@@ -13,10 +13,9 @@ const Logo: React.FC<Props> = ({ variant = 'horizontal', className = '', onClick
     return (
       <button onClick={onClick} className={`flex items-center ${className}`} aria-label="Trésor Couture">
         <img
-          src="/logo.jpg"
+          src="/branding/monogram-master.png"
           alt="Trésor Couture"
           loading="eager"
-          style={{ mixBlendMode: 'multiply' }}
           className="h-full w-auto object-contain"
         />
       </button>

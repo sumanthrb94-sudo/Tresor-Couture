@@ -10,7 +10,7 @@ Single source of truth for the Trésor Couture identity. Drop new assets here; t
 | `horizontal.svg` | Horizontal lockup (mark + wordmark). Use in headers, email signature, invoice. |
 | `wordmark.svg` | Wordmark only. Use when a mark is already nearby. |
 | `mark.svg` | Compact TC mark. Use for favicon, app icon, watermark. |
-| `logo.jpg` _(in `/public/`)_ | Founder's illustrated logo. **Has a cream paper background — only use over `brand-bg` (`#F5ECDC`) and apply `mix-blend-mode: multiply` if placed on a different surface.** |
+| `monogram-master.png` | Master illustrated logo (1272×1685, transparent RGBA). The painted TC monogram with reclining figure and floral flourish. Use this in hero placements and OG/social previews. Drops on any background — no blend modes required. |
 
 The four SVG files have transparent backgrounds and use a gold gradient (`#D8B97A → #B8893A → #8E6520`). They will blend correctly on any background.
 
