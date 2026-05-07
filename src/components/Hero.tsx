@@ -1,9 +1,10 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { COLLECTIONS } from '../constants';
-import { ArrowRight } from 'lucide-react';
+import { useRouter } from '../context/RouterContext';
 
 const Hero = () => {
+  const { navigate } = useRouter();
   return (
     <section className="relative min-h-[90vh] lg:h-screen lg:min-h-[700px] w-full overflow-hidden bg-brand-bg pt-[100px]">
       <div className="geometric-grid h-full min-h-[600px] lg:h-[calc(100vh-100px)]">
@@ -55,8 +56,11 @@ const Hero = () => {
                 <p className="text-[11px] uppercase tracking-widest leading-relaxed opacity-90 font-medium">
                   Centuries of Indian weaving traditions.
                 </p>
-                <button className="mt-8 px-8 py-3 border border-white text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition-all">
-                  Inaugural Collection
+                <button
+                  onClick={() => navigate({ name: 'shop' })}
+                  className="mt-8 px-8 py-3 border border-white text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition-all"
+                >
+                  Shop the Collection
                 </button>
               </div>
             </div>
@@ -84,12 +88,19 @@ const Hero = () => {
           </span>
           <ul className="space-y-0">
             {COLLECTIONS.map((collection) => (
-              <li key={collection.id} className="group border-b border-brand-border py-6 flex justify-between items-center cursor-pointer hover:bg-brand-accent/30 transition-all">
+              <li
+                key={collection.id}
+                onClick={() => navigate({ name: 'shop' })}
+                className="group border-b border-brand-border py-6 flex justify-between items-center cursor-pointer hover:bg-brand-accent/30 transition-all"
+              >
                 <span className="font-serif text-lg group-hover:italic transition-all">{collection.name}</span>
                 <span className="text-[10px] uppercase opacity-40 group-hover:opacity-100 group-hover:text-brand-gold transition-all">Explore</span>
               </li>
             ))}
-            <li className="group border-b border-brand-border py-6 flex justify-between items-center cursor-pointer hover:bg-brand-accent/30 transition-all">
+            <li
+              onClick={() => navigate({ name: 'shop' })}
+              className="group border-b border-brand-border py-6 flex justify-between items-center cursor-pointer hover:bg-brand-accent/30 transition-all"
+            >
               <span className="font-serif text-lg group-hover:italic transition-all font-medium">Bespoke Couture</span>
               <span className="text-[10px] uppercase opacity-40 group-hover:opacity-100 group-hover:text-brand-gold transition-all">Explore</span>
             </li>
