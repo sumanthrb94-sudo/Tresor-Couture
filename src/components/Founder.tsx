@@ -12,12 +12,13 @@ const Founder = () => {
               whileInView={{ scale: 1, opacity: 1 }}
               transition={{ duration: 1.5 }}
               viewport={{ once: true }}
-              className="relative z-10 p-8 border border-brand-border bg-brand-bg-soft flex items-center justify-center"
+              className="relative z-10 p-4 border border-brand-border bg-brand-bg flex items-center justify-center"
             >
               <img
-                src="/branding/monogram.svg"
-                alt="Trésor Couture monogram"
+                src="/logo.jpg"
+                alt="Trésor Couture"
                 loading="eager"
+                style={{ mixBlendMode: 'multiply' }}
                 className="w-full aspect-[4/5] object-contain"
               />
             </motion.div>
