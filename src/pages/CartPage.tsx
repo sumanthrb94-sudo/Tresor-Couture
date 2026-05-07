@@ -60,7 +60,7 @@ const CartPage: React.FC = () => {
                     <img
                       src={fabric.image}
                       alt={fabric.name}
-                      referrerPolicy="no-referrer"
+                      loading="eager"
                       className="w-20 h-20 object-cover border border-brand-border"
                     />
                   </button>

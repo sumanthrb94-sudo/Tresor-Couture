@@ -4,6 +4,7 @@ import { Menu, X, ShoppingBag, Search } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useRouter } from '../context/RouterContext';
 import { Route } from '../types';
+import Logo from './Logo';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -86,12 +87,7 @@ const Navbar = () => {
         </button>
 
         <div className="flex-shrink-0 px-4">
-          <button
-            onClick={() => navigate({ name: 'home' })}
-            className="text-lg md:text-2xl font-serif tracking-[0.2em] uppercase whitespace-nowrap"
-          >
-            Trésor <span className="italic">Couture</span>
-          </button>
+          <Logo onClick={() => navigate({ name: 'home' })} />
         </div>
 
         <div className="flex-1 flex justify-end gap-6 md:gap-8 items-center">

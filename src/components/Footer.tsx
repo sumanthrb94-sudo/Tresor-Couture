@@ -6,9 +6,12 @@ const Footer = () => {
     <footer id="contact" className="bg-brand-bg text-brand-ink pt-24 border-t border-brand-border">
       <div className="w-full px-6 md:px-[60px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
         <div className="col-span-1 lg:col-span-1">
-          <h2 className="text-3xl font-serif tracking-widest uppercase mb-8">
-            Trésor <span className="italic">Couture</span>
-          </h2>
+          <div className="flex items-center gap-3 mb-8">
+            <img src="/logo.jpg" alt="Trésor Couture" className="h-14 w-14 object-contain" loading="eager" />
+            <h2 className="brand-logotype text-2xl uppercase">
+              Trésor <span className="italic font-light text-brand-gold">Couture</span>
+            </h2>
+          </div>
           <p className="text-sm text-brand-ink/60 font-light leading-relaxed mb-8">
             The definitive source for luxury textiles and artisanal craftsmanship in India. 
             Elevating the standard of elegance since 2012.

@@ -78,7 +78,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
               <img
                 src={gallery[activeImage]}
                 alt={fabric.name}
-                referrerPolicy="no-referrer"
+                loading="eager"
                 className="w-full h-full object-cover"
               />
             </motion.div>
@@ -92,7 +92,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
                       activeImage === idx ? 'border-brand-gold' : 'border-brand-border'
                     }`}
                   >
-                    <img src={src} alt="" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                    <img src={src} alt="" loading="eager" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>

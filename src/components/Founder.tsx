@@ -14,11 +14,11 @@ const Founder = () => {
               viewport={{ once: true }}
               className="relative z-10 p-4 border border-brand-border bg-white"
             >
-              <img 
-                src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=1200" 
+              <img
+                src="/logo.jpg"
                 alt="Founder of Trésor Couture"
-                referrerPolicy="no-referrer"
-                className="w-full aspect-[4/5] object-cover grayscale brightness-90 shadow-sm"
+                loading="eager"
+                className="w-full aspect-[4/5] object-cover object-top shadow-sm"
               />
             </motion.div>
             

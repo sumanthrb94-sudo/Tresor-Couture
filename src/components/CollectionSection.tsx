@@ -48,8 +48,8 @@ const CollectionSection = () => {
                 <img
                   src={collection.coverImage}
                   alt={collection.name}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover grayscale brightness-95 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000"
+                  loading="eager"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-all duration-1000"
                 />
               </div>
               <div className="flex justify-between items-end">
@@ -100,8 +100,8 @@ const CollectionSection = () => {
                 <img
                   src={fabric.image}
                   alt={fabric.name}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000"
+                  loading="eager"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-all duration-1000"
                 />
               </div>
               <p className="text-[9px] uppercase tracking-[0.3em] text-brand-gold font-bold mb-2">

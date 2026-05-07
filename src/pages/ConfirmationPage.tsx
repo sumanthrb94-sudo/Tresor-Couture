@@ -83,7 +83,7 @@ const ConfirmationPage: React.FC<Props> = ({ orderId }) => {
                 <img
                   src={item.fabricSnapshot.image}
                   alt={item.fabricSnapshot.name}
-                  referrerPolicy="no-referrer"
+                  loading="eager"
                   className="w-16 h-16 object-cover border border-brand-border"
                 />
                 <div className="flex-1 min-w-0">

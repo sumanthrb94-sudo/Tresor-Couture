@@ -1,4 +1,15 @@
 import { Fabric, Collection, Testimonial } from './types';
+import { fabricSwatch } from './lib/swatch';
+
+const swatch = (
+  id: string,
+  primary: string,
+  secondary: string,
+  accent: string,
+  weave: 'satin' | 'brocade' | 'ikat' | 'jamdani' | 'tie-dye' | 'plain' | 'twill' | 'kalamkari' | 'kanjivaram',
+  name: string,
+  origin: string
+) => fabricSwatch({ id, primary, secondary, accent, weave, name, origin });
 
 export const FABRICS: Fabric[] = [
   {
@@ -7,11 +18,11 @@ export const FABRICS: Fabric[] = [
     description:
       'A "permitted" fabric where silk never touches the skin. Hand-woven by the last four families of Mandvi keeping this craft alive. Lustrous satin face on a cotton ground, ideal for jackets, lehengas and cushion covers.',
     pricePerMeter: 4500,
-    image: 'https://images.unsplash.com/photo-1620164233772-246d88ff7536?auto=format&fit=crop&q=80&w=1200',
+    image: swatch('f1', '#2A3F66', '#E2A33A', '#F2EBDD', 'satin', 'Mashru Silk-Satin', 'Mandvi'),
     gallery: [
-      'https://images.unsplash.com/photo-1620164233772-246d88ff7536?auto=format&fit=crop&q=80&w=1200',
-      'https://images.unsplash.com/photo-1551803091-e20673f15770?auto=format&fit=crop&q=80&w=1200',
-      'https://images.unsplash.com/photo-1605518293442-3eaeae5e421b?auto=format&fit=crop&q=80&w=1200'
+      swatch('f1a', '#2A3F66', '#E2A33A', '#F2EBDD', 'satin', 'Mashru Silk-Satin', 'Indigo'),
+      swatch('f1b', '#E2A33A', '#7A1F2C', '#F2EBDD', 'satin', 'Mashru Silk-Satin', 'Saffron'),
+      swatch('f1c', '#F2EBDD', '#C5A059', '#7A1F2C', 'satin', 'Mashru Silk-Satin', 'Ivory')
     ],
     category: 'Satin',
     origin: 'Mandvi, Gujarat',
@@ -33,11 +44,11 @@ export const FABRICS: Fabric[] = [
     description:
       'Woven on traditional pit looms with authentic silver-and-gold zari. A regal weave for bridal lehengas, sherwanis and statement saris.',
     pricePerMeter: 12500,
-    image: 'https://images.unsplash.com/photo-1610406534231-0701fd0326c4?auto=format&fit=crop&q=80&w=1200',
+    image: swatch('f2', '#7A1F2C', '#C5A059', '#F2EBDD', 'brocade', 'Real Zari Banarasi', 'Varanasi'),
     gallery: [
-      'https://images.unsplash.com/photo-1610406534231-0701fd0326c4?auto=format&fit=crop&q=80&w=1200',
-      'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=1200',
-      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=1200'
+      swatch('f2a', '#7A1F2C', '#C5A059', '#F2EBDD', 'brocade', 'Real Zari Banarasi', 'Maroon'),
+      swatch('f2b', '#1F5D4F', '#C5A059', '#F2EBDD', 'brocade', 'Real Zari Banarasi', 'Emerald'),
+      swatch('f2c', '#C5A059', '#7A1F2C', '#F2EBDD', 'brocade', 'Real Zari Banarasi', 'Gold')
     ],
     category: 'Silk',
     origin: 'Varanasi',
@@ -59,10 +70,10 @@ export const FABRICS: Fabric[] = [
     description:
       'The "King of Textiles". A double-ikkat masterpiece taking master weavers up to six months per sari. Reversible, mathematically precise and museum-grade.',
     pricePerMeter: 28000,
-    image: 'https://images.unsplash.com/photo-1590736910113-f9630613914b?auto=format&fit=crop&q=80&w=1200',
+    image: swatch('f3', '#9B1B30', '#1E3A8A', '#F2EBDD', 'ikat', 'Patan Patola', 'Patan'),
     gallery: [
-      'https://images.unsplash.com/photo-1590736910113-f9630613914b?auto=format&fit=crop&q=80&w=1200',
-      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=1200'
+      swatch('f3a', '#9B1B30', '#1E3A8A', '#F2EBDD', 'ikat', 'Patan Patola', 'Crimson'),
+      swatch('f3b', '#1E3A8A', '#C5A059', '#F2EBDD', 'ikat', 'Patan Patola', 'Royal Blue')
     ],
     category: 'Silk',
     origin: 'Patan, Gujarat',
@@ -83,10 +94,10 @@ export const FABRICS: Fabric[] = [
     description:
       'The "Ghost Fabric". A translucent, 300-count cotton weave once reserved for Mughal courts. Featherlight and ethereally drapey.',
     pricePerMeter: 3800,
-    image: 'https://images.unsplash.com/photo-1589363360147-442ca02cc047?auto=format&fit=crop&q=80&w=1200',
+    image: swatch('f4', '#EDE7DA', '#B5B8B1', '#C5A059', 'jamdani', 'Dhakai Jamdani', 'West Bengal'),
     gallery: [
-      'https://images.unsplash.com/photo-1589363360147-442ca02cc047?auto=format&fit=crop&q=80&w=1200',
-      'https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&q=80&w=1200'
+      swatch('f4a', '#EDE7DA', '#B5B8B1', '#C5A059', 'jamdani', 'Dhakai Jamdani', 'Pearl'),
+      swatch('f4b', '#B5B8B1', '#EDE7DA', '#7A7A4F', 'jamdani', 'Dhakai Jamdani', 'Mist Grey')
     ],
     category: 'Cotton',
     origin: 'West Bengal',
@@ -107,9 +118,11 @@ export const FABRICS: Fabric[] = [
     description:
       'A glassy, sheer weave from Madhya Pradesh blending silk warp with cotton weft. Subtle sheen, perfect for summer saris and dupattas.',
     pricePerMeter: 2200,
-    image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=1200',
+    image: swatch('f5', '#E8C7C8', '#C5A059', '#F2EBDD', 'plain', 'Chanderi', 'Chanderi'),
     gallery: [
-      'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&q=80&w=1200'
+      swatch('f5a', '#E8C7C8', '#C5A059', '#F2EBDD', 'plain', 'Chanderi', 'Powder Pink'),
+      swatch('f5b', '#B6D7C9', '#C5A059', '#F2EBDD', 'plain', 'Chanderi', 'Mint'),
+      swatch('f5c', '#E5D3A8', '#C5A059', '#7A1F2C', 'plain', 'Chanderi', 'Champagne')
     ],
     category: 'Mixed',
     origin: 'Chanderi, Madhya Pradesh',
@@ -131,9 +144,10 @@ export const FABRICS: Fabric[] = [
     description:
       'Hand-spun and hand-woven from the under-fleece of Changthangi goats in Ladakh. The warmest, softest wool on earth.',
     pricePerMeter: 9800,
-    image: 'https://images.unsplash.com/photo-1605518293442-3eaeae5e421b?auto=format&fit=crop&q=80&w=1200',
+    image: swatch('f6', '#D8C8AE', '#3A3A3A', '#C5A059', 'twill', 'Pashmina', 'Ladakh'),
     gallery: [
-      'https://images.unsplash.com/photo-1605518293442-3eaeae5e421b?auto=format&fit=crop&q=80&w=1200'
+      swatch('f6a', '#D8C8AE', '#3A3A3A', '#C5A059', 'twill', 'Pashmina', 'Natural'),
+      swatch('f6b', '#3A3A3A', '#D8C8AE', '#C5A059', 'twill', 'Pashmina', 'Charcoal')
     ],
     category: 'Wool',
     origin: 'Ladakh',
@@ -154,9 +168,12 @@ export const FABRICS: Fabric[] = [
     description:
       'European flax linen with a crisp hand and natural slub. Ages beautifully and softens with each wash. A modern essential.',
     pricePerMeter: 1850,
-    image: 'https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&q=80&w=1200',
+    image: swatch('f7', '#D9CDB3', '#7A7A4F', '#F2EBDD', 'plain', 'Belgian Linen', 'Belgium'),
     gallery: [
-      'https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&q=80&w=1200'
+      swatch('f7a', '#D9CDB3', '#7A7A4F', '#F2EBDD', 'plain', 'Belgian Linen', 'Oat'),
+      swatch('f7b', '#6E747B', '#D9CDB3', '#F2EBDD', 'plain', 'Belgian Linen', 'Slate'),
+      swatch('f7c', '#7A7A4F', '#D9CDB3', '#F2EBDD', 'plain', 'Belgian Linen', 'Olive'),
+      swatch('f7d', '#F2EBDD', '#D9CDB3', '#7A7A4F', 'plain', 'Belgian Linen', 'Ivory')
     ],
     category: 'Linen',
     origin: 'Flanders, Belgium',
@@ -179,9 +196,10 @@ export const FABRICS: Fabric[] = [
     description:
       'Pure mulberry silk woven with three-shuttle technique. Heavy, regal and known for its temple-border motifs.',
     pricePerMeter: 8400,
-    image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=1200',
+    image: swatch('f8', '#0E5E6F', '#C5A059', '#F2EBDD', 'kanjivaram', 'Kanjivaram', 'Tamil Nadu'),
     gallery: [
-      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&q=80&w=1200'
+      swatch('f8a', '#0E5E6F', '#C5A059', '#F2EBDD', 'kanjivaram', 'Kanjivaram', 'Peacock'),
+      swatch('f8b', '#C9266B', '#C5A059', '#F2EBDD', 'kanjivaram', 'Kanjivaram', 'Rani Pink')
     ],
     category: 'Silk',
     origin: 'Kanchipuram, Tamil Nadu',
@@ -202,9 +220,10 @@ export const FABRICS: Fabric[] = [
     description:
       'Hand-painted with natural dyes using bamboo pens. Each meter tells a story drawn from epics and folk traditions.',
     pricePerMeter: 1650,
-    image: 'https://images.unsplash.com/photo-1551803091-e20673f15770?auto=format&fit=crop&q=80&w=1200',
+    image: swatch('f9', '#9B3A2A', '#2A3F66', '#F2EBDD', 'kalamkari', 'Kalamkari', 'Andhra Pradesh'),
     gallery: [
-      'https://images.unsplash.com/photo-1551803091-e20673f15770?auto=format&fit=crop&q=80&w=1200'
+      swatch('f9a', '#9B3A2A', '#2A3F66', '#F2EBDD', 'kalamkari', 'Kalamkari', 'Madder Red'),
+      swatch('f9b', '#2A3F66', '#9B3A2A', '#F2EBDD', 'kalamkari', 'Kalamkari', 'Indigo')
     ],
     category: 'Cotton',
     origin: 'Srikalahasti, Andhra Pradesh',
@@ -225,9 +244,11 @@ export const FABRICS: Fabric[] = [
     description:
       'Super-130s merino from Biella, Italy. The standard for bespoke suiting and winter couture.',
     pricePerMeter: 6200,
-    image: 'https://images.unsplash.com/photo-1574169208538-4f45163a14e6?auto=format&fit=crop&q=80&w=1200',
+    image: swatch('f10', '#0F1B2D', '#9A958A', '#C5A059', 'twill', 'Italian Merino', 'Biella'),
     gallery: [
-      'https://images.unsplash.com/photo-1574169208538-4f45163a14e6?auto=format&fit=crop&q=80&w=1200'
+      swatch('f10a', '#0F1B2D', '#9A958A', '#C5A059', 'twill', 'Italian Merino', 'Midnight'),
+      swatch('f10b', '#3A3A3A', '#9A958A', '#C5A059', 'twill', 'Italian Merino', 'Charcoal'),
+      swatch('f10c', '#9A958A', '#3A3A3A', '#C5A059', 'twill', 'Italian Merino', 'Stone')
     ],
     category: 'Wool',
     origin: 'Biella, Italy',
@@ -249,9 +270,10 @@ export const FABRICS: Fabric[] = [
     description:
       'Each dot tied by hand before dyeing. A Gujarat craft that turns silk into a constellation of colour.',
     pricePerMeter: 3200,
-    image: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&q=80&w=1200',
+    image: swatch('f11', '#C8312B', '#D6A93B', '#F2EBDD', 'tie-dye', 'Bandhani', 'Kutch'),
     gallery: [
-      'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&q=80&w=1200'
+      swatch('f11a', '#C8312B', '#D6A93B', '#F2EBDD', 'tie-dye', 'Bandhani', 'Vermilion'),
+      swatch('f11b', '#D6A93B', '#C8312B', '#F2EBDD', 'tie-dye', 'Bandhani', 'Mustard')
     ],
     category: 'Silk',
     origin: 'Kutch, Gujarat',
@@ -272,9 +294,10 @@ export const FABRICS: Fabric[] = [
     description:
       'A modern blend: the crispness of linen with the lustre of silk. Elegant for shirts, drapes and saris alike.',
     pricePerMeter: 2950,
-    image: 'https://images.unsplash.com/photo-1606293459380-e7d8b1c2e8e9?auto=format&fit=crop&q=80&w=1200',
+    image: swatch('f12', '#E7DFCF', '#A6B89A', '#C5A059', 'plain', 'Linen-Silk', 'Bhagalpur'),
     gallery: [
-      'https://images.unsplash.com/photo-1606293459380-e7d8b1c2e8e9?auto=format&fit=crop&q=80&w=1200'
+      swatch('f12a', '#E7DFCF', '#A6B89A', '#C5A059', 'plain', 'Linen-Silk', 'Bone'),
+      swatch('f12b', '#A6B89A', '#E7DFCF', '#C5A059', 'plain', 'Linen-Silk', 'Sage')
     ],
     category: 'Mixed',
     origin: 'Bhagalpur',
@@ -298,7 +321,7 @@ export const COLLECTIONS: Collection[] = [
     subtitle: 'Revival Series 01',
     description:
       'A dedicated initiative to rescue and restore weaving techniques that are on the brink of extinction.',
-    coverImage: 'https://images.unsplash.com/photo-1574169208538-4f45163a14e6?auto=format&fit=crop&q=80&w=1200',
+    coverImage: swatch('chero', '#7A1F2C', '#C5A059', '#F2EBDD', 'brocade', 'The Lost Loom', 'Heritage Revival'),
     items: FABRICS.filter(f => f.category === 'Silk' || f.category === 'Satin')
   },
   {
@@ -307,10 +330,20 @@ export const COLLECTIONS: Collection[] = [
     subtitle: 'Light & Legacy',
     description:
       'Focusing on the fine muslins and translucent weaves that defined elegance in a bygone era.',
-    coverImage: 'https://images.unsplash.com/photo-1544441893-675973e31985?auto=format&fit=crop&q=80&w=1200',
+    coverImage: swatch('caether', '#EDE7DA', '#C5A059', '#7A7A4F', 'jamdani', 'Aether', 'Light & Legacy'),
     items: FABRICS.filter(f => f.category === 'Cotton' || f.category === 'Linen')
   }
 ];
+
+export const HERO_IMAGE = swatch(
+  'hero',
+  '#7A1F2C',
+  '#C5A059',
+  '#F2EBDD',
+  'brocade',
+  'Varanasi Gold',
+  'Selected Weave'
+);
 
 export const TESTIMONIALS: Testimonial[] = [
   {

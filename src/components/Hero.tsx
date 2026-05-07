@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { COLLECTIONS } from '../constants';
+import { COLLECTIONS, HERO_IMAGE } from '../constants';
 import { useRouter } from '../context/RouterContext';
 
 const Hero = () => {
@@ -39,11 +39,12 @@ const Hero = () => {
             transition={{ duration: 1.2 }}
             className="relative w-full max-w-lg lg:w-4/5 lg:h-4/5 aspect-[4/5] lg:aspect-auto shadow-2xl overflow-hidden group border border-brand-border p-1 bg-white"
           >
-            <img 
-              src="https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&q=80&w=1200" 
-              alt="Fabric Texture"
-              referrerPolicy="no-referrer"
-              className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-[2000ms]"
+            <img
+              src={HERO_IMAGE}
+              alt="Selected weave"
+              loading="eager"
+              fetchPriority="high"
+              className="w-full h-full object-cover transition-all duration-[2000ms]"
             />
             <div className="absolute inset-0 bg-black/10" />
             

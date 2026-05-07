@@ -163,8 +163,8 @@ const ShopPage: React.FC<Props> = ({ initialCategory }) => {
                       <img
                         src={fabric.image}
                         alt={fabric.name}
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000"
+                        loading="eager"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-all duration-1000"
                       />
                       {(fabric.inStockMeters ?? 0) < 15 && (
                         <span className="absolute top-3 left-3 bg-brand-ink text-white text-[8px] uppercase tracking-widest px-2 py-1">

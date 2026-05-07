@@ -328,7 +328,7 @@ const CheckoutPage: React.FC = () => {
                   <img
                     src={fabric.image}
                     alt={fabric.name}
-                    referrerPolicy="no-referrer"
+                    loading="eager"
                     className="w-14 h-14 object-cover border border-brand-border"
                   />
                   <div className="flex-1 min-w-0">

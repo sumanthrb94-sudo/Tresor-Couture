@@ -31,8 +31,8 @@ const Craftsmanship = () => {
                 <img 
                   src={fabric.image} 
                   alt={fabric.name}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover grayscale brightness-95 group-hover:grayscale-0 group-hover:scale-110 transition-transform duration-[2000ms]"
+                  loading="eager"
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2000ms]"
                 />
               </div>
               
