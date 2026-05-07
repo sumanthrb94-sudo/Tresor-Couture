@@ -19,6 +19,14 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    const original = document.body.style.overflow;
+    document.body.style.overflow = isMobileMenuOpen ? 'hidden' : original;
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, [isMobileMenuOpen]);
+
   const navLinks: { name: string; route: Route }[] = [
     { name: 'Shop', route: { name: 'shop' } },
     { name: 'Silk', route: { name: 'shop', category: 'Silk' } },
@@ -122,7 +130,8 @@ const Navbar = () => {
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-0 bg-brand-bg z-[60] flex flex-col p-12"
+            style={{ backgroundColor: '#F8F5F2' }}
+            className="fixed inset-0 z-[100] flex flex-col p-12 overflow-y-auto"
           >
             <button className="absolute top-8 right-8" onClick={() => setIsMobileMenuOpen(false)} aria-label="Close menu">
               <X className="w-8 h-8" />
