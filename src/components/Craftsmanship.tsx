@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { FABRICS } from '../constants';
+import FabricImage from './FabricImage';
 
 const Craftsmanship = () => {
   return (
@@ -28,10 +29,10 @@ const Craftsmanship = () => {
               className="bg-brand-bg group relative p-6 hover:bg-brand-accent/40 transition-all duration-500"
             >
               <div className="aspect-[4/5] overflow-hidden mb-8 relative border border-brand-border p-1 bg-white shadow-sm">
-                <img 
-                  src={fabric.image} 
+                <FabricImage
+                  photo={fabric.photo}
+                  fallback={fabric.image}
                   alt={fabric.name}
-                  loading="eager"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[2000ms]"
                 />
               </div>

@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { ArrowRight, Star } from 'lucide-react';
 import { COLLECTIONS, FABRICS, formatINR } from '../constants';
 import { useRouter } from '../context/RouterContext';
+import FabricImage from './FabricImage';
 
 const FEATURED_IDS = ['2', '3', '6', '8'];
 
@@ -45,10 +46,10 @@ const CollectionSection = () => {
               className="bg-brand-bg group cursor-pointer p-12 hover:bg-brand-accent/20 transition-all duration-700 text-left"
             >
               <div className="relative aspect-[16/9] overflow-hidden mb-10 shadow-sm border border-brand-border p-2 bg-white">
-                <img
-                  src={collection.coverImage}
+                <FabricImage
+                  photo={collection.coverPhoto}
+                  fallback={collection.coverImage}
                   alt={collection.name}
-                  loading="eager"
                   className="w-full h-full object-cover group-hover:scale-105 transition-all duration-1000"
                 />
               </div>
@@ -97,10 +98,10 @@ const CollectionSection = () => {
               className="group bg-brand-bg p-6 text-left hover:bg-brand-accent/20 transition-colors duration-500"
             >
               <div className="aspect-[4/5] overflow-hidden mb-5 bg-white border border-brand-border">
-                <img
-                  src={fabric.image}
+                <FabricImage
+                  photo={fabric.photo}
+                  fallback={fabric.image}
                   alt={fabric.name}
-                  loading="eager"
                   className="w-full h-full object-cover group-hover:scale-105 transition-all duration-1000"
                 />
               </div>

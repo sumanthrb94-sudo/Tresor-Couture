@@ -3,6 +3,7 @@ import { CheckCircle2, Package } from 'lucide-react';
 import { useOrders } from '../context/OrderContext';
 import { useRouter } from '../context/RouterContext';
 import { formatINR } from '../constants';
+import FabricImage from '../components/FabricImage';
 
 interface Props {
   orderId: string;
@@ -80,10 +81,10 @@ const ConfirmationPage: React.FC<Props> = ({ orderId }) => {
                 key={`${item.fabricId}-${item.color ?? ''}`}
                 className="flex gap-4 pb-4 border-b border-brand-border last:border-b-0 last:pb-0"
               >
-                <img
-                  src={item.fabricSnapshot.image}
+                <FabricImage
+                  photo={item.fabricSnapshot.photo ?? item.fabricSnapshot.image}
+                  fallback={item.fabricSnapshot.image}
                   alt={item.fabricSnapshot.name}
-                  loading="eager"
                   className="w-16 h-16 object-cover border border-brand-border"
                 />
                 <div className="flex-1 min-w-0">

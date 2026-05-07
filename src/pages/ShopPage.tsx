@@ -4,6 +4,7 @@ import { Star } from 'lucide-react';
 import { CATEGORIES, FABRICS, formatINR } from '../constants';
 import { useRouter } from '../context/RouterContext';
 import { Fabric } from '../types';
+import FabricImage from '../components/FabricImage';
 
 type SortKey = 'featured' | 'price-asc' | 'price-desc' | 'rating';
 
@@ -160,10 +161,10 @@ const ShopPage: React.FC<Props> = ({ initialCategory }) => {
                     className="group bg-brand-bg text-left p-6 hover:bg-brand-accent/30 transition-colors duration-500"
                   >
                     <div className="relative aspect-[4/5] overflow-hidden mb-5 bg-white border border-brand-border">
-                      <img
-                        src={fabric.image}
+                      <FabricImage
+                        photo={fabric.photo}
+                        fallback={fabric.image}
                         alt={fabric.name}
-                        loading="eager"
                         className="w-full h-full object-cover group-hover:scale-105 transition-all duration-1000"
                       />
                       {(fabric.inStockMeters ?? 0) < 15 && (

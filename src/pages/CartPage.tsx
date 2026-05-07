@@ -3,6 +3,7 @@ import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useRouter } from '../context/RouterContext';
 import { formatINR, FREE_SHIPPING_THRESHOLD } from '../constants';
+import FabricImage from '../components/FabricImage';
 
 const CartPage: React.FC = () => {
   const { resolved, updateMeters, removeItem, subtotal, shipping, tax, total, clear } = useCart();
@@ -57,10 +58,10 @@ const CartPage: React.FC = () => {
                   className="grid grid-cols-[80px_1fr_auto] md:grid-cols-[80px_1fr_140px_140px_40px] gap-4 items-center px-6 py-6 border-b border-brand-border last:border-b-0"
                 >
                   <button onClick={() => navigate({ name: 'product', id: fabric.id })} className="block">
-                    <img
-                      src={fabric.image}
+                    <FabricImage
+                      photo={fabric.photo}
+                      fallback={fabric.image}
                       alt={fabric.name}
-                      loading="eager"
                       className="w-20 h-20 object-cover border border-brand-border"
                     />
                   </button>

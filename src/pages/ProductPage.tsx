@@ -4,6 +4,7 @@ import { ArrowLeft, Check, Minus, Plus, ShieldCheck, Star, Truck } from 'lucide-
 import { FABRICS, formatINR } from '../constants';
 import { useRouter } from '../context/RouterContext';
 import { useCart } from '../context/CartContext';
+import FabricImage from '../components/FabricImage';
 
 interface Props {
   productId: string;
@@ -20,7 +21,13 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
   const [activeImage, setActiveImage] = useState<number>(0);
   const [added, setAdded] = useState(false);
 
-  const gallery = useMemo(() => fabric?.gallery?.length ? fabric.gallery : fabric ? [fabric.image] : [], [fabric]);
+  // Pair each photo with its swatch fallback so a dead URL never leaves a blank tile.
+  const gallery = useMemo(() => {
+    if (!fabric) return [] as { photo: string; fallback: string }[];
+    const photos = fabric.photoGallery?.length ? fabric.photoGallery : [fabric.photo];
+    const fallbacks = fabric.gallery?.length ? fabric.gallery : [fabric.image];
+    return photos.map((photo, i) => ({ photo, fallback: fallbacks[i] ?? fallbacks[0] ?? fabric.image }));
+  }, [fabric]);
 
   if (!fabric) {
     return (
@@ -75,24 +82,29 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
               transition={{ duration: 0.4 }}
               className="aspect-[4/5] bg-white border border-brand-border overflow-hidden"
             >
-              <img
-                src={gallery[activeImage]}
+              <FabricImage
+                photo={gallery[activeImage].photo}
+                fallback={gallery[activeImage].fallback}
                 alt={fabric.name}
-                loading="eager"
                 className="w-full h-full object-cover"
               />
             </motion.div>
             {gallery.length > 1 && (
               <div className="grid grid-cols-4 gap-3 mt-4">
-                {gallery.map((src, idx) => (
+                {gallery.map((g, idx) => (
                   <button
-                    key={src}
+                    key={g.photo}
                     onClick={() => setActiveImage(idx)}
                     className={`aspect-square overflow-hidden border-2 transition-colors ${
                       activeImage === idx ? 'border-brand-gold' : 'border-brand-border'
                     }`}
                   >
-                    <img src={src} alt="" loading="eager" className="w-full h-full object-cover" />
+                    <FabricImage
+                      photo={g.photo}
+                      fallback={g.fallback}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
                   </button>
                 ))}
               </div>

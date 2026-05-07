@@ -5,6 +5,7 @@ import { useRouter } from '../context/RouterContext';
 import { useOrders } from '../context/OrderContext';
 import { formatINR } from '../constants';
 import { Order, PaymentMethod, ShippingAddress } from '../types';
+import FabricImage from '../components/FabricImage';
 
 const initialAddress: ShippingAddress = {
   fullName: '',
@@ -325,10 +326,10 @@ const CheckoutPage: React.FC = () => {
                   key={`${fabric.id}-${item.color ?? ''}`}
                   className="flex gap-3 pb-4 border-b border-brand-border last:border-b-0 last:pb-0"
                 >
-                  <img
-                    src={fabric.image}
+                  <FabricImage
+                    photo={fabric.photo}
+                    fallback={fabric.image}
                     alt={fabric.name}
-                    loading="eager"
                     className="w-14 h-14 object-cover border border-brand-border"
                   />
                   <div className="flex-1 min-w-0">

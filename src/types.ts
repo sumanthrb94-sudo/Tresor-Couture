@@ -3,6 +3,11 @@ export interface Fabric {
   name: string;
   description: string;
   pricePerMeter: number;
+  /** Real photograph URL (Pexels/Unsplash via CDN proxy or local file). */
+  photo: string;
+  /** Additional photographs for the gallery. */
+  photoGallery?: string[];
+  /** Guaranteed-loading SVG fabric swatch used as onError fallback. */
   image: string;
   gallery?: string[];
   category: 'Silk' | 'Cotton' | 'Wool' | 'Linen' | 'Mixed' | 'Satin';
@@ -21,6 +26,7 @@ export interface Collection {
   name: string;
   subtitle: string;
   description: string;
+  coverPhoto: string;
   coverImage: string;
   items: Fabric[];
 }

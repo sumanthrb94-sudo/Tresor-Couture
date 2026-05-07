@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { COLLECTIONS, HERO_IMAGE } from '../constants';
+import { COLLECTIONS, HERO_IMAGE, HERO_PHOTO } from '../constants';
 import { useRouter } from '../context/RouterContext';
+import FabricImage from './FabricImage';
 
 const Hero = () => {
   const { navigate } = useRouter();
@@ -39,10 +40,10 @@ const Hero = () => {
             transition={{ duration: 1.2 }}
             className="relative w-full max-w-lg lg:w-4/5 lg:h-4/5 aspect-[4/5] lg:aspect-auto shadow-2xl overflow-hidden group border border-brand-border p-1 bg-white"
           >
-            <img
-              src={HERO_IMAGE}
+            <FabricImage
+              photo={HERO_PHOTO}
+              fallback={HERO_IMAGE}
               alt="Selected weave"
-              loading="eager"
               fetchPriority="high"
               className="w-full h-full object-cover transition-all duration-[2000ms]"
             />
