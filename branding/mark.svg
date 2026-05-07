@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Trésor Couture mark">
+  <title>TC</title>
+  <defs>
+    <linearGradient id="mk-gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#D8B97A"/>
+      <stop offset="50%" stop-color="#B8893A"/>
+      <stop offset="100%" stop-color="#8E6520"/>
+    </linearGradient>
+  </defs>
+  <g fill="url(#mk-gold)">
+    <path d="M 12 14 L 12 12 Q 12 11 13 11 L 38 11 Q 39 11 39 12 L 39 14 L 36 16 L 17 16 L 14 14 Z"/>
+    <path d="M 23 16 L 23 48 L 21 50 L 21 52 L 30 52 L 30 50 L 28 48 L 28 16 Z"/>
+  </g>
+  <g fill="none" stroke="url(#mk-gold)" stroke-width="3" stroke-linecap="round">
+    <path d="M 51 22 C 44 22 40 28 40 34 C 40 40 44 46 51 46"/>
+  </g>
+</svg>

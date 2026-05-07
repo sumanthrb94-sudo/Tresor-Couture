@@ -5,12 +5,13 @@
   --font-serif: "Cormorant Garamond", serif;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 
-  /* Warm cream sampled from the logo background */
-  --color-brand-bg: #F5ECDC;
+  /* Warm cream sampled from the founder's logo paper. See branding/palette.json. */
+  --color-brand-bg: #F2E7D5;
   --color-brand-bg-soft: #FBF5EA;
   --color-brand-ink: #2A1F12;
   --color-brand-gold: #B8893A;
   --color-brand-gold-soft: #D8B97A;
+  --color-brand-gold-deep: #8E6520;
   --color-brand-accent: #EAD9BA;
   --color-brand-border: rgba(42, 31, 18, 0.12);
 }

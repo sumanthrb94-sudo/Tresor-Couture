@@ -18,6 +18,7 @@ const Founder = () => {
                 src="/logo.jpg"
                 alt="Founder of Trésor Couture"
                 loading="eager"
+                style={{ mixBlendMode: 'multiply' }}
                 className="w-full aspect-[4/5] object-cover object-top shadow-sm"
               />
             </motion.div>

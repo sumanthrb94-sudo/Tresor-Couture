@@ -47,7 +47,7 @@ const Navbar = () => {
           animate={{ x: 0 }}
           exit={{ x: '-100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          style={{ backgroundColor: '#F5ECDC', color: '#2A1F12' }}
+          style={{ backgroundColor: '#F2E7D5', color: '#2A1F12' }}
           className="fixed inset-0 z-[200] flex flex-col p-12 overflow-y-auto"
         >
           <button

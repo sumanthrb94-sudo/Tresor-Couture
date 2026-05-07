@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 120" role="img" aria-label="Trésor Couture horizontal lockup">
+  <title>Trésor Couture</title>
+  <defs>
+    <linearGradient id="hz-gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#D8B97A"/>
+      <stop offset="50%" stop-color="#B8893A"/>
+      <stop offset="100%" stop-color="#8E6520"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Mark (compact TC) -->
+  <g transform="translate(20 20) scale(1.2)" fill="url(#hz-gold)">
+    <path d="M 12 14 L 12 12 Q 12 11 13 11 L 38 11 Q 39 11 39 12 L 39 14 L 36 16 L 17 16 L 14 14 Z"/>
+    <path d="M 23 16 L 23 56 L 21 58 L 21 60 L 30 60 L 30 58 L 28 56 L 28 16 Z"/>
+  </g>
+  <g transform="translate(20 20) scale(1.2)" fill="none" stroke="url(#hz-gold)" stroke-width="3" stroke-linecap="round">
+    <path d="M 51 22 C 44 22 40 30 40 38 C 40 46 44 54 51 54"/>
+  </g>
+
+  <!-- Wordmark -->
+  <g fill="url(#hz-gold)" font-family="'Cormorant Garamond', 'Times New Roman', serif">
+    <text x="140" y="60" font-size="42" letter-spacing="6">TRÉSOR</text>
+    <text x="140" y="88" font-size="14" letter-spacing="10">COUTURE</text>
+  </g>
+
+  <line x1="140" y1="74" x2="320" y2="74" stroke="url(#hz-gold)" stroke-width="0.6" opacity="0.8"/>
+</svg>
