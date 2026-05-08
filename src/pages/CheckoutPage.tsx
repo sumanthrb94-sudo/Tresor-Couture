@@ -36,8 +36,8 @@ const CheckoutPage: React.FC = () => {
 
   if (resolved.length === 0) {
     return (
-      <main className="pt-[160px] pb-[120px] min-h-screen text-center px-6">
-        <h1 className="font-serif text-4xl gold-text mb-4">Your bag is empty</h1>
+      <main className="pt-32 md:pt-[160px] pb-20 md:pb-[120px] min-h-screen text-center px-5">
+        <h1 className="font-serif text-3xl md:text-4xl gold-text mb-4">Your bag is empty</h1>
         <button onClick={() => navigate({ name: 'shop' })} className="btn-gold">
           Continue shopping
         </button>
@@ -102,19 +102,19 @@ const CheckoutPage: React.FC = () => {
   );
 
   return (
-    <main className="flex-grow pt-[120px] pb-[120px] px-6 md:px-16 max-w-[1280px] mx-auto w-full">
-      <div className="mb-12">
-        <h1 className="font-serif text-5xl md:text-[48px] gold-text mb-4">Checkout</h1>
-        <p className="text-base text-brand-ink-soft">Final details before we hand-cut and dispatch your weaves.</p>
+    <main className="flex-grow pt-24 md:pt-[120px] pb-20 md:pb-[120px] px-5 md:px-16 max-w-[1280px] mx-auto w-full">
+      <div className="mb-10 md:mb-12">
+        <h1 className="font-serif text-[40px] md:text-[48px] gold-text mb-3 md:mb-4">Checkout</h1>
+        <p className="text-sm md:text-base text-brand-ink-soft">Final details before we hand-cut and dispatch your weaves.</p>
       </div>
 
       <form onSubmit={placeOrder} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 flex flex-col gap-10">
           {/* Shipping */}
-          <section className="bg-brand-bg-soft p-8 border border-brand-outline/30">
+          <section className="bg-brand-bg-soft p-6 md:p-8 border border-brand-outline/30">
             <div className="flex items-center gap-3 mb-6">
               <Truck className="w-5 h-5 text-brand-gold" />
-              <h2 className="font-serif text-2xl text-brand-ink">Shipping Details</h2>
+              <h2 className="font-serif text-xl md:text-2xl text-brand-ink">Shipping Details</h2>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -155,10 +155,10 @@ const CheckoutPage: React.FC = () => {
           </section>
 
           {/* Payment */}
-          <section className="bg-brand-bg-soft p-8 border border-brand-outline/30">
+          <section className="bg-brand-bg-soft p-6 md:p-8 border border-brand-outline/30">
             <div className="flex items-center gap-3 mb-6">
               <Lock className="w-5 h-5 text-brand-gold" />
-              <h2 className="font-serif text-2xl text-brand-ink">Payment</h2>
+              <h2 className="font-serif text-xl md:text-2xl text-brand-ink">Payment</h2>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
@@ -232,8 +232,8 @@ const CheckoutPage: React.FC = () => {
         </div>
 
         <aside className="lg:col-span-4">
-          <div className="bg-brand-bg-soft p-8 sticky top-[120px] border border-brand-outline/30">
-            <h2 className="font-serif text-2xl text-brand-ink mb-6 border-b border-brand-outline/30 pb-4">Order Summary</h2>
+          <div className="bg-brand-bg-soft p-6 md:p-8 lg:sticky lg:top-[120px] border border-brand-outline/30">
+            <h2 className="font-serif text-xl md:text-2xl text-brand-ink mb-5 md:mb-6 border-b border-brand-outline/30 pb-4">Order Summary</h2>
             <ul className="space-y-4 mb-6 max-h-[280px] overflow-auto pr-2">
               {resolved.map(({ item, fabric }) => (
                 <li key={`${fabric.id}-${item.color ?? ''}`} className="flex gap-3 pb-4 border-b border-brand-outline/30 last:border-b-0 last:pb-0">
@@ -253,9 +253,9 @@ const CheckoutPage: React.FC = () => {
               <div className="flex justify-between"><dt className="text-brand-ink-soft">Shipping</dt><dd>{shipping === 0 ? 'Free' : formatINR(shipping)}</dd></div>
               <div className="flex justify-between"><dt className="text-brand-ink-soft">GST</dt><dd>{formatINR(tax)}</dd></div>
             </dl>
-            <div className="flex justify-between items-end mt-6 mb-8 pt-4 border-t border-brand-gold/20">
-              <span className="font-serif text-2xl text-brand-ink">Total</span>
-              <span className="font-serif text-[32px] gold-text">{formatINR(total)}</span>
+            <div className="flex justify-between items-end mt-5 md:mt-6 mb-6 md:mb-8 pt-4 border-t border-brand-gold/20">
+              <span className="font-serif text-xl md:text-2xl text-brand-ink">Total</span>
+              <span className="font-serif text-[28px] md:text-[32px] gold-text">{formatINR(total)}</span>
             </div>
             <button type="submit" disabled={placing} className="btn-gold w-full">
               {placing ? 'Placing Order…' : `Place Order · ${formatINR(total)}`}

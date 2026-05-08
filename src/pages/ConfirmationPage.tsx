@@ -16,8 +16,8 @@ const ConfirmationPage: React.FC<Props> = ({ orderId }) => {
 
   if (!order) {
     return (
-      <main className="pt-[160px] pb-[120px] min-h-screen text-center px-6">
-        <h1 className="font-serif text-4xl gold-text mb-4">Order not found</h1>
+      <main className="pt-32 md:pt-[160px] pb-20 md:pb-[120px] min-h-screen text-center px-5">
+        <h1 className="font-serif text-3xl md:text-4xl gold-text mb-4">Order not found</h1>
         <button onClick={() => navigate({ name: 'shop' })} className="btn-gold">Back to Shop</button>
       </main>
     );
@@ -27,24 +27,24 @@ const ConfirmationPage: React.FC<Props> = ({ orderId }) => {
   const eta = new Date(placedDate.getTime() + 6 * 24 * 60 * 60 * 1000);
 
   return (
-    <main className="flex-grow pt-[120px] pb-[120px] px-6 md:px-16 max-w-3xl mx-auto w-full">
-      <div className="text-center mb-12">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-brand-surface border border-brand-gold mb-6">
-          <CheckCircle2 className="w-10 h-10 text-brand-gold" />
+    <main className="flex-grow pt-24 md:pt-[120px] pb-20 md:pb-[120px] px-5 md:px-16 max-w-3xl mx-auto w-full">
+      <div className="text-center mb-10 md:mb-12">
+        <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-full bg-brand-surface border border-brand-gold mb-5 md:mb-6">
+          <CheckCircle2 className="w-8 h-8 md:w-10 md:h-10 text-brand-gold" />
         </div>
         <span className="text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-gold mb-3 block">
           Order Confirmed
         </span>
-        <h1 className="font-serif text-5xl md:text-[48px] gold-text mb-4">
+        <h1 className="font-serif text-[36px] md:text-[48px] gold-text mb-3 md:mb-4 leading-tight">
           Thank you, {order.shippingAddress.fullName.split(' ')[0]}
         </h1>
-        <p className="text-base text-brand-ink-soft max-w-lg mx-auto">
+        <p className="text-sm md:text-base text-brand-ink-soft max-w-lg mx-auto">
           Your weaves are being prepared by hand. A confirmation has been sent to{' '}
           <span className="text-brand-ink">{order.shippingAddress.email}</span>.
         </p>
       </div>
 
-      <div className="bg-brand-bg-soft border border-brand-outline/30 p-8 mb-8">
+      <div className="bg-brand-bg-soft border border-brand-outline/30 p-6 md:p-8 mb-6 md:mb-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8 pb-8 border-b border-brand-outline/30">
           <div>
             <p className="text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-ink-soft mb-2">Order Number</p>
@@ -100,7 +100,7 @@ const ConfirmationPage: React.FC<Props> = ({ orderId }) => {
         </dl>
       </div>
 
-      <div className="bg-brand-bg-soft border border-brand-outline/30 p-8 mb-8">
+      <div className="bg-brand-bg-soft border border-brand-outline/30 p-6 md:p-8 mb-6 md:mb-8">
         <h2 className="text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-ink-soft mb-4">Shipping To</h2>
         <p className="text-base leading-relaxed">
           {order.shippingAddress.fullName}<br />

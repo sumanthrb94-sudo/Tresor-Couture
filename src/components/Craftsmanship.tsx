@@ -10,12 +10,12 @@ const STATS = [
 
 const Craftsmanship = () => {
   return (
-    <section id="craft" className="py-[120px] px-6 md:px-16 max-w-[1280px] mx-auto">
-      <div className="text-center max-w-2xl mx-auto mb-16">
+    <section id="craft" className="py-20 md:py-[120px] px-5 md:px-16 max-w-[1280px] mx-auto">
+      <div className="text-center max-w-2xl mx-auto mb-12 md:mb-16">
         <span className="text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-gold mb-3 block">
           Quality Above All
         </span>
-        <h2 className="font-serif text-5xl md:text-[64px] gold-text leading-[1.1] tracking-[-0.02em] mb-6">
+        <h2 className="font-serif text-[40px] md:text-5xl lg:text-[64px] gold-text leading-[1.1] tracking-[-0.02em] mb-5 md:mb-6">
           The Art of the <em>Perfect Thread</em>
         </h2>
         <p className="text-base text-brand-ink-soft leading-relaxed">
@@ -33,10 +33,10 @@ const Craftsmanship = () => {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: idx * 0.1 }}
             viewport={{ once: true }}
-            className="bg-brand-bg p-8 md:p-10 text-center"
+            className="bg-brand-bg p-6 md:p-10 text-center"
           >
-            <p className="font-serif text-[64px] gold-text leading-none mb-3">{s.value}</p>
-            <p className="text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-ink-soft">
+            <p className="font-serif text-[44px] md:text-[64px] gold-text leading-none mb-2 md:mb-3">{s.value}</p>
+            <p className="text-[10px] md:text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-ink-soft">
               {s.label}
             </p>
           </motion.div>

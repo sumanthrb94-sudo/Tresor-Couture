@@ -30,8 +30,8 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
 
   if (!fabric) {
     return (
-      <main className="pt-[160px] pb-[120px] min-h-screen text-center px-6">
-        <h1 className="font-serif text-4xl text-brand-gold mb-4">Weave not found</h1>
+      <main className="pt-32 md:pt-[160px] pb-20 md:pb-[120px] min-h-screen text-center px-5">
+        <h1 className="font-serif text-3xl md:text-4xl text-brand-gold mb-4">Weave not found</h1>
         <button onClick={() => navigate({ name: 'shop' })} className="btn-gold">Back to Shop</button>
       </main>
     );
@@ -47,8 +47,8 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
   };
 
   return (
-    <main className="flex-grow pt-[120px] pb-[120px] px-6 md:px-16 max-w-[1280px] mx-auto w-full">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+    <main className="flex-grow pt-24 md:pt-[120px] pb-20 md:pb-[120px] px-5 md:px-16 max-w-[1280px] mx-auto w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-12 lg:gap-16">
         {/* Gallery */}
         <div>
           <motion.div
@@ -66,7 +66,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
             />
           </motion.div>
           {gallery.length > 1 && (
-            <div className="grid grid-cols-5 gap-3 mt-4">
+            <div className="grid grid-cols-4 md:grid-cols-5 gap-2 md:gap-3 mt-3 md:mt-4">
               {gallery.map((g, idx) => (
                 <button
                   key={g.photo}
@@ -84,15 +84,15 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
 
         {/* Info */}
         <div>
-          <h1 className="font-serif text-[40px] md:text-[48px] gold-text leading-tight mb-3">
+          <h1 className="font-serif text-[32px] md:text-[40px] lg:text-[48px] gold-text leading-tight mb-3">
             {fabric.name}
           </h1>
-          <p className="text-base text-brand-ink mb-6">
+          <p className="text-base text-brand-ink mb-5 md:mb-6">
             <span className="font-medium">{formatINR(fabric.pricePerMeter)}</span>
             <span className="text-brand-ink-soft"> / meter</span>
           </p>
 
-          <p className="text-base text-brand-ink-soft leading-relaxed mb-8">
+          <p className="text-sm md:text-base text-brand-ink-soft leading-relaxed mb-6 md:mb-8">
             {fabric.description}
           </p>
 
@@ -148,7 +148,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
           <div className="border-t border-brand-outline/30">
             <button
               onClick={() => setOpenSection(openSection === 'specs' ? null : 'specs')}
-              className="w-full flex justify-between items-center py-5 font-serif text-xl text-brand-ink"
+              className="w-full flex justify-between items-center py-4 md:py-5 font-serif text-lg md:text-xl text-brand-ink"
             >
               Specifications
               <ChevronDown className={`w-5 h-5 transition-transform ${openSection === 'specs' ? 'rotate-180' : ''}`} />
@@ -172,7 +172,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
           <div className="border-t border-brand-outline/30">
             <button
               onClick={() => setOpenSection(openSection === 'care' ? null : 'care')}
-              className="w-full flex justify-between items-center py-5 font-serif text-xl text-brand-ink"
+              className="w-full flex justify-between items-center py-4 md:py-5 font-serif text-lg md:text-xl text-brand-ink"
             >
               Care Instructions
               <ChevronDown className={`w-5 h-5 transition-transform ${openSection === 'care' ? 'rotate-180' : ''}`} />

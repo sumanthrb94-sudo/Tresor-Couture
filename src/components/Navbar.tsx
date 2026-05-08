@@ -85,14 +85,14 @@ const Navbar = () => {
   return (
     <>
       <header
-        className="fixed top-0 left-0 w-full z-50 h-20 flex items-center border-b border-brand-outline/30 transition-all duration-200"
+        className="fixed top-0 left-0 w-full z-50 h-16 md:h-20 flex items-center border-b border-brand-outline/30 transition-all duration-200"
         style={{ backgroundColor: 'rgba(255, 248, 245, 0.85)', backdropFilter: 'blur(14px)' }}
       >
-        <div className="w-full max-w-[1280px] mx-auto px-6 md:px-16 flex items-center justify-between">
+        <div className="w-full max-w-[1280px] mx-auto px-5 md:px-16 flex items-center justify-between">
           {/* Brand */}
           <button
             onClick={() => navigate({ name: 'home' })}
-            className="brand-logotype text-2xl md:text-[28px] text-brand-gold hover:opacity-70 transition-opacity"
+            className="brand-logotype text-[19px] md:text-[28px] text-brand-gold hover:opacity-70 transition-opacity whitespace-nowrap"
           >
             Tresor Couture
           </button>

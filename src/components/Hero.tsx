@@ -9,8 +9,8 @@ const Hero = () => {
   const { navigate } = useRouter();
 
   return (
-    <section className="pt-[120px] pb-[120px] px-6 md:px-16 max-w-[1280px] mx-auto">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+    <section className="pt-24 md:pt-[120px] pb-20 md:pb-[120px] px-5 md:px-16 max-w-[1280px] mx-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-16 items-center">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -19,15 +19,15 @@ const Hero = () => {
           <span className="text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-gold mb-6 block">
             Heritage · Revival · Couture
           </span>
-          <h1 className="font-serif text-5xl md:text-[64px] leading-[1.1] tracking-[-0.02em] gold-text mb-6">
+          <h1 className="font-serif text-[40px] md:text-5xl lg:text-[64px] leading-[1.1] tracking-[-0.02em] gold-text mb-5 md:mb-6">
             A Textile <em>Treasure</em><br />for the Discerning Creator
           </h1>
-          <p className="text-lg text-brand-ink-soft leading-relaxed mb-10 max-w-md">
+          <p className="text-base md:text-lg text-brand-ink-soft leading-relaxed mb-8 md:mb-10 max-w-md">
             We rescue India's dying weaves and place them in the hands of designers who care.
             Each meter is hand-cut and dispatched with an authenticity card signed by the master weaver.
           </p>
           <div className="flex flex-wrap gap-4 items-center">
-            <button onClick={() => navigate({ name: 'shop' })} className="btn-gold">
+            <button onClick={() => navigate({ name: 'shop' })} className="btn-gold w-full sm:w-auto">
               Shop the Atelier
             </button>
             <button
@@ -53,10 +53,10 @@ const Hero = () => {
             className="w-full h-full object-cover"
           />
           <div
-            className="absolute bottom-6 left-6 bg-brand-bg-soft px-6 py-4 max-w-[200px] border border-brand-outline/30"
+            className="absolute bottom-4 left-4 md:bottom-6 md:left-6 bg-brand-bg-soft px-4 py-3 md:px-6 md:py-4 max-w-[180px] md:max-w-[200px] border border-brand-outline/30"
           >
-            <p className="text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-gold mb-1">Selected Weave</p>
-            <p className="font-serif italic text-xl text-brand-ink leading-tight">Varanasi Gold</p>
+            <p className="text-[10px] md:text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-gold mb-1">Selected Weave</p>
+            <p className="font-serif italic text-lg md:text-xl text-brand-ink leading-tight">Varanasi Gold</p>
           </div>
         </motion.div>
       </div>

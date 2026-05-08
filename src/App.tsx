@@ -26,12 +26,12 @@ const Home: React.FC = () => (
     <Founder />
     <Craftsmanship />
 
-    <section className="py-[120px] px-6 md:px-16 max-w-[1280px] mx-auto bg-brand-bg-soft border-y border-brand-outline/30">
+    <section className="py-20 md:py-[120px] px-5 md:px-16 max-w-[1280px] mx-auto bg-brand-bg-soft border-y border-brand-outline/30">
       <div className="max-w-3xl mx-auto text-center">
         <span className="text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-gold mb-4 block">
           Inner Circle
         </span>
-        <h2 className="font-serif text-4xl md:text-5xl gold-text leading-tight tracking-[-0.01em] mb-6">
+        <h2 className="font-serif text-[32px] md:text-4xl lg:text-5xl gold-text leading-tight tracking-[-0.01em] mb-5 md:mb-6">
           Discover new weaves <em>before the world</em>
         </h2>
         <p className="text-base text-brand-ink-soft mb-10 max-w-xl mx-auto leading-relaxed">
@@ -44,7 +44,7 @@ const Home: React.FC = () => (
             required
             className="input-underline flex-grow text-base text-brand-ink"
           />
-          <button type="submit" className="btn-gold whitespace-nowrap">
+          <button type="submit" className="btn-gold whitespace-nowrap w-full sm:w-auto">
             Subscribe
           </button>
         </form>

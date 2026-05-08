@@ -5,9 +5,9 @@ const Founder = () => {
   return (
     <section
       id="founder"
-      className="py-[120px] px-6 md:px-16 max-w-[1280px] mx-auto bg-brand-bg-soft border-y border-brand-outline/30"
+      className="py-20 md:py-[120px] px-5 md:px-16 max-w-[1280px] mx-auto bg-brand-bg-soft border-y border-brand-outline/30"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
         <motion.div
           initial={{ scale: 0.96, opacity: 0 }}
           whileInView={{ scale: 1, opacity: 1 }}
@@ -32,7 +32,7 @@ const Founder = () => {
           <span className="text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-gold mb-6 block">
             The Rescue Mission
           </span>
-          <h2 className="font-serif text-4xl md:text-5xl gold-text leading-tight tracking-[-0.01em] mb-8">
+          <h2 className="font-serif text-[32px] md:text-4xl lg:text-5xl gold-text leading-tight tracking-[-0.01em] mb-6 md:mb-8">
             Hand-woven by the last <em>four families</em> on earth.
           </h2>
           <div className="space-y-5 text-base text-brand-ink-soft leading-relaxed">

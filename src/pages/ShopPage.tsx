@@ -38,18 +38,17 @@ const ShopPage: React.FC<Props> = ({ initialCategory }) => {
   }, [category, colorFilter, sort]);
 
   return (
-    <main className="flex-grow pt-[120px] pb-[120px] px-6 md:px-16 max-w-[1280px] mx-auto w-full">
-      <div className="text-center mb-16">
-        <h1 className="font-serif text-5xl md:text-[64px] gold-text mb-4">Artisanal Gallery</h1>
-        <p className="text-base text-brand-ink-soft max-w-xl mx-auto">
+    <main className="flex-grow pt-24 md:pt-[120px] pb-20 md:pb-[120px] px-5 md:px-16 max-w-[1280px] mx-auto w-full">
+      <div className="text-center mb-10 md:mb-16">
+        <h1 className="font-serif text-[40px] md:text-5xl lg:text-[64px] gold-text mb-3 md:mb-4">Artisanal Gallery</h1>
+        <p className="text-sm md:text-base text-brand-ink-soft max-w-xl mx-auto">
           Discover our exclusive collection of premium fabrics, curated for the discerning creator.
-          Explore textures that transcend time.
         </p>
       </div>
 
       {/* Filter strip */}
-      <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-12 border-b border-brand-outline/30 pb-6">
-        <div className="flex flex-wrap items-center gap-6">
+      <div className="flex flex-row flex-wrap justify-between items-center gap-x-5 gap-y-3 mb-8 md:mb-12 border-b border-brand-outline/30 pb-4 md:pb-6">
+        <div className="flex flex-wrap items-center gap-x-5 md:gap-x-6 gap-y-2">
           <div className="relative">
             <select
               value={category}
@@ -73,8 +72,8 @@ const ShopPage: React.FC<Props> = ({ initialCategory }) => {
             <ChevronDown className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         </div>
-        <div className="flex items-center gap-6">
-          <span className="text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-ink-soft">
+        <div className="flex items-center gap-4 md:gap-6">
+          <span className="hidden sm:inline text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-ink-soft">
             {filtered.length} items
           </span>
           <div className="relative">
@@ -99,7 +98,7 @@ const ShopPage: React.FC<Props> = ({ initialCategory }) => {
           <p className="text-sm text-brand-ink-soft">Try widening your selection.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12">
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-8 md:gap-y-12">
           {filtered.map((fabric, idx) => (
             <motion.button
               key={fabric.id}
@@ -109,7 +108,7 @@ const ShopPage: React.FC<Props> = ({ initialCategory }) => {
               onClick={() => navigate({ name: 'product', id: fabric.id })}
               className="group text-left"
             >
-              <div className="aspect-[4/3] overflow-hidden bg-brand-surface mb-5">
+              <div className="aspect-[4/5] md:aspect-[4/3] overflow-hidden bg-brand-surface mb-3 md:mb-5">
                 <FabricImage
                   photo={fabric.photo}
                   fallback={fabric.image}
@@ -117,14 +116,14 @@ const ShopPage: React.FC<Props> = ({ initialCategory }) => {
                   className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-1000"
                 />
               </div>
-              <div className="flex justify-between items-start gap-4">
-                <div>
-                  <h3 className="font-serif text-2xl text-brand-ink leading-tight">{fabric.name}</h3>
-                  <p className="text-[11px] uppercase tracking-[0.1em] font-semibold text-brand-ink-soft mt-1">
+              <div className="flex justify-between items-start gap-2 md:gap-4">
+                <div className="min-w-0">
+                  <h3 className="font-serif text-base md:text-2xl text-brand-ink leading-tight truncate">{fabric.name}</h3>
+                  <p className="text-[10px] md:text-[11px] uppercase tracking-[0.1em] font-semibold text-brand-ink-soft mt-1">
                     {fabric.category}
                   </p>
                 </div>
-                <p className="text-base text-brand-ink whitespace-nowrap">
+                <p className="text-sm md:text-base text-brand-ink whitespace-nowrap shrink-0">
                   {formatINR(fabric.pricePerMeter)}<span className="text-xs text-brand-ink-soft">/m</span>
                 </p>
               </div>
@@ -133,11 +132,11 @@ const ShopPage: React.FC<Props> = ({ initialCategory }) => {
         </div>
       )}
 
-      <div className="mt-16 text-center">
-        <span className="block w-12 h-px bg-brand-outline/40 mx-auto mb-8" />
+      <div className="mt-12 md:mt-16 text-center">
+        <span className="block w-12 h-px bg-brand-outline/40 mx-auto mb-6 md:mb-8" />
         <button
           onClick={() => setCategory('All')}
-          className="border border-brand-gold text-brand-gold px-10 py-3 text-[11px] uppercase tracking-[0.15em] font-semibold hover:bg-brand-gold hover:text-brand-bg transition-all"
+          className="border border-brand-gold text-brand-gold px-8 md:px-10 py-3 text-[11px] uppercase tracking-[0.15em] font-semibold hover:bg-brand-gold hover:text-brand-bg transition-all"
         >
           View Entire Collection
         </button>
