@@ -88,17 +88,17 @@ const Navbar = () => {
         className="fixed top-0 left-0 w-full z-50 h-16 md:h-20 flex items-center border-b border-brand-outline/30 transition-all duration-200"
         style={{ backgroundColor: 'rgba(255, 248, 245, 0.85)', backdropFilter: 'blur(14px)' }}
       >
-        <div className="w-full max-w-[1280px] mx-auto px-5 md:px-16 flex items-center justify-between">
+        <div className="w-full max-w-[1280px] mx-auto px-5 md:px-8 lg:px-16 flex items-center justify-between gap-4">
           {/* Brand */}
           <button
             onClick={() => navigate({ name: 'home' })}
-            className="brand-logotype text-[19px] md:text-[28px] text-brand-gold hover:opacity-70 transition-opacity whitespace-nowrap"
+            className="brand-logotype text-[19px] md:text-2xl lg:text-[28px] text-brand-gold hover:opacity-70 transition-opacity whitespace-nowrap shrink-0"
           >
             Tresor Couture
           </button>
 
-          {/* Center nav */}
-          <nav className="hidden md:flex gap-8">
+          {/* Center nav — full set only at lg+, hamburger handles tablet */}
+          <nav className="hidden lg:flex gap-6 xl:gap-8 min-w-0">
             <button onClick={() => navigate({ name: 'shop' })} className={linkClass(isShop)}>
               Shop
             </button>
@@ -114,9 +114,9 @@ const Navbar = () => {
           </nav>
 
           {/* Right */}
-          <div className="flex gap-4 items-center">
+          <div className="flex gap-3 md:gap-4 items-center shrink-0">
             <button
-              className="md:hidden text-brand-ink"
+              className="lg:hidden text-brand-ink"
               onClick={() => setIsMobileMenuOpen(true)}
               aria-label="Open menu"
             >
@@ -124,13 +124,13 @@ const Navbar = () => {
             </button>
             <button
               onClick={() => navigate({ name: 'shop' })}
-              className="hidden md:block text-brand-gold hover:opacity-70 transition-opacity"
+              className="hidden lg:block text-brand-gold hover:opacity-70 transition-opacity"
               aria-label="Search"
             >
               <Search className="w-5 h-5" />
             </button>
             <button
-              className="hidden md:block text-brand-gold hover:opacity-70 transition-opacity"
+              className="hidden lg:block text-brand-gold hover:opacity-70 transition-opacity"
               aria-label="Account"
             >
               <User className="w-5 h-5" />
