@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
-import { Star } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { CATEGORIES, FABRICS, formatINR } from '../constants';
 import { useRouter } from '../context/RouterContext';
 import { Fabric } from '../types';
@@ -15,189 +15,134 @@ interface Props {
 const ShopPage: React.FC<Props> = ({ initialCategory }) => {
   const { navigate } = useRouter();
   const [category, setCategory] = useState<string>(initialCategory ?? 'All');
-  const [origin, setOrigin] = useState<string>('All');
+  const [colorFilter, setColorFilter] = useState<string>('All');
   const [sort, setSort] = useState<SortKey>('featured');
-  const [maxPrice, setMaxPrice] = useState<number>(30000);
 
-  const origins = useMemo(() => ['All', ...Array.from(new Set(FABRICS.map(f => f.origin)))], []);
+  const colorPalette = useMemo(() => {
+    const set = new Set<string>();
+    FABRICS.forEach(f => f.colors?.forEach(c => set.add(c.name)));
+    return ['All', ...Array.from(set)];
+  }, []);
 
   const filtered = useMemo(() => {
     let list: Fabric[] = FABRICS.filter(f =>
       (category === 'All' || f.category === category) &&
-      (origin === 'All' || f.origin === origin) &&
-      f.pricePerMeter <= maxPrice
+      (colorFilter === 'All' || (f.colors ?? []).some(c => c.name === colorFilter))
     );
     switch (sort) {
-      case 'price-asc':
-        list = [...list].sort((a, b) => a.pricePerMeter - b.pricePerMeter);
-        break;
-      case 'price-desc':
-        list = [...list].sort((a, b) => b.pricePerMeter - a.pricePerMeter);
-        break;
-      case 'rating':
-        list = [...list].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
-        break;
-      default:
-        break;
+      case 'price-asc': list = [...list].sort((a, b) => a.pricePerMeter - b.pricePerMeter); break;
+      case 'price-desc': list = [...list].sort((a, b) => b.pricePerMeter - a.pricePerMeter); break;
+      case 'rating': list = [...list].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0)); break;
     }
     return list;
-  }, [category, origin, sort, maxPrice]);
+  }, [category, colorFilter, sort]);
 
   return (
-    <section className="pt-[140px] pb-32 bg-brand-bg min-h-screen">
-      <div className="max-w-7xl mx-auto px-6 md:px-12">
-        <div className="mb-16">
-          <span className="text-brand-gold text-[9px] uppercase tracking-[0.4em] mb-4 block font-bold">
-            The Atelier
-          </span>
-          <h1 className="text-4xl md:text-6xl font-serif leading-tight">
-            Shop <span className="italic">Our Weaves</span>
-          </h1>
-          <p className="text-brand-ink/60 font-light mt-4 max-w-xl text-sm">
-            Browse the full catalogue. Order by the meter; we cut to length, parcel with care, and ship worldwide.
-          </p>
-        </div>
+    <main className="flex-grow pt-[120px] pb-[120px] px-6 md:px-16 max-w-[1280px] mx-auto w-full">
+      <div className="text-center mb-16">
+        <h1 className="font-serif text-5xl md:text-[64px] gold-text mb-4">Artisanal Gallery</h1>
+        <p className="text-base text-brand-ink-soft max-w-xl mx-auto">
+          Discover our exclusive collection of premium fabrics, curated for the discerning creator.
+          Explore textures that transcend time.
+        </p>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-12">
-          {/* Filters */}
-          <aside className="border border-brand-border bg-white p-8 h-fit lg:sticky lg:top-[120px]">
-            <h2 className="text-[10px] uppercase tracking-[0.3em] font-bold text-brand-gold mb-6">Refine</h2>
-
-            <div className="mb-8">
-              <p className="text-[10px] uppercase tracking-widest font-semibold mb-4">Category</p>
-              <div className="flex flex-col gap-2">
-                {['All', ...CATEGORIES].map(c => (
-                  <button
-                    key={c}
-                    onClick={() => setCategory(c)}
-                    className={`text-left text-sm py-1 transition-colors ${
-                      category === c ? 'text-brand-gold font-semibold' : 'text-brand-ink/70 hover:text-brand-ink'
-                    }`}
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="mb-8">
-              <p className="text-[10px] uppercase tracking-widest font-semibold mb-4">Origin</p>
-              <select
-                value={origin}
-                onChange={e => setOrigin(e.target.value)}
-                className="w-full border border-brand-border bg-brand-bg px-3 py-2 text-sm focus:outline-none focus:border-brand-gold"
-              >
-                {origins.map(o => (
-                  <option key={o} value={o}>
-                    {o}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="mb-8">
-              <p className="text-[10px] uppercase tracking-widest font-semibold mb-4">
-                Max Price · {formatINR(maxPrice)}/m
-              </p>
-              <input
-                type="range"
-                min={1500}
-                max={30000}
-                step={500}
-                value={maxPrice}
-                onChange={e => setMaxPrice(Number(e.target.value))}
-                className="w-full accent-brand-gold"
-              />
-            </div>
-
-            <button
-              onClick={() => {
-                setCategory('All');
-                setOrigin('All');
-                setSort('featured');
-                setMaxPrice(30000);
-              }}
-              className="text-[10px] uppercase tracking-[0.2em] font-bold underline text-brand-ink/60 hover:text-brand-gold"
+      {/* Filter strip */}
+      <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 mb-12 border-b border-brand-outline/30 pb-6">
+        <div className="flex flex-wrap items-center gap-6">
+          <div className="relative">
+            <select
+              value={category}
+              onChange={e => setCategory(e.target.value)}
+              className="appearance-none bg-transparent pr-8 text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-ink hover:text-brand-gold cursor-pointer"
             >
-              Reset Filters
-            </button>
-          </aside>
-
-          {/* Grid */}
-          <div>
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-              <p className="text-sm text-brand-ink/60">
-                {filtered.length} {filtered.length === 1 ? 'weave' : 'weaves'}
-              </p>
-              <div className="flex items-center gap-3">
-                <span className="text-[10px] uppercase tracking-widest text-brand-ink/50">Sort</span>
-                <select
-                  value={sort}
-                  onChange={e => setSort(e.target.value as SortKey)}
-                  className="border border-brand-border bg-white px-3 py-2 text-sm focus:outline-none focus:border-brand-gold"
-                >
-                  <option value="featured">Featured</option>
-                  <option value="price-asc">Price · Low to High</option>
-                  <option value="price-desc">Price · High to Low</option>
-                  <option value="rating">Top Rated</option>
-                </select>
-              </div>
-            </div>
-
-            {filtered.length === 0 ? (
-              <div className="border border-brand-border bg-white p-16 text-center">
-                <p className="font-serif italic text-2xl mb-2">No weaves match your filters.</p>
-                <p className="text-sm text-brand-ink/60">Try widening your selection.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-px bg-brand-border border border-brand-border">
-                {filtered.map((fabric, idx) => (
-                  <motion.button
-                    key={fabric.id}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: idx * 0.04 }}
-                    onClick={() => navigate({ name: 'product', id: fabric.id })}
-                    className="group bg-brand-bg text-left p-6 hover:bg-brand-accent/30 transition-colors duration-500"
-                  >
-                    <div className="relative aspect-[4/5] overflow-hidden mb-5 bg-white border border-brand-border">
-                      <FabricImage
-                        photo={fabric.photo}
-                        fallback={fabric.image}
-                        alt={fabric.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-all duration-1000"
-                      />
-                      {(fabric.inStockMeters ?? 0) < 15 && (
-                        <span className="absolute top-3 left-3 bg-brand-ink text-white text-[8px] uppercase tracking-widest px-2 py-1">
-                          Limited
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[9px] uppercase tracking-[0.3em] text-brand-gold font-bold mb-2">
-                      {fabric.origin}
-                    </p>
-                    <h3 className="text-xl font-serif italic mb-2 group-hover:not-italic transition-all">
-                      {fabric.name}
-                    </h3>
-                    <div className="flex items-center justify-between mt-4">
-                      <span className="text-sm font-medium">
-                        {formatINR(fabric.pricePerMeter)} <span className="text-xs text-brand-ink/50">/ meter</span>
-                      </span>
-                      {fabric.rating && (
-                        <span className="flex items-center gap-1 text-xs text-brand-ink/60">
-                          <Star className="w-3 h-3 fill-brand-gold stroke-brand-gold" />
-                          {fabric.rating.toFixed(1)}
-                        </span>
-                      )}
-                    </div>
-                  </motion.button>
-                ))}
-              </div>
-            )}
+              <option value="All">Material · All</option>
+              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <ChevronDown className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+          <div className="relative">
+            <select
+              value={colorFilter}
+              onChange={e => setColorFilter(e.target.value)}
+              className="appearance-none bg-transparent pr-8 text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-ink hover:text-brand-gold cursor-pointer"
+            >
+              <option value="All">Colour · All</option>
+              {colorPalette.filter(c => c !== 'All').map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <ChevronDown className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+        </div>
+        <div className="flex items-center gap-6">
+          <span className="text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-ink-soft">
+            {filtered.length} items
+          </span>
+          <div className="relative">
+            <select
+              value={sort}
+              onChange={e => setSort(e.target.value as SortKey)}
+              className="appearance-none bg-transparent pr-8 text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-ink hover:text-brand-gold cursor-pointer"
+            >
+              <option value="featured">Sort by · Featured</option>
+              <option value="price-asc">Price · Low to High</option>
+              <option value="price-desc">Price · High to Low</option>
+              <option value="rating">Top Rated</option>
+            </select>
+            <ChevronDown className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         </div>
       </div>
-    </section>
+
+      {filtered.length === 0 ? (
+        <div className="border border-brand-outline/30 bg-brand-bg-soft p-16 text-center">
+          <p className="font-serif text-2xl mb-2">No weaves match your filters.</p>
+          <p className="text-sm text-brand-ink-soft">Try widening your selection.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-12">
+          {filtered.map((fabric, idx) => (
+            <motion.button
+              key={fabric.id}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: idx * 0.05 }}
+              onClick={() => navigate({ name: 'product', id: fabric.id })}
+              className="group text-left"
+            >
+              <div className="aspect-[4/3] overflow-hidden bg-brand-surface mb-5">
+                <FabricImage
+                  photo={fabric.photo}
+                  fallback={fabric.image}
+                  alt={fabric.name}
+                  className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-1000"
+                />
+              </div>
+              <div className="flex justify-between items-start gap-4">
+                <div>
+                  <h3 className="font-serif text-2xl text-brand-ink leading-tight">{fabric.name}</h3>
+                  <p className="text-[11px] uppercase tracking-[0.1em] font-semibold text-brand-ink-soft mt-1">
+                    {fabric.category}
+                  </p>
+                </div>
+                <p className="text-base text-brand-ink whitespace-nowrap">
+                  {formatINR(fabric.pricePerMeter)}<span className="text-xs text-brand-ink-soft">/m</span>
+                </p>
+              </div>
+            </motion.button>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-16 text-center">
+        <span className="block w-12 h-px bg-brand-outline/40 mx-auto mb-8" />
+        <button
+          onClick={() => setCategory('All')}
+          className="border border-brand-gold text-brand-gold px-10 py-3 text-[11px] uppercase tracking-[0.15em] font-semibold hover:bg-brand-gold hover:text-brand-bg transition-all"
+        >
+          View Entire Collection
+        </button>
+      </div>
+    </main>
   );
 };
 

@@ -1,5 +1,5 @@
-import React from 'react';
-import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Gift, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useRouter } from '../context/RouterContext';
 import { formatINR, FREE_SHIPPING_THRESHOLD } from '../constants';
@@ -8,20 +8,18 @@ import FabricImage from '../components/FabricImage';
 const CartPage: React.FC = () => {
   const { resolved, updateMeters, removeItem, subtotal, shipping, tax, total, clear } = useCart();
   const { navigate } = useRouter();
+  const [giftMessage, setGiftMessage] = useState('');
 
   if (resolved.length === 0) {
     return (
-      <section className="pt-[160px] pb-32 min-h-screen bg-brand-bg">
+      <section className="pt-[160px] pb-[120px] min-h-screen">
         <div className="max-w-2xl mx-auto text-center px-6">
-          <ShoppingBag className="w-12 h-12 mx-auto text-brand-ink/30 mb-6" />
-          <h1 className="text-4xl font-serif italic mb-4">Your cart is empty</h1>
-          <p className="text-brand-ink/60 mb-10">
+          <ShoppingBag className="w-12 h-12 mx-auto text-brand-ink-soft/40 mb-6" />
+          <h1 className="font-serif text-5xl text-brand-gold mb-4">Your Bag is Empty</h1>
+          <p className="text-brand-ink-soft mb-10">
             Begin with a single bolt. Cut to length, dispatched with care.
           </p>
-          <button
-            onClick={() => navigate({ name: 'shop' })}
-            className="bg-brand-ink text-white px-10 py-4 text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-brand-gold transition-colors duration-500"
-          >
+          <button onClick={() => navigate({ name: 'shop' })} className="btn-gold">
             Browse the Atelier
           </button>
         </div>
@@ -29,145 +27,183 @@ const CartPage: React.FC = () => {
     );
   }
 
+  const stockOf = (id: string) => {
+    const r = resolved.find(({ fabric }) => fabric.id === id);
+    return r?.fabric.inStockMeters ?? 999;
+  };
+
   const remainingForFreeShip = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
 
   return (
-    <section className="pt-[140px] pb-32 min-h-screen bg-brand-bg">
-      <div className="max-w-7xl mx-auto px-6 md:px-12">
-        <h1 className="text-4xl md:text-5xl font-serif mb-12">
-          Your <span className="italic">Cart</span>
-        </h1>
+    <main className="flex-grow pt-[120px] pb-[120px] px-6 md:px-16 max-w-[1280px] mx-auto w-full">
+      <div className="mb-12 text-center md:text-left">
+        <h1 className="font-serif text-5xl md:text-[48px] gold-text mb-4">Your Bag</h1>
+        <p className="text-base text-brand-ink-soft">
+          Review your selections before proceeding to checkout.
+        </p>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-12">
-          {/* Line items */}
-          <div className="border border-brand-border bg-white">
-            <div className="hidden md:grid grid-cols-[80px_1fr_140px_140px_40px] gap-4 px-6 py-4 border-b border-brand-border text-[10px] uppercase tracking-widest text-brand-ink/50">
-              <span></span>
-              <span>Item</span>
-              <span>Length</span>
-              <span className="text-right">Total</span>
-              <span></span>
-            </div>
-
-            {resolved.map(({ item, fabric }) => {
-              const lineTotal = item.meters * fabric.pricePerMeter;
-              const stock = fabric.inStockMeters ?? 999;
-              return (
-                <div
-                  key={`${fabric.id}-${item.color ?? ''}`}
-                  className="grid grid-cols-[80px_1fr_auto] md:grid-cols-[80px_1fr_140px_140px_40px] gap-4 items-center px-6 py-6 border-b border-brand-border last:border-b-0"
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Items */}
+        <div className="lg:col-span-8 flex flex-col gap-8">
+          {resolved.map(({ item, fabric }) => {
+            const lineTotal = item.meters * fabric.pricePerMeter;
+            const stock = stockOf(fabric.id);
+            const options: number[] = [];
+            for (let i = 0.5; i <= Math.min(stock, 10); i += 0.5) options.push(i);
+            return (
+              <div
+                key={`${fabric.id}-${item.color ?? ''}`}
+                className="flex flex-col md:flex-row gap-6 pb-8 border-b border-brand-outline/30"
+              >
+                <button
+                  onClick={() => navigate({ name: 'product', id: fabric.id })}
+                  className="w-full md:w-48 aspect-square overflow-hidden bg-brand-surface block"
                 >
-                  <button onClick={() => navigate({ name: 'product', id: fabric.id })} className="block">
-                    <FabricImage
-                      photo={fabric.photo}
-                      fallback={fabric.image}
-                      alt={fabric.name}
-                      className="w-20 h-20 object-cover border border-brand-border"
-                    />
-                  </button>
-                  <div className="min-w-0">
-                    <button
-                      onClick={() => navigate({ name: 'product', id: fabric.id })}
-                      className="text-left"
-                    >
-                      <p className="font-serif italic text-lg leading-tight">{fabric.name}</p>
-                    </button>
-                    <p className="text-[10px] uppercase tracking-widest text-brand-ink/50 mt-1">
-                      {fabric.origin}
-                      {item.color ? ` · ${item.color}` : ''}
+                  <FabricImage
+                    photo={fabric.photo}
+                    fallback={fabric.image}
+                    alt={fabric.name}
+                    className="w-full h-full object-cover object-center"
+                  />
+                </button>
+                <div className="flex-grow flex flex-col justify-between">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <button
+                        onClick={() => navigate({ name: 'product', id: fabric.id })}
+                        className="text-left"
+                      >
+                        <h3 className="font-serif text-2xl text-brand-ink mb-2">{fabric.name}</h3>
+                      </button>
+                      <p className="text-[11px] uppercase tracking-[0.1em] text-brand-ink-soft mb-1 font-semibold">
+                        SKU: {fabric.weaveType?.split(' ')[0].toUpperCase()}-{fabric.id.padStart(3, '0')}
+                      </p>
+                      <p className="text-base text-brand-ink-soft">
+                        Cut: {item.meters} m{item.color ? ` · ${item.color}` : ''}
+                      </p>
+                    </div>
+                    <p className="text-lg text-brand-ink font-medium whitespace-nowrap">
+                      {formatINR(lineTotal)}
                     </p>
-                    <p className="text-xs text-brand-ink/60 mt-1">{formatINR(fabric.pricePerMeter)} / m</p>
                   </div>
-
-                  <div className="flex items-center border border-brand-border w-fit md:col-start-3">
+                  <div className="flex justify-between items-end">
+                    <div className="flex items-center gap-4">
+                      <label className="sr-only" htmlFor={`qty-${fabric.id}`}>Length</label>
+                      <select
+                        id={`qty-${fabric.id}`}
+                        value={item.meters}
+                        onChange={e => updateMeters(fabric.id, item.color, Number(e.target.value))}
+                        className="input-underline text-base text-brand-ink py-1 pr-6 cursor-pointer"
+                      >
+                        {options.map(opt => (
+                          <option key={opt} value={opt}>{opt} m</option>
+                        ))}
+                      </select>
+                    </div>
                     <button
-                      onClick={() => updateMeters(fabric.id, item.color, Math.max(0, item.meters - 0.5))}
-                      className="px-3 py-2 hover:bg-brand-accent"
-                      aria-label="Decrease length"
+                      onClick={() => removeItem(fabric.id, item.color)}
+                      className="text-[11px] uppercase tracking-[0.1em] font-semibold text-brand-ink-soft hover:text-red-700 transition-colors underline underline-offset-4"
                     >
-                      <Minus className="w-3 h-3" />
-                    </button>
-                    <span className="px-3 py-2 text-sm min-w-[60px] text-center">{item.meters} m</span>
-                    <button
-                      onClick={() => updateMeters(fabric.id, item.color, Math.min(stock, item.meters + 0.5))}
-                      className="px-3 py-2 hover:bg-brand-accent"
-                      aria-label="Increase length"
-                    >
-                      <Plus className="w-3 h-3" />
+                      Remove
                     </button>
                   </div>
-
-                  <p className="font-medium md:text-right md:col-start-4">{formatINR(lineTotal)}</p>
-
-                  <button
-                    onClick={() => removeItem(fabric.id, item.color)}
-                    className="text-brand-ink/40 hover:text-brand-gold md:col-start-5 justify-self-end"
-                    aria-label="Remove"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
                 </div>
-              );
-            })}
+              </div>
+            );
+          })}
 
-            <div className="px-6 py-4 flex justify-between items-center">
-              <button
-                onClick={() => navigate({ name: 'shop' })}
-                className="text-[10px] uppercase tracking-widest underline text-brand-ink/60 hover:text-brand-gold"
-              >
-                Continue shopping
-              </button>
-              <button
-                onClick={clear}
-                className="text-[10px] uppercase tracking-widest text-brand-ink/40 hover:text-brand-gold"
-              >
-                Clear cart
-              </button>
-            </div>
+          <div className="flex justify-between items-center -mt-2">
+            <button
+              onClick={() => navigate({ name: 'shop' })}
+              className="text-[11px] uppercase tracking-[0.1em] font-semibold text-brand-ink-soft hover:text-brand-gold underline underline-offset-4"
+            >
+              Continue shopping
+            </button>
+            <button
+              onClick={clear}
+              className="text-[11px] uppercase tracking-[0.1em] font-semibold text-brand-ink-soft hover:text-brand-gold"
+            >
+              Clear bag
+            </button>
           </div>
 
-          {/* Summary */}
-          <aside className="border border-brand-border bg-white p-8 h-fit lg:sticky lg:top-[120px]">
-            <h2 className="text-[10px] uppercase tracking-[0.3em] font-bold text-brand-gold mb-6">Order Summary</h2>
+          {/* Gift message */}
+          <div className="mt-8 bg-brand-bg-soft p-8 border border-brand-outline/30 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-brand-gold" />
+            <h4 className="font-serif text-2xl text-brand-ink mb-4 flex items-center gap-2">
+              <Gift className="w-5 h-5 text-brand-gold" />
+              Personalized Artisanal Note
+            </h4>
+            <p className="text-base text-brand-ink-soft mb-6 max-w-2xl">
+              Elevate your order with a handwritten note on our signature textured cardstock,
+              perfect for gifting to a fellow creator.
+            </p>
+            <div className="relative w-full max-w-xl">
+              <label
+                htmlFor="gift-message"
+                className="block text-[11px] uppercase tracking-[0.1em] font-semibold text-brand-ink-soft mb-1"
+              >
+                Your Message
+              </label>
+              <textarea
+                id="gift-message"
+                value={giftMessage}
+                onChange={e => setGiftMessage(e.target.value)}
+                rows={3}
+                className="input-underline text-base text-brand-ink"
+                placeholder="Hand-written by our atelier…"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Summary */}
+        <aside className="lg:col-span-4">
+          <div className="bg-brand-bg-soft p-8 sticky top-[120px] border border-brand-outline/30">
+            <h2 className="font-serif text-2xl text-brand-ink mb-6 border-b border-brand-outline/30 pb-4">
+              Order Summary
+            </h2>
 
             {remainingForFreeShip > 0 && (
-              <div className="bg-brand-accent/40 border border-brand-border p-3 mb-6 text-xs leading-relaxed">
+              <p className="text-sm bg-brand-surface border border-brand-outline/30 p-3 mb-6 leading-relaxed">
                 Add <span className="font-semibold">{formatINR(remainingForFreeShip)}</span> more for complimentary worldwide shipping.
-              </div>
+              </p>
             )}
 
-            <dl className="space-y-3 text-sm border-b border-brand-border pb-6 mb-6">
+            <dl className="space-y-4 mb-8">
               <div className="flex justify-between">
-                <dt className="text-brand-ink/60">Subtotal</dt>
-                <dd>{formatINR(subtotal)}</dd>
+                <dt className="text-base text-brand-ink-soft">Subtotal</dt>
+                <dd className="text-base text-brand-ink">{formatINR(subtotal)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-brand-ink/60">Shipping</dt>
-                <dd>{shipping === 0 ? 'Free' : formatINR(shipping)}</dd>
+                <dt className="text-base text-brand-ink-soft">Shipping</dt>
+                <dd className="text-base text-brand-ink">{shipping === 0 ? 'Free' : formatINR(shipping)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-brand-ink/60">GST (5%)</dt>
-                <dd>{formatINR(tax)}</dd>
+                <dt className="text-base text-brand-ink-soft">GST</dt>
+                <dd className="text-base text-brand-ink">{formatINR(tax)}</dd>
               </div>
             </dl>
-            <div className="flex justify-between items-end mb-8">
-              <span className="text-[10px] uppercase tracking-[0.3em] font-bold">Total</span>
-              <span className="text-2xl font-serif">{formatINR(total)}</span>
+
+            <div className="flex justify-between items-end mb-8 pt-6 border-t border-brand-gold/20">
+              <span className="font-serif text-2xl text-brand-ink">Total</span>
+              <span className="font-serif text-[32px] gold-text">{formatINR(total)}</span>
             </div>
 
             <button
               onClick={() => navigate({ name: 'checkout' })}
-              className="w-full bg-brand-ink text-white py-4 text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-brand-gold transition-colors duration-500"
+              className="btn-gold w-full mb-4"
             >
               Proceed to Checkout
             </button>
-            <p className="text-[10px] text-brand-ink/40 mt-4 text-center">
-              Secure checkout · Concierge available
+            <p className="text-[11px] uppercase tracking-[0.1em] font-semibold text-brand-ink-soft text-center">
+              Secure Checkout
             </p>
-          </aside>
-        </div>
+          </div>
+        </aside>
       </div>
-    </section>
+    </main>
   );
 };
 

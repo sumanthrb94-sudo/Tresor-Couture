@@ -36,15 +36,12 @@ const CheckoutPage: React.FC = () => {
 
   if (resolved.length === 0) {
     return (
-      <section className="pt-[160px] pb-32 min-h-screen text-center px-6">
-        <h1 className="text-3xl font-serif italic mb-4">Your cart is empty</h1>
-        <button
-          onClick={() => navigate({ name: 'shop' })}
-          className="text-[10px] uppercase tracking-widest underline"
-        >
+      <main className="pt-[160px] pb-[120px] min-h-screen text-center px-6">
+        <h1 className="font-serif text-4xl gold-text mb-4">Your bag is empty</h1>
+        <button onClick={() => navigate({ name: 'shop' })} className="btn-gold">
           Continue shopping
         </button>
-      </section>
+      </main>
     );
   }
 
@@ -94,287 +91,179 @@ const CheckoutPage: React.FC = () => {
     navigate({ name: 'confirmation', orderId: order.id });
   };
 
-  const fieldClass = (key: string) =>
-    `w-full border ${
-      errors[key] ? 'border-red-400' : 'border-brand-border'
-    } bg-brand-bg px-4 py-3 text-sm focus:outline-none focus:border-brand-gold`;
+  const Field: React.FC<{ label: string; field: string; children: React.ReactNode }> = ({ label, field, children }) => (
+    <div>
+      <label className="block text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-ink-soft mb-2">
+        {label}
+      </label>
+      {children}
+      {errors[field] && <p className="text-xs text-red-700 mt-1">{errors[field]}</p>}
+    </div>
+  );
 
   return (
-    <section className="pt-[140px] pb-32 min-h-screen bg-brand-bg">
-      <div className="max-w-7xl mx-auto px-6 md:px-12">
-        <h1 className="text-4xl md:text-5xl font-serif mb-12">
-          <span className="italic">Checkout</span>
-        </h1>
+    <main className="flex-grow pt-[120px] pb-[120px] px-6 md:px-16 max-w-[1280px] mx-auto w-full">
+      <div className="mb-12">
+        <h1 className="font-serif text-5xl md:text-[48px] gold-text mb-4">Checkout</h1>
+        <p className="text-base text-brand-ink-soft">Final details before we hand-cut and dispatch your weaves.</p>
+      </div>
 
-        <form onSubmit={placeOrder} className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-12">
-          <div className="space-y-10">
-            {/* Shipping */}
-            <div className="border border-brand-border bg-white p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <Truck className="w-5 h-5 text-brand-gold" />
-                <h2 className="text-[10px] uppercase tracking-[0.3em] font-bold">Shipping Details</h2>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="sm:col-span-2">
-                  <label className="text-[10px] uppercase tracking-widest text-brand-ink/60">Full Name</label>
-                  <input
-                    type="text"
-                    value={address.fullName}
-                    onChange={e => setField('fullName', e.target.value)}
-                    className={fieldClass('fullName')}
-                  />
-                  {errors.fullName && <p className="text-xs text-red-500 mt-1">{errors.fullName}</p>}
-                </div>
-                <div>
-                  <label className="text-[10px] uppercase tracking-widest text-brand-ink/60">Email</label>
-                  <input
-                    type="email"
-                    value={address.email}
-                    onChange={e => setField('email', e.target.value)}
-                    className={fieldClass('email')}
-                  />
-                  {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
-                </div>
-                <div>
-                  <label className="text-[10px] uppercase tracking-widest text-brand-ink/60">Phone</label>
-                  <input
-                    type="tel"
-                    value={address.phone}
-                    onChange={e => setField('phone', e.target.value)}
-                    className={fieldClass('phone')}
-                  />
-                  {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="text-[10px] uppercase tracking-widest text-brand-ink/60">Address Line 1</label>
-                  <input
-                    type="text"
-                    value={address.line1}
-                    onChange={e => setField('line1', e.target.value)}
-                    className={fieldClass('line1')}
-                  />
-                  {errors.line1 && <p className="text-xs text-red-500 mt-1">{errors.line1}</p>}
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="text-[10px] uppercase tracking-widest text-brand-ink/60">Address Line 2 (optional)</label>
-                  <input
-                    type="text"
-                    value={address.line2 ?? ''}
-                    onChange={e => setField('line2', e.target.value)}
-                    className={fieldClass('line2')}
-                  />
-                </div>
-                <div>
-                  <label className="text-[10px] uppercase tracking-widest text-brand-ink/60">City</label>
-                  <input
-                    type="text"
-                    value={address.city}
-                    onChange={e => setField('city', e.target.value)}
-                    className={fieldClass('city')}
-                  />
-                  {errors.city && <p className="text-xs text-red-500 mt-1">{errors.city}</p>}
-                </div>
-                <div>
-                  <label className="text-[10px] uppercase tracking-widest text-brand-ink/60">State</label>
-                  <input
-                    type="text"
-                    value={address.state}
-                    onChange={e => setField('state', e.target.value)}
-                    className={fieldClass('state')}
-                  />
-                  {errors.state && <p className="text-xs text-red-500 mt-1">{errors.state}</p>}
-                </div>
-                <div>
-                  <label className="text-[10px] uppercase tracking-widest text-brand-ink/60">Postal Code</label>
-                  <input
-                    type="text"
-                    value={address.postalCode}
-                    onChange={e => setField('postalCode', e.target.value)}
-                    className={fieldClass('postalCode')}
-                  />
-                  {errors.postalCode && <p className="text-xs text-red-500 mt-1">{errors.postalCode}</p>}
-                </div>
-                <div>
-                  <label className="text-[10px] uppercase tracking-widest text-brand-ink/60">Country</label>
-                  <input
-                    type="text"
-                    value={address.country}
-                    onChange={e => setField('country', e.target.value)}
-                    className={fieldClass('country')}
-                  />
-                </div>
-              </div>
+      <form onSubmit={placeOrder} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-8 flex flex-col gap-10">
+          {/* Shipping */}
+          <section className="bg-brand-bg-soft p-8 border border-brand-outline/30">
+            <div className="flex items-center gap-3 mb-6">
+              <Truck className="w-5 h-5 text-brand-gold" />
+              <h2 className="font-serif text-2xl text-brand-ink">Shipping Details</h2>
             </div>
 
-            {/* Payment */}
-            <div className="border border-brand-border bg-white p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <Lock className="w-5 h-5 text-brand-gold" />
-                <h2 className="text-[10px] uppercase tracking-[0.3em] font-bold">Payment</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="sm:col-span-2">
+                <Field label="Full Name" field="fullName">
+                  <input type="text" value={address.fullName} onChange={e => setField('fullName', e.target.value)} className="input-underline" />
+                </Field>
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-                {(
-                  [
-                    { id: 'card', label: 'Card', icon: CreditCard },
-                    { id: 'upi', label: 'UPI', icon: Smartphone },
-                    { id: 'cod', label: 'Cash on Delivery', icon: Truck }
-                  ] as const
-                ).map(opt => {
-                  const Icon = opt.icon;
-                  const active = payment === opt.id;
-                  return (
-                    <button
-                      type="button"
-                      key={opt.id}
-                      onClick={() => setPayment(opt.id)}
-                      className={`flex items-center gap-3 px-4 py-3 border text-sm transition-colors ${
-                        active
-                          ? 'border-brand-gold bg-brand-accent/40'
-                          : 'border-brand-border hover:border-brand-ink'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                      {opt.label}
-                    </button>
-                  );
-                })}
+              <Field label="Email" field="email">
+                <input type="email" value={address.email} onChange={e => setField('email', e.target.value)} className="input-underline" />
+              </Field>
+              <Field label="Phone" field="phone">
+                <input type="tel" value={address.phone} onChange={e => setField('phone', e.target.value)} className="input-underline" />
+              </Field>
+              <div className="sm:col-span-2">
+                <Field label="Address Line 1" field="line1">
+                  <input type="text" value={address.line1} onChange={e => setField('line1', e.target.value)} className="input-underline" />
+                </Field>
               </div>
+              <div className="sm:col-span-2">
+                <Field label="Address Line 2 (optional)" field="line2">
+                  <input type="text" value={address.line2 ?? ''} onChange={e => setField('line2', e.target.value)} className="input-underline" />
+                </Field>
+              </div>
+              <Field label="City" field="city">
+                <input type="text" value={address.city} onChange={e => setField('city', e.target.value)} className="input-underline" />
+              </Field>
+              <Field label="State" field="state">
+                <input type="text" value={address.state} onChange={e => setField('state', e.target.value)} className="input-underline" />
+              </Field>
+              <Field label="Postal Code" field="postalCode">
+                <input type="text" value={address.postalCode} onChange={e => setField('postalCode', e.target.value)} className="input-underline" />
+              </Field>
+              <Field label="Country" field="country">
+                <input type="text" value={address.country} onChange={e => setField('country', e.target.value)} className="input-underline" />
+              </Field>
+            </div>
+          </section>
 
-              {payment === 'card' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="sm:col-span-2">
-                    <label className="text-[10px] uppercase tracking-widest text-brand-ink/60">Card Number</label>
+          {/* Payment */}
+          <section className="bg-brand-bg-soft p-8 border border-brand-outline/30">
+            <div className="flex items-center gap-3 mb-6">
+              <Lock className="w-5 h-5 text-brand-gold" />
+              <h2 className="font-serif text-2xl text-brand-ink">Payment</h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+              {([
+                { id: 'card', label: 'Card', icon: CreditCard },
+                { id: 'upi', label: 'UPI', icon: Smartphone },
+                { id: 'cod', label: 'Cash on Delivery', icon: Truck }
+              ] as const).map(opt => {
+                const Icon = opt.icon;
+                const active = payment === opt.id;
+                return (
+                  <button
+                    type="button"
+                    key={opt.id}
+                    onClick={() => setPayment(opt.id)}
+                    className={`flex items-center gap-3 px-4 py-3 border text-sm transition-colors ${
+                      active ? 'border-brand-gold bg-brand-surface' : 'border-brand-outline/40 hover:border-brand-ink'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {payment === 'card' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="sm:col-span-2">
+                  <Field label="Card Number" field="cardNumber">
                     <input
                       type="text"
                       inputMode="numeric"
                       placeholder="1234 5678 9012 3456"
                       value={card.number}
                       onChange={e => setCard(c => ({ ...c, number: e.target.value }))}
-                      className={fieldClass('cardNumber')}
+                      className="input-underline"
                     />
-                    {errors.cardNumber && <p className="text-xs text-red-500 mt-1">{errors.cardNumber}</p>}
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="text-[10px] uppercase tracking-widest text-brand-ink/60">Name on Card</label>
-                    <input
-                      type="text"
-                      value={card.name}
-                      onChange={e => setCard(c => ({ ...c, name: e.target.value }))}
-                      className={fieldClass('cardName')}
-                    />
-                    {errors.cardName && <p className="text-xs text-red-500 mt-1">{errors.cardName}</p>}
-                  </div>
-                  <div>
-                    <label className="text-[10px] uppercase tracking-widest text-brand-ink/60">Expiry</label>
-                    <input
-                      type="text"
-                      placeholder="MM/YY"
-                      value={card.expiry}
-                      onChange={e => setCard(c => ({ ...c, expiry: e.target.value }))}
-                      className={fieldClass('cardExpiry')}
-                    />
-                    {errors.cardExpiry && <p className="text-xs text-red-500 mt-1">{errors.cardExpiry}</p>}
-                  </div>
-                  <div>
-                    <label className="text-[10px] uppercase tracking-widest text-brand-ink/60">CVV</label>
-                    <input
-                      type="password"
-                      inputMode="numeric"
-                      value={card.cvv}
-                      onChange={e => setCard(c => ({ ...c, cvv: e.target.value }))}
-                      className={fieldClass('cardCvv')}
-                    />
-                    {errors.cardCvv && <p className="text-xs text-red-500 mt-1">{errors.cardCvv}</p>}
-                  </div>
+                  </Field>
                 </div>
-              )}
-
-              {payment === 'upi' && (
-                <div>
-                  <label className="text-[10px] uppercase tracking-widest text-brand-ink/60">UPI ID</label>
-                  <input
-                    type="text"
-                    placeholder="name@bank"
-                    value={upi}
-                    onChange={e => setUpi(e.target.value)}
-                    className={fieldClass('upi')}
-                  />
-                  {errors.upi && <p className="text-xs text-red-500 mt-1">{errors.upi}</p>}
+                <div className="sm:col-span-2">
+                  <Field label="Name on Card" field="cardName">
+                    <input type="text" value={card.name} onChange={e => setCard(c => ({ ...c, name: e.target.value }))} className="input-underline" />
+                  </Field>
                 </div>
-              )}
+                <Field label="Expiry" field="cardExpiry">
+                  <input type="text" placeholder="MM/YY" value={card.expiry} onChange={e => setCard(c => ({ ...c, expiry: e.target.value }))} className="input-underline" />
+                </Field>
+                <Field label="CVV" field="cardCvv">
+                  <input type="password" inputMode="numeric" value={card.cvv} onChange={e => setCard(c => ({ ...c, cvv: e.target.value }))} className="input-underline" />
+                </Field>
+              </div>
+            )}
 
-              {payment === 'cod' && (
-                <p className="text-sm text-brand-ink/60 leading-relaxed">
-                  Pay in cash when our courier arrives. Available across India for orders below ₹50,000.
-                </p>
-              )}
+            {payment === 'upi' && (
+              <Field label="UPI ID" field="upi">
+                <input type="text" placeholder="name@bank" value={upi} onChange={e => setUpi(e.target.value)} className="input-underline" />
+              </Field>
+            )}
 
-              <p className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-brand-ink/40 mt-6">
-                <Lock className="w-3 h-3" /> Encrypted · Demo checkout, no real charges are made.
+            {payment === 'cod' && (
+              <p className="text-sm text-brand-ink-soft leading-relaxed">
+                Pay in cash when our courier arrives. Available across India for orders below ₹50,000.
               </p>
-            </div>
-          </div>
+            )}
 
-          {/* Summary */}
-          <aside className="border border-brand-border bg-white p-8 h-fit lg:sticky lg:top-[120px]">
-            <h2 className="text-[10px] uppercase tracking-[0.3em] font-bold text-brand-gold mb-6">Order Summary</h2>
-            <ul className="space-y-4 mb-6 max-h-[260px] overflow-auto pr-2">
+            <p className="flex items-center gap-2 text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-ink-soft mt-6">
+              <Lock className="w-3 h-3" /> Encrypted · Demo checkout, no real charges are made.
+            </p>
+          </section>
+        </div>
+
+        <aside className="lg:col-span-4">
+          <div className="bg-brand-bg-soft p-8 sticky top-[120px] border border-brand-outline/30">
+            <h2 className="font-serif text-2xl text-brand-ink mb-6 border-b border-brand-outline/30 pb-4">Order Summary</h2>
+            <ul className="space-y-4 mb-6 max-h-[280px] overflow-auto pr-2">
               {resolved.map(({ item, fabric }) => (
-                <li
-                  key={`${fabric.id}-${item.color ?? ''}`}
-                  className="flex gap-3 pb-4 border-b border-brand-border last:border-b-0 last:pb-0"
-                >
-                  <FabricImage
-                    photo={fabric.photo}
-                    fallback={fabric.image}
-                    alt={fabric.name}
-                    className="w-14 h-14 object-cover border border-brand-border"
-                  />
+                <li key={`${fabric.id}-${item.color ?? ''}`} className="flex gap-3 pb-4 border-b border-brand-outline/30 last:border-b-0 last:pb-0">
+                  <FabricImage photo={fabric.photo} fallback={fabric.image} alt={fabric.name} className="w-14 h-14 object-cover border border-brand-outline/30" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-serif italic truncate">{fabric.name}</p>
-                    <p className="text-[10px] uppercase tracking-widest text-brand-ink/50 mt-0.5">
+                    <p className="text-base font-serif italic truncate">{fabric.name}</p>
+                    <p className="text-[11px] uppercase tracking-[0.1em] font-semibold text-brand-ink-soft mt-0.5">
                       {item.meters} m{item.color ? ` · ${item.color}` : ''}
                     </p>
                   </div>
-                  <p className="text-sm font-medium whitespace-nowrap">
-                    {formatINR(item.meters * fabric.pricePerMeter)}
-                  </p>
+                  <p className="text-base font-medium whitespace-nowrap">{formatINR(item.meters * fabric.pricePerMeter)}</p>
                 </li>
               ))}
             </ul>
-
-            <dl className="space-y-2 text-sm border-t border-brand-border pt-4">
-              <div className="flex justify-between">
-                <dt className="text-brand-ink/60">Subtotal</dt>
-                <dd>{formatINR(subtotal)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-brand-ink/60">Shipping</dt>
-                <dd>{shipping === 0 ? 'Free' : formatINR(shipping)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-brand-ink/60">GST (5%)</dt>
-                <dd>{formatINR(tax)}</dd>
-              </div>
+            <dl className="space-y-3 border-t border-brand-outline/30 pt-4 text-base">
+              <div className="flex justify-between"><dt className="text-brand-ink-soft">Subtotal</dt><dd>{formatINR(subtotal)}</dd></div>
+              <div className="flex justify-between"><dt className="text-brand-ink-soft">Shipping</dt><dd>{shipping === 0 ? 'Free' : formatINR(shipping)}</dd></div>
+              <div className="flex justify-between"><dt className="text-brand-ink-soft">GST</dt><dd>{formatINR(tax)}</dd></div>
             </dl>
-            <div className="flex justify-between items-end mt-4 mb-8 pt-4 border-t border-brand-border">
-              <span className="text-[10px] uppercase tracking-[0.3em] font-bold">Total</span>
-              <span className="text-2xl font-serif">{formatINR(total)}</span>
+            <div className="flex justify-between items-end mt-6 mb-8 pt-4 border-t border-brand-gold/20">
+              <span className="font-serif text-2xl text-brand-ink">Total</span>
+              <span className="font-serif text-[32px] gold-text">{formatINR(total)}</span>
             </div>
-
-            <button
-              type="submit"
-              disabled={placing}
-              className="w-full bg-brand-ink text-white py-4 text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-brand-gold transition-colors duration-500 disabled:opacity-60"
-            >
+            <button type="submit" disabled={placing} className="btn-gold w-full">
               {placing ? 'Placing Order…' : `Place Order · ${formatINR(total)}`}
             </button>
-          </aside>
-        </form>
-      </div>
-    </section>
+          </div>
+        </aside>
+      </form>
+    </main>
   );
 };
 

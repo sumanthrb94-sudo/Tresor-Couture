@@ -26,26 +26,25 @@ const Home: React.FC = () => (
     <Founder />
     <Craftsmanship />
 
-    <section className="py-32 bg-brand-bg border-t border-brand-border">
-      <div className="max-w-4xl mx-auto px-6 text-center">
-        <span className="text-[9px] uppercase tracking-[0.6em] font-bold text-brand-gold mb-6 block italic">
+    <section className="py-[120px] px-6 md:px-16 max-w-[1280px] mx-auto bg-brand-bg-soft border-y border-brand-outline/30">
+      <div className="max-w-3xl mx-auto text-center">
+        <span className="text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-gold mb-4 block">
           Inner Circle
         </span>
-        <h2 className="text-4xl md:text-5xl font-serif mb-8 italic">
-          Discover New Weaves <br />
-          <span className="not-italic">Before the World</span>
+        <h2 className="font-serif text-4xl md:text-5xl gold-text leading-tight tracking-[-0.01em] mb-6">
+          Discover new weaves <em>before the world</em>
         </h2>
-        <p className="text-brand-ink/60 font-light mb-12 max-w-xl mx-auto text-sm leading-relaxed">
-          Be the first to know about our seasonal releases, artisanal collaborations, and exclusive exhibitions across the globe.
+        <p className="text-base text-brand-ink-soft mb-10 max-w-xl mx-auto leading-relaxed">
+          Be the first to know about our seasonal releases, artisanal collaborations, and exclusive exhibitions.
         </p>
         <form className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto" onSubmit={(e) => e.preventDefault()}>
           <input
             type="email"
-            placeholder="EMAIL ADDRESS"
-            className="flex-grow bg-white border border-brand-border px-6 py-4 text-[10px] uppercase tracking-widest focus:outline-none focus:border-brand-gold transition-colors"
+            placeholder="Email address"
             required
+            className="input-underline flex-grow text-base text-brand-ink"
           />
-          <button className="bg-brand-ink text-white px-10 py-4 text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-brand-gold transition-colors duration-500">
+          <button type="submit" className="btn-gold whitespace-nowrap">
             Subscribe
           </button>
         </form>

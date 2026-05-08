@@ -3,75 +3,54 @@ import { motion } from 'motion/react';
 
 const Founder = () => {
   return (
-    <section id="founder" className="py-32 bg-brand-bg text-brand-ink overflow-hidden border-t border-brand-border">
-      <div className="max-w-7xl mx-auto px-6 md:px-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-          <div className="relative">
-            <motion.div 
-              initial={{ scale: 1.1, opacity: 0 }}
-              whileInView={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 1.5 }}
-              viewport={{ once: true }}
-              className="relative z-10 flex items-center justify-center"
-            >
-              <img
-                src="/branding/monogram-master.png"
-                alt="Trésor Couture"
-                loading="eager"
-                className="w-full aspect-[4/5] object-contain"
-              />
-            </motion.div>
-            
-            <div className="absolute -bottom-6 -right-6 bg-brand-gold p-8 z-20 hidden lg:block">
-              <span className="vertical-text text-white text-[10px] tracking-[0.6em] font-medium uppercase rotate-180">
-                Meera Rajput
-              </span>
-            </div>
+    <section
+      id="founder"
+      className="py-[120px] px-6 md:px-16 max-w-[1280px] mx-auto bg-brand-bg-soft border-y border-brand-outline/30"
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <motion.div
+          initial={{ scale: 0.96, opacity: 0 }}
+          whileInView={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 1.2 }}
+          viewport={{ once: true }}
+          className="aspect-[4/5] flex items-center justify-center"
+        >
+          <img
+            src="/branding/monogram-master.png"
+            alt="Trésor Couture"
+            loading="eager"
+            className="max-h-full max-w-full object-contain"
+          />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 40 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          transition={{ duration: 1, delay: 0.3 }}
+          viewport={{ once: true }}
+        >
+          <span className="text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-gold mb-6 block">
+            The Rescue Mission
+          </span>
+          <h2 className="font-serif text-4xl md:text-5xl gold-text leading-tight tracking-[-0.01em] mb-8">
+            Hand-woven by the last <em>four families</em> on earth.
+          </h2>
+          <div className="space-y-5 text-base text-brand-ink-soft leading-relaxed">
+            <p>
+              Trésor Couture began with a single visit to Mandvi, where we met the four remaining
+              families weaving Mashru silk-satin on traditional pit looms. Their daughters had no
+              interest in the loom; the craft was on the brink of vanishing within a generation.
+            </p>
+            <p>
+              Today we underwrite weavers across nine Indian states — Banaras, Patan, Kanchipuram,
+              Srikalahasti, Kutch, Ladakh, Bhagalpur, Chanderi and West Bengal — paying fair-trade
+              rates and reserving every metre of their output for our atelier and chosen designers.
+            </p>
+            <p className="font-serif italic text-lg text-brand-ink">
+              — Meera Rajput, Founder
+            </p>
           </div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 1, delay: 0.3 }}
-            viewport={{ once: true }}
-          >
-            <span className="text-brand-gold text-[9px] uppercase tracking-[0.4em] mb-6 block font-bold italic">
-              The Rescue Mission
-            </span>
-            <h2 className="text-4xl md:text-6xl font-serif leading-tight mb-8">
-              Restoring the <br />
-              <span className="italic">Lost Weaves of India</span>
-            </h2>
-            
-            <div className="space-y-6 text-brand-ink/60 font-light leading-relaxed">
-              <p>
-                Led by <span className="text-brand-ink font-normal italic">Meera Rajput</span>, Trésor Couture 
-                is not just a brand, but a rescue initiative. We identify weaving techniques that are down to their 
-                last three or four practitioners across India.
-              </p>
-              <p>
-                "Our goal is to pull these arts back from the edge of extinction," Meera says. From the complex double-ikkat 
-                of Patan to the translucent Muslins of Bengal, we provide the infrastructure, fair wages, and international 
-                exposure that these masters of the loom deserve.
-              </p>
-              <p className="italic font-medium border-l-2 border-brand-gold pl-6 py-2">
-                "When a weave goes extinct, we don't just lose a fabric; we lose a piece of the human story."
-              </p>
-            </div>
-
-            <div className="mt-12 flex flex-col md:flex-row items-start md:items-center gap-8 border-t border-brand-border pt-12">
-              <div className="flex flex-col">
-                <span className="text-3xl font-serif text-brand-gold">15+</span>
-                <span className="text-[10px] uppercase tracking-widest text-brand-ink/40 font-bold">Artisanal Communities</span>
-              </div>
-              <div className="hidden md:block w-[1px] h-12 bg-brand-border" />
-              <div className="flex flex-col">
-                <span className="text-3xl font-serif text-brand-gold">5000+</span>
-                <span className="text-[10px] uppercase tracking-widest text-brand-ink/40 font-bold">Exclusive Weaves</span>
-              </div>
-            </div>
-          </motion.div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

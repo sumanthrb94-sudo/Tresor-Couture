@@ -1,43 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Menu, X, ShoppingBag, Search } from 'lucide-react';
+import { Menu, X, ShoppingBag, Search, User } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useRouter } from '../context/RouterContext';
 import { Route } from '../types';
-import Logo from './Logo';
+
+const navLinks: { name: string; route: Route }[] = [
+  { name: 'Shop', route: { name: 'shop' } },
+  { name: 'Collections', route: { name: 'home' } },
+  { name: 'About', route: { name: 'home' } },
+  { name: 'Contact', route: { name: 'home' } }
+];
 
 const Navbar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { meterCount } = useCart();
-  const { navigate } = useRouter();
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const { navigate, route } = useRouter();
 
   useEffect(() => {
     const original = document.body.style.overflow;
     document.body.style.overflow = isMobileMenuOpen ? 'hidden' : original;
-    return () => {
-      document.body.style.overflow = original;
-    };
+    return () => { document.body.style.overflow = original; };
   }, [isMobileMenuOpen]);
 
-  const navLinks: { name: string; route: Route }[] = [
-    { name: 'Shop', route: { name: 'shop' } },
-    { name: 'Silk', route: { name: 'shop', category: 'Silk' } },
-    { name: 'Cotton', route: { name: 'shop', category: 'Cotton' } },
-    { name: 'Wool', route: { name: 'shop', category: 'Wool' } },
-    { name: 'Linen', route: { name: 'shop', category: 'Linen' } }
-  ];
-
   const cartBadge = Math.min(meterCount, 99);
+  const isShop = route.name === 'shop' || route.name === 'product';
+
+  const linkClass = (active = false) =>
+    `font-sans text-[14px] uppercase tracking-[0.15em] font-medium transition-colors duration-300 ${
+      active ? 'text-brand-gold' : 'text-brand-ink-soft hover:text-brand-gold'
+    }`;
 
   const mobileMenu = (
     <AnimatePresence>
@@ -47,46 +40,40 @@ const Navbar = () => {
           animate={{ x: 0 }}
           exit={{ x: '-100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          style={{ backgroundColor: '#F2E7D5', color: '#2A1F12' }}
-          className="fixed inset-0 z-[200] flex flex-col p-12 overflow-y-auto"
+          style={{ backgroundColor: '#FFF8F5', color: '#1E1B18' }}
+          className="fixed inset-0 z-[200] flex flex-col p-10 overflow-y-auto"
         >
-          <button
-            className="absolute top-8 right-8"
-            onClick={() => setIsMobileMenuOpen(false)}
-            aria-label="Close menu"
-          >
-            <X className="w-8 h-8" />
-          </button>
-
-          <div className="mt-20 mb-10">
-            <Logo onClick={() => { setIsMobileMenuOpen(false); navigate({ name: 'home' }); }} />
+          <div className="flex items-center justify-between mb-12">
+            <button
+              onClick={() => { setIsMobileMenuOpen(false); navigate({ name: 'home' }); }}
+              className="brand-logotype text-3xl text-brand-gold"
+            >
+              Tresor Couture
+            </button>
+            <button onClick={() => setIsMobileMenuOpen(false)} aria-label="Close menu">
+              <X className="w-7 h-7" />
+            </button>
           </div>
 
           <div className="flex flex-col gap-7">
             {navLinks.map(link => (
               <button
                 key={link.name}
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  navigate(link.route);
-                }}
-                className="text-3xl font-serif italic hover:text-brand-gold transition-colors text-left"
+                onClick={() => { setIsMobileMenuOpen(false); navigate(link.route); }}
+                className="text-3xl font-serif text-left hover:text-brand-gold transition-colors"
               >
                 {link.name}
               </button>
             ))}
             <button
-              onClick={() => {
-                setIsMobileMenuOpen(false);
-                navigate({ name: 'cart' });
-              }}
-              className="text-3xl font-serif italic hover:text-brand-gold transition-colors text-left"
+              onClick={() => { setIsMobileMenuOpen(false); navigate({ name: 'cart' }); }}
+              className="text-3xl font-serif text-left hover:text-brand-gold transition-colors"
             >
-              Cart ({cartBadge})
+              Bag ({cartBadge})
             </button>
           </div>
 
-          <div className="mt-auto border-t border-brand-ink/10 pt-8 flex flex-col gap-3 text-xs uppercase tracking-widest opacity-60">
+          <div className="mt-auto pt-12 border-t border-brand-outline/40 flex flex-col gap-3 text-[11px] uppercase tracking-[0.15em] text-brand-ink-soft">
             <p>India · Global Shipping</p>
             <p>concierge@tresorcouture.com</p>
           </div>
@@ -97,86 +84,74 @@ const Navbar = () => {
 
   return (
     <>
-      <nav
-        className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 border-b border-brand-border h-[100px] flex items-center ${
-          isScrolled ? 'bg-brand-bg/90 backdrop-blur-md' : 'bg-brand-bg'
-        }`}
+      <header
+        className="fixed top-0 left-0 w-full z-50 h-20 flex items-center border-b border-brand-outline/30 transition-all duration-200"
+        style={{ backgroundColor: 'rgba(255, 248, 245, 0.85)', backdropFilter: 'blur(14px)' }}
       >
-        <div className="w-full px-6 md:px-[60px] h-full flex items-center justify-between text-brand-ink relative">
-          <div className="flex-1 hidden md:flex gap-6 items-center text-[10px] uppercase tracking-[0.1em] font-bold">
-            <button
-              onClick={() => navigate({ name: 'shop' })}
-              className="hover:text-brand-gold transition-colors whitespace-nowrap"
-            >
-              Shop
-            </button>
-            <button
-              onClick={() => navigate({ name: 'shop', category: 'Silk' })}
-              className="hover:text-brand-gold transition-colors whitespace-nowrap hidden lg:inline-block"
-            >
-              Silk
-            </button>
-            <button
-              onClick={() => navigate({ name: 'shop', category: 'Cotton' })}
-              className="hover:text-brand-gold transition-colors whitespace-nowrap hidden lg:inline-block"
-            >
-              Cotton
-            </button>
-            <button
-              onClick={() => navigate({ name: 'shop', category: 'Wool' })}
-              className="hover:text-brand-gold transition-colors whitespace-nowrap hidden xl:inline-block"
-            >
-              Wool
-            </button>
-            <button
-              onClick={() => navigate({ name: 'home' })}
-              className="hover:text-brand-gold transition-colors whitespace-nowrap hidden xl:inline-block"
-            >
-              Story
-            </button>
-          </div>
-
+        <div className="w-full max-w-[1280px] mx-auto px-6 md:px-16 flex items-center justify-between">
+          {/* Brand */}
           <button
-            className="md:hidden flex-1 flex justify-start"
-            onClick={() => setIsMobileMenuOpen(true)}
-            aria-label="Open menu"
+            onClick={() => navigate({ name: 'home' })}
+            className="brand-logotype text-2xl md:text-[28px] text-brand-gold hover:opacity-70 transition-opacity"
           >
-            <Menu className="w-6 h-6" />
+            Tresor Couture
           </button>
 
-          <div className="flex-shrink-0 px-4">
-            <Logo onClick={() => navigate({ name: 'home' })} />
-          </div>
+          {/* Center nav */}
+          <nav className="hidden md:flex gap-8">
+            <button onClick={() => navigate({ name: 'shop' })} className={linkClass(isShop)}>
+              Shop
+            </button>
+            <button onClick={() => navigate({ name: 'home' })} className={linkClass()}>
+              Collections
+            </button>
+            <button onClick={() => navigate({ name: 'home' })} className={linkClass()}>
+              About
+            </button>
+            <button onClick={() => navigate({ name: 'home' })} className={linkClass()}>
+              Contact
+            </button>
+          </nav>
 
-          <div className="flex-1 flex justify-end gap-6 md:gap-8 items-center">
+          {/* Right */}
+          <div className="flex gap-4 items-center">
+            <button
+              className="md:hidden text-brand-ink"
+              onClick={() => setIsMobileMenuOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
             <button
               onClick={() => navigate({ name: 'shop' })}
-              className="hidden sm:block border border-brand-ink px-5 py-2 text-[9px] uppercase tracking-[0.1em] font-bold hover:bg-brand-ink hover:text-white transition-all whitespace-nowrap"
+              className="hidden md:block text-brand-gold hover:opacity-70 transition-opacity"
+              aria-label="Search"
             >
-              Shop Now
+              <Search className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-4 md:gap-6">
-              <button
-                onClick={() => navigate({ name: 'shop' })}
-                className="hover:text-brand-gold transition-colors cursor-pointer"
-                aria-label="Search"
-              >
-                <Search className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => navigate({ name: 'cart' })}
-                className="hover:text-brand-gold transition-colors cursor-pointer relative"
-                aria-label="Cart"
-              >
-                <ShoppingBag className="w-5 h-5" />
-                <span className="absolute -top-2 -right-2 bg-brand-gold text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center">
+            <button
+              className="hidden md:block text-brand-gold hover:opacity-70 transition-opacity"
+              aria-label="Account"
+            >
+              <User className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => navigate({ name: 'cart' })}
+              className={`text-brand-gold hover:opacity-70 transition-opacity relative ${
+                route.name === 'cart' ? 'border-b border-brand-gold pb-1' : ''
+              }`}
+              aria-label="Bag"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              {cartBadge > 0 && (
+                <span className="absolute -top-1 -right-2 bg-brand-gold text-brand-bg text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
                   {cartBadge}
                 </span>
-              </button>
-            </div>
+              )}
+            </button>
           </div>
         </div>
-      </nav>
+      </header>
 
       {typeof document !== 'undefined' && createPortal(mobileMenu, document.body)}
     </>
