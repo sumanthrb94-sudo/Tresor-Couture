@@ -1,9 +1,14 @@
 export interface Fabric {
   id: string;
+  /** Brand label shown in Myntra-style cards (uppercase, bold). */
+  brand: string;
   name: string;
   description: string;
+  /** Current selling price per meter. */
   pricePerMeter: number;
-  /** Real photograph URL (Pexels/Unsplash via CDN proxy or local file). */
+  /** Original "MRP" per meter (always >= pricePerMeter). */
+  mrpPerMeter: number;
+  /** Real photograph URL. */
   photo: string;
   /** Additional photographs for the gallery. */
   photoGallery?: string[];
@@ -13,7 +18,11 @@ export interface Fabric {
   category: 'Silk' | 'Cotton' | 'Wool' | 'Linen' | 'Mixed' | 'Satin';
   origin: string;
   tags: string[];
+  /** Optional sticker (e.g. "Trending", "Bestseller", "New In"). */
+  sticker?: 'Trending' | 'Bestseller' | 'New In' | 'Limited' | 'Hot Deal';
   colors?: { name: string; hex: string }[];
+  /** Pre-cut length presets shown as "size" pills. */
+  lengthOptions?: number[];
   widthInches?: number;
   inStockMeters?: number;
   weaveType?: string;

@@ -1,96 +1,214 @@
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-serif: "EB Garamond", "Cormorant Garamond", "Times New Roman", serif;
-  --font-sans: "Montserrat", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Assistant", "Whitney", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: "Manrope", "Assistant", system-ui, sans-serif;
 
-  /* Quiet luxury palette — Material You inspired warm cream + olive gold. */
-  --color-brand-bg: #FFF8F5;
-  --color-brand-bg-soft: #FBF2ED;
-  --color-brand-surface: #F5ECE7;
-  --color-brand-surface-high: #EFE6E2;
-  --color-brand-ink: #1E1B18;
-  --color-brand-ink-soft: #47473F;
-  --color-brand-gold: #735C00;
-  --color-brand-gold-soft: #785A00;
-  --color-brand-gold-deep: #5B4300;
-  --color-brand-gold-bright: #E9C349;
-  --color-brand-accent: #F5ECE7;
-  --color-brand-outline: #C8C7BC;
-  --color-brand-border: rgba(120, 119, 110, 0.3);
-
-  /* Spacing tokens from the design system. */
-  --spacing-margin-page: 64px;
-  --spacing-section-gap: 120px;
-  --spacing-gutter: 32px;
-  --container-7xl: 1280px;
+  /* Myntra / Jabong inspired palette */
+  --color-myntra-pink: #FF3F6C;
+  --color-myntra-pink-dark: #E5325E;
+  --color-myntra-orange: #FF905A;
+  --color-myntra-yellow: #F1AC11;
+  --color-myntra-green: #03A685;
+  --color-myntra-green-light: #14CDA8;
+  --color-myntra-navy: #282C3F;
+  --color-myntra-ink: #3E4152;
+  --color-myntra-ink-soft: #696B79;
+  --color-myntra-ink-mute: #94969F;
+  --color-myntra-border: #D4D5D9;
+  --color-myntra-border-soft: #EAEAEC;
+  --color-myntra-bg: #FFFFFF;
+  --color-myntra-bg-soft: #F5F5F6;
+  --color-myntra-bg-sale: #FFF4D6;
+  --color-myntra-rating-bg: #14958F;
 }
 
 @layer base {
+  html, body { background: #FFFFFF; }
   body {
-    @apply bg-brand-bg text-brand-ink font-sans antialiased;
+    @apply text-[color:var(--color-myntra-navy)] font-sans antialiased;
+    font-feature-settings: "ss01" on, "cv01" on;
   }
-
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-serif;
-  }
+  h1, h2, h3, h4, h5, h6 { font-family: var(--font-display); letter-spacing: -0.01em; }
+  button { cursor: pointer; }
+  input, select, textarea { font-family: inherit; }
 }
 
-/* Quiet luxury input — underline only. */
-.input-underline {
-  border: none;
-  border-bottom: 1px solid var(--color-brand-ink);
-  border-radius: 0;
-  background: transparent;
-  width: 100%;
-  padding: 0.5rem 0;
-  outline: none;
-  transition: border-color 200ms ease;
-}
-.input-underline:focus {
-  border-bottom: 2px solid var(--color-brand-gold);
-}
-
-/* Restrained gold gradient for primary CTAs. */
-.btn-gold {
-  background: linear-gradient(135deg, var(--color-brand-gold-bright) 0%, var(--color-brand-gold) 100%);
-  color: #FFF8F5;
-  font-weight: 500;
-  letter-spacing: 0.15em;
+/* ───────────── Buttons ───────────── */
+.btn-primary {
+  background: var(--color-myntra-pink);
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   font-size: 14px;
-  padding: 1rem 1.5rem;
-  border: 1px solid color-mix(in srgb, var(--color-brand-gold-bright), transparent 50%);
+  padding: 14px 22px;
+  border-radius: 4px;
+  transition: background 150ms ease, transform 100ms ease;
+}
+.btn-primary:hover { background: var(--color-myntra-pink-dark); }
+.btn-primary:active { transform: scale(0.99); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-outline {
+  background: #fff;
+  color: var(--color-myntra-navy);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 14px;
+  padding: 14px 22px;
+  border-radius: 4px;
+  border: 1px solid var(--color-myntra-border);
+  transition: border-color 150ms ease, color 150ms ease;
+}
+.btn-outline:hover { border-color: var(--color-myntra-pink); color: var(--color-myntra-pink); }
+
+.btn-ghost {
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--color-myntra-pink);
+}
+.btn-ghost:hover { text-decoration: underline; }
+
+/* ───────────── Inputs ───────────── */
+.input-box {
+  width: 100%;
+  background: #fff;
+  border: 1px solid var(--color-myntra-border);
+  border-radius: 2px;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: var(--color-myntra-navy);
+  outline: none;
+  transition: border-color 150ms ease;
+}
+.input-box:focus { border-color: var(--color-myntra-pink); }
+.input-box::placeholder { color: var(--color-myntra-ink-mute); }
+
+.input-search {
+  width: 100%;
+  background: var(--color-myntra-bg-soft);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 12px 14px 12px 44px;
+  font-size: 14px;
+  color: var(--color-myntra-navy);
+  outline: none;
+  transition: background 150ms, border-color 150ms;
+}
+.input-search:focus { background: #fff; border-color: var(--color-myntra-pink); }
+
+/* ───────────── Cards ───────────── */
+.card-product {
+  background: #fff;
   position: relative;
-  overflow: hidden;
-  transition: opacity 200ms ease;
+  transition: box-shadow 200ms ease;
 }
-.btn-gold:hover { opacity: 0.92; }
-.btn-gold:disabled { opacity: 0.5; cursor: not-allowed; }
-
-/* Gold text accent. */
-.gold-text { color: var(--color-brand-gold); }
-
-/* Editorial italic logotype. */
-.brand-logotype {
-  font-family: var(--font-serif);
-  font-style: italic;
-  font-weight: 500;
-  letter-spacing: 0.005em;
+.card-product:hover {
+  box-shadow: 0 6px 18px rgba(40, 44, 63, 0.12);
 }
 
-.geometric-grid {
-  display: grid;
-  grid-template-columns: 320px 1fr 320px;
+.badge-discount {
+  color: var(--color-myntra-pink);
+  font-weight: 700;
+  font-size: 12px;
+}
+.badge-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fff;
+  border: 1px solid var(--color-myntra-border);
+  border-radius: 2px;
+  padding: 3px 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-myntra-navy);
+}
+.badge-rating .star { color: var(--color-myntra-green); }
+
+.badge-trending {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(40, 44, 63, 0.85);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 2px;
 }
 
-@media (max-width: 1024px) {
-  .geometric-grid {
-    grid-template-columns: 1fr;
-  }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--color-myntra-border);
+  background: #fff;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-myntra-navy);
+}
+.chip-active {
+  border-color: var(--color-myntra-pink);
+  color: var(--color-myntra-pink);
+  background: #FFF1F5;
 }
 
-.pane-border-r { border-right: 1px solid var(--color-brand-border); }
-.pane-border-l { border-left: 1px solid var(--color-brand-border); }
-.vertical-text { writing-mode: vertical-rl; text-orientation: mixed; }
+/* ───────────── Section headings ───────────── */
+.section-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 26px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-myntra-navy);
+  text-align: center;
+  margin-bottom: 22px;
+}
+@media (min-width: 768px) {
+  .section-title { font-size: 30px; }
+}
+
+.section-eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-myntra-pink);
+}
+
+/* ───────────── Tiny utilities ───────────── */
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { scrollbar-width: none; }
+
+.no-tap-highlight { -webkit-tap-highlight-color: transparent; }
+
+/* Strike-through MRP */
+.mrp { color: var(--color-myntra-ink-mute); text-decoration: line-through; font-weight: 500; }
+
+/* Color swatch */
+.swatch-dot {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  outline: 1px solid var(--color-myntra-border);
+}
+
+/* Animated marquee for offer ticker */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee-track { animation: marquee 28s linear infinite; }
