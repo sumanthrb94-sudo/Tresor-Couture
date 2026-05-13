@@ -120,7 +120,8 @@ const Navbar: React.FC = () => {
         >
           <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--color-myntra-border-soft)]">
             <button onClick={() => { setMobileOpen(false); navigate({ name: 'home' }); }} className="flex items-center gap-2">
-              <span className="font-bold text-xl tracking-tight text-[color:var(--color-myntra-pink)]">TRÉSOR</span>
+              <img src="/branding/logo-master.png" alt="" className="h-9 w-auto object-contain" />
+              <span className="font-bold text-xl tracking-tight text-[color:var(--color-myntra-pink)]">Trésor</span>
               <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-[color:var(--color-myntra-ink-soft)]">couture</span>
             </button>
             <button onClick={() => setMobileOpen(false)} aria-label="Close menu">
@@ -169,10 +170,16 @@ const Navbar: React.FC = () => {
             className="flex items-baseline gap-1.5 shrink-0 no-tap-highlight"
             aria-label="Home"
           >
-            <span className="font-extrabold text-[22px] md:text-[26px] tracking-tight text-[color:var(--color-myntra-pink)]">
-              TRÉSOR
+            <img
+              src="/branding/logo-master.png"
+              alt=""
+              className="h-10 md:h-12 w-auto object-contain"
+              loading="eager"
+            />
+            <span className="font-extrabold text-[20px] md:text-[24px] tracking-tight text-[color:var(--color-myntra-pink)] leading-none">
+              Trésor
             </span>
-            <span className="hidden sm:inline text-[10px] md:text-[11px] font-bold uppercase tracking-[0.18em] text-[color:var(--color-myntra-ink-soft)]">
+            <span className="hidden sm:inline text-[10px] md:text-[11px] font-bold uppercase tracking-[0.18em] text-[color:var(--color-myntra-ink-soft)] leading-none">
               couture
             </span>
           </button>
