@@ -14,13 +14,17 @@ const swatch = (
 
 const p = (src: string, w = 1000, h = 1250) => photoUrl(src, { w, h });
 
+const BRAND = 'TRÉSOR';
+
 export const FABRICS: Fabric[] = [
   {
     id: '1',
-    name: 'Mashru Silk-Satin',
+    brand: BRAND,
+    name: 'Mashru Silk-Satin Fabric (per meter)',
     description:
       'A "permitted" fabric where silk never touches the skin. Hand-woven by the last four families of Mandvi keeping this craft alive. Lustrous satin face on a cotton ground, ideal for jackets, lehengas and cushion covers.',
     pricePerMeter: 4500,
+    mrpPerMeter: 7999,
     photo: p(SOURCES.mashru),
     photoGallery: [p(SOURCES.mashru), p(SOURCES.mashru2), p(SOURCES.mashru3)],
     image: swatch('f1', '#2A3F66', '#E2A33A', '#F2EBDD', 'satin', 'Mashru Silk-Satin', 'Mandvi'),
@@ -32,11 +36,13 @@ export const FABRICS: Fabric[] = [
     category: 'Satin',
     origin: 'Mandvi, Gujarat',
     tags: ['Endangered', 'Handloom', 'Heritage'],
+    sticker: 'Bestseller',
     colors: [
       { name: 'Indigo', hex: '#2A3F66' },
       { name: 'Saffron', hex: '#E2A33A' },
       { name: 'Ivory', hex: '#F2EBDD' }
     ],
+    lengthOptions: [1, 2, 3, 5],
     widthInches: 44,
     inStockMeters: 38,
     weaveType: 'Warp-faced satin',
@@ -45,10 +51,12 @@ export const FABRICS: Fabric[] = [
   },
   {
     id: '2',
-    name: 'Real Zari Banarasi',
+    brand: BRAND,
+    name: 'Real Zari Banarasi Bridal Fabric',
     description:
       'Woven on traditional pit looms with authentic silver-and-gold zari. A regal weave for bridal lehengas, sherwanis and statement saris.',
     pricePerMeter: 12500,
+    mrpPerMeter: 19999,
     photo: p(SOURCES.banarasi),
     photoGallery: [p(SOURCES.banarasi), p(SOURCES.banarasi2), p(SOURCES.banarasi3)],
     image: swatch('f2', '#7A1F2C', '#C5A059', '#F2EBDD', 'brocade', 'Real Zari Banarasi', 'Varanasi'),
@@ -60,11 +68,13 @@ export const FABRICS: Fabric[] = [
     category: 'Silk',
     origin: 'Varanasi',
     tags: ['Royal Heritage', 'Silver Thread', 'Authentic'],
+    sticker: 'Trending',
     colors: [
       { name: 'Maroon', hex: '#7A1F2C' },
       { name: 'Emerald', hex: '#1F5D4F' },
       { name: 'Gold', hex: '#C5A059' }
     ],
+    lengthOptions: [1, 2, 3, 5, 8],
     widthInches: 45,
     inStockMeters: 22,
     weaveType: 'Kadhua Brocade',
@@ -73,10 +83,12 @@ export const FABRICS: Fabric[] = [
   },
   {
     id: '3',
-    name: 'Patan Patola',
+    brand: BRAND,
+    name: 'Patan Patola Double-Ikat Silk',
     description:
       'The "King of Textiles". A double-ikkat masterpiece taking master weavers up to six months per sari. Reversible, mathematically precise and museum-grade.',
     pricePerMeter: 28000,
+    mrpPerMeter: 39999,
     photo: p(SOURCES.patola),
     photoGallery: [p(SOURCES.patola), p(SOURCES.patola2)],
     image: swatch('f3', '#9B1B30', '#1E3A8A', '#F2EBDD', 'ikat', 'Patan Patola', 'Patan'),
@@ -87,10 +99,12 @@ export const FABRICS: Fabric[] = [
     category: 'Silk',
     origin: 'Patan, Gujarat',
     tags: ['Rarest', 'Double Ikkat', 'Museum Grade'],
+    sticker: 'Limited',
     colors: [
       { name: 'Crimson', hex: '#9B1B30' },
       { name: 'Royal Blue', hex: '#1E3A8A' }
     ],
+    lengthOptions: [1, 2, 3, 5],
     widthInches: 44,
     inStockMeters: 8,
     weaveType: 'Double Ikkat',
@@ -99,10 +113,12 @@ export const FABRICS: Fabric[] = [
   },
   {
     id: '4',
-    name: 'Dhakai Jamdani Muslin',
+    brand: BRAND,
+    name: 'Dhakai Jamdani Muslin Fabric',
     description:
       'The "Ghost Fabric". A translucent, 300-count cotton weave once reserved for Mughal courts. Featherlight and ethereally drapey.',
     pricePerMeter: 3800,
+    mrpPerMeter: 5999,
     photo: p(SOURCES.jamdani),
     photoGallery: [p(SOURCES.jamdani), p(SOURCES.jamdani2)],
     image: swatch('f4', '#EDE7DA', '#B5B8B1', '#C5A059', 'jamdani', 'Dhakai Jamdani', 'West Bengal'),
@@ -113,10 +129,12 @@ export const FABRICS: Fabric[] = [
     category: 'Cotton',
     origin: 'West Bengal',
     tags: ['Ethereal', 'Ancient Craft', 'Hand-spun'],
+    sticker: 'New In',
     colors: [
       { name: 'Pearl', hex: '#EDE7DA' },
       { name: 'Mist Grey', hex: '#B5B8B1' }
     ],
+    lengthOptions: [1, 2, 3, 5],
     widthInches: 42,
     inStockMeters: 56,
     weaveType: 'Discontinuous Supplementary Weft',
@@ -125,10 +143,12 @@ export const FABRICS: Fabric[] = [
   },
   {
     id: '5',
-    name: 'Chanderi Silk-Cotton',
+    brand: BRAND,
+    name: 'Chanderi Silk-Cotton Sheer Fabric',
     description:
       'A glassy, sheer weave from Madhya Pradesh blending silk warp with cotton weft. Subtle sheen, perfect for summer saris and dupattas.',
     pricePerMeter: 2200,
+    mrpPerMeter: 3499,
     photo: p(SOURCES.chanderi),
     photoGallery: [p(SOURCES.chanderi), p(SOURCES.chanderi2), p(SOURCES.chanderi3)],
     image: swatch('f5', '#E8C7C8', '#C5A059', '#F2EBDD', 'plain', 'Chanderi', 'Chanderi'),
@@ -140,11 +160,13 @@ export const FABRICS: Fabric[] = [
     category: 'Mixed',
     origin: 'Chanderi, Madhya Pradesh',
     tags: ['Sheer', 'Lightweight', 'Summer'],
+    sticker: 'Hot Deal',
     colors: [
       { name: 'Powder Pink', hex: '#E8C7C8' },
       { name: 'Mint', hex: '#B6D7C9' },
       { name: 'Champagne', hex: '#E5D3A8' }
     ],
+    lengthOptions: [1, 2, 3, 5],
     widthInches: 44,
     inStockMeters: 110,
     weaveType: 'Plain weave with zari motifs',
@@ -153,10 +175,12 @@ export const FABRICS: Fabric[] = [
   },
   {
     id: '6',
-    name: 'Pashmina Cashmere',
+    brand: BRAND,
+    name: 'Pashmina Cashmere Shawl Cloth',
     description:
       'Hand-spun and hand-woven from the under-fleece of Changthangi goats in Ladakh. The warmest, softest wool on earth.',
     pricePerMeter: 9800,
+    mrpPerMeter: 15999,
     photo: p(SOURCES.pashmina),
     photoGallery: [p(SOURCES.pashmina), p(SOURCES.pashmina2)],
     image: swatch('f6', '#D8C8AE', '#3A3A3A', '#C5A059', 'twill', 'Pashmina', 'Ladakh'),
@@ -167,10 +191,12 @@ export const FABRICS: Fabric[] = [
     category: 'Wool',
     origin: 'Ladakh',
     tags: ['Heirloom', 'Hand-spun', 'Winter'],
+    sticker: 'Bestseller',
     colors: [
       { name: 'Natural', hex: '#D8C8AE' },
       { name: 'Charcoal', hex: '#3A3A3A' }
     ],
+    lengthOptions: [1, 2, 3],
     widthInches: 36,
     inStockMeters: 18,
     weaveType: 'Twill',
@@ -179,10 +205,12 @@ export const FABRICS: Fabric[] = [
   },
   {
     id: '7',
-    name: 'Belgian Linen',
+    brand: BRAND,
+    name: 'Belgian Linen Fabric (per meter)',
     description:
       'European flax linen with a crisp hand and natural slub. Ages beautifully and softens with each wash. A modern essential.',
     pricePerMeter: 1850,
+    mrpPerMeter: 2999,
     photo: p(SOURCES.linen),
     photoGallery: [p(SOURCES.linen), p(SOURCES.linen2)],
     image: swatch('f7', '#D9CDB3', '#7A7A4F', '#F2EBDD', 'plain', 'Belgian Linen', 'Belgium'),
@@ -195,12 +223,14 @@ export const FABRICS: Fabric[] = [
     category: 'Linen',
     origin: 'Flanders, Belgium',
     tags: ['Sustainable', 'Modern', 'Everyday'],
+    sticker: 'Hot Deal',
     colors: [
       { name: 'Oat', hex: '#D9CDB3' },
       { name: 'Slate', hex: '#6E747B' },
       { name: 'Olive', hex: '#7A7A4F' },
       { name: 'Ivory', hex: '#F2EBDD' }
     ],
+    lengthOptions: [1, 2, 3, 5, 8],
     widthInches: 58,
     inStockMeters: 240,
     weaveType: 'Plain weave',
@@ -209,10 +239,12 @@ export const FABRICS: Fabric[] = [
   },
   {
     id: '8',
-    name: 'Kanjivaram Silk',
+    brand: BRAND,
+    name: 'Kanjivaram Silk Bridal Fabric',
     description:
       'Pure mulberry silk woven with three-shuttle technique. Heavy, regal and known for its temple-border motifs.',
     pricePerMeter: 8400,
+    mrpPerMeter: 13499,
     photo: p(SOURCES.kanjivaram),
     photoGallery: [p(SOURCES.kanjivaram), p(SOURCES.kanjivaram2)],
     image: swatch('f8', '#0E5E6F', '#C5A059', '#F2EBDD', 'kanjivaram', 'Kanjivaram', 'Tamil Nadu'),
@@ -223,10 +255,12 @@ export const FABRICS: Fabric[] = [
     category: 'Silk',
     origin: 'Kanchipuram, Tamil Nadu',
     tags: ['Bridal', 'Temple Border', 'Mulberry'],
+    sticker: 'Trending',
     colors: [
       { name: 'Peacock', hex: '#0E5E6F' },
       { name: 'Rani Pink', hex: '#C9266B' }
     ],
+    lengthOptions: [1, 2, 3, 5, 8],
     widthInches: 47,
     inStockMeters: 30,
     weaveType: 'Three-shuttle',
@@ -235,10 +269,12 @@ export const FABRICS: Fabric[] = [
   },
   {
     id: '9',
-    name: 'Kalamkari Cotton',
+    brand: BRAND,
+    name: 'Kalamkari Hand-Painted Cotton',
     description:
       'Hand-painted with natural dyes using bamboo pens. Each meter tells a story drawn from epics and folk traditions.',
     pricePerMeter: 1650,
+    mrpPerMeter: 2499,
     photo: p(SOURCES.kalamkari),
     photoGallery: [p(SOURCES.kalamkari), p(SOURCES.kalamkari2)],
     image: swatch('f9', '#9B3A2A', '#2A3F66', '#F2EBDD', 'kalamkari', 'Kalamkari', 'Andhra Pradesh'),
@@ -249,10 +285,12 @@ export const FABRICS: Fabric[] = [
     category: 'Cotton',
     origin: 'Srikalahasti, Andhra Pradesh',
     tags: ['Hand-painted', 'Natural Dyes', 'Story Cloth'],
+    sticker: 'Hot Deal',
     colors: [
       { name: 'Madder Red', hex: '#9B3A2A' },
       { name: 'Indigo', hex: '#2A3F66' }
     ],
+    lengthOptions: [1, 2, 3, 5],
     widthInches: 44,
     inStockMeters: 78,
     weaveType: 'Plain woven, hand-painted',
@@ -261,10 +299,12 @@ export const FABRICS: Fabric[] = [
   },
   {
     id: '10',
-    name: 'Italian Merino Wool',
+    brand: BRAND,
+    name: 'Italian Super-130s Merino Suiting',
     description:
       'Super-130s merino from Biella, Italy. The standard for bespoke suiting and winter couture.',
     pricePerMeter: 6200,
+    mrpPerMeter: 9499,
     photo: p(SOURCES.merino),
     photoGallery: [p(SOURCES.merino), p(SOURCES.merino2)],
     image: swatch('f10', '#0F1B2D', '#9A958A', '#C5A059', 'twill', 'Italian Merino', 'Biella'),
@@ -276,11 +316,13 @@ export const FABRICS: Fabric[] = [
     category: 'Wool',
     origin: 'Biella, Italy',
     tags: ['Suiting', 'Super 130s', 'Bespoke'],
+    sticker: 'Bestseller',
     colors: [
       { name: 'Midnight', hex: '#0F1B2D' },
       { name: 'Charcoal', hex: '#3A3A3A' },
       { name: 'Stone', hex: '#9A958A' }
     ],
+    lengthOptions: [1, 2, 3, 5, 8],
     widthInches: 60,
     inStockMeters: 96,
     weaveType: 'Twill',
@@ -289,10 +331,12 @@ export const FABRICS: Fabric[] = [
   },
   {
     id: '11',
-    name: 'Bandhani Tie-Dye Silk',
+    brand: BRAND,
+    name: 'Bandhani Tie-Dye Silk Fabric',
     description:
       'Each dot tied by hand before dyeing. A Gujarat craft that turns silk into a constellation of colour.',
     pricePerMeter: 3200,
+    mrpPerMeter: 4999,
     photo: p(SOURCES.bandhani),
     photoGallery: [p(SOURCES.bandhani), p(SOURCES.bandhani2)],
     image: swatch('f11', '#C8312B', '#D6A93B', '#F2EBDD', 'tie-dye', 'Bandhani', 'Kutch'),
@@ -303,10 +347,12 @@ export const FABRICS: Fabric[] = [
     category: 'Silk',
     origin: 'Kutch, Gujarat',
     tags: ['Tie-Dye', 'Festive', 'Hand-knotted'],
+    sticker: 'Trending',
     colors: [
       { name: 'Vermilion', hex: '#C8312B' },
       { name: 'Mustard', hex: '#D6A93B' }
     ],
+    lengthOptions: [1, 2, 3, 5],
     widthInches: 44,
     inStockMeters: 44,
     weaveType: 'Resist-dyed plain weave',
@@ -315,10 +361,12 @@ export const FABRICS: Fabric[] = [
   },
   {
     id: '12',
-    name: 'Linen-Silk Blend',
+    brand: BRAND,
+    name: 'Linen-Silk Modern Blend Fabric',
     description:
       'A modern blend: the crispness of linen with the lustre of silk. Elegant for shirts, drapes and saris alike.',
     pricePerMeter: 2950,
+    mrpPerMeter: 4499,
     photo: p(SOURCES.linenSilk),
     photoGallery: [p(SOURCES.linenSilk), p(SOURCES.linenSilk2)],
     image: swatch('f12', '#E7DFCF', '#A6B89A', '#C5A059', 'plain', 'Linen-Silk', 'Bhagalpur'),
@@ -329,10 +377,12 @@ export const FABRICS: Fabric[] = [
     category: 'Mixed',
     origin: 'Bhagalpur',
     tags: ['Blend', 'Drape', 'Versatile'],
+    sticker: 'New In',
     colors: [
       { name: 'Bone', hex: '#E7DFCF' },
       { name: 'Sage', hex: '#A6B89A' }
     ],
+    lengthOptions: [1, 2, 3, 5],
     widthInches: 54,
     inStockMeters: 130,
     weaveType: 'Plain weave',
@@ -396,8 +446,8 @@ export const TESTIMONIALS: Testimonial[] = [
 
 export const CATEGORIES: Fabric['category'][] = ['Silk', 'Cotton', 'Wool', 'Linen', 'Satin', 'Mixed'];
 
-export const SHIPPING_FLAT_RATE = 250;
-export const FREE_SHIPPING_THRESHOLD = 10000;
+export const SHIPPING_FLAT_RATE = 99;
+export const FREE_SHIPPING_THRESHOLD = 1999;
 export const TAX_RATE = 0.05;
 
 export const formatINR = (n: number) =>
@@ -406,3 +456,80 @@ export const formatINR = (n: number) =>
     currency: 'INR',
     maximumFractionDigits: 0
   }).format(n);
+
+export const discountPct = (price: number, mrp: number): number =>
+  mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
+
+/* Marketing banners for the hero carousel. */
+export interface HeroBanner {
+  id: string;
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  ctaLabel: string;
+  ctaCategory?: string;
+  bg: string;
+  accent: string;
+  photo: string;
+  fallback: string;
+}
+
+export const HERO_BANNERS: HeroBanner[] = [
+  {
+    id: 'bridal',
+    eyebrow: 'WEDDING EDIT · LIVE NOW',
+    title: 'Up to 60% Off Bridal Silks',
+    subtitle: 'Banarasi · Kanjivaram · Patola · Bandhani — shop heritage weaves at festival prices.',
+    ctaLabel: 'Shop Bridal',
+    ctaCategory: 'Silk',
+    bg: 'linear-gradient(135deg,#FFE3EC 0%,#FFD0DD 60%,#FFB1C4 100%)',
+    accent: '#FF3F6C',
+    photo: p(SOURCES.banarasi, 1400, 1000),
+    fallback: FABRICS[1].image
+  },
+  {
+    id: 'summer',
+    eyebrow: 'SUMMER LIGHTWEIGHTS',
+    title: 'Flat 50% Off Cottons & Linens',
+    subtitle: 'Jamdani muslin, Belgian linen and Kalamkari — breathe easy this season.',
+    ctaLabel: 'Shop Summer',
+    ctaCategory: 'Linen',
+    bg: 'linear-gradient(135deg,#FFF6E0 0%,#FFE8B5 55%,#FFCB73 100%)',
+    accent: '#FF905A',
+    photo: p(SOURCES.linen, 1400, 1000),
+    fallback: FABRICS[6].image
+  },
+  {
+    id: 'winter',
+    eyebrow: 'WARM ESSENTIALS',
+    title: 'Pashmina & Merino · From ₹1,850',
+    subtitle: 'Hand-spun cashmere from Ladakh and Super-130s wool from Biella.',
+    ctaLabel: 'Shop Wool',
+    ctaCategory: 'Wool',
+    bg: 'linear-gradient(135deg,#E3F4F1 0%,#BFE8E0 60%,#7FD0C2 100%)',
+    accent: '#03A685',
+    photo: p(SOURCES.pashmina, 1400, 1000),
+    fallback: FABRICS[5].image
+  }
+];
+
+/* Pill categories rendered as circular tiles on home. */
+export const CATEGORY_TILES: { name: string; category: string; color: string }[] = [
+  { name: 'Silks', category: 'Silk', color: '#F7C8C3' },
+  { name: 'Cottons', category: 'Cotton', color: '#F5E1B9' },
+  { name: 'Wool', category: 'Wool', color: '#D8C8AE' },
+  { name: 'Linen', category: 'Linen', color: '#D9CDB3' },
+  { name: 'Satin', category: 'Satin', color: '#E8C7C8' },
+  { name: 'Mixed', category: 'Mixed', color: '#B6D7C9' },
+  { name: 'Bridal', category: 'Silk', color: '#FFD0DD' },
+  { name: 'Sale', category: 'All', color: '#FFE0E6' }
+];
+
+/* Offer ticker — looks like Myntra's sticky deals strip. */
+export const OFFER_TICKER: string[] = [
+  'FREE SHIPPING ON ORDERS ABOVE ₹1,999',
+  'FLAT 50% OFF ON BRIDAL SILKS · CODE WEDDING50',
+  'EXTRA 10% OFF ON UPI · CODE UPI10',
+  'EASY 30-DAY RETURNS · AUTHENTICITY CARD WITH EVERY METER',
+  'HAND-CUT IN INDIA · SHIPPED WORLDWIDE'
+];

@@ -1,64 +1,102 @@
-import React from 'react';
-import { motion } from 'motion/react';
-import { ArrowRight } from 'lucide-react';
-import { HERO_PHOTO, HERO_IMAGE } from '../constants';
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { HERO_BANNERS } from '../constants';
 import { useRouter } from '../context/RouterContext';
 import FabricImage from './FabricImage';
 
-const Hero = () => {
+const Hero: React.FC = () => {
   const { navigate } = useRouter();
+  const [idx, setIdx] = useState(0);
+  const total = HERO_BANNERS.length;
+
+  useEffect(() => {
+    const t = setInterval(() => setIdx(i => (i + 1) % total), 5500);
+    return () => clearInterval(t);
+  }, [total]);
+
+  const banner = HERO_BANNERS[idx];
+
+  const go = (n: number) => setIdx((n + total) % total);
 
   return (
-    <section className="pt-24 md:pt-[120px] pb-20 md:pb-[120px] px-5 md:px-16 max-w-[1280px] mx-auto">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-16 items-center">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <span className="text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-gold mb-6 block">
-            Heritage · Revival · Couture
-          </span>
-          <h1 className="font-serif text-[40px] md:text-5xl lg:text-[64px] leading-[1.1] tracking-[-0.02em] gold-text mb-5 md:mb-6">
-            A Textile <em>Treasure</em><br />for the Discerning Creator
-          </h1>
-          <p className="text-base md:text-lg text-brand-ink-soft leading-relaxed mb-8 md:mb-10 max-w-md">
-            We rescue India's dying weaves and place them in the hands of designers who care.
-            Each meter is hand-cut and dispatched with an authenticity card signed by the master weaver.
-          </p>
-          <div className="flex flex-wrap gap-4 items-center">
-            <button onClick={() => navigate({ name: 'shop' })} className="btn-gold w-full sm:w-auto">
-              Shop the Atelier
-            </button>
-            <button
-              onClick={() => navigate({ name: 'shop', category: 'Silk' })}
-              className="text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-ink hover:text-brand-gold flex items-center gap-2 group"
-            >
-              Browse Silks <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.2 }}
-          className="relative aspect-[4/5] bg-brand-surface overflow-hidden"
-        >
-          <FabricImage
-            photo={HERO_PHOTO}
-            fallback={HERO_IMAGE}
-            alt="Selected weave"
-            fetchPriority="high"
-            className="w-full h-full object-cover"
-          />
-          <div
-            className="absolute bottom-4 left-4 md:bottom-6 md:left-6 bg-brand-bg-soft px-4 py-3 md:px-6 md:py-4 max-w-[180px] md:max-w-[200px] border border-brand-outline/30"
+    <section className="relative pt-[88px] md:pt-[100px]">
+      <div className="relative w-full h-[420px] md:h-[520px] lg:h-[560px] overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={banner.id}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            style={{ background: banner.bg }}
+            className="absolute inset-0 grid grid-cols-1 md:grid-cols-2 items-center"
           >
-            <p className="text-[10px] md:text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-gold mb-1">Selected Weave</p>
-            <p className="font-serif italic text-lg md:text-xl text-brand-ink leading-tight">Varanasi Gold</p>
-          </div>
-        </motion.div>
+            <div className="px-6 md:px-12 lg:px-20 py-8 md:py-0 text-[color:var(--color-myntra-navy)]">
+              <p
+                className="text-[11px] md:text-[12px] font-extrabold tracking-[0.2em] uppercase mb-3"
+                style={{ color: banner.accent }}
+              >
+                {banner.eyebrow}
+              </p>
+              <h1 className="text-[34px] md:text-[44px] lg:text-[56px] font-extrabold leading-[1.05] mb-4 max-w-[520px]">
+                {banner.title}
+              </h1>
+              <p className="text-[14px] md:text-[16px] text-[color:var(--color-myntra-ink)] max-w-[480px] mb-7 md:mb-9">
+                {banner.subtitle}
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => navigate({ name: 'shop', category: banner.ctaCategory })}
+                  className="btn-primary"
+                  style={{ background: banner.accent }}
+                >
+                  {banner.ctaLabel}
+                </button>
+                <button onClick={() => navigate({ name: 'shop' })} className="btn-outline">
+                  View All
+                </button>
+              </div>
+            </div>
+            <div className="hidden md:block relative h-full overflow-hidden">
+              <FabricImage
+                photo={banner.photo}
+                fallback={banner.fallback}
+                alt={banner.title}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, ${banner.bg.includes('linear-gradient') ? 'rgba(255,255,255,0.0)' : '#fff'} 0%, transparent 30%)` }} />
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Arrows */}
+        <button
+          onClick={() => go(idx - 1)}
+          aria-label="Previous"
+          className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <button
+          onClick={() => go(idx + 1)}
+          aria-label="Next"
+          className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
+
+        {/* Dots */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+          {HERO_BANNERS.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => go(i)}
+              aria-label={`Go to slide ${i + 1}`}
+              className={`h-1.5 rounded-full transition-all ${i === idx ? 'w-8 bg-[color:var(--color-myntra-pink)]' : 'w-3 bg-white/80'}`}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );

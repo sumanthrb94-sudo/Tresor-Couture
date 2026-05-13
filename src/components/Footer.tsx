@@ -1,41 +1,86 @@
 import React from 'react';
+import { Facebook, Instagram, Twitter, Youtube, Phone, Mail, ShieldCheck, RotateCcw, Truck } from 'lucide-react';
 import { useRouter } from '../context/RouterContext';
 
-const Footer = () => {
+const cols = [
+  {
+    title: 'Online Shopping',
+    links: ['All Fabrics', 'Silks', 'Cottons', 'Wool', 'Linen', 'Satin', 'Mixed', 'Sale']
+  },
+  {
+    title: 'Customer Policies',
+    links: ['Contact Us', 'FAQ', 'Track Order', 'Shipping', 'Cancellation', 'Returns', 'Privacy Policy', 'Terms of Use']
+  },
+  {
+    title: 'The Atelier',
+    links: ['About Tresor', 'The Weavers', 'Press', 'Sustainability', 'Careers', 'Atelier Tours']
+  }
+];
+
+const Footer: React.FC = () => {
   const { navigate } = useRouter();
 
-  const links = [
-    { label: 'Shipping', onClick: () => navigate({ name: 'home' }) },
-    { label: 'Returns', onClick: () => navigate({ name: 'home' }) },
-    { label: 'Privacy Policy', onClick: () => navigate({ name: 'home' }) },
-    { label: 'Contact', onClick: () => navigate({ name: 'home' }) },
-    { label: 'Instagram', onClick: () => navigate({ name: 'home' }) },
-    { label: 'Pinterest', onClick: () => navigate({ name: 'home' }) }
-  ];
-
   return (
-    <footer
-      id="contact"
-      className="bg-brand-bg-soft w-full py-16 md:py-[120px] px-5 md:px-16 border-t border-brand-gold/20"
-    >
-      <div className="max-w-[1280px] mx-auto flex flex-col md:flex-row justify-between items-start gap-10 md:gap-12">
-        <div className="flex flex-col gap-3 md:gap-4">
-          <span className="font-serif italic text-2xl md:text-[28px] gold-text">Tresor Couture</span>
-          <p className="text-base text-brand-ink-soft max-w-xs">
-            © 2026 Trésor Couture. Artisanal textiles for the discerning creator.
-          </p>
+    <footer className="bg-[color:var(--color-myntra-bg-soft)] mt-10 md:mt-16">
+      <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 py-10 md:py-14 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 md:gap-10">
+        {cols.map(col => (
+          <div key={col.title}>
+            <h4 className="text-[12px] font-extrabold uppercase tracking-[0.15em] text-[color:var(--color-myntra-navy)] mb-4">{col.title}</h4>
+            <ul className="space-y-2.5">
+              {col.links.map(l => (
+                <li key={l}>
+                  <button
+                    onClick={() => navigate({ name: 'home' })}
+                    className="text-[13px] text-[color:var(--color-myntra-ink-soft)] hover:text-[color:var(--color-myntra-pink)] transition-colors"
+                  >
+                    {l}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+
+        <div className="col-span-2 md:col-span-4 lg:col-span-2">
+          <h4 className="text-[12px] font-extrabold uppercase tracking-[0.15em] text-[color:var(--color-myntra-navy)] mb-4">
+            Experience Tresor on Mobile
+          </h4>
+          <div className="flex gap-3 mb-6">
+            <div className="px-4 py-2.5 bg-[color:var(--color-myntra-navy)] text-white rounded-md text-[12px] font-semibold">
+              Get on Google Play
+            </div>
+            <div className="px-4 py-2.5 bg-[color:var(--color-myntra-navy)] text-white rounded-md text-[12px] font-semibold">
+              Download on iOS
+            </div>
+          </div>
+
+          <h4 className="text-[12px] font-extrabold uppercase tracking-[0.15em] text-[color:var(--color-myntra-navy)] mb-3">
+            Keep in Touch
+          </h4>
+          <div className="flex gap-3 mb-6">
+            {[Facebook, Instagram, Twitter, Youtube].map((Icon, i) => (
+              <a key={i} href="#" className="w-9 h-9 rounded-full bg-white border border-[color:var(--color-myntra-border-soft)] flex items-center justify-center text-[color:var(--color-myntra-ink-soft)] hover:text-[color:var(--color-myntra-pink)] hover:border-[color:var(--color-myntra-pink)] transition-colors">
+                <Icon className="w-4 h-4" />
+              </a>
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-1.5 text-[13px] text-[color:var(--color-myntra-ink-soft)]">
+            <div className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> +91 80 1234 5678</div>
+            <div className="flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> concierge@tresorcouture.com</div>
+          </div>
         </div>
-        <nav className="flex flex-wrap gap-x-6 md:gap-x-8 gap-y-4">
-          {links.map(l => (
-            <button
-              key={l.label}
-              onClick={l.onClick}
-              className="text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-ink-soft hover:text-brand-gold hover:underline decoration-brand-gold underline-offset-4 transition-all duration-300"
-            >
-              {l.label}
-            </button>
-          ))}
-        </nav>
+      </div>
+
+      <div className="border-t border-[color:var(--color-myntra-border-soft)] py-5">
+        <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 flex flex-col md:flex-row gap-4 items-center justify-between text-[12px] text-[color:var(--color-myntra-ink-soft)]">
+          <div className="flex flex-wrap gap-5 md:gap-7">
+            <span className="inline-flex items-center gap-1.5"><Truck className="w-4 h-4 text-[color:var(--color-myntra-pink)]" /> Free Shipping over ₹1,999</span>
+            <span className="inline-flex items-center gap-1.5"><RotateCcw className="w-4 h-4 text-[color:var(--color-myntra-pink)]" /> Easy 30-Day Returns</span>
+            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-[color:var(--color-myntra-pink)]" /> 100% Authentic Weaves</span>
+          </div>
+          <p>© {new Date().getFullYear()} Trésor Couture · All rights reserved.</p>
+        </div>
       </div>
     </footer>
   );

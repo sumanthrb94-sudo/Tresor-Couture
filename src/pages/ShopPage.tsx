@@ -1,146 +1,288 @@
-import React, { useMemo, useState } from 'react';
-import { motion } from 'motion/react';
-import { ChevronDown } from 'lucide-react';
-import { CATEGORIES, FABRICS, formatINR } from '../constants';
-import { useRouter } from '../context/RouterContext';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ChevronDown, ChevronUp, Filter, X } from 'lucide-react';
+import { CATEGORIES, FABRICS, discountPct } from '../constants';
 import { Fabric } from '../types';
-import FabricImage from '../components/FabricImage';
+import ProductCard from '../components/ProductCard';
+import { useRouter } from '../context/RouterContext';
 
-type SortKey = 'featured' | 'price-asc' | 'price-desc' | 'rating';
+type SortKey = 'recommended' | 'popularity' | 'discount' | 'price-asc' | 'price-desc' | 'rating' | 'newest';
 
 interface Props {
   initialCategory?: string;
 }
 
+const PRICE_BRACKETS = [
+  { id: '0-2000', label: 'Under ₹2,000', min: 0, max: 2000 },
+  { id: '2000-5000', label: '₹2,000 – ₹5,000', min: 2000, max: 5000 },
+  { id: '5000-10000', label: '₹5,000 – ₹10,000', min: 5000, max: 10000 },
+  { id: '10000-99999999', label: 'Over ₹10,000', min: 10000, max: Number.MAX_SAFE_INTEGER }
+];
+
+const DISCOUNT_BRACKETS = [
+  { id: '10', label: '10% and above', min: 10 },
+  { id: '20', label: '20% and above', min: 20 },
+  { id: '30', label: '30% and above', min: 30 },
+  { id: '40', label: '40% and above', min: 40 },
+  { id: '50', label: '50% and above', min: 50 }
+];
+
+const Section: React.FC<{ title: string; defaultOpen?: boolean; children: React.ReactNode }> = ({ title, defaultOpen = true, children }) => {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="border-b border-[color:var(--color-myntra-border-soft)] py-4">
+      <button onClick={() => setOpen(o => !o)} className="w-full flex justify-between items-center mb-3">
+        <span className="text-[12px] font-extrabold uppercase tracking-[0.1em] text-[color:var(--color-myntra-navy)]">{title}</span>
+        {open ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+      </button>
+      {open && <div className="space-y-2">{children}</div>}
+    </div>
+  );
+};
+
+const Checkbox: React.FC<{ checked: boolean; onChange: () => void; label: React.ReactNode }> = ({ checked, onChange, label }) => (
+  <label className="flex items-center gap-2 text-[13px] text-[color:var(--color-myntra-ink)] cursor-pointer hover:text-[color:var(--color-myntra-pink)]">
+    <input
+      type="checkbox"
+      checked={checked}
+      onChange={onChange}
+      className="accent-[color:var(--color-myntra-pink)] w-4 h-4"
+    />
+    {label}
+  </label>
+);
+
 const ShopPage: React.FC<Props> = ({ initialCategory }) => {
   const { navigate } = useRouter();
-  const [category, setCategory] = useState<string>(initialCategory ?? 'All');
-  const [colorFilter, setColorFilter] = useState<string>('All');
-  const [sort, setSort] = useState<SortKey>('featured');
+  const [categories, setCategories] = useState<Set<string>>(() => new Set(initialCategory && initialCategory !== 'All' ? [initialCategory] : []));
+  const [colors, setColors] = useState<Set<string>>(new Set());
+  const [origins, setOrigins] = useState<Set<string>>(new Set());
+  const [priceBrackets, setPriceBrackets] = useState<Set<string>>(new Set());
+  const [discountBracket, setDiscountBracket] = useState<string>('');
+  const [sort, setSort] = useState<SortKey>('recommended');
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  const colorPalette = useMemo(() => {
-    const set = new Set<string>();
-    FABRICS.forEach(f => f.colors?.forEach(c => set.add(c.name)));
-    return ['All', ...Array.from(set)];
+  useEffect(() => {
+    setCategories(new Set(initialCategory && initialCategory !== 'All' ? [initialCategory] : []));
+  }, [initialCategory]);
+
+  const allColors = useMemo(() => {
+    const s = new Set<string>();
+    FABRICS.forEach(f => f.colors?.forEach(c => s.add(c.name)));
+    return Array.from(s).sort();
   }, []);
 
+  const allOrigins = useMemo(() => Array.from(new Set(FABRICS.map(f => f.origin.split(',')[0].trim()))).sort(), []);
+
+  const toggleSet = (setter: React.Dispatch<React.SetStateAction<Set<string>>>, v: string) =>
+    setter(prev => {
+      const n = new Set(prev);
+      if (n.has(v)) n.delete(v); else n.add(v);
+      return n;
+    });
+
   const filtered = useMemo(() => {
-    let list: Fabric[] = FABRICS.filter(f =>
-      (category === 'All' || f.category === category) &&
-      (colorFilter === 'All' || (f.colors ?? []).some(c => c.name === colorFilter))
-    );
+    let list: Fabric[] = FABRICS.filter(f => {
+      if (categories.size > 0 && !categories.has(f.category)) return false;
+      if (colors.size > 0 && !(f.colors ?? []).some(c => colors.has(c.name))) return false;
+      if (origins.size > 0 && !origins.has(f.origin.split(',')[0].trim())) return false;
+      if (priceBrackets.size > 0) {
+        const ok = PRICE_BRACKETS.some(b => priceBrackets.has(b.id) && f.pricePerMeter >= b.min && f.pricePerMeter < b.max);
+        if (!ok) return false;
+      }
+      if (discountBracket) {
+        const need = DISCOUNT_BRACKETS.find(b => b.id === discountBracket);
+        if (need && discountPct(f.pricePerMeter, f.mrpPerMeter) < need.min) return false;
+      }
+      return true;
+    });
+
     switch (sort) {
       case 'price-asc': list = [...list].sort((a, b) => a.pricePerMeter - b.pricePerMeter); break;
       case 'price-desc': list = [...list].sort((a, b) => b.pricePerMeter - a.pricePerMeter); break;
       case 'rating': list = [...list].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0)); break;
+      case 'popularity': list = [...list].sort((a, b) => (b.reviewCount ?? 0) - (a.reviewCount ?? 0)); break;
+      case 'discount': list = [...list].sort((a, b) => discountPct(b.pricePerMeter, b.mrpPerMeter) - discountPct(a.pricePerMeter, a.mrpPerMeter)); break;
+      case 'newest': list = [...list].reverse(); break;
     }
     return list;
-  }, [category, colorFilter, sort]);
+  }, [categories, colors, origins, priceBrackets, discountBracket, sort]);
+
+  const activeChips: { label: string; clear: () => void }[] = [];
+  categories.forEach(c => activeChips.push({ label: c, clear: () => toggleSet(setCategories, c) }));
+  colors.forEach(c => activeChips.push({ label: c, clear: () => toggleSet(setColors, c) }));
+  origins.forEach(o => activeChips.push({ label: o, clear: () => toggleSet(setOrigins, o) }));
+  priceBrackets.forEach(id => {
+    const b = PRICE_BRACKETS.find(p => p.id === id);
+    if (b) activeChips.push({ label: b.label, clear: () => toggleSet(setPriceBrackets, id) });
+  });
+  if (discountBracket) {
+    const b = DISCOUNT_BRACKETS.find(d => d.id === discountBracket);
+    if (b) activeChips.push({ label: b.label, clear: () => setDiscountBracket('') });
+  }
+
+  const clearAll = () => {
+    setCategories(new Set());
+    setColors(new Set());
+    setOrigins(new Set());
+    setPriceBrackets(new Set());
+    setDiscountBracket('');
+  };
+
+  const Sidebar = (
+    <aside className="text-[color:var(--color-myntra-navy)]">
+      <div className="flex justify-between items-center pb-3 border-b border-[color:var(--color-myntra-border-soft)]">
+        <span className="text-[14px] font-extrabold uppercase tracking-wider">Filters</span>
+        {activeChips.length > 0 && (
+          <button onClick={clearAll} className="text-[12px] font-bold text-[color:var(--color-myntra-pink)]">Clear All</button>
+        )}
+      </div>
+
+      <Section title="Category">
+        {CATEGORIES.map(c => (
+          <Checkbox key={c} checked={categories.has(c)} onChange={() => toggleSet(setCategories, c)} label={c} />
+        ))}
+      </Section>
+
+      <Section title="Price">
+        {PRICE_BRACKETS.map(b => (
+          <Checkbox key={b.id} checked={priceBrackets.has(b.id)} onChange={() => toggleSet(setPriceBrackets, b.id)} label={b.label} />
+        ))}
+      </Section>
+
+      <Section title="Discount Range">
+        {DISCOUNT_BRACKETS.map(b => (
+          <label key={b.id} className="flex items-center gap-2 text-[13px] cursor-pointer hover:text-[color:var(--color-myntra-pink)]">
+            <input
+              type="radio"
+              name="discount"
+              checked={discountBracket === b.id}
+              onChange={() => setDiscountBracket(discountBracket === b.id ? '' : b.id)}
+              className="accent-[color:var(--color-myntra-pink)] w-4 h-4"
+            />
+            {b.label}
+          </label>
+        ))}
+      </Section>
+
+      <Section title="Colour" defaultOpen={false}>
+        <div className="grid grid-cols-3 gap-2">
+          {allColors.map(c => {
+            const hex = FABRICS.find(f => f.colors?.find(x => x.name === c))?.colors?.find(x => x.name === c)?.hex ?? '#ccc';
+            const active = colors.has(c);
+            return (
+              <button
+                key={c}
+                onClick={() => toggleSet(setColors, c)}
+                className={`flex flex-col items-center gap-1 p-1 rounded ${active ? 'ring-2 ring-[color:var(--color-myntra-pink)]' : ''}`}
+                title={c}
+              >
+                <span className="swatch-dot" style={{ background: hex }} />
+                <span className="text-[10px] truncate w-full text-center">{c}</span>
+              </button>
+            );
+          })}
+        </div>
+      </Section>
+
+      <Section title="Origin" defaultOpen={false}>
+        {allOrigins.map(o => (
+          <Checkbox key={o} checked={origins.has(o)} onChange={() => toggleSet(setOrigins, o)} label={o} />
+        ))}
+      </Section>
+    </aside>
+  );
 
   return (
-    <main className="flex-grow pt-24 md:pt-[120px] pb-20 md:pb-[120px] px-5 md:px-16 max-w-[1280px] mx-auto w-full">
-      <div className="text-center mb-10 md:mb-16">
-        <h1 className="font-serif text-[40px] md:text-5xl lg:text-[64px] gold-text mb-3 md:mb-4">Artisanal Gallery</h1>
-        <p className="text-sm md:text-base text-brand-ink-soft max-w-xl mx-auto">
-          Discover our exclusive collection of premium fabrics, curated for the discerning creator.
-        </p>
+    <main className="pt-[148px] md:pt-[160px] pb-12 md:pb-16 bg-white min-h-screen">
+      <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10">
+        {/* Breadcrumb */}
+        <nav className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mb-3">
+          <button onClick={() => navigate({ name: 'home' })} className="hover:text-[color:var(--color-myntra-pink)]">Home</button>
+          <span className="mx-1.5">/</span>
+          <span>Fabrics</span>
+          {categories.size === 1 && (
+            <>
+              <span className="mx-1.5">/</span>
+              <span className="text-[color:var(--color-myntra-navy)] font-semibold">{Array.from(categories)[0]}</span>
+            </>
+          )}
+        </nav>
+
+        <div className="flex items-end justify-between mb-4">
+          <h1 className="text-xl md:text-2xl font-extrabold text-[color:var(--color-myntra-navy)]">
+            Fabrics
+            <span className="text-[14px] font-medium text-[color:var(--color-myntra-ink-mute)] ml-2">— {filtered.length} items</span>
+          </h1>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setMobileFiltersOpen(true)} className="lg:hidden inline-flex items-center gap-2 chip">
+              <Filter className="w-4 h-4" /> Filters
+            </button>
+            <label className="inline-flex items-center gap-2 text-[12px] text-[color:var(--color-myntra-ink-soft)]">
+              <span className="hidden sm:inline">Sort by:</span>
+              <div className="relative">
+                <select
+                  value={sort}
+                  onChange={e => setSort(e.target.value as SortKey)}
+                  className="appearance-none border border-[color:var(--color-myntra-border)] rounded px-3 py-2 pr-8 text-[13px] font-semibold bg-white"
+                >
+                  <option value="recommended">Recommended</option>
+                  <option value="popularity">Popularity</option>
+                  <option value="discount">Better Discount</option>
+                  <option value="price-asc">Price: Low to High</option>
+                  <option value="price-desc">Price: High to Low</option>
+                  <option value="rating">Customer Rating</option>
+                  <option value="newest">What's New</option>
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </label>
+          </div>
+        </div>
+
+        {/* Active filter chips */}
+        {activeChips.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {activeChips.map((c, i) => (
+              <button key={i} onClick={c.clear} className="chip chip-active">
+                {c.label} <X className="w-3 h-3" />
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[260px_1fr] gap-6 lg:gap-8">
+          <div className="hidden lg:block">{Sidebar}</div>
+
+          {filtered.length === 0 ? (
+            <div className="border border-[color:var(--color-myntra-border-soft)] py-20 text-center bg-[color:var(--color-myntra-bg-soft)]">
+              <p className="text-xl font-bold mb-2">No weaves match your filters.</p>
+              <p className="text-[14px] text-[color:var(--color-myntra-ink-soft)] mb-5">Try widening your selection.</p>
+              <button onClick={clearAll} className="btn-outline">Clear Filters</button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
+              {filtered.map(f => <ProductCard key={f.id} fabric={f} />)}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Filter strip */}
-      <div className="flex flex-row flex-wrap justify-between items-center gap-x-5 gap-y-3 mb-8 md:mb-12 border-b border-brand-outline/30 pb-4 md:pb-6">
-        <div className="flex flex-wrap items-center gap-x-5 md:gap-x-6 gap-y-2">
-          <div className="relative">
-            <select
-              value={category}
-              onChange={e => setCategory(e.target.value)}
-              className="appearance-none bg-transparent pr-8 text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-ink hover:text-brand-gold cursor-pointer"
-            >
-              <option value="All">Material · All</option>
-              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <ChevronDown className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+      {/* Mobile filter drawer */}
+      {mobileFiltersOpen && (
+        <div className="fixed inset-0 z-[120] flex">
+          <div className="flex-1 bg-black/40" onClick={() => setMobileFiltersOpen(false)} />
+          <div className="w-[86%] max-w-[360px] bg-white overflow-y-auto p-5">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[14px] font-extrabold uppercase tracking-wider">Filters</span>
+              <button onClick={() => setMobileFiltersOpen(false)}><X className="w-5 h-5" /></button>
+            </div>
+            {Sidebar}
+            <button onClick={() => setMobileFiltersOpen(false)} className="btn-primary w-full mt-5">
+              Apply ({filtered.length})
+            </button>
           </div>
-          <div className="relative">
-            <select
-              value={colorFilter}
-              onChange={e => setColorFilter(e.target.value)}
-              className="appearance-none bg-transparent pr-8 text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-ink hover:text-brand-gold cursor-pointer"
-            >
-              <option value="All">Colour · All</option>
-              {colorPalette.filter(c => c !== 'All').map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <ChevronDown className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
-        </div>
-        <div className="flex items-center gap-4 md:gap-6">
-          <span className="hidden sm:inline text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-ink-soft">
-            {filtered.length} items
-          </span>
-          <div className="relative">
-            <select
-              value={sort}
-              onChange={e => setSort(e.target.value as SortKey)}
-              className="appearance-none bg-transparent pr-8 text-[11px] uppercase tracking-[0.15em] font-semibold text-brand-ink hover:text-brand-gold cursor-pointer"
-            >
-              <option value="featured">Sort by · Featured</option>
-              <option value="price-asc">Price · Low to High</option>
-              <option value="price-desc">Price · High to Low</option>
-              <option value="rating">Top Rated</option>
-            </select>
-            <ChevronDown className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
-        </div>
-      </div>
-
-      {filtered.length === 0 ? (
-        <div className="border border-brand-outline/30 bg-brand-bg-soft p-16 text-center">
-          <p className="font-serif text-2xl mb-2">No weaves match your filters.</p>
-          <p className="text-sm text-brand-ink-soft">Try widening your selection.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-8 md:gap-y-12">
-          {filtered.map((fabric, idx) => (
-            <motion.button
-              key={fabric.id}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: idx * 0.05 }}
-              onClick={() => navigate({ name: 'product', id: fabric.id })}
-              className="group text-left"
-            >
-              <div className="aspect-[4/5] md:aspect-[4/3] overflow-hidden bg-brand-surface mb-3 md:mb-5">
-                <FabricImage
-                  photo={fabric.photo}
-                  fallback={fabric.image}
-                  alt={fabric.name}
-                  className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-1000"
-                />
-              </div>
-              <div className="flex justify-between items-start gap-2 md:gap-4">
-                <div className="min-w-0">
-                  <h3 className="font-serif text-base md:text-2xl text-brand-ink leading-tight truncate">{fabric.name}</h3>
-                  <p className="text-[10px] md:text-[11px] uppercase tracking-[0.1em] font-semibold text-brand-ink-soft mt-1">
-                    {fabric.category}
-                  </p>
-                </div>
-                <p className="text-sm md:text-base text-brand-ink whitespace-nowrap shrink-0">
-                  {formatINR(fabric.pricePerMeter)}<span className="text-xs text-brand-ink-soft">/m</span>
-                </p>
-              </div>
-            </motion.button>
-          ))}
         </div>
       )}
-
-      <div className="mt-12 md:mt-16 text-center">
-        <span className="block w-12 h-px bg-brand-outline/40 mx-auto mb-6 md:mb-8" />
-        <button
-          onClick={() => setCategory('All')}
-          className="border border-brand-gold text-brand-gold px-8 md:px-10 py-3 text-[11px] uppercase tracking-[0.15em] font-semibold hover:bg-brand-gold hover:text-brand-bg transition-all"
-        >
-          View Entire Collection
-        </button>
-      </div>
     </main>
   );
 };
