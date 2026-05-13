@@ -10,6 +10,7 @@ import CategoryStrip from './components/CategoryStrip';
 import OffersBanner from './components/OffersBanner';
 import DealsStrip from './components/DealsStrip';
 import ProductRail from './components/ProductRail';
+import LookbookRail from './components/LookbookRail';
 import Footer from './components/Footer';
 import ShopPage from './pages/ShopPage';
 import ProductPage from './pages/ProductPage';
@@ -34,9 +35,10 @@ const Home: React.FC = () => (
     <OffersBanner />
     <DealsStrip />
     <ProductRail eyebrow="Hot on Tresor" title="Trending Weaves" items={trending} bg="white" />
-    <ProductRail eyebrow="The Bridal Edit" title="Heritage Silks for the Aisle" items={bridal} ctaCategory="Silk" bg="soft" />
-    <ProductRail eyebrow="Just Dropped" title="New In · Limited Bolts" items={newIn} bg="white" />
-    <ProductRail eyebrow="Summer Lightweights" title="Cottons, Linens & Muslins" items={summer} ctaCategory="Cotton" bg="soft" />
+    <LookbookRail />
+    <ProductRail eyebrow="The Bridal Edit" title="Heritage Silks for the Aisle" items={bridal} ctaCategory="Silk" bg="white" />
+    <ProductRail eyebrow="Just Dropped" title="New In · Limited Bolts" items={newIn} bg="soft" />
+    <ProductRail eyebrow="Summer Lightweights" title="Cottons, Linens & Muslins" items={summer} ctaCategory="Cotton" bg="white" />
   </main>
 );
 
