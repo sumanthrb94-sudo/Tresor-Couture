@@ -214,7 +214,7 @@ const CheckoutPage: React.FC = () => {
                       key={opt.id}
                       type="button"
                       onClick={() => setPayment(opt.id)}
-                      className={`text-left border rounded p-3 transition-colors ${active ? 'border-[color:var(--color-myntra-pink)] bg-[#FFF1F5]' : 'border-[color:var(--color-myntra-border)] hover:border-[color:var(--color-myntra-navy)]'}`}
+                      className={`text-left border rounded p-3 transition-colors ${active ? 'border-[color:var(--color-myntra-pink)] bg-[#F5E8C8]' : 'border-[color:var(--color-myntra-border)] hover:border-[color:var(--color-myntra-navy)]'}`}
                     >
                       <Icon className="w-5 h-5 mb-2 text-[color:var(--color-myntra-navy)]" />
                       <p className="text-[13px] font-bold">{opt.label}</p>
