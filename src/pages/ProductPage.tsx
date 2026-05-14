@@ -7,6 +7,7 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import FabricImage from '../components/FabricImage';
 import ProductCard from '../components/ProductCard';
+import ReviewsSection from '../components/ReviewsSection';
 
 interface Props {
   productId: string;
@@ -301,6 +302,9 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
             </div>
           </section>
         )}
+
+        {/* Reviews */}
+        <ReviewsSection fabricId={fabric.id} />
       </div>
     </main>
   );
