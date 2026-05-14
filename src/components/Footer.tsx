@@ -23,7 +23,7 @@ const Footer: React.FC = () => {
   return (
     <footer className="bg-[color:var(--color-myntra-bg-soft)] mt-10 md:mt-16">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 pt-10 md:pt-14 pb-6 flex flex-col items-center text-center border-b border-[color:var(--color-myntra-border-soft)]">
-        <img src="/branding/logo-master.png" alt="Trésor Couture" className="h-20 md:h-24 w-auto object-contain mb-3" />
+        <img src="/branding/logo-master.png" alt="Trésor Couture" className="h-20 md:h-24 w-auto object-contain mb-3 logo-blend" />
         <p className="text-[13px] md:text-[14px] text-[color:var(--color-myntra-ink-soft)] max-w-md">
           Heritage Indian weaves, hand-cut to the meter and dispatched with an authenticity card signed by the master weaver.
         </p>

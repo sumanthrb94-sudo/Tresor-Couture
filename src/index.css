@@ -16,11 +16,11 @@
   --color-myntra-ink: #3D362B;
   --color-myntra-ink-soft: #6B6358;
   --color-myntra-ink-mute: #98917F;
-  --color-myntra-border: #E5D9C0;
-  --color-myntra-border-soft: #F0E6D2;
-  --color-myntra-bg: #FBF5EB;          /* warm cream background */
-  --color-myntra-bg-soft: #F2E8D6;     /* deeper cream surface */
-  --color-myntra-bg-sale: #FFF6E0;     /* pale gold deals strip */
+  --color-myntra-border: #DECCAC;
+  --color-myntra-border-soft: #EAD9BB;
+  --color-myntra-bg: #F1E1C3;          /* warm cream — matches logo background */
+  --color-myntra-bg-soft: #ECDBBC;     /* slightly deeper cream surface */
+  --color-myntra-bg-sale: #F5E5C2;     /* pale gold deals strip */
   --color-myntra-rating-bg: #6B7F4F;
 }
 
@@ -192,6 +192,13 @@
 .scrollbar-none { scrollbar-width: none; }
 
 .no-tap-highlight { -webkit-tap-highlight-color: transparent; }
+
+/* Logo blend — the master PNG has a cream backdrop; multiply blend with the
+   surrounding cream chrome makes the rectangular edge disappear. */
+.logo-blend {
+  mix-blend-mode: multiply;
+  filter: contrast(1.02) saturate(1.05);
+}
 
 /* Strike-through MRP */
 .mrp { color: var(--color-myntra-ink-mute); text-decoration: line-through; font-weight: 500; }
