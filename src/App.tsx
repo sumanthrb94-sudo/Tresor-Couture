@@ -17,10 +17,15 @@ import ProductPage from './pages/ProductPage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import ConfirmationPage from './pages/ConfirmationPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import AccountPage from './pages/AccountPage';
+import AdminPage from './pages/admin/AdminPage';
 import { FABRICS } from './constants';
 import { CartProvider } from './context/CartContext';
 import { OrderProvider } from './context/OrderContext';
 import { WishlistProvider } from './context/WishlistContext';
+import { AuthProvider } from './context/AuthContext';
 import { RouterProvider, useRouter } from './context/RouterContext';
 
 const trending = FABRICS.filter(f => f.sticker === 'Trending' || f.sticker === 'Bestseller').slice(0, 5);
@@ -57,23 +62,33 @@ const RoutedView: React.FC = () => {
       return <CheckoutPage />;
     case 'confirmation':
       return <ConfirmationPage orderId={route.orderId} />;
+    case 'login':
+      return <LoginPage />;
+    case 'register':
+      return <RegisterPage />;
+    case 'account':
+      return <AccountPage tab={route.tab} />;
+    case 'admin':
+      return <AdminPage section={route.section} />;
   }
 };
 
 function App() {
   return (
     <RouterProvider>
-      <WishlistProvider>
-        <CartProvider>
-          <OrderProvider>
-            <div className="selection:bg-[color:var(--color-myntra-pink)] selection:text-white bg-white min-h-screen">
-              <Navbar />
-              <RoutedView />
-              <Footer />
-            </div>
-          </OrderProvider>
-        </CartProvider>
-      </WishlistProvider>
+      <AuthProvider>
+        <WishlistProvider>
+          <CartProvider>
+            <OrderProvider>
+              <div className="selection:bg-[color:var(--color-myntra-pink)] selection:text-white bg-white min-h-screen">
+                <Navbar />
+                <RoutedView />
+                <Footer />
+              </div>
+            </OrderProvider>
+          </CartProvider>
+        </WishlistProvider>
+      </AuthProvider>
     </RouterProvider>
   );
 }

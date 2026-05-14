@@ -23,6 +23,24 @@ const parseHash = (hash: string): Route => {
     case 'confirmation':
       if (segments[1]) return { name: 'confirmation', orderId: segments[1] };
       return { name: 'home' };
+    case 'login':
+      return { name: 'login' };
+    case 'register':
+      return { name: 'register' };
+    case 'account': {
+      const tab = segments[1] as 'profile' | 'orders' | 'wishlist' | 'addresses' | undefined;
+      return { name: 'account', tab };
+    }
+    case 'admin': {
+      const section = segments[1] as
+        | 'dashboard'
+        | 'products'
+        | 'orders'
+        | 'coupons'
+        | 'reviews'
+        | undefined;
+      return { name: 'admin', section };
+    }
     default:
       return { name: 'home' };
   }
@@ -42,6 +60,14 @@ const buildHash = (route: Route): string => {
       return '#/checkout';
     case 'confirmation':
       return `#/confirmation/${route.orderId}`;
+    case 'login':
+      return '#/login';
+    case 'register':
+      return '#/register';
+    case 'account':
+      return route.tab ? `#/account/${route.tab}` : '#/account';
+    case 'admin':
+      return route.section ? `#/admin/${route.section}` : '#/admin';
   }
 };
 

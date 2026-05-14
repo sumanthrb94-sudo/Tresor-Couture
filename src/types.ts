@@ -68,8 +68,18 @@ export interface ShippingAddress {
 
 export type PaymentMethod = 'card' | 'upi' | 'cod';
 
+export type OrderStatus =
+  | 'placed'
+  | 'processing'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled'
+  | 'refunded';
+
 export interface Order {
   id: string;
+  /** Optional foreign key to User; undefined for guest checkouts. */
+  userId?: string;
   items: (CartItem & { fabricSnapshot: Fabric })[];
   subtotal: number;
   shipping: number;
@@ -78,6 +88,60 @@ export interface Order {
   shippingAddress: ShippingAddress;
   paymentMethod: PaymentMethod;
   placedAt: string;
+  status?: OrderStatus;
+  /** Optional applied coupon code (uppercase). */
+  couponCode?: string;
+  /** Discount amount applied via coupon (₹). */
+  couponDiscount?: number;
+}
+
+/* ─────────── e-commerce entities ─────────── */
+
+export type UserRole = 'customer' | 'admin';
+
+export interface User {
+  id: string;
+  email: string;
+  /** SHA-256 of password — never store plaintext. */
+  passwordHash: string;
+  fullName: string;
+  phone?: string;
+  role: UserRole;
+  /** ISO timestamp. */
+  createdAt: string;
+  defaultAddress?: ShippingAddress;
+}
+
+export type CouponKind = 'percent' | 'flat';
+
+export interface Coupon {
+  /** Uppercase code customers type. */
+  code: string;
+  description: string;
+  kind: CouponKind;
+  /** For percent: 10 = 10%; for flat: amount in ₹. */
+  value: number;
+  /** Optional minimum subtotal in ₹. */
+  minSubtotal?: number;
+  /** Optional cap on the discount for percent coupons. */
+  maxDiscount?: number;
+  /** ISO date string; coupon is invalid after this. */
+  expiresAt?: string;
+  /** Disable without deleting. */
+  active: boolean;
+}
+
+export interface Review {
+  id: string;
+  fabricId: string;
+  userId?: string;
+  authorName: string;
+  rating: 1 | 2 | 3 | 4 | 5;
+  title?: string;
+  body: string;
+  createdAt: string;
+  /** Set by admin moderation. */
+  status: 'pending' | 'approved' | 'rejected';
 }
 
 export type Route =
@@ -86,4 +150,8 @@ export type Route =
   | { name: 'product'; id: string }
   | { name: 'cart' }
   | { name: 'checkout' }
-  | { name: 'confirmation'; orderId: string };
+  | { name: 'confirmation'; orderId: string }
+  | { name: 'login' }
+  | { name: 'register' }
+  | { name: 'account'; tab?: 'profile' | 'orders' | 'wishlist' | 'addresses' }
+  | { name: 'admin'; section?: 'dashboard' | 'products' | 'orders' | 'coupons' | 'reviews' };
