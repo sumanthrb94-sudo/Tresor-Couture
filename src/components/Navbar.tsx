@@ -116,11 +116,11 @@ const Navbar: React.FC = () => {
           animate={{ x: 0 }}
           exit={{ x: '-100%' }}
           transition={{ type: 'tween', duration: 0.25 }}
-          className="fixed inset-0 z-[200] bg-[color:var(--color-myntra-bg)] flex flex-col"
+          className="fixed inset-0 z-[200] bg-white flex flex-col"
         >
           <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--color-myntra-border-soft)]">
             <button onClick={() => { setMobileOpen(false); navigate({ name: 'home' }); }} className="flex items-center gap-2">
-              <img src="/branding/logo-master.png" alt="" className="h-9 w-auto object-contain logo-blend" />
+              <img src="/branding/monogram.svg" alt="" className="h-9 w-auto object-contain" />
               <span className="font-bold text-xl tracking-tight text-[color:var(--color-myntra-pink)]">Trésor</span>
               <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-[color:var(--color-myntra-ink-soft)]">couture</span>
             </button>
@@ -162,7 +162,7 @@ const Navbar: React.FC = () => {
 
   return (
     <>
-      <header className="fixed top-0 left-0 w-full z-50 bg-[color:var(--color-myntra-bg)] shadow-[0_2px_8px_rgba(120,90,40,0.08)]">
+      <header className="fixed top-0 left-0 w-full z-50 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
         {/* Top tier — logo, nav, search, icons */}
         <div className="h-16 md:h-20 px-4 md:px-8 lg:px-10 flex items-center gap-4 md:gap-6">
           <button
@@ -171,9 +171,9 @@ const Navbar: React.FC = () => {
             aria-label="Home"
           >
             <img
-              src="/branding/logo-master.png"
+              src="/branding/monogram.svg"
               alt=""
-              className="h-10 md:h-12 w-auto object-contain logo-blend"
+              className="h-10 md:h-12 w-auto object-contain"
               loading="eager"
             />
             <span className="font-extrabold text-[20px] md:text-[24px] tracking-tight text-[color:var(--color-myntra-pink)] leading-none">
@@ -295,7 +295,7 @@ const Navbar: React.FC = () => {
 
       {/* Sub-bar with quick filter chips on shop pages */}
       {route.name === 'shop' && (
-        <div className="fixed top-[88px] md:top-[100px] left-0 w-full z-40 bg-[color:var(--color-myntra-bg)] border-b border-[color:var(--color-myntra-border-soft)]">
+        <div className="fixed top-[88px] md:top-[100px] left-0 w-full z-40 bg-white border-b border-[color:var(--color-myntra-border-soft)]">
           <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 py-2 flex gap-2 overflow-x-auto scrollbar-none">
             <button onClick={() => goShop()} className={`chip ${!activeCat ? 'chip-active' : ''}`}>All</button>
             {CATEGORIES.map(c => (
