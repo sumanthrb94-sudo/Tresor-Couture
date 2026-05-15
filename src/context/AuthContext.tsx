@@ -54,8 +54,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const currentUidRef = useRef<string | null>(null);
 
   const hydrate = useCallback(async (uid: string, email: string | null) => {
-    const profile = (await usersApi.me()) as Record<string, unknown> | null;
-    const admin = await isAdminUser();
+    // Profile read can fail (permission race right after sign-up, network,
+    // Firestore offline). Don't let it block sign-in — fall back to a
+    // minimal user synthesised from the Firebase auth identity so the
+    // session is usable immediately.
+    let profile: Record<string, unknown> | null = null;
+    try {
+      profile = (await usersApi.me()) as Record<string, unknown> | null;
+    } catch (err) {
+      console.warn('[auth] profile read failed; using fallback', (err as Error).message);
+    }
+    let admin = false;
+    try {
+      admin = await isAdminUser();
+    } catch {
+      /* token claim read failure → treat as customer */
+    }
     if (currentUidRef.current !== uid) return;
     setUser(toUser(uid, profile, email));
     setIsAdmin(admin);

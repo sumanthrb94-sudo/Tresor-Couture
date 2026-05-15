@@ -35,7 +35,7 @@ const RegisterPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate({ name: 'account' });
+    if (!loading && user) navigate({ name: 'home' });
   }, [user, loading, navigate]);
 
   useEffect(() => {
@@ -67,7 +67,7 @@ const RegisterPage: React.FC = () => {
         phone: phone.trim() || undefined,
         password
       });
-      navigate({ name: 'account' });
+      navigate({ name: 'home' });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unable to create your account.';
       setSubmitError(message);
@@ -118,7 +118,7 @@ const RegisterPage: React.FC = () => {
               <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] leading-relaxed">
                 Verify your number to create an account instantly — no password required.
               </p>
-              <PhoneOtpForm onDone={() => navigate({ name: 'account' })} verifyLabel="Verify & Create Account" />
+              <PhoneOtpForm onDone={() => navigate({ name: 'home' })} verifyLabel="Verify & Create Account" />
 
               <div className="flex items-center gap-3 my-1">
                 <span className="flex-1 h-px bg-[color:var(--color-myntra-border-soft)]" />
@@ -126,7 +126,7 @@ const RegisterPage: React.FC = () => {
                 <span className="flex-1 h-px bg-[color:var(--color-myntra-border-soft)]" />
               </div>
 
-              <GoogleSignInButton onDone={() => navigate({ name: 'account' })} label="Sign up with Google" />
+              <GoogleSignInButton onDone={() => navigate({ name: 'home' })} label="Sign up with Google" />
             </div>
           ) : (
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
@@ -295,7 +295,7 @@ const RegisterPage: React.FC = () => {
               <span className="flex-1 h-px bg-[color:var(--color-myntra-border-soft)]" />
             </div>
 
-            <GoogleSignInButton onDone={() => navigate({ name: 'account' })} label="Sign up with Google" />
+            <GoogleSignInButton onDone={() => navigate({ name: 'home' })} label="Sign up with Google" />
 
             <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] leading-relaxed">
               By creating an account, you agree to Trésor Couture&apos;s{' '}

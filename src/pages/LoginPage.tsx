@@ -21,7 +21,7 @@ const LoginPage: React.FC = () => {
   // this page already authed — route them to /account so they don't stare
   // at the login form.
   useEffect(() => {
-    if (!loading && user) navigate({ name: 'account' });
+    if (!loading && user) navigate({ name: 'home' });
   }, [user, loading, navigate]);
 
   useEffect(() => {
@@ -41,7 +41,7 @@ const LoginPage: React.FC = () => {
     try {
       await login(email.trim(), password);
       const isAdminLogin = email.trim().toLowerCase() === 'admin@tresor.test';
-      navigate(isAdminLogin ? { name: 'admin' } : { name: 'account' });
+      navigate(isAdminLogin ? { name: 'admin' } : { name: 'home' });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unable to sign in.';
       setError(message);
@@ -96,7 +96,7 @@ const LoginPage: React.FC = () => {
 
             {mode === 'phone' ? (
               <div className="space-y-4">
-                <PhoneOtpForm onDone={() => navigate({ name: 'account' })} verifyLabel="Verify & Sign in" />
+                <PhoneOtpForm onDone={() => navigate({ name: 'home' })} verifyLabel="Verify & Sign in" />
 
                 <div className="flex items-center gap-3 my-1">
                   <span className="flex-1 h-px bg-[color:var(--color-myntra-border-soft)]" />
@@ -104,7 +104,7 @@ const LoginPage: React.FC = () => {
                   <span className="flex-1 h-px bg-[color:var(--color-myntra-border-soft)]" />
                 </div>
 
-                <GoogleSignInButton onDone={() => navigate({ name: 'account' })} />
+                <GoogleSignInButton onDone={() => navigate({ name: 'home' })} />
 
                 <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] leading-relaxed">
                   By continuing, you agree to Trésor Couture&apos;s{' '}
@@ -192,7 +192,7 @@ const LoginPage: React.FC = () => {
                 <span className="flex-1 h-px bg-[color:var(--color-myntra-border-soft)]" />
               </div>
 
-              <GoogleSignInButton onDone={() => navigate({ name: 'account' })} />
+              <GoogleSignInButton onDone={() => navigate({ name: 'home' })} />
 
               <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] leading-relaxed">
                 By continuing, you agree to Trésor Couture&apos;s{' '}
