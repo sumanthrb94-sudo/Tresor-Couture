@@ -35,7 +35,7 @@ import { FABRICS } from './constants';
 import { CartProvider } from './context/CartContext';
 import { OrderProvider } from './context/OrderContext';
 import { WishlistProvider } from './context/WishlistContext';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { RouterProvider, useRouter } from './context/RouterContext';
 import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
 
@@ -45,15 +45,17 @@ let autoSeedAttempted = false;
 
 const Home: React.FC = () => {
   const [products, setProducts] = useState<Fabric[] | null>(null);
+  const { isAdmin } = useAuth();
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        if (!autoSeedAttempted) {
+        // Only admins can write under firestore.rules; guest visitors trigger
+        // a permission_denied that we don't want to surface or risk crashing on.
+        if (isAdmin && !autoSeedAttempted) {
           autoSeedAttempted = true;
-          // seedCatalog is idempotent: it bails out if the collection is non-empty.
-          await seedCatalog(FABRICS as unknown as Record<string, unknown>[]);
+          await seedCatalog(FABRICS as unknown as Record<string, unknown>[]).catch(() => null);
         }
         const rows = await productsApi.list({ limit: 200 });
         if (!cancelled) setProducts(rows as unknown as Fabric[]);
@@ -62,7 +64,7 @@ const Home: React.FC = () => {
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [isAdmin]);
 
   const { trending, newIn, bridal, summer } = useMemo(() => {
     const list = products ?? [];

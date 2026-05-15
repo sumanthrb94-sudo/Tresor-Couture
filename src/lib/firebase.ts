@@ -252,14 +252,22 @@ async function getOne<T>(name: string, id: string): Promise<(T & { id: string })
  * Idempotent — checks the products collection size and bails if already
  * populated, unless `force: true` is passed.
  */
-export async function seedCatalog(items: DocumentData[], opts: { force?: boolean } = {}): Promise<{ seeded: number; skipped: boolean }> {
+export async function seedCatalog(items: DocumentData[], opts: { force?: boolean } = {}): Promise<{ seeded: number; skipped: boolean; reason?: string }> {
   const existing = await getDocs(query(collection(db, 'products'), qLimit(1)));
-  if (!existing.empty && !opts.force) return { seeded: 0, skipped: true };
+  if (!existing.empty && !opts.force) return { seeded: 0, skipped: true, reason: 'already_populated' };
   let seeded = 0;
-  for (const it of items) {
-    const ref = doc(collection(db, 'products'));
-    await setDoc(ref, { ...it, id: ref.id, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
-    seeded += 1;
+  try {
+    for (const it of items) {
+      const ref = doc(collection(db, 'products'));
+      await setDoc(ref, { ...it, id: ref.id, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+      seeded += 1;
+    }
+  } catch (err) {
+    // Firestore rules deny unauthenticated writes; treat as a graceful skip
+    // rather than a crash so the auto-seed call from Home for guests is safe.
+    const code = (err as { code?: string }).code;
+    if (code === 'permission-denied') return { seeded, skipped: true, reason: 'permission_denied' };
+    throw err;
   }
   return { seeded, skipped: false };
 }

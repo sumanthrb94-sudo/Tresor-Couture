@@ -83,7 +83,7 @@ const Navbar: React.FC = () => {
     const items = FABRICS.filter(f => f.masterCategory === label).slice(0, 4);
     return (
       <div
-        className="absolute top-full left-1/2 -translate-x-1/2 w-[820px] bg-white border-t-4 border-[color:var(--color-myntra-pink)] shadow-2xl pt-6 pb-7 px-8 grid grid-cols-[220px_1fr] gap-8 z-50"
+        className="fixed top-[64px] md:top-[80px] left-1/2 -translate-x-1/2 w-[820px] max-w-[calc(100vw-32px)] bg-white border-t-4 border-[color:var(--color-myntra-pink)] shadow-2xl pt-6 pb-7 px-8 grid grid-cols-[220px_1fr] gap-8 z-[60]"
         onMouseEnter={() => setHoverCat(label)}
         onMouseLeave={() => setHoverCat(null)}
       >
