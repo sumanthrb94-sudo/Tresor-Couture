@@ -980,7 +980,6 @@ export const CATEGORIES: Fabric['category'][] = ['Silk', 'Cotton', 'Wool', 'Line
  * the home-page CategoryStrip, the mobile drawer and the shop filter UI.
  */
 export const MASTER_CATEGORIES: MasterCategory[] = [
-  'Fabrics',
   'Dyeable Fabrics',
   'Sarees',
   'Lehenga Cholis',
@@ -1006,13 +1005,12 @@ export const MASTER_CATEGORY_TREE: Record<MasterCategory, string[]> = {
 
 /** Tile metadata for the home-page CategoryStrip and navbar mega-menu. */
 export const MASTER_CATEGORY_TILES: { name: MasterCategory; color: string; tagline: string }[] = [
-  { name: 'Fabrics',          color: '#E5C97A', tagline: 'Hand-loomed by the metre' },
   { name: 'Dyeable Fabrics',  color: '#F2E4C4', tagline: 'Ready for your palette' },
   { name: 'Sarees',           color: '#C9A267', tagline: 'Six yards of heritage' },
   { name: 'Lehenga Cholis',   color: '#D9B26B', tagline: 'For the aisle and after' },
   { name: 'Anarkalis',        color: '#E0BFA0', tagline: 'Royal silhouettes, modern cuts' },
   { name: 'Western Wear',     color: '#CBC0A7', tagline: 'East-West edit' },
-  { name: 'Studios Prêt',      color: '#B8915A', tagline: 'Ready-to-wear, off the atelier rail' }
+  { name: 'Studios Prêt',     color: '#B8915A', tagline: 'Ready-to-wear, off the atelier rail' }
 ];
 
 export const SHIPPING_FLAT_RATE = 99;
