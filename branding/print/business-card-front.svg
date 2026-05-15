@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="3.625in" height="2.125in" viewBox="0 0 1088 638">
+  <title>Trésor Couture — business card (front)</title>
+  <desc>Print: 3.5×2 in at 300 dpi with 0.0625 in bleed on every side.</desc>
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#D8B97A"/>
+      <stop offset="50%" stop-color="#B8893A"/>
+      <stop offset="100%" stop-color="#8E6520"/>
+    </linearGradient>
+  </defs>
+
+  <!-- bleed background (cream paper) -->
+  <rect width="1088" height="638" fill="#F5ECDC"/>
+
+  <!-- safe area frame (do not extend art beyond) -->
+  <rect x="56" y="56" width="976" height="526" fill="none" stroke="url(#gold)" stroke-width="0.6" opacity="0.6"/>
+
+  <!-- corners -->
+  <g stroke="url(#gold)" stroke-width="1.6" fill="none" stroke-linecap="round">
+    <path d="M 88 88 H 116 M 88 88 V 116"/>
+    <path d="M 1000 88 H 972 M 1000 88 V 116"/>
+    <path d="M 88 550 H 116 M 88 550 V 522"/>
+    <path d="M 1000 550 H 972 M 1000 550 V 522"/>
+  </g>
+
+  <!-- wordmark, centred -->
+  <g text-anchor="middle" font-family="'Cormorant Garamond', 'Times New Roman', serif">
+    <text x="544" y="270" font-size="120" font-weight="300" letter-spacing="20" fill="#2A1F12">TRÉSOR</text>
+  </g>
+  <line x1="380" y1="305" x2="498" y2="305" stroke="url(#gold)" stroke-width="1"/>
+  <circle cx="544" cy="305" r="4" fill="url(#gold)"/>
+  <line x1="590" y1="305" x2="708" y2="305" stroke="url(#gold)" stroke-width="1"/>
+  <text x="544" y="350" text-anchor="middle" font-family="'Inter', sans-serif" font-size="22" letter-spacing="16" font-weight="600" fill="#2A1F12">COUTURE</text>
+
+  <text x="544" y="430" text-anchor="middle" font-family="'Inter', sans-serif" font-size="15" letter-spacing="6" font-weight="500" fill="#8E6520">HERITAGE INDIAN WEAVES</text>
+</svg>
