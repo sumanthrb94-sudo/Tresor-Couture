@@ -166,14 +166,23 @@ const Navbar: React.FC = () => {
         <div className="h-16 md:h-20 px-4 md:px-8 lg:px-10 flex items-center gap-4 md:gap-6">
           <button
             onClick={() => navigate({ name: 'home' })}
-            className="flex items-baseline gap-1.5 shrink-0 no-tap-highlight"
-            aria-label="Home"
+            className="flex items-center gap-2 md:gap-2.5 shrink-0 no-tap-highlight"
+            aria-label="Trésor Couture — Home"
           >
-            <span className="font-extrabold text-[22px] md:text-[26px] tracking-tight text-[color:var(--color-myntra-pink)]">
-              TRÉSOR
-            </span>
-            <span className="hidden sm:inline text-[10px] md:text-[11px] font-bold uppercase tracking-[0.18em] text-[color:var(--color-myntra-ink-soft)]">
-              couture
+            <img
+              src="/branding/mark-master.png"
+              alt=""
+              aria-hidden="true"
+              className="h-10 md:h-12 w-auto select-none"
+              draggable={false}
+            />
+            <span className="flex items-baseline gap-1.5">
+              <span className="font-serif font-semibold text-[20px] md:text-[24px] tracking-[0.04em] text-[color:var(--color-myntra-navy)]">
+                TRÉSOR
+              </span>
+              <span className="hidden sm:inline text-[10px] md:text-[11px] font-bold uppercase tracking-[0.22em] text-[color:var(--color-myntra-ink-soft)]">
+                couture
+              </span>
             </span>
           </button>
 

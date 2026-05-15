@@ -254,12 +254,19 @@ def draw_letters(draw, text, fnt, cx, cy, fill, tracking):
 
 
 def build_favicons():
-    """A clean ink-on-cream TC mark for browser tabs.
+    """Browser tab + app icons.
 
-    The master PNG painted cream-on-cream wouldn't read at 16px. We render a
-    bespoke high-contrast 'TC' monogram on the cream paper.
+    Two strategies, picked by size:
+      • ≤ 96 px — bespoke high-contrast ink-on-cream "TC" + gold border.
+        The painted master is too detailed (figure, drape, floral) to read
+        at 16/32 px.
+      • ≥ 128 px — composite the painted TC mark (mark-master.png, the
+        upper portion of the lockup without the TRÉSOR/COUTURE wordmark)
+        on a cream tile with the gold-border frame. This carries the real
+        brand artwork on PWA install, apple-touch, and OS app surfaces.
     """
     sizes = [16, 32, 48, 64, 96, 180, 192, 256, 512]
+    mark_master = Image.open(ROOT / "mark-master.png").convert("RGBA")
     for s in sizes:
         im = Image.new("RGBA", (s, s), CREAM + (255,))
         d = ImageDraw.Draw(im)
@@ -271,31 +278,39 @@ def build_favicons():
             outline=GOLD,
             width=max(1, s // 32),
         )
-        # TC wordmark
-        # Use Cormorant Bold for legibility
-        # find size that fits ~ 55% of canvas
-        target_h = int(s * 0.50)
-        # binary search font size
-        lo, hi = 6, s * 2
-        best = lo
-        while lo <= hi:
-            mid = (lo + hi) // 2
-            f = cormorant(mid, "Bold")
+        if s >= 128:
+            # Painted mark, fit ~72% of canvas with comfortable margin
+            target = int(s * 0.72)
+            ratio = min(target / mark_master.width, target / mark_master.height)
+            new_w = max(1, int(mark_master.width * ratio))
+            new_h = max(1, int(mark_master.height * ratio))
+            mark = mark_master.resize((new_w, new_h), Image.LANCZOS)
+            mx = (s - new_w) // 2
+            my = (s - new_h) // 2
+            im.alpha_composite(mark, (mx, my))
+        else:
+            # Bespoke high-legibility TC at small sizes
+            target_h = int(s * 0.50)
+            lo, hi = 6, s * 2
+            best = lo
+            while lo <= hi:
+                mid = (lo + hi) // 2
+                f = cormorant(mid, "Bold")
+                w, h = text_size(f, "TC")
+                if w <= s * 0.70 and h <= target_h:
+                    best = mid
+                    lo = mid + 1
+                else:
+                    hi = mid - 1
+            f = cormorant(best, "Bold")
             w, h = text_size(f, "TC")
-            if w <= s * 0.70 and h <= target_h:
-                best = mid
-                lo = mid + 1
-            else:
-                hi = mid - 1
-        f = cormorant(best, "Bold")
-        w, h = text_size(f, "TC")
-        bbox = f.getbbox("TC")
-        d.text(
-            (s // 2 - w // 2 - bbox[0], s // 2 - h // 2 - bbox[1] - max(0, s // 40)),
-            "TC",
-            font=f,
-            fill=INK,
-        )
+            bbox = f.getbbox("TC")
+            d.text(
+                (s // 2 - w // 2 - bbox[0], s // 2 - h // 2 - bbox[1] - max(0, s // 40)),
+                "TC",
+                font=f,
+                fill=INK,
+            )
         out = FAVI / f"favicon-{s}x{s}.png"
         im.save(out)
     # apple-touch-icon
@@ -1254,13 +1269,30 @@ def mirror_to_public():
     """Copy generated rasters into /public/branding so the site can serve them."""
     import shutil
 
+    public_root = ROOT.parent / "public" / "branding"
     src_dirs = [FAVI, SOCIAL]
     for d in src_dirs:
-        dest = ROOT.parent / "public" / "branding" / d.name
+        dest = public_root / d.name
         dest.mkdir(parents=True, exist_ok=True)
         for p in d.iterdir():
             if p.is_file():
                 shutil.copy2(p, dest / p.name)
+    # Top-level master assets the site references directly (Navbar, admin kit page, etc.)
+    public_root.mkdir(parents=True, exist_ok=True)
+    for fname in (
+        "master-logo.png",
+        "master-logo-trim.png",
+        "mark-master.png",
+        "monogram-master.png",
+        "monogram.svg",
+        "mark.svg",
+        "wordmark.svg",
+        "horizontal.svg",
+        "palette.json",
+    ):
+        p = ROOT / fname
+        if p.exists():
+            shutil.copy2(p, public_root / fname)
 
 
 # ----- main --------------------------------------------------------------
