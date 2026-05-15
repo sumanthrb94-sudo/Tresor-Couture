@@ -13,10 +13,10 @@ type NavEntry =
   | { kind: 'master'; label: MasterCategory; tone?: 'default' }
   | { kind: 'static'; label: string; tone?: 'default' | 'sale' };
 
-// "Studio" kept as a brand-story slot; "Sale" trails as a tone='sale' entry.
+// "Couture Studio" is the bespoke / made-to-measure entry; "Sale" trails as tone='sale'.
 const NAV: NavEntry[] = [
   ...MASTER_CATEGORIES.map<NavEntry>(m => ({ kind: 'master', label: m })),
-  { kind: 'static', label: 'Studio' },
+  { kind: 'static', label: 'Couture Studio' },
   { kind: 'static', label: 'Sale', tone: 'sale' }
 ];
 
@@ -188,10 +188,18 @@ const Navbar: React.FC = () => {
             </button>
             {NAV.map(n => {
               if (n.kind === 'static') {
+                const click = () => {
+                  if (n.label === 'Couture Studio') {
+                    setMobileOpen(false);
+                    navigate({ name: 'customise' });
+                  } else {
+                    goShop();
+                  }
+                };
                 return (
                   <button
                     key={n.label}
-                    onClick={() => n.label === 'Sale' ? goShop() : goShop()}
+                    onClick={click}
                     className={`w-full text-left py-3 text-[15px] border-b border-[color:var(--color-myntra-border-soft)] ${n.tone === 'sale' ? 'text-[color:var(--color-myntra-pink)] font-bold' : 'font-semibold'}`}
                   >
                     {n.label}
@@ -236,38 +244,6 @@ const Navbar: React.FC = () => {
                 </div>
               );
             })}
-            <button onClick={() => { setMobileOpen(false); navigate({ name: 'cart' }); }} className="w-full text-left py-3 font-semibold text-[15px] border-b border-[color:var(--color-myntra-border-soft)]">
-              Bag ({cartBadge})
-            </button>
-            <button
-              onClick={() => { setMobileOpen(false); navigate(user ? { name: 'account', tab: 'wishlist' } : { name: 'login' }); }}
-              className="w-full text-left py-3 font-semibold text-[15px] border-b border-[color:var(--color-myntra-border-soft)]"
-            >
-              Wishlist ({wishBadge})
-            </button>
-            {user ? (
-              <button
-                onClick={() => { setMobileOpen(false); navigate({ name: 'account' }); }}
-                className="w-full text-left py-3 font-semibold text-[15px] border-b border-[color:var(--color-myntra-border-soft)]"
-              >
-                My Account
-              </button>
-            ) : (
-              <button
-                onClick={() => { setMobileOpen(false); navigate({ name: 'login' }); }}
-                className="w-full text-left py-3 font-semibold text-[15px] border-b border-[color:var(--color-myntra-border-soft)] text-[color:var(--color-myntra-pink)]"
-              >
-                Login / Sign Up
-              </button>
-            )}
-            {isAdmin && (
-              <button
-                onClick={() => { setMobileOpen(false); navigate({ name: 'admin' }); }}
-                className="w-full text-left py-3 font-bold text-[15px] text-[color:var(--color-myntra-pink)]"
-              >
-                Admin Console
-              </button>
-            )}
           </nav>
         </motion.div>
       )}
@@ -310,6 +286,11 @@ const Navbar: React.FC = () => {
                 (n.kind === 'static' && n.label === 'Sale' && route.name === 'shop' && !activeCat);
               const onClick = () => {
                 if (n.kind === 'master') goShop(n.label);
+                else if (n.label === 'Couture Studio') {
+                  setMobileOpen(false);
+                  setHoverCat(null);
+                  navigate({ name: 'customise' });
+                }
                 else goShop();
               };
               return (
@@ -374,17 +355,18 @@ const Navbar: React.FC = () => {
           {/* Right icons */}
           <div className="flex items-center gap-1 md:gap-2 ml-auto md:ml-0 shrink-0">
             <div
-              className="hidden md:block relative"
+              className="relative"
               onMouseEnter={() => setProfileOpen(true)}
               onMouseLeave={() => setProfileOpen(false)}
             >
               <button
-                onClick={() => navigate(user ? { name: 'account' } : { name: 'login' })}
-                className="flex flex-col items-center px-3 py-1 group"
+                onClick={() => setProfileOpen(v => !v)}
+                className="flex flex-col items-center px-2 md:px-3 py-1 group"
                 aria-label="Profile"
+                aria-expanded={profileOpen}
               >
                 <User className="w-5 h-5 text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]" />
-                <span className="text-[10px] font-bold mt-0.5">Profile</span>
+                <span className="hidden md:block text-[10px] font-bold mt-0.5">Profile</span>
               </button>
               {profileOpen && (
                 <div className="absolute top-full right-0 w-60 bg-white border-t-4 border-[color:var(--color-myntra-pink)] shadow-2xl pt-3 pb-2 z-50">
@@ -399,7 +381,7 @@ const Navbar: React.FC = () => {
                         <p className="text-[14px] font-extrabold">Welcome</p>
                         <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mb-2">To access your bag and orders</p>
                         <button
-                          onClick={() => navigate({ name: 'login' })}
+                          onClick={() => { setProfileOpen(false); navigate({ name: 'login' }); }}
                           className="block w-full text-center border border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)] text-[12px] font-bold uppercase tracking-wider py-1.5 rounded"
                         >
                           Login / Sign Up
@@ -410,16 +392,16 @@ const Navbar: React.FC = () => {
                   <ul className="py-1 text-[13px]">
                     {user && (
                       <>
-                        <li><button onClick={() => navigate({ name: 'account', tab: 'profile' })} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)]">My Profile</button></li>
-                        <li><button onClick={() => navigate({ name: 'account', tab: 'orders' })} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)]">My Orders</button></li>
-                        <li><button onClick={() => navigate({ name: 'account', tab: 'wishlist' })} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)]">Wishlist</button></li>
-                        <li><button onClick={() => navigate({ name: 'account', tab: 'addresses' })} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)]">Addresses</button></li>
+                        <li><button onClick={() => { setProfileOpen(false); navigate({ name: 'account', tab: 'profile' }); }} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)]">My Profile</button></li>
+                        <li><button onClick={() => { setProfileOpen(false); navigate({ name: 'account', tab: 'orders' }); }} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)]">My Orders</button></li>
+                        <li><button onClick={() => { setProfileOpen(false); navigate({ name: 'account', tab: 'wishlist' }); }} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)]">Wishlist</button></li>
+                        <li><button onClick={() => { setProfileOpen(false); navigate({ name: 'account', tab: 'addresses' }); }} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)]">Addresses</button></li>
                       </>
                     )}
                     {isAdmin && (
                       <li>
                         <button
-                          onClick={() => navigate({ name: 'admin' })}
+                          onClick={() => { setProfileOpen(false); navigate({ name: 'admin' }); }}
                           className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)] text-[color:var(--color-myntra-pink)] font-bold flex items-center gap-2"
                         >
                           <LayoutDashboard className="w-4 h-4" /> Admin Console
@@ -432,11 +414,11 @@ const Navbar: React.FC = () => {
             </div>
             <button
               onClick={() => navigate(user ? { name: 'account', tab: 'wishlist' } : { name: 'login' })}
-              className="hidden md:flex flex-col items-center px-3 py-1 group relative"
+              className="flex flex-col items-center px-2 md:px-3 py-1 group relative"
               aria-label="Wishlist"
             >
               <Heart className="w-5 h-5 text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]" />
-              <span className="text-[10px] font-bold mt-0.5">Wishlist</span>
+              <span className="hidden md:block text-[10px] font-bold mt-0.5">Wishlist</span>
               {wishBadge > 0 && (
                 <span className="absolute top-0 right-1 bg-[color:var(--color-myntra-pink)] text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
                   {wishBadge}

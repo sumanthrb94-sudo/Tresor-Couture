@@ -169,6 +169,7 @@ export type Route =
   | { name: 'cart' }
   | { name: 'checkout' }
   | { name: 'confirmation'; orderId: string }
+  | { name: 'customise'; productId?: string }
   | { name: 'login' }
   | { name: 'register' }
   | { name: 'account'; tab?: 'profile' | 'orders' | 'wishlist' | 'addresses' }

@@ -17,6 +17,7 @@ import ProductPage from './pages/ProductPage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import ConfirmationPage from './pages/ConfirmationPage';
+import CustomisePage from './pages/CustomisePage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminLandingPage from './pages/AdminLandingPage';
 import AdminBrandKitPage from './pages/AdminBrandKitPage';
@@ -67,6 +68,8 @@ const RoutedView: React.FC = () => {
       return <CheckoutPage />;
     case 'confirmation':
       return <ConfirmationPage orderId={route.orderId} />;
+    case 'customise':
+      return <CustomisePage productId={route.productId} />;
     case 'login':
       return <LoginPage />;
     case 'register':
