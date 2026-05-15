@@ -58,7 +58,7 @@ const RoutedView: React.FC = () => {
     case 'home':
       return <Home />;
     case 'shop':
-      return <ShopPage initialCategory={route.category} />;
+      return <ShopPage initialCategory={route.category} initialSubCategory={route.subCategory} />;
     case 'product':
       return <ProductPage productId={route.id} />;
     case 'cart':
