@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Package, ShoppingBag, Tag, Star, LogOut, ExternalLink } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Tag, Star, Palette, LogOut, ExternalLink } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
 
@@ -52,6 +52,12 @@ const AdminLayout: React.FC<{ section: Section; children: React.ReactNode }> = (
               })}
             </nav>
             <div className="mt-4 pt-4 border-t border-[color:var(--color-myntra-border-soft)] flex flex-col gap-1.5">
+              <button
+                onClick={() => navigate({ name: 'admin-brand-kit' })}
+                className="flex items-center gap-2 px-3 py-2 rounded text-[12px] font-semibold text-[color:var(--color-myntra-ink-soft)] hover:bg-[color:var(--color-myntra-bg-soft)]"
+              >
+                <Palette className="w-4 h-4" /> Brand Identity Kit
+              </button>
               <button
                 onClick={() => navigate({ name: 'home' })}
                 className="flex items-center gap-2 px-3 py-2 rounded text-[12px] font-semibold text-[color:var(--color-myntra-ink-soft)] hover:bg-[color:var(--color-myntra-bg-soft)]"
