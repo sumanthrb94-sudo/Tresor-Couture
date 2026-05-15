@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { CheckCircle2, CreditCard, Lock, MapPin, Smartphone, Tag, Truck, User } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useRouter } from '../context/RouterContext';
-import { useOrders } from '../context/OrderContext';
 import { useAuth } from '../context/AuthContext';
 import { formatINR } from '../constants';
 import { PaymentMethod, ShippingAddress } from '../types';
 import { couponsApi } from '../lib/firebase';
 import FabricImage from '../components/FabricImage';
+import PaymentModal from '../components/PaymentModal';
 
 type Step = 'login' | 'address' | 'payment';
 
@@ -24,9 +24,8 @@ const initialAddress: ShippingAddress = {
 };
 
 const CheckoutPage: React.FC = () => {
-  const { resolved, subtotal, shipping, tax, total, clear } = useCart();
+  const { resolved, subtotal, shipping, tax, total, clearCart } = useCart();
   const { navigate } = useRouter();
-  const { placeOrder } = useOrders();
   const { user } = useAuth();
 
   const [step, setStep] = useState<Step>(user ? 'address' : 'login');
@@ -39,8 +38,8 @@ const CheckoutPage: React.FC = () => {
   const [card, setCard] = useState({ number: '', name: '', expiry: '', cvv: '' });
   const [upi, setUpi] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [placing, setPlacing] = useState(false);
   const [placeError, setPlaceError] = useState<string | null>(null);
+  const [showPayment, setShowPayment] = useState(false);
 
   const [couponInput, setCouponInput] = useState('');
   const [couponCode, setCouponCode] = useState<string | null>(null);
@@ -123,30 +122,25 @@ const CheckoutPage: React.FC = () => {
     setCouponInput('');
   };
 
-  const handlePlaceOrder = async () => {
+  // Quick lightweight gate before opening the payment modal — the modal
+  // re-validates payment-instrument details itself.
+  const handleStartPayment = () => {
     if (!validatePayment()) return;
     if (!user) {
-      // ordersApi.place() asserts auth; route to login rather than 500.
       setPlaceError('Please sign in to place your order.');
       navigate({ name: 'login' });
       return;
     }
-    setPlacing(true);
     setPlaceError(null);
-    try {
-      const placed = await placeOrder({
-        items: resolved.map(({ item }) => ({ fabricId: item.fabricId, meters: item.meters, color: item.color })),
-        shippingAddress: address,
-        paymentMethod: payment,
-        couponCode: couponCode ?? undefined
-      });
-      clear();
-      navigate({ name: 'confirmation', orderId: placed.id });
-    } catch (err) {
-      setPlaceError(err instanceof Error ? err.message : 'Could not place your order.');
-    } finally {
-      setPlacing(false);
-    }
+    setShowPayment(true);
+  };
+
+  const handlePaymentSuccess = (orderId: string) => {
+    // Cart MUST be emptied before navigation so the user can't accidentally
+    // re-place the same order by hitting back.
+    clearCart();
+    setShowPayment(false);
+    navigate({ name: 'confirmation', orderId });
   };
 
   const StepBlock: React.FC<{ id: Step; index: number; title: string; doneTitle?: string; children: React.ReactNode }> = ({ id, index, title, doneTitle, children }) => {
@@ -322,14 +316,11 @@ const CheckoutPage: React.FC = () => {
               )}
 
               <button
-                onClick={handlePlaceOrder}
-                disabled={placing}
+                onClick={handleStartPayment}
+                disabled={showPayment}
                 className="btn-primary mt-5 w-full sm:w-auto inline-flex items-center justify-center gap-2"
               >
-                {placing && (
-                  <span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" aria-hidden />
-                )}
-                {placing ? 'Placing Order…' : `Place Order · ${formatINR(payable)}`}
+                {`Place Order · ${formatINR(payable)}`}
               </button>
             </StepBlock>
           </div>
@@ -413,6 +404,17 @@ const CheckoutPage: React.FC = () => {
           </aside>
         </div>
       </div>
+
+      <PaymentModal
+        open={showPayment}
+        amount={payable}
+        initialMethod={payment}
+        shippingAddress={address}
+        items={resolved.map(({ item }) => ({ fabricId: item.fabricId, meters: item.meters, color: item.color }))}
+        couponCode={couponCode ?? undefined}
+        onClose={() => setShowPayment(false)}
+        onSuccess={placed => handlePaymentSuccess(placed.id)}
+      />
     </main>
   );
 };
