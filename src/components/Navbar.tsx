@@ -10,17 +10,18 @@ import { FABRICS, MASTER_CATEGORIES, MASTER_CATEGORY_TREE, OFFER_TICKER } from '
 import type { MasterCategory } from '../types';
 
 type NavEntry =
-  | { kind: 'master'; label: MasterCategory; tone?: 'default' }
-  | { kind: 'static'; label: string; tone?: 'default' | 'sale' };
+  | { kind: 'master'; label: MasterCategory; tone?: 'default' | 'premium' }
+  | { kind: 'static'; label: string; tone?: 'default' | 'sale' | 'premium' };
 
-// "Couture Customisations" is the ultra-exclusive bespoke atelier; "Studio Prêt"
-// is the ready-to-wear master category that immediately follows it in the nav.
+// The two atelier lines ("Couture Customisations" and "Studios Prêt") render with
+// a distinct serif/gold treatment so they read as signature offerings, not regular
+// shop categories. Sale keeps its red/pink tone.
 const NAV: NavEntry[] = [
   ...MASTER_CATEGORIES
-    .filter(m => m !== 'Studio Prêt')
+    .filter(m => m !== 'Studios Prêt')
     .map<NavEntry>(m => ({ kind: 'master', label: m })),
-  { kind: 'static', label: 'Couture Customisations' },
-  { kind: 'master', label: 'Studio Prêt' },
+  { kind: 'static', label: 'Couture Customisations', tone: 'premium' },
+  { kind: 'master', label: 'Studios Prêt', tone: 'premium' },
   { kind: 'static', label: 'Sale', tone: 'sale' }
 ];
 
@@ -200,25 +201,37 @@ const Navbar: React.FC = () => {
                     goShop();
                   }
                 };
+                const premium = n.tone === 'premium';
                 return (
                   <button
                     key={n.label}
                     onClick={click}
-                    className={`w-full text-left py-3 text-[15px] border-b border-[color:var(--color-myntra-border-soft)] ${n.tone === 'sale' ? 'text-[color:var(--color-myntra-pink)] font-bold' : 'font-semibold'}`}
+                    className={
+                      premium
+                        ? 'w-full text-left py-3.5 border-b border-[#E8DCC4] bg-[#FBF7EE] -mx-5 px-5 flex items-center gap-2 font-serif italic text-[17px] text-[#8E6520]'
+                        : `w-full text-left py-3 text-[15px] border-b border-[color:var(--color-myntra-border-soft)] ${n.tone === 'sale' ? 'text-[color:var(--color-myntra-pink)] font-bold' : 'font-semibold'}`
+                    }
                   >
+                    {premium && <span aria-hidden className="w-1.5 h-1.5 rounded-full bg-[color:var(--color-myntra-pink)]" />}
                     {n.label}
                   </button>
                 );
               }
               const expanded = mobileExpanded === n.label;
               const subs = MASTER_CATEGORY_TREE[n.label] ?? [];
+              const isPremium = n.tone === 'premium';
               return (
-                <div key={n.label} className="border-b border-[color:var(--color-myntra-border-soft)]">
+                <div key={n.label} className={`border-b border-[color:var(--color-myntra-border-soft)] ${isPremium ? 'bg-[#FBF7EE] -mx-5 px-5' : ''}`}>
                   <div className="flex items-stretch">
                     <button
                       onClick={() => goShop(n.label)}
-                      className="flex-1 text-left py-3 font-semibold text-[15px]"
+                      className={
+                        isPremium
+                          ? 'flex-1 text-left py-3.5 font-serif italic text-[17px] text-[#8E6520] flex items-center gap-2'
+                          : 'flex-1 text-left py-3 font-semibold text-[15px]'
+                      }
                     >
+                      {isPremium && <span aria-hidden className="w-1.5 h-1.5 rounded-full bg-[color:var(--color-myntra-pink)]" />}
                       {n.label}
                     </button>
                     <button
@@ -297,6 +310,8 @@ const Navbar: React.FC = () => {
                 }
                 else goShop();
               };
+              const isPremium = n.tone === 'premium';
+              const isSale = n.kind === 'static' && n.tone === 'sale';
               return (
                 <div
                   key={n.label}
@@ -308,13 +323,25 @@ const Navbar: React.FC = () => {
                     onClick={onClick}
                     aria-haspopup={n.kind === 'master' ? 'true' : undefined}
                     aria-expanded={n.kind === 'master' ? hoverCat === n.label : undefined}
-                    className={`h-full px-3 xl:px-4 flex items-center text-[12px] xl:text-[13px] font-bold uppercase tracking-[0.04em] transition-colors no-tap-highlight border-b-[3px] ${
-                      isActive ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)]'
-                        : n.kind === 'static' && n.tone === 'sale'
-                          ? 'border-transparent text-[color:var(--color-myntra-pink)] hover:text-[color:var(--color-myntra-pink-dark)]'
-                          : 'border-transparent text-[color:var(--color-myntra-navy)] hover:text-[color:var(--color-myntra-pink)]'
-                    }`}
+                    className={
+                      isPremium
+                        ? `h-full px-3 xl:px-4 flex items-center gap-1.5 font-serif italic text-[13px] xl:text-[15px] tracking-[0.02em] transition-colors no-tap-highlight border-b-[3px] ${
+                            isActive
+                              ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)]'
+                              : 'border-transparent text-[#8E6520] hover:text-[color:var(--color-myntra-pink)]'
+                          }`
+                        : `h-full px-3 xl:px-4 flex items-center text-[12px] xl:text-[13px] font-bold uppercase tracking-[0.04em] transition-colors no-tap-highlight border-b-[3px] ${
+                            isActive
+                              ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)]'
+                              : isSale
+                                ? 'border-transparent text-[color:var(--color-myntra-pink)] hover:text-[color:var(--color-myntra-pink-dark)]'
+                                : 'border-transparent text-[color:var(--color-myntra-navy)] hover:text-[color:var(--color-myntra-pink)]'
+                          }`
+                    }
                   >
+                    {isPremium && (
+                      <span aria-hidden className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--color-myntra-pink)]" />
+                    )}
                     {n.label}
                   </button>
                   {n.kind === 'master' && hoverCat === n.label && megaPanel(n.label)}
