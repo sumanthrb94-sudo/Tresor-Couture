@@ -2,8 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { HERO_BANNERS } from '../constants';
+import type { MasterCategory } from '../types';
 import { useRouter } from '../context/RouterContext';
 import FabricImage from './FabricImage';
+
+// Maps the legacy weave-based banner CTAs onto the new master taxonomy so each
+// banner deep-links into a real catalogue section instead of an orphan filter.
+const BANNER_DESTINATION: Record<string, { category: MasterCategory; subCategory?: string }> = {
+  bridal: { category: 'Lehenga Cholis', subCategory: 'Bridal' },
+  summer: { category: 'Fabrics', subCategory: 'Linen' },
+  winter: { category: 'Fabrics', subCategory: 'Wool' }
+};
 
 const Hero: React.FC = () => {
   const { navigate } = useRouter();
@@ -61,7 +70,14 @@ const Hero: React.FC = () => {
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <button
-                    onClick={() => navigate({ name: 'shop', category: banner.ctaCategory })}
+                    onClick={() => {
+                      const dest = BANNER_DESTINATION[banner.id];
+                      navigate(
+                        dest
+                          ? { name: 'shop', category: dest.category, subCategory: dest.subCategory }
+                          : { name: 'shop' }
+                      );
+                    }}
                     className="btn-primary"
                     style={{ background: banner.accent }}
                   >

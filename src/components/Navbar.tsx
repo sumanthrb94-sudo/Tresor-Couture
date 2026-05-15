@@ -1,22 +1,23 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Heart, LayoutDashboard, Menu, Search, ShoppingBag, User, X } from 'lucide-react';
+import { ChevronDown, Heart, LayoutDashboard, Menu, Search, ShoppingBag, User, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
-import { CATEGORIES, FABRICS, OFFER_TICKER } from '../constants';
+import { FABRICS, MASTER_CATEGORIES, MASTER_CATEGORY_TREE, OFFER_TICKER } from '../constants';
+import type { MasterCategory } from '../types';
 
-const NAV: { label: string; category?: string; tone?: 'default' | 'sale' }[] = [
-  { label: 'Silks', category: 'Silk' },
-  { label: 'Cottons', category: 'Cotton' },
-  { label: 'Wool', category: 'Wool' },
-  { label: 'Linen', category: 'Linen' },
-  { label: 'Satin', category: 'Satin' },
-  { label: 'Mixed', category: 'Mixed' },
-  { label: 'Studio' },
-  { label: 'Sale', tone: 'sale' }
+type NavEntry =
+  | { kind: 'master'; label: MasterCategory; tone?: 'default' }
+  | { kind: 'static'; label: string; tone?: 'default' | 'sale' };
+
+// "Studio" kept as a brand-story slot; "Sale" trails as a tone='sale' entry.
+const NAV: NavEntry[] = [
+  ...MASTER_CATEGORIES.map<NavEntry>(m => ({ kind: 'master', label: m })),
+  { kind: 'static', label: 'Studio' },
+  { kind: 'static', label: 'Sale', tone: 'sale' }
 ];
 
 const Navbar: React.FC = () => {
@@ -30,6 +31,7 @@ const Navbar: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [hoverCat, setHoverCat] = useState<string | null>(null);
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : '';
@@ -45,17 +47,20 @@ const Navbar: React.FC = () => {
     return FABRICS.filter(f =>
       f.name.toLowerCase().includes(q) ||
       f.category.toLowerCase().includes(q) ||
+      f.masterCategory.toLowerCase().includes(q) ||
       f.tags.some(t => t.toLowerCase().includes(q))
     ).slice(0, 6);
   }, [search]);
 
   const activeCat = route.name === 'shop' ? route.category : undefined;
 
-  const goShop = (category?: string) => {
+  const goShop = (category?: string, subCategory?: string) => {
     setMobileOpen(false);
+    setMobileExpanded(null);
     setSearch('');
     setSearchFocus(false);
-    navigate({ name: 'shop', category });
+    setHoverCat(null);
+    navigate({ name: 'shop', category, subCategory });
   };
 
   const onSearchSubmit = (e: React.FormEvent) => {
@@ -69,43 +74,75 @@ const Navbar: React.FC = () => {
     }
   };
 
-  const megaPanel = (label: string) => {
-    if (label === 'Sale' || label === 'Studio') return null;
-    const cat = NAV.find(n => n.label === label)?.category;
-    const items = FABRICS.filter(f => f.category === cat).slice(0, 4);
-    if (!items.length) return null;
+  const megaPanel = (label: MasterCategory) => {
+    const subs = MASTER_CATEGORY_TREE[label] ?? [];
+    const items = FABRICS.filter(f => f.masterCategory === label).slice(0, 4);
     return (
       <div
-        className="absolute top-full left-1/2 -translate-x-1/2 w-[760px] bg-white border-t-4 border-[color:var(--color-myntra-pink)] shadow-2xl pt-6 pb-7 px-8 grid grid-cols-[200px_1fr] gap-8 z-50"
+        className="absolute top-full left-1/2 -translate-x-1/2 w-[820px] bg-white border-t-4 border-[color:var(--color-myntra-pink)] shadow-2xl pt-6 pb-7 px-8 grid grid-cols-[220px_1fr] gap-8 z-50"
         onMouseEnter={() => setHoverCat(label)}
         onMouseLeave={() => setHoverCat(null)}
       >
         <div>
           <p className="text-[11px] uppercase tracking-[0.15em] font-bold text-[color:var(--color-myntra-pink)] mb-3">
-            Shop by Weave
+            Shop by {label}
           </p>
           <ul className="space-y-2 text-sm">
-            <li><button onClick={() => goShop(cat)} className="hover:text-[color:var(--color-myntra-pink)] font-semibold">All {label}</button></li>
-            <li><button onClick={() => goShop(cat)} className="hover:text-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-ink-soft)]">Bestsellers</button></li>
-            <li><button onClick={() => goShop(cat)} className="hover:text-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-ink-soft)]">New In</button></li>
-            <li><button onClick={() => goShop(cat)} className="hover:text-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-ink-soft)]">Hand-woven</button></li>
-            <li><button onClick={() => goShop(cat)} className="hover:text-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-ink-soft)]">Heritage Revival</button></li>
+            <li>
+              <button
+                onClick={() => goShop(label)}
+                className="hover:text-[color:var(--color-myntra-pink)] font-semibold"
+              >
+                All {label}
+              </button>
+            </li>
+            {subs.map(sub => (
+              <li key={sub}>
+                <button
+                  onClick={() => goShop(label, sub)}
+                  className="hover:text-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-ink-soft)]"
+                >
+                  {sub}
+                </button>
+              </li>
+            ))}
           </ul>
         </div>
         <div className="grid grid-cols-4 gap-3">
-          {items.map(f => (
+          {items.length > 0 ? (
+            items.map(f => (
+              <button
+                key={f.id}
+                onClick={() => { navigate({ name: 'product', id: f.id }); setHoverCat(null); }}
+                className="text-left group"
+              >
+                <div className="aspect-[3/4] bg-[color:var(--color-myntra-bg-soft)] overflow-hidden mb-2">
+                  <img
+                    src={f.photo}
+                    alt={f.name}
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = f.image; }}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+                <p className="text-[12px] font-bold text-[color:var(--color-myntra-navy)] truncate">{f.brand}</p>
+                <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] truncate">
+                  {f.name.split(' ').slice(0, 3).join(' ')}
+                </p>
+              </button>
+            ))
+          ) : (
             <button
-              key={f.id}
-              onClick={() => { navigate({ name: 'product', id: f.id }); setHoverCat(null); }}
-              className="text-left group"
+              onClick={() => goShop(label)}
+              className="col-span-4 aspect-[16/6] bg-[color:var(--color-myntra-bg-soft)] border border-dashed border-[color:var(--color-myntra-pink)] flex flex-col items-center justify-center gap-1 text-center px-4 group hover:bg-white transition-colors"
             >
-              <div className="aspect-[3/4] bg-[color:var(--color-myntra-bg-soft)] overflow-hidden mb-2">
-                <img src={f.photo} alt={f.name} onError={(e) => { (e.currentTarget as HTMLImageElement).src = f.image; }} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-              </div>
-              <p className="text-[12px] font-bold text-[color:var(--color-myntra-navy)] truncate">{f.brand}</p>
-              <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] truncate">{f.name.split(' ').slice(0, 3).join(' ')}</p>
+              <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-[color:var(--color-myntra-pink)]">
+                Coming soon
+              </span>
+              <span className="text-[13px] font-semibold text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]">
+                Preview the {label} collection ↗
+              </span>
             </button>
-          ))}
+          )}
         </div>
       </div>
     );
@@ -137,22 +174,68 @@ const Navbar: React.FC = () => {
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search for fabrics, weaves and more"
+                placeholder="Search for fabrics, sarees, lehengas and more"
                 className="input-search"
               />
             </div>
           </div>
           <nav className="flex-1 overflow-y-auto px-5 py-4">
-            <button onClick={() => goShop()} className="w-full text-left py-3 font-bold text-[15px] border-b border-[color:var(--color-myntra-border-soft)]">All Fabrics</button>
-            {NAV.map(n => (
-              <button
-                key={n.label}
-                onClick={() => n.category ? goShop(n.category) : goShop()}
-                className={`w-full text-left py-3 text-[15px] border-b border-[color:var(--color-myntra-border-soft)] ${n.tone === 'sale' ? 'text-[color:var(--color-myntra-pink)] font-bold' : 'font-semibold'}`}
-              >
-                {n.label}
-              </button>
-            ))}
+            <button
+              onClick={() => goShop()}
+              className="w-full text-left py-3 font-bold text-[15px] border-b border-[color:var(--color-myntra-border-soft)]"
+            >
+              All Categories
+            </button>
+            {NAV.map(n => {
+              if (n.kind === 'static') {
+                return (
+                  <button
+                    key={n.label}
+                    onClick={() => n.label === 'Sale' ? goShop() : goShop()}
+                    className={`w-full text-left py-3 text-[15px] border-b border-[color:var(--color-myntra-border-soft)] ${n.tone === 'sale' ? 'text-[color:var(--color-myntra-pink)] font-bold' : 'font-semibold'}`}
+                  >
+                    {n.label}
+                  </button>
+                );
+              }
+              const expanded = mobileExpanded === n.label;
+              const subs = MASTER_CATEGORY_TREE[n.label] ?? [];
+              return (
+                <div key={n.label} className="border-b border-[color:var(--color-myntra-border-soft)]">
+                  <div className="flex items-stretch">
+                    <button
+                      onClick={() => goShop(n.label)}
+                      className="flex-1 text-left py-3 font-semibold text-[15px]"
+                    >
+                      {n.label}
+                    </button>
+                    <button
+                      onClick={() => setMobileExpanded(expanded ? null : n.label)}
+                      aria-label={`${expanded ? 'Collapse' : 'Expand'} ${n.label}`}
+                      aria-expanded={expanded}
+                      className="px-3 flex items-center"
+                    >
+                      <ChevronDown
+                        className={`w-5 h-5 text-[color:var(--color-myntra-ink-soft)] transition-transform ${expanded ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+                  </div>
+                  {expanded && subs.length > 0 && (
+                    <div className="pb-3 flex flex-wrap gap-2">
+                      {subs.map(sub => (
+                        <button
+                          key={sub}
+                          onClick={() => goShop(n.label, sub)}
+                          className="text-[12px] font-semibold px-3 py-1.5 rounded-full bg-[color:var(--color-myntra-bg-soft)] text-[color:var(--color-myntra-navy)] hover:bg-[color:var(--color-myntra-pink)] hover:text-white transition-colors"
+                        >
+                          {sub}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
             <button onClick={() => { setMobileOpen(false); navigate({ name: 'cart' }); }} className="w-full text-left py-3 font-semibold text-[15px] border-b border-[color:var(--color-myntra-border-soft)]">
               Bag ({cartBadge})
             </button>
@@ -220,11 +303,15 @@ const Navbar: React.FC = () => {
           </button>
 
           {/* Desktop mega-menu */}
-          <nav className="hidden lg:flex items-stretch gap-1 h-full">
+          <nav className="hidden lg:flex items-stretch gap-1 h-full" aria-label="Primary">
             {NAV.map(n => {
               const isActive =
-                (n.category && activeCat === n.category) ||
-                (n.label === 'Sale' && route.name === 'shop' && !activeCat);
+                (n.kind === 'master' && activeCat === n.label) ||
+                (n.kind === 'static' && n.label === 'Sale' && route.name === 'shop' && !activeCat);
+              const onClick = () => {
+                if (n.kind === 'master') goShop(n.label);
+                else goShop();
+              };
               return (
                 <div
                   key={n.label}
@@ -233,17 +320,19 @@ const Navbar: React.FC = () => {
                   onMouseLeave={() => setHoverCat(null)}
                 >
                   <button
-                    onClick={() => n.category ? goShop(n.category) : goShop()}
+                    onClick={onClick}
+                    aria-haspopup={n.kind === 'master' ? 'true' : undefined}
+                    aria-expanded={n.kind === 'master' ? hoverCat === n.label : undefined}
                     className={`h-full px-3 xl:px-4 flex items-center text-[12px] xl:text-[13px] font-bold uppercase tracking-[0.04em] transition-colors no-tap-highlight border-b-[3px] ${
                       isActive ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)]'
-                        : n.tone === 'sale'
+                        : n.kind === 'static' && n.tone === 'sale'
                           ? 'border-transparent text-[color:var(--color-myntra-pink)] hover:text-[color:var(--color-myntra-pink-dark)]'
                           : 'border-transparent text-[color:var(--color-myntra-navy)] hover:text-[color:var(--color-myntra-pink)]'
                     }`}
                   >
                     {n.label}
                   </button>
-                  {hoverCat === n.label && megaPanel(n.label)}
+                  {n.kind === 'master' && hoverCat === n.label && megaPanel(n.label)}
                 </div>
               );
             })}
@@ -257,8 +346,9 @@ const Navbar: React.FC = () => {
               onChange={e => setSearch(e.target.value)}
               onFocus={() => setSearchFocus(true)}
               onBlur={() => setTimeout(() => setSearchFocus(false), 150)}
-              placeholder="Search for fabrics, weaves, brands and more"
+              placeholder="Search for fabrics, sarees, lehengas and more"
               className="input-search"
+              aria-label="Search catalogue"
             />
             {searchFocus && suggestions.length > 0 && (
               <ul className="absolute top-full left-0 right-0 mt-1 bg-white border border-[color:var(--color-myntra-border-soft)] shadow-xl z-30 max-h-[360px] overflow-y-auto">
@@ -385,12 +475,12 @@ const Navbar: React.FC = () => {
         </div>
       </header>
 
-      {/* Sub-bar with quick filter chips on shop pages */}
+      {/* Sub-bar with master-category chips on shop pages */}
       {route.name === 'shop' && (
         <div className="fixed top-[88px] md:top-[100px] left-0 w-full z-40 bg-white border-b border-[color:var(--color-myntra-border-soft)]">
           <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 py-2 flex gap-2 overflow-x-auto scrollbar-none">
             <button onClick={() => goShop()} className={`chip ${!activeCat ? 'chip-active' : ''}`}>All</button>
-            {CATEGORIES.map(c => (
+            {MASTER_CATEGORIES.map(c => (
               <button key={c} onClick={() => goShop(c)} className={`chip ${activeCat === c ? 'chip-active' : ''}`}>
                 {c}
               </button>
