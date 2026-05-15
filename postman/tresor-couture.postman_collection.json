@@ -1,0 +1,366 @@
+{
+  "info": {
+    "name": "Trésor Couture · API",
+    "_postman_id": "trsr-couture-api",
+    "description": "Full REST surface for the Trésor Couture backend (Cloud Functions on asia-south1). Use the 'Trésor Couture · Production' environment. Auth endpoints capture {{idToken}} into the environment so downstream calls work automatically.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+      }
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\",\n  \"fullName\": \"Test User\",\n  \"phone\": \"+919876543210\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.idToken) pm.environment.set('idToken', body.idToken);",
+                  "if (body.uid) pm.environment.set('uid', body.uid);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.idToken) pm.environment.set('idToken', body.idToken);",
+                  "if (body.uid) pm.environment.set('uid', body.uid);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{idToken}}" }],
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          }
+        },
+        {
+          "name": "Promote to Admin (admin only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminIdToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/auth/promote", "host": ["{{baseUrl}}"], "path": ["auth", "promote"] },
+            "body": { "mode": "raw", "raw": "{\n  \"uid\": \"{{uid}}\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "List",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/products?limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "limit", "value": "50" },
+                { "key": "masterCategory", "value": "Sarees", "disabled": true },
+                { "key": "subCategory",    "value": "Half Sarees", "disabled": true }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.products && body.products[0]) pm.environment.set('productId', body.products[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get one",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["products", "{{productId}}"] }
+          }
+        },
+        {
+          "name": "Create (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminIdToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/products", "host": ["{{baseUrl}}"], "path": ["products"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"brand\": \"TRÉSOR\",\n  \"name\": \"Sample Banarasi\",\n  \"description\": \"Test product seeded via Postman.\",\n  \"pricePerMeter\": 4500,\n  \"mrpPerMeter\": 7999,\n  \"photo\": \"/products/banarasi-purple-1.jpg\",\n  \"image\": \"/products/banarasi-purple-1.jpg\",\n  \"category\": \"Silk\",\n  \"masterCategory\": \"Sarees\",\n  \"subCategory\": \"Banarasi\",\n  \"origin\": \"Varanasi\",\n  \"tags\": [\"sample\", \"banarasi\"],\n  \"sticker\": \"Trending\",\n  \"widthInches\": 44,\n  \"inStockMeters\": 20\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.product && body.product.id) pm.environment.set('productId', body.product.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminIdToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["products", "{{productId}}"] },
+            "body": { "mode": "raw", "raw": "{\n  \"pricePerMeter\": 4800,\n  \"sticker\": \"Bestseller\"\n}" }
+          }
+        },
+        {
+          "name": "Delete (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminIdToken}}" }],
+            "url": { "raw": "{{baseUrl}}/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["products", "{{productId}}"] }
+          }
+        },
+        {
+          "name": "Bulk seed (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminIdToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/products/bulk", "host": ["{{baseUrl}}"], "path": ["products", "bulk"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"products\": [\n    {\n      \"brand\": \"TRÉSOR\",\n      \"name\": \"Sample 1\",\n      \"description\": \"d\",\n      \"pricePerMeter\": 1000,\n      \"mrpPerMeter\": 1500,\n      \"photo\": \"/products/banarasi-purple-1.jpg\",\n      \"image\": \"/products/banarasi-purple-1.jpg\",\n      \"category\": \"Silk\",\n      \"masterCategory\": \"Sarees\",\n      \"origin\": \"Varanasi\",\n      \"tags\": []\n    }\n  ]\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "My orders",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{idToken}}" }],
+            "url": { "raw": "{{baseUrl}}/orders", "host": ["{{baseUrl}}"], "path": ["orders"] }
+          }
+        },
+        {
+          "name": "All orders (admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminIdToken}}" }],
+            "url": { "raw": "{{baseUrl}}/orders?all=1", "host": ["{{baseUrl}}"], "path": ["orders"], "query": [{ "key": "all", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Get one",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{idToken}}" }],
+            "url": { "raw": "{{baseUrl}}/orders/{{orderId}}", "host": ["{{baseUrl}}"], "path": ["orders", "{{orderId}}"] }
+          }
+        },
+        {
+          "name": "Place order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{idToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/orders", "host": ["{{baseUrl}}"], "path": ["orders"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [{ \"fabricId\": \"{{productId}}\", \"meters\": 3 }],\n  \"shippingAddress\": {\n    \"fullName\": \"Test User\",\n    \"email\": \"{{testEmail}}\",\n    \"phone\": \"9876543210\",\n    \"line1\": \"Plot 12, Banjara Hills\",\n    \"city\": \"Hyderabad\",\n    \"state\": \"Telangana\",\n    \"postalCode\": \"500034\",\n    \"country\": \"India\"\n  },\n  \"paymentMethod\": \"upi\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.order && body.order.id) pm.environment.set('orderId', body.order.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update status (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminIdToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/orders/{{orderId}}/status", "host": ["{{baseUrl}}"], "path": ["orders", "{{orderId}}", "status"] },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"shipped\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{idToken}}" }],
+            "url": { "raw": "{{baseUrl}}/users/me", "host": ["{{baseUrl}}"], "path": ["users", "me"] }
+          }
+        },
+        {
+          "name": "Update me",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{idToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/users/me", "host": ["{{baseUrl}}"], "path": ["users", "me"] },
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Test User (renamed)\"\n}" }
+          }
+        },
+        {
+          "name": "List (admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminIdToken}}" }],
+            "url": { "raw": "{{baseUrl}}/users?limit=20", "host": ["{{baseUrl}}"], "path": ["users"], "query": [{ "key": "limit", "value": "20" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "List for product",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/reviews?fabricId={{productId}}", "host": ["{{baseUrl}}"], "path": ["reviews"], "query": [{ "key": "fabricId", "value": "{{productId}}" }] }
+          }
+        },
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{idToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/reviews", "host": ["{{baseUrl}}"], "path": ["reviews"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fabricId\": \"{{productId}}\",\n  \"rating\": 5,\n  \"title\": \"Loved the weave\",\n  \"body\": \"Exquisite hand-finish, exactly as photographed.\",\n  \"authorName\": \"Test User\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Moderate (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminIdToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/reviews/:id", "host": ["{{baseUrl}}"], "path": ["reviews", ":id"] },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"approved\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Coupons",
+      "item": [
+        {
+          "name": "Create (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminIdToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/coupons", "host": ["{{baseUrl}}"], "path": ["coupons"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"WELCOME10\",\n  \"description\": \"10% off first order\",\n  \"kind\": \"percent\",\n  \"value\": 10,\n  \"minSubtotal\": 1999,\n  \"maxDiscount\": 2000,\n  \"active\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "List (admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminIdToken}}" }],
+            "url": { "raw": "{{baseUrl}}/coupons", "host": ["{{baseUrl}}"], "path": ["coupons"] }
+          }
+        },
+        {
+          "name": "Validate (public)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/coupons/validate", "host": ["{{baseUrl}}"], "path": ["coupons", "validate"] },
+            "body": { "mode": "raw", "raw": "{\n  \"code\": \"{{couponCode}}\",\n  \"subtotal\": 4500\n}" }
+          }
+        }
+      ]
+    }
+  ]
+}

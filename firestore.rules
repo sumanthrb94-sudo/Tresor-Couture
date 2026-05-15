@@ -1,0 +1,62 @@
+rules_version = '2';
+
+// Production security model: clients can read public catalogue data, but
+// every write goes through Cloud Functions which uses the Admin SDK and
+// bypasses these rules. So we lock client writes to zero except for the
+// few collections users own (their own user doc, their own reviews).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Products — public read, admin-only write (write usually goes through the API)
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Coupons — admin only
+    match /coupons/{code} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Orders — owner reads their own, admin reads all
+    match /orders/{orderId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      // Creation is gated through the API; direct client create is denied to
+      // prevent users from setting their own price/status fields.
+      allow write: if isAdmin();
+    }
+
+    // Reviews — anyone signed-in can create their own; public read for approved.
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending';
+      allow update, delete: if isAdmin();
+    }
+
+    // Users — owner reads/updates their own profile, admin sees all.
+    match /users/{userId} {
+      allow read:   if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Anything else — denied by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
