@@ -981,6 +981,7 @@ export const CATEGORIES: Fabric['category'][] = ['Silk', 'Cotton', 'Wool', 'Line
  */
 export const MASTER_CATEGORIES: MasterCategory[] = [
   'Dyeable Fabrics',
+  'Lace',
   'Sarees',
   'Lehenga Cholis',
   'Anarkalis',
@@ -996,6 +997,7 @@ export const MASTER_CATEGORIES: MasterCategory[] = [
 export const MASTER_CATEGORY_TREE: Record<MasterCategory, string[]> = {
   Fabrics: ['Silk', 'Cotton', 'Wool', 'Linen', 'Satin', 'Mixed'],
   'Dyeable Fabrics': ['Cotton', 'Silk', 'Linen', 'Mixed'],
+  Lace: ['Chantilly', 'French', 'Embroidered', 'Cotton', 'Trim & Edging'],
   Sarees: ['Half Sarees', 'Banarasi', 'Kanjivaram', 'Patola', 'Bandhani', 'Jamdani', 'Mashru'],
   'Lehenga Cholis': ['Bridal', 'Festive', 'Contemporary'],
   Anarkalis: ['Floor-length', 'Knee-length', 'Embroidered'],
@@ -1006,6 +1008,7 @@ export const MASTER_CATEGORY_TREE: Record<MasterCategory, string[]> = {
 /** Tile metadata for the home-page CategoryStrip and navbar mega-menu. */
 export const MASTER_CATEGORY_TILES: { name: MasterCategory; color: string; tagline: string }[] = [
   { name: 'Dyeable Fabrics',  color: '#F2E4C4', tagline: 'Ready for your palette' },
+  { name: 'Lace',             color: '#EDE4D2', tagline: 'Hand-knotted trims & edging' },
   { name: 'Sarees',           color: '#C9A267', tagline: 'Six yards of heritage' },
   { name: 'Lehenga Cholis',   color: '#D9B26B', tagline: 'For the aisle and after' },
   { name: 'Anarkalis',        color: '#E0BFA0', tagline: 'Royal silhouettes, modern cuts' },

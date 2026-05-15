@@ -5,6 +5,7 @@
 export type MasterCategory =
   | 'Fabrics'
   | 'Dyeable Fabrics'
+  | 'Lace'
   | 'Sarees'
   | 'Lehenga Cholis'
   | 'Anarkalis'
