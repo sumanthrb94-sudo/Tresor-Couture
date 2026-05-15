@@ -220,7 +220,7 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
   );
 
   return (
-    <main className="pt-[148px] md:pt-[160px] pb-12 md:pb-16 bg-white min-h-screen">
+    <main className="pt-[100px] md:pt-[112px] pb-12 md:pb-16 bg-white min-h-screen">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10">
         {/* Breadcrumb */}
         <nav className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mb-3">

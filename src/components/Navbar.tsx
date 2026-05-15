@@ -484,20 +484,6 @@ const Navbar: React.FC = () => {
         </div>
       </header>
 
-      {/* Sub-bar with master-category chips on shop pages */}
-      {route.name === 'shop' && (
-        <div className="fixed top-[88px] md:top-[100px] left-0 w-full z-40 bg-white border-b border-[color:var(--color-myntra-border-soft)]">
-          <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 py-2 flex gap-2 overflow-x-auto scrollbar-none">
-            <button onClick={() => goShop()} className={`chip ${!activeCat ? 'chip-active' : ''}`}>All</button>
-            {MASTER_CATEGORIES.map(c => (
-              <button key={c} onClick={() => goShop(c)} className={`chip ${activeCat === c ? 'chip-active' : ''}`}>
-                {c}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
       {typeof document !== 'undefined' && createPortal(mobileDrawer, document.body)}
     </>
   );
