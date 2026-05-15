@@ -8,6 +8,7 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import CategoryStrip from './components/CategoryStrip';
 import OffersBanner from './components/OffersBanner';
+import SignupCallout from './components/SignupCallout';
 import ProductRail from './components/ProductRail';
 import LookbookRail from './components/LookbookRail';
 import Footer from './components/Footer';
@@ -31,6 +32,7 @@ const AdminLandingPage  = lazy(() => import('./pages/AdminLandingPage'));
 const AdminBrandKitPage = lazy(() => import('./pages/AdminBrandKitPage'));
 const AdminPage         = lazy(() => import('./pages/admin/AdminPage'));
 const NotFoundPage      = lazy(() => import('./pages/NotFoundPage'));
+const SearchResultsPage = lazy(() => import('./pages/SearchResultsPage'));
 import { FABRICS } from './constants';
 import { CartProvider } from './context/CartContext';
 import { OrderProvider } from './context/OrderContext';
@@ -81,6 +83,8 @@ const Home: React.FC = () => {
       <Hero />
       <CategoryStrip />
       <OffersBanner />
+      {/* SignupCallout self-gates on auth + session dismissal — safe to always mount here. */}
+      <SignupCallout />
       <ProductRail eyebrow="Hot on Tresor" title="Trending Weaves" items={trending} bg="white" />
       <LookbookRail />
       <ProductRail eyebrow="The Bridal Edit" title="Heritage Silks for the Aisle" items={bridal} ctaCategory="Silk" bg="white" />
@@ -98,6 +102,8 @@ const RoutedView: React.FC = () => {
       return <Home />;
     case 'shop':
       return <ShopPage initialCategory={route.category} initialSubCategory={route.subCategory} />;
+    case 'search':
+      return <SearchResultsPage q={route.q} />;
     case 'product':
       return <ProductPage productId={route.id} />;
     case 'cart':

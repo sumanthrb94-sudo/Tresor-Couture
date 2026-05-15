@@ -14,6 +14,11 @@ const parseHash = (hash: string): Route => {
       const subCategory = params.get('subcategory') ?? undefined;
       return { name: 'shop', category, subCategory };
     }
+    case 'search': {
+      const q = (params.get('q') ?? '').trim();
+      if (!q) return { name: 'not-found', path: cleaned };
+      return { name: 'search', q };
+    }
     case 'product':
       if (segments[1]) return { name: 'product', id: segments[1] };
       return { name: 'shop' };
@@ -64,6 +69,8 @@ const buildHash = (route: Route): string => {
       if (route.subCategory) parts.push(`subcategory=${encodeURIComponent(route.subCategory)}`);
       return parts.length ? `#/shop?${parts.join('&')}` : '#/shop';
     }
+    case 'search':
+      return `#/search?q=${encodeURIComponent(route.q)}`;
     case 'product':
       return `#/product/${route.id}`;
     case 'cart':

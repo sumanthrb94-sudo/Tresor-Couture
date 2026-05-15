@@ -166,6 +166,7 @@ export interface Review {
 export type Route =
   | { name: 'home' }
   | { name: 'shop'; category?: string; subCategory?: string }
+  | { name: 'search'; q: string }
   | { name: 'product'; id: string }
   | { name: 'cart' }
   | { name: 'checkout' }
