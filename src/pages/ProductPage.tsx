@@ -71,15 +71,29 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
     <main className="pt-[100px] pb-12 md:pb-16 bg-white min-h-screen">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10">
         {/* Breadcrumb */}
-        <nav className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mb-4">
-          <button onClick={() => navigate({ name: 'home' })} className="hover:text-[color:var(--color-myntra-pink)]">Home</button>
-          <span className="mx-1.5">/</span>
-          <button onClick={() => navigate({ name: 'shop' })} className="hover:text-[color:var(--color-myntra-pink)]">Fabrics</button>
-          <span className="mx-1.5">/</span>
-          <button onClick={() => navigate({ name: 'shop', category: fabric.category })} className="hover:text-[color:var(--color-myntra-pink)]">{fabric.category}</button>
-          <span className="mx-1.5">/</span>
-          <span className="text-[color:var(--color-myntra-navy)] font-semibold truncate inline-block max-w-[200px] align-bottom">{fabric.name}</span>
-        </nav>
+        {(() => {
+          const masterCat = fabric.masterCategory ?? 'Fabrics';
+          return (
+            <nav className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mb-4">
+              <button onClick={() => navigate({ name: 'home' })} className="hover:text-[color:var(--color-myntra-pink)]">Home</button>
+              <span className="mx-1.5">/</span>
+              <button onClick={() => navigate({ name: 'shop', category: masterCat })} className="hover:text-[color:var(--color-myntra-pink)]">{masterCat}</button>
+              {fabric.subCategory && (
+                <>
+                  <span className="mx-1.5">/</span>
+                  <button
+                    onClick={() => navigate({ name: 'shop', category: masterCat, subCategory: fabric.subCategory })}
+                    className="hover:text-[color:var(--color-myntra-pink)]"
+                  >
+                    {fabric.subCategory}
+                  </button>
+                </>
+              )}
+              <span className="mx-1.5">/</span>
+              <span className="text-[color:var(--color-myntra-navy)] font-semibold truncate inline-block max-w-[200px] align-bottom">{fabric.name}</span>
+            </nav>
+          );
+        })()}
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_460px] gap-8 lg:gap-12">
           {/* Gallery */}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Fabric } from '../types';
+import { Fabric, MasterCategory } from '../types';
 import ProductCard from './ProductCard';
 import { useRouter } from '../context/RouterContext';
 
@@ -8,11 +8,13 @@ interface Props {
   eyebrow?: string;
   items: Fabric[];
   ctaCategory?: string;
+  masterCategory?: MasterCategory;
   bg?: 'white' | 'soft';
 }
 
-const ProductRail: React.FC<Props> = ({ title, eyebrow, items, ctaCategory, bg = 'white' }) => {
+const ProductRail: React.FC<Props> = ({ title, eyebrow, items, ctaCategory, masterCategory, bg = 'white' }) => {
   const { navigate } = useRouter();
+  const ctaTarget = masterCategory ?? ctaCategory;
 
   return (
     <section className={bg === 'soft' ? 'bg-[color:var(--color-myntra-bg-soft)] py-8 md:py-12' : 'py-8 md:py-12'}>
@@ -23,10 +25,10 @@ const ProductRail: React.FC<Props> = ({ title, eyebrow, items, ctaCategory, bg =
             <h2 className="text-2xl md:text-3xl font-extrabold mt-1">{title}</h2>
           </div>
           <button
-            onClick={() => navigate({ name: 'shop', category: ctaCategory })}
+            onClick={() => navigate({ name: 'shop', category: ctaTarget })}
             className="text-[13px] font-bold uppercase tracking-wide text-[color:var(--color-myntra-pink)] hover:underline"
           >
-            View All →
+            See All →
           </button>
         </div>
 

@@ -50,6 +50,11 @@ const ProductCard: React.FC<Props> = ({ fabric, compact = false }) => {
           <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)] truncate mb-1.5">
             {fabric.name}
           </p>
+          {fabric.subCategory && (
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.08em] text-[color:var(--color-myntra-ink-mute)] mb-1">
+              {fabric.subCategory}
+            </p>
+          )}
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className="text-[14px] font-bold text-[color:var(--color-myntra-navy)]">
               {formatINR(fabric.pricePerMeter)}
