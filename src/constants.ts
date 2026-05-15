@@ -1102,9 +1102,9 @@ export const CATEGORY_TILES: { name: string; category: string; color: string }[]
 
 /* Offer ticker — looks like Myntra's sticky deals strip. */
 export const OFFER_TICKER: string[] = [
+  '⚡ 40-MINUTE DELIVERY IN HYDERABAD ON DESIGNER WEAR',
   'FREE SHIPPING ON ORDERS ABOVE ₹1,999',
   'FLAT 50% OFF ON BRIDAL SILKS · CODE WEDDING50',
   'EXTRA 10% OFF ON UPI · CODE UPI10',
-  'EASY 30-DAY RETURNS · AUTHENTICITY CARD WITH EVERY METER',
   'HAND-CUT IN INDIA · SHIPPED WORLDWIDE'
 ];

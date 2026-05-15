@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
-import { ChevronDown, ChevronUp, Heart, MapPin, RotateCcw, ShieldCheck, ShoppingBag, Star, Truck } from 'lucide-react';
+import { ChevronDown, ChevronUp, Heart, MapPin, ShieldCheck, ShoppingBag, Star, Truck, Zap } from 'lucide-react';
 import { FABRICS, discountPct, formatINR } from '../constants';
 import { useRouter } from '../context/RouterContext';
 import { useCart } from '../context/CartContext';
@@ -25,7 +25,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
   const [activeImage, setActiveImage] = useState<number>(0);
   const [pin, setPin] = useState('');
   const [pinChecked, setPinChecked] = useState<null | boolean>(null);
-  const [openSection, setOpenSection] = useState<'specs' | 'care' | 'returns' | null>('specs');
+  const [openSection, setOpenSection] = useState<'specs' | 'care' | 'delivery' | null>('specs');
 
   const gallery = useMemo(() => {
     if (!fabric) return [] as { photo: string; fallback: string }[];
@@ -248,9 +248,9 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
             {/* Trust strip */}
             <div className="grid grid-cols-3 gap-3 mb-6">
               {[
-                { Icon: Truck, label: '100% Free Shipping' },
-                { Icon: RotateCcw, label: '30-Day Returns' },
-                { Icon: ShieldCheck, label: 'Authenticity Card' }
+                { Icon: Zap, label: '40-min · Hyderabad' },
+                { Icon: Truck, label: 'Free over ₹1,999' },
+                { Icon: ShieldCheck, label: '100% Authentic' }
               ].map(({ Icon, label }) => (
                 <div key={label} className="text-center">
                   <Icon className="w-6 h-6 mx-auto mb-1 text-[color:var(--color-myntra-pink)]" />
@@ -265,11 +265,11 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
             </div>
 
             {/* Accordions */}
-            {(['specs', 'care', 'returns'] as const).map(key => {
+            {(['specs', 'care', 'delivery'] as const).map(key => {
               const labels = {
                 specs: 'Product Details',
                 care: 'Material & Care',
-                returns: 'Returns & Exchange'
+                delivery: 'Shipping & Delivery'
               };
               const open = openSection === key;
               return (
@@ -294,10 +294,13 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
                         </dl>
                       )}
                       {key === 'care' && (
-                        <p>Dry-clean only by a specialist familiar with hand-woven heritage textiles. Store rolled in muslin away from direct sunlight. Each parcel ships with a signed authenticity card and care leaflet.</p>
+                        <p>Dry-clean only by a specialist familiar with hand-woven heritage textiles. Store rolled in muslin away from direct sunlight. Every parcel ships with a care leaflet.</p>
                       )}
-                      {key === 'returns' && (
-                        <p>Easy 30-day returns on unused, undamaged fabric in original packaging. Cuts above 5m are made-to-order and final sale. Initiate returns from your account.</p>
+                      {key === 'delivery' && (
+                        <div className="space-y-2">
+                          <p className="flex items-start gap-2"><Zap className="w-4 h-4 mt-0.5 text-[color:var(--color-myntra-pink)] shrink-0" /> <span><b>Hyderabad — 40 minutes.</b> Studios Prêt and Couture Customisations stocked at the city studio go out by motorbike inside forty minutes of order placement.</span></p>
+                          <p className="flex items-start gap-2"><Truck className="w-4 h-4 mt-0.5 text-[color:var(--color-myntra-pink)] shrink-0" /> <span>Free shipping pan-India on orders over ₹1,999. Hand-cut to the metre and dispatched within 48 hours.</span></p>
+                        </div>
                       )}
                     </div>
                   )}

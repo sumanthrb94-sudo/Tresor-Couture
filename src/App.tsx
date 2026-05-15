@@ -6,6 +6,7 @@
 import React from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
+import HyderabadDeliveryStrip from './components/HyderabadDeliveryStrip';
 import CategoryStrip from './components/CategoryStrip';
 import OffersBanner from './components/OffersBanner';
 import DealsStrip from './components/DealsStrip';
@@ -40,6 +41,7 @@ const summer = FABRICS.filter(f => f.category === 'Cotton' || f.category === 'Li
 
 const Home: React.FC = () => (
   <main>
+    <HyderabadDeliveryStrip />
     <Hero />
     <CategoryStrip />
     <OffersBanner />
