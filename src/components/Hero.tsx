@@ -29,7 +29,7 @@ const Hero: React.FC = () => {
   const go = (n: number) => setIdx((n + total) % total);
 
   return (
-    <section className="relative pt-[88px] md:pt-[100px]">
+    <section className="relative">
       <div className="relative w-full h-[520px] md:h-[560px] lg:h-[600px] overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div

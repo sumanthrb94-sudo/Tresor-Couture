@@ -13,7 +13,7 @@ const HyderabadDeliveryStrip: React.FC = () => {
   return (
     <button
       onClick={() => navigate({ name: 'shop', category: 'Studios Prêt' })}
-      className="group w-full bg-gradient-to-r from-[#1A1209] via-[#2A1F12] to-[#1A1209] text-white relative overflow-hidden"
+      className="group w-full mt-[88px] md:mt-[100px] bg-gradient-to-r from-[#1A1209] via-[#2A1F12] to-[#1A1209] text-white relative overflow-hidden"
       aria-label="Shop designer wear with 40-minute Hyderabad delivery"
     >
       <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 py-2.5 md:py-3 flex items-center justify-center gap-2.5 md:gap-4 text-[12px] md:text-[14px]">
