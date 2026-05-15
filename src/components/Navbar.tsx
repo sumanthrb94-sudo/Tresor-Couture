@@ -271,7 +271,7 @@ const Navbar: React.FC = () => {
     <>
       <header className="fixed top-0 left-0 w-full z-50 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
         {/* Top tier — logo, nav, search, icons */}
-        <div className="h-16 md:h-20 px-4 md:px-8 lg:px-10 flex items-center gap-4 md:gap-6">
+        <div className="h-16 md:h-20 px-4 md:px-6 lg:px-6 xl:px-10 flex items-center gap-3 md:gap-4 xl:gap-6">
           <button
             onClick={() => navigate({ name: 'home' })}
             className="flex items-center gap-2 md:gap-2.5 shrink-0 no-tap-highlight"
@@ -296,7 +296,7 @@ const Navbar: React.FC = () => {
           </button>
 
           {/* Desktop mega-menu */}
-          <nav className="hidden lg:flex items-stretch gap-1 h-full" aria-label="Primary">
+          <nav className="hidden lg:flex items-stretch gap-0 xl:gap-1 h-full" aria-label="Primary">
             {NAV.map(n => {
               const isActive =
                 (n.kind === 'master' && activeCat === n.label) ||
@@ -325,12 +325,12 @@ const Navbar: React.FC = () => {
                     aria-expanded={n.kind === 'master' ? hoverCat === n.label : undefined}
                     className={
                       isPremium
-                        ? `h-full px-3 xl:px-4 flex items-center gap-1.5 font-serif italic text-[13px] xl:text-[15px] tracking-[0.02em] transition-colors no-tap-highlight border-b-[3px] ${
+                        ? `h-full px-2 xl:px-3 flex items-center gap-1.5 whitespace-nowrap font-serif italic text-[12px] xl:text-[14px] tracking-[0.02em] transition-colors no-tap-highlight border-b-[3px] ${
                             isActive
                               ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)]'
                               : 'border-transparent text-[#8E6520] hover:text-[color:var(--color-myntra-pink)]'
                           }`
-                        : `h-full px-3 xl:px-4 flex items-center text-[12px] xl:text-[13px] font-bold uppercase tracking-[0.04em] transition-colors no-tap-highlight border-b-[3px] ${
+                        : `h-full px-2 xl:px-3 flex items-center whitespace-nowrap text-[11px] xl:text-[13px] font-bold uppercase tracking-[0.04em] transition-colors no-tap-highlight border-b-[3px] ${
                             isActive
                               ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)]'
                               : isSale
@@ -397,7 +397,7 @@ const Navbar: React.FC = () => {
                 aria-expanded={profileOpen}
               >
                 <User className="w-5 h-5 text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]" />
-                <span className="hidden md:block text-[10px] font-bold mt-0.5">Profile</span>
+                <span className="hidden xl:block text-[10px] font-bold mt-0.5">Profile</span>
               </button>
               {profileOpen && (
                 <div className="absolute top-full right-0 w-60 bg-white border-t-4 border-[color:var(--color-myntra-pink)] shadow-2xl pt-3 pb-2 z-50">
@@ -449,7 +449,7 @@ const Navbar: React.FC = () => {
               aria-label="Wishlist"
             >
               <Heart className="w-5 h-5 text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]" />
-              <span className="hidden md:block text-[10px] font-bold mt-0.5">Wishlist</span>
+              <span className="hidden xl:block text-[10px] font-bold mt-0.5">Wishlist</span>
               {wishBadge > 0 && (
                 <span className="absolute top-0 right-1 bg-[color:var(--color-myntra-pink)] text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
                   {wishBadge}
@@ -462,7 +462,7 @@ const Navbar: React.FC = () => {
               aria-label="Bag"
             >
               <ShoppingBag className="w-5 h-5 text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]" />
-              <span className="hidden md:block text-[10px] font-bold mt-0.5">Bag</span>
+              <span className="hidden xl:block text-[10px] font-bold mt-0.5">Bag</span>
               {cartBadge > 0 && (
                 <span className="absolute top-0 right-1 bg-[color:var(--color-myntra-pink)] text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
                   {cartBadge}
