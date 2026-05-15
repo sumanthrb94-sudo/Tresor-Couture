@@ -1,14 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  CalendarDays,
+  Check,
+  ChevronDown,
   ChevronRight,
-  Edit,
+  CreditCard,
   Heart,
   LogOut,
   Mail,
   MapPin,
   Package,
+  RotateCw,
   ShoppingBag,
   Trash2,
+  Truck,
   User as UserIcon
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -18,7 +23,10 @@ import { useWishlist } from '../context/WishlistContext';
 import { useOrders } from '../context/OrderContext';
 import { FABRICS, formatINR } from '../constants';
 import FabricImage from '../components/FabricImage';
-import type { Order, OrderStatus, ShippingAddress } from '../types';
+import OrderStatusTracker from '../components/OrderStatusTracker';
+import AddressBookEditor from '../components/AddressBookEditor';
+import { auth } from '../lib/firebase';
+import type { Order, OrderStatus } from '../types';
 
 type Tab = 'profile' | 'orders' | 'wishlist' | 'addresses';
 
@@ -33,21 +41,9 @@ const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: st
   { id: 'addresses', label: 'Addresses', icon: MapPin }
 ];
 
-const emptyAddress: ShippingAddress = {
-  fullName: '',
-  email: '',
-  phone: '',
-  line1: '',
-  line2: '',
-  city: '',
-  state: '',
-  postalCode: '',
-  country: 'India'
-};
-
-const statusColors: Record<OrderStatus, string> = {
-  placed: 'bg-[color:var(--color-myntra-bg-sale)] text-[color:var(--color-myntra-navy)]',
-  processing: 'bg-[color:var(--color-myntra-bg-sale)] text-[color:var(--color-myntra-navy)]',
+const statusPillStyle: Record<OrderStatus, string> = {
+  placed: 'bg-[color:var(--color-myntra-bg-sale)] text-[color:var(--color-myntra-pink-dark)]',
+  processing: 'bg-[color:var(--color-myntra-bg-sale)] text-[color:var(--color-myntra-pink-dark)]',
   shipped: 'bg-[color:var(--color-myntra-green)] text-white',
   delivered: 'bg-[color:var(--color-myntra-green)] text-white',
   cancelled: 'bg-[color:var(--color-myntra-pink)] text-white',
@@ -56,6 +52,44 @@ const statusColors: Record<OrderStatus, string> = {
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+const formatShortDate = (d: Date) =>
+  d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+
+const SLOW_CATEGORIES = new Set(['Studios Prêt', 'Sarees']);
+
+// Same-week SLA for in-stock fabric meters, multi-week SLA for stitched
+// pieces (Studios Prêt) and made-to-order sarees.
+const ETA_FAST_DAYS = 5;
+const ETA_SLOW_DAYS = 14;
+
+const computeEta = (order: Order): Date | null => {
+  if (!order.placedAt) return null;
+  const placed = new Date(order.placedAt);
+  if (Number.isNaN(placed.getTime())) return null;
+  const slow = order.items.some(it => SLOW_CATEGORIES.has(it.fabricSnapshot.masterCategory));
+  const days = slow ? ETA_SLOW_DAYS : ETA_FAST_DAYS;
+  return new Date(placed.getTime() + days * 24 * 60 * 60 * 1000);
+};
+
+const shortOrderId = (id: string) => `TC-${id.slice(-8).toUpperCase()}`;
+
+const initialsOf = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(p => p[0]?.toUpperCase() ?? '')
+    .join('') || '?';
+
+const paymentLabel = (m: Order['paymentMethod']) => {
+  switch (m) {
+    case 'card': return 'Card';
+    case 'upi': return 'UPI';
+    case 'cod': return 'Cash on Delivery';
+    default: return m;
+  }
+};
 
 const AccountPage: React.FC<Props> = ({ tab = 'profile' }) => {
   const { user, loading, logout } = useAuth();
@@ -72,7 +106,10 @@ const AccountPage: React.FC<Props> = ({ tab = 'profile' }) => {
   if (loading) {
     return (
       <main className="pt-[140px] pb-20 min-h-screen flex items-center justify-center bg-[color:var(--color-myntra-bg-soft)]">
-        <div className="w-8 h-8 border-2 border-[color:var(--color-myntra-pink)] border-t-transparent rounded-full animate-spin" aria-label="Loading account" />
+        <div
+          className="w-8 h-8 border-2 border-[color:var(--color-myntra-pink)] border-t-transparent rounded-full animate-spin"
+          aria-label="Loading account"
+        />
       </main>
     );
   }
@@ -86,7 +123,7 @@ const AccountPage: React.FC<Props> = ({ tab = 'profile' }) => {
   }
 
   const handleSignOut = () => {
-    logout();
+    void logout();
     navigate({ name: 'home' });
   };
 
@@ -172,7 +209,7 @@ const AccountPage: React.FC<Props> = ({ tab = 'profile' }) => {
 
               <button
                 onClick={handleSignOut}
-                className="w-full bg-white border border-[color:var(--color-myntra-border-soft)] px-4 py-3 text-[13px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink) ] inline-flex items-center justify-center gap-2 hover:border-[color:var(--color-myntra-pink)] hover:text-[color:var(--color-myntra-pink)]"
+                className="w-full bg-white border border-[color:var(--color-myntra-border-soft)] px-4 py-3 text-[13px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink)] inline-flex items-center justify-center gap-2 hover:border-[color:var(--color-myntra-pink)] hover:text-[color:var(--color-myntra-pink)]"
               >
                 <LogOut className="w-4 h-4" />
                 Sign out
@@ -185,7 +222,7 @@ const AccountPage: React.FC<Props> = ({ tab = 'profile' }) => {
             {tab === 'profile' && <ProfileTab />}
             {tab === 'orders' && <OrdersTab />}
             {tab === 'wishlist' && <WishlistTab />}
-            {tab === 'addresses' && <AddressesTab />}
+            {tab === 'addresses' && <AddressBookEditor />}
           </section>
         </div>
       </div>
@@ -195,6 +232,14 @@ const AccountPage: React.FC<Props> = ({ tab = 'profile' }) => {
 
 /* ─────────── Profile tab ─────────── */
 
+// Maps a user-id derived hash to a palette slot — same id always gets the
+// same colour so the avatar feels stable across renders.
+const AVATAR_PALETTE = [
+  'bg-[color:var(--color-myntra-pink)]',
+  'bg-[color:var(--color-myntra-green)]',
+  'bg-[color:var(--color-myntra-navy)]'
+];
+
 const ProfileTab: React.FC = () => {
   const { user, updateProfile } = useAuth();
   const [fullName, setFullName] = useState(user?.fullName ?? '');
@@ -202,6 +247,11 @@ const ProfileTab: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Firebase Auth currentUser carries the Google photo + display info that we
+  // don't persist on the user doc. Reading it directly keeps the User type
+  // unchanged while still surfacing the avatar.
+  const photoURL = auth.currentUser?.photoURL ?? null;
 
   useEffect(() => {
     setFullName(user?.fullName ?? '');
@@ -243,20 +293,48 @@ const ProfileTab: React.FC = () => {
     }
   };
 
+  const paletteIdx =
+    Math.abs(user.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % AVATAR_PALETTE.length;
+
   return (
     <div className="bg-white border border-[color:var(--color-myntra-border-soft)] p-5 md:p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-[15px] font-extrabold uppercase tracking-wider text-[color:var(--color-myntra-navy)]">
-          Profile Details
-        </h2>
-        <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] hidden sm:block">
-          Member since {formatDate(user.createdAt)}
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-5 pb-5 border-b border-[color:var(--color-myntra-border-soft)]">
+        {photoURL ? (
+          <img
+            src={photoURL}
+            alt={user.fullName}
+            referrerPolicy="no-referrer"
+            className="w-16 h-16 rounded-full object-cover border border-[color:var(--color-myntra-border-soft)] shrink-0"
+          />
+        ) : (
+          <div
+            aria-hidden
+            className={`w-16 h-16 rounded-full text-white font-extrabold text-[20px] inline-flex items-center justify-center shrink-0 ${AVATAR_PALETTE[paletteIdx]}`}
+          >
+            {initialsOf(user.fullName || user.email)}
+          </div>
+        )}
+        <div className="min-w-0">
+          <h2 className="text-[16px] font-extrabold text-[color:var(--color-myntra-navy)] truncate">
+            {user.fullName || 'Trésor Member'}
+          </h2>
+          <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)] truncate">{user.email}</p>
+          <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] mt-0.5">
+            Member since {formatDate(user.createdAt)}
+          </p>
+        </div>
       </div>
+
+      <h3 className="text-[13px] font-extrabold uppercase tracking-wider text-[color:var(--color-myntra-navy)] mb-3">
+        Edit Profile
+      </h3>
 
       <form onSubmit={handleSave} noValidate className="space-y-4 max-w-md">
         <div>
-          <label htmlFor="profile-name" className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">
+          <label
+            htmlFor="profile-name"
+            className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5"
+          >
             Full Name
           </label>
           <input
@@ -270,7 +348,10 @@ const ProfileTab: React.FC = () => {
         </div>
 
         <div>
-          <label htmlFor="profile-email" className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">
+          <label
+            htmlFor="profile-email"
+            className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5"
+          >
             Email
           </label>
           <div className="relative">
@@ -289,7 +370,10 @@ const ProfileTab: React.FC = () => {
         </div>
 
         <div>
-          <label htmlFor="profile-phone" className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">
+          <label
+            htmlFor="profile-phone"
+            className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5"
+          >
             Phone <span className="text-[color:var(--color-myntra-ink-mute)] font-medium normal-case">(optional)</span>
           </label>
           <input
@@ -304,12 +388,18 @@ const ProfileTab: React.FC = () => {
         </div>
 
         {error && (
-          <p role="alert" className="text-[13px] font-semibold text-[color:var(--color-myntra-pink)] bg-[color:var(--color-myntra-bg-sale)] border border-[color:var(--color-myntra-border)] px-3 py-2 rounded">
+          <p
+            role="alert"
+            className="text-[13px] font-semibold text-[color:var(--color-myntra-pink)] bg-[color:var(--color-myntra-bg-sale)] border border-[color:var(--color-myntra-border)] px-3 py-2 rounded"
+          >
             {error}
           </p>
         )}
         {success && (
-          <p role="status" className="text-[13px] font-semibold text-[color:var(--color-myntra-green)] bg-white border border-[color:var(--color-myntra-border-soft)] px-3 py-2 rounded">
+          <p
+            role="status"
+            className="text-[13px] font-semibold text-[color:var(--color-myntra-green)] bg-white border border-[color:var(--color-myntra-border-soft)] px-3 py-2 rounded"
+          >
             {success}
           </p>
         )}
@@ -318,9 +408,6 @@ const ProfileTab: React.FC = () => {
           <button type="submit" disabled={saving || !dirty} className="btn-primary">
             {saving ? 'Saving…' : 'Save Changes'}
           </button>
-          <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] sm:hidden">
-            Member since {formatDate(user.createdAt)}
-          </p>
         </div>
       </form>
     </div>
@@ -333,16 +420,28 @@ const OrdersTab: React.FC = () => {
   const { user } = useAuth();
   const { orders, loading, error, refresh } = useOrders();
   const { navigate } = useRouter();
+  const { addItem } = useCart();
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [reordered, setReordered] = useState<string | null>(null);
 
   // ordersApi.mine() already filters/sorts server-side, so the rows arrive
   // ready to render — no client-side userId filter needed.
   const myOrders = useMemo<Order[]>(() => (user ? orders : []), [orders, user]);
 
+  useEffect(() => {
+    if (!reordered) return;
+    const id = window.setTimeout(() => setReordered(null), 3000);
+    return () => window.clearTimeout(id);
+  }, [reordered]);
+
   if (loading && myOrders.length === 0) {
     return (
       <div className="bg-white border border-[color:var(--color-myntra-border-soft)] px-6 py-12 text-center">
         <div className="inline-flex flex-col items-center gap-3 text-[color:var(--color-myntra-ink-soft)]">
-          <span className="inline-block w-6 h-6 border-2 border-[color:var(--color-myntra-border)] border-t-[color:var(--color-myntra-pink)] rounded-full animate-spin" aria-hidden />
+          <span
+            className="inline-block w-6 h-6 border-2 border-[color:var(--color-myntra-border)] border-t-[color:var(--color-myntra-pink)] rounded-full animate-spin"
+            aria-hidden
+          />
           <p className="text-[13px] font-semibold">Loading your orders…</p>
         </div>
       </div>
@@ -353,7 +452,9 @@ const OrdersTab: React.FC = () => {
     return (
       <div className="bg-white border border-[color:var(--color-myntra-border-soft)] px-6 py-12 text-center">
         <p className="text-[13px] font-semibold text-[color:var(--color-myntra-pink)] mb-4">{error}</p>
-        <button onClick={() => void refresh()} className="btn-outline">Try again</button>
+        <button onClick={() => void refresh()} className="btn-outline">
+          Try again
+        </button>
       </div>
     );
   }
@@ -375,59 +476,199 @@ const OrdersTab: React.FC = () => {
     );
   }
 
+  const reorder = (order: Order) => {
+    order.items.forEach(it => addItem({ fabricId: it.fabricId, meters: it.meters, color: it.color }));
+    setReordered(order.id);
+  };
+
   return (
     <div className="space-y-3">
       <h2 className="text-[15px] font-extrabold uppercase tracking-wider mb-1 text-[color:var(--color-myntra-navy)]">
-        My Orders <span className="text-[12px] font-medium text-[color:var(--color-myntra-ink-mute)] ml-2">{myOrders.length}</span>
+        My Orders{' '}
+        <span className="text-[12px] font-medium text-[color:var(--color-myntra-ink-mute)] ml-2">
+          {myOrders.length}
+        </span>
       </h2>
 
       {myOrders.map(order => {
         const status: OrderStatus = order.status ?? 'placed';
-        const itemCount = order.items.reduce((s, it) => s + it.meters, 0);
+        const isCancelled = status === 'cancelled' || status === 'refunded';
+        const isDelivered = status === 'delivered';
+        const meterCount = order.items.reduce((s, it) => s + it.meters, 0);
         const firstItem = order.items[0]?.fabricSnapshot;
+        const isOpen = expanded === order.id;
+        const eta = !isCancelled && !isDelivered ? computeEta(order) : null;
 
         return (
-          <div key={order.id} className="bg-white border border-[color:var(--color-myntra-border-soft)] p-4 flex gap-4">
-            {firstItem && (
-              <button
-                onClick={() => navigate({ name: 'confirmation', orderId: order.id })}
-                className="w-16 h-20 md:w-20 md:h-24 shrink-0 bg-[color:var(--color-myntra-bg-soft)] overflow-hidden"
-                aria-label={`View order ${order.id}`}
-              >
-                <FabricImage photo={firstItem.photo} fallback={firstItem.image} alt={firstItem.name} className="w-full h-full object-cover" />
-              </button>
-            )}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-mute)]">
-                    Order ID
-                  </p>
-                  <p className="text-[13px] font-bold text-[color:var(--color-myntra-navy)] truncate">{order.id}</p>
-                </div>
-                <span
-                  className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 ${statusColors[status]}`}
-                >
-                  {status}
-                </span>
-              </div>
-
-              <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mt-1">
-                Placed {formatDate(order.placedAt)} · {order.items.length} item{order.items.length === 1 ? '' : 's'} · {itemCount} m
-              </p>
-
-              <div className="flex items-center justify-between mt-3">
-                <p className="text-[14px] font-extrabold">{formatINR(order.total)}</p>
+          <article
+            key={order.id}
+            className="bg-white border border-[color:var(--color-myntra-border-soft)]"
+          >
+            <div className="p-4 flex gap-4">
+              {firstItem && (
                 <button
-                  onClick={() => navigate({ name: 'confirmation', orderId: order.id })}
-                  className="text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-pink)] inline-flex items-center gap-1 hover:underline"
+                  onClick={() => navigate({ name: 'product', id: firstItem.id })}
+                  className="w-16 h-20 md:w-20 md:h-24 shrink-0 bg-[color:var(--color-myntra-bg-soft)] overflow-hidden"
+                  aria-label={`View ${firstItem.name}`}
                 >
-                  View
-                  <ChevronRight className="w-3.5 h-3.5" />
+                  <FabricImage
+                    photo={firstItem.photo}
+                    fallback={firstItem.image}
+                    alt={firstItem.name}
+                    className="w-full h-full object-cover"
+                  />
                 </button>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-mute)]">
+                      Order ID
+                    </p>
+                    <p className="text-[13px] font-bold text-[color:var(--color-myntra-navy)] truncate">
+                      {shortOrderId(order.id)}
+                    </p>
+                  </div>
+                  <span
+                    className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 ${statusPillStyle[status]}`}
+                  >
+                    {isCancelled ? 'Cancelled' : status}
+                  </span>
+                </div>
+
+                <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mt-1">
+                  Placed {formatDate(order.placedAt)} · {order.items.length} item
+                  {order.items.length === 1 ? '' : 's'} · {meterCount} m
+                </p>
+
+                {eta && (
+                  <p className="text-[12px] mt-1 inline-flex items-center gap-1 font-semibold text-[color:var(--color-myntra-green)]">
+                    <Truck className="w-3.5 h-3.5" />
+                    Arriving by {formatShortDate(eta)}
+                  </p>
+                )}
+                {isDelivered && (
+                  <p className="text-[12px] mt-1 inline-flex items-center gap-1 font-semibold text-[color:var(--color-myntra-green)]">
+                    <Check className="w-3.5 h-3.5" strokeWidth={3} />
+                    Delivered
+                  </p>
+                )}
+
+                <div className="flex items-center justify-between mt-3 gap-2 flex-wrap">
+                  <p className="text-[14px] font-extrabold">{formatINR(order.total)}</p>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => reorder(order)}
+                      className="text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] inline-flex items-center gap-1 hover:text-[color:var(--color-myntra-pink)]"
+                    >
+                      <RotateCw className="w-3.5 h-3.5" />
+                      Reorder
+                    </button>
+                    {!isCancelled && (
+                      <button
+                        onClick={() => setExpanded(isOpen ? null : order.id)}
+                        className="text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-pink)] inline-flex items-center gap-1 hover:underline"
+                        aria-expanded={isOpen}
+                      >
+                        Track
+                        <ChevronDown
+                          className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                        />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => navigate({ name: 'confirmation', orderId: order.id })}
+                      className="text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-pink)] inline-flex items-center gap-1 hover:underline"
+                    >
+                      View
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {reordered === order.id && (
+                  <p
+                    role="status"
+                    className="text-[12px] font-semibold text-[color:var(--color-myntra-green)] mt-2"
+                  >
+                    Items added to your bag.
+                  </p>
+                )}
               </div>
             </div>
-          </div>
+
+            {isOpen && (
+              <div className="border-t border-[color:var(--color-myntra-border-soft)] px-4 py-4 bg-[color:var(--color-myntra-bg-soft)]">
+                <OrderStatusTracker currentStatus={status} placedAt={order.placedAt} />
+
+                {eta && (
+                  <p className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-semibold text-[color:var(--color-myntra-navy)]">
+                    <CalendarDays className="w-3.5 h-3.5" />
+                    Estimated delivery: {formatShortDate(eta)}
+                  </p>
+                )}
+
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-mute)] mb-2">
+                      Items
+                    </p>
+                    <ul className="space-y-2">
+                      {order.items.map((it, idx) => (
+                        <li key={`${it.fabricId}-${idx}`} className="flex items-center gap-3">
+                          <div className="w-10 h-12 shrink-0 bg-white border border-[color:var(--color-myntra-border-soft)] overflow-hidden">
+                            <FabricImage
+                              photo={it.fabricSnapshot.photo}
+                              fallback={it.fabricSnapshot.image}
+                              alt={it.fabricSnapshot.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[12px] font-bold uppercase text-[color:var(--color-myntra-navy)] truncate">
+                              {it.fabricSnapshot.brand}
+                            </p>
+                            <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] truncate">
+                              {it.fabricSnapshot.name} · {it.meters} m
+                              {it.color ? ` · ${it.color}` : ''}
+                            </p>
+                          </div>
+                          <p className="text-[12px] font-bold shrink-0">
+                            {formatINR(it.meters * it.fabricSnapshot.pricePerMeter)}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-mute)] mb-1 inline-flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        Shipping to
+                      </p>
+                      <p className="text-[12px] text-[color:var(--color-myntra-ink)] whitespace-pre-line leading-relaxed">
+                        {order.shippingAddress.fullName}
+                        {`\n${order.shippingAddress.line1}`}
+                        {order.shippingAddress.line2 ? `\n${order.shippingAddress.line2}` : ''}
+                        {`\n${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.postalCode}`}
+                        {`\n${order.shippingAddress.country}`}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-mute)] mb-1 inline-flex items-center gap-1">
+                        <CreditCard className="w-3 h-3" />
+                        Payment
+                      </p>
+                      <p className="text-[12px] text-[color:var(--color-myntra-ink)]">
+                        {paymentLabel(order.paymentMethod)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </article>
         );
       })}
     </div>
@@ -474,7 +715,10 @@ const WishlistTab: React.FC = () => {
   return (
     <div>
       <h2 className="text-[15px] font-extrabold uppercase tracking-wider mb-3 text-[color:var(--color-myntra-navy)]">
-        My Wishlist <span className="text-[12px] font-medium text-[color:var(--color-myntra-ink-mute)] ml-2">{items.length}</span>
+        My Wishlist{' '}
+        <span className="text-[12px] font-medium text-[color:var(--color-myntra-ink-mute)] ml-2">
+          {items.length}
+        </span>
       </h2>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
@@ -488,7 +732,12 @@ const WishlistTab: React.FC = () => {
               className="block w-full aspect-[3/4] bg-[color:var(--color-myntra-bg-soft)]"
               aria-label={`View ${fabric.name}`}
             >
-              <FabricImage photo={fabric.photo} fallback={fabric.image} alt={fabric.name} className="w-full h-full object-cover" />
+              <FabricImage
+                photo={fabric.photo}
+                fallback={fabric.image}
+                alt={fabric.name}
+                className="w-full h-full object-cover"
+              />
             </button>
             <div className="p-3 flex flex-col gap-1 flex-1">
               <p className="text-[12px] font-extrabold uppercase truncate">{fabric.brand}</p>
@@ -519,184 +768,5 @@ const WishlistTab: React.FC = () => {
     </div>
   );
 };
-
-/* ─────────── Addresses tab ─────────── */
-
-const AddressesTab: React.FC = () => {
-  const { user, updateProfile } = useAuth();
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState<ShippingAddress>(user?.defaultAddress ?? emptyAddress);
-  const [errors, setErrors] = useState<Partial<Record<keyof ShippingAddress, string>>>({});
-  const [saving, setSaving] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!editing) {
-      setDraft(user?.defaultAddress ?? { ...emptyAddress, fullName: user?.fullName ?? '', email: user?.email ?? '', phone: user?.phone ?? '' });
-    }
-  }, [user, editing]);
-
-  useEffect(() => {
-    if (!submitError) return;
-    const id = window.setTimeout(() => setSubmitError(null), 5000);
-    return () => window.clearTimeout(id);
-  }, [submitError]);
-
-  if (!user) return null;
-
-  const validate = (): boolean => {
-    const next: Partial<Record<keyof ShippingAddress, string>> = {};
-    if (!draft.fullName.trim()) next.fullName = 'Required';
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(draft.email)) next.email = 'Valid email required';
-    if (!/^[0-9+\-\s()]{7,}$/.test(draft.phone)) next.phone = 'Valid phone required';
-    if (!draft.line1.trim()) next.line1 = 'Required';
-    if (!draft.city.trim()) next.city = 'Required';
-    if (!draft.state.trim()) next.state = 'Required';
-    if (!/^[0-9A-Za-z\- ]{4,}$/.test(draft.postalCode)) next.postalCode = 'Valid postal code required';
-    if (!draft.country.trim()) next.country = 'Required';
-    setErrors(next);
-    return Object.keys(next).length === 0;
-  };
-
-  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setSubmitError(null);
-    if (!validate()) return;
-    setSaving(true);
-    try {
-      await updateProfile({ defaultAddress: { ...draft, line2: draft.line2?.trim() ? draft.line2 : undefined } });
-      setEditing(false);
-    } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Unable to save your address.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const setField = <K extends keyof ShippingAddress>(key: K, value: ShippingAddress[K]) =>
-    setDraft(d => ({ ...d, [key]: value }));
-
-  const address = user.defaultAddress;
-
-  if (editing) {
-    return (
-      <div className="bg-white border border-[color:var(--color-myntra-border-soft)] p-5 md:p-6">
-        <h2 className="text-[15px] font-extrabold uppercase tracking-wider mb-4 text-[color:var(--color-myntra-navy)]">
-          {address ? 'Edit Default Address' : 'Add Default Address'}
-        </h2>
-        <form onSubmit={handleSave} noValidate className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <AddressField label="Full Name" error={errors.fullName} cols={2}>
-            <input className="input-box" value={draft.fullName} onChange={e => setField('fullName', e.target.value)} />
-          </AddressField>
-          <AddressField label="Email" error={errors.email}>
-            <input className="input-box" type="email" value={draft.email} onChange={e => setField('email', e.target.value)} />
-          </AddressField>
-          <AddressField label="Phone" error={errors.phone}>
-            <input className="input-box" type="tel" value={draft.phone} onChange={e => setField('phone', e.target.value)} />
-          </AddressField>
-          <AddressField label="Address Line 1" error={errors.line1} cols={2}>
-            <input className="input-box" value={draft.line1} onChange={e => setField('line1', e.target.value)} />
-          </AddressField>
-          <AddressField label="Address Line 2 (optional)" error={errors.line2} cols={2}>
-            <input className="input-box" value={draft.line2 ?? ''} onChange={e => setField('line2', e.target.value)} />
-          </AddressField>
-          <AddressField label="City" error={errors.city}>
-            <input className="input-box" value={draft.city} onChange={e => setField('city', e.target.value)} />
-          </AddressField>
-          <AddressField label="State" error={errors.state}>
-            <input className="input-box" value={draft.state} onChange={e => setField('state', e.target.value)} />
-          </AddressField>
-          <AddressField label="PIN Code" error={errors.postalCode}>
-            <input className="input-box" value={draft.postalCode} onChange={e => setField('postalCode', e.target.value)} />
-          </AddressField>
-          <AddressField label="Country" error={errors.country}>
-            <input className="input-box" value={draft.country} onChange={e => setField('country', e.target.value)} />
-          </AddressField>
-
-          {submitError && (
-            <p role="alert" className="sm:col-span-2 text-[13px] font-semibold text-[color:var(--color-myntra-pink)] bg-[color:var(--color-myntra-bg-sale)] border border-[color:var(--color-myntra-border)] px-3 py-2 rounded">
-              {submitError}
-            </p>
-          )}
-
-          <div className="sm:col-span-2 flex flex-wrap gap-3 mt-1">
-            <button type="submit" disabled={saving} className="btn-primary">
-              {saving ? 'Saving…' : 'Save Address'}
-            </button>
-            <button
-              type="button"
-              onClick={() => { setEditing(false); setErrors({}); setSubmitError(null); }}
-              className="btn-outline"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-white border border-[color:var(--color-myntra-border-soft)] p-5 md:p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-[15px] font-extrabold uppercase tracking-wider text-[color:var(--color-myntra-navy)]">
-          Default Address
-        </h2>
-        {address && (
-          <button
-            onClick={() => setEditing(true)}
-            className="text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-pink)] inline-flex items-center gap-1 hover:underline"
-          >
-            <Edit className="w-3.5 h-3.5" />
-            Edit
-          </button>
-        )}
-      </div>
-
-      {address ? (
-        <div className="border border-[color:var(--color-myntra-border-soft)] p-4 max-w-md">
-          <p className="text-[14px] font-extrabold text-[color:var(--color-myntra-navy)]">{address.fullName}</p>
-          <p className="text-[13px] text-[color:var(--color-myntra-ink)] mt-1 whitespace-pre-line leading-relaxed">
-            {address.line1}
-            {address.line2 ? `\n${address.line2}` : ''}
-            {`\n${address.city}, ${address.state} ${address.postalCode}`}
-            {`\n${address.country}`}
-          </p>
-          <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mt-2">
-            {address.phone} · {address.email}
-          </p>
-        </div>
-      ) : (
-        <div className="border border-dashed border-[color:var(--color-myntra-border)] px-5 py-8 text-center max-w-md">
-          <MapPin className="w-10 h-10 mx-auto text-[color:var(--color-myntra-ink-mute)] mb-3" />
-          <p className="text-[14px] font-bold text-[color:var(--color-myntra-navy)] mb-1">
-            No default address yet
-          </p>
-          <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mb-4">
-            Add an address to speed up checkout next time.
-          </p>
-          <button onClick={() => setEditing(true)} className="btn-primary">
-            Add Address
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const AddressField: React.FC<{ label: string; error?: string; cols?: 1 | 2; children: React.ReactNode }> = ({
-  label,
-  error,
-  cols = 1,
-  children
-}) => (
-  <div className={cols === 2 ? 'sm:col-span-2' : ''}>
-    <label className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">
-      {label}
-    </label>
-    {children}
-    {error && <p className="text-[12px] text-[color:var(--color-myntra-pink)] mt-1 font-semibold">{error}</p>}
-  </div>
-);
 
 export default AccountPage;
