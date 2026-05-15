@@ -861,8 +861,8 @@ export const FABRICS: Fabric[] = [
     photoGallery: [p(SOURCES.patola), p(SOURCES.patola2)],
     image: swatch('f32', '#F2EBDD', '#9B1B30', '#C5A059', 'ikat', 'Couture Gown', 'Mumbai Atelier'),
     category: 'Silk',
-    masterCategory: 'Designer Wear',
-    subCategory: 'Couture',
+    masterCategory: 'Studio Prêt',
+    subCategory: 'Atelier Edits',
     origin: 'Mumbai Atelier',
     tags: ['One-of-One', 'Atelier', 'Red Carpet'],
     sticker: 'Limited',
@@ -885,8 +885,8 @@ export const FABRICS: Fabric[] = [
     photoGallery: [p(SOURCES.banarasi), p(SOURCES.banarasi3)],
     image: swatch('f33', '#7A1F2C', '#C5A059', '#F2EBDD', 'brocade', 'Sherwani', 'Varanasi'),
     category: 'Silk',
-    masterCategory: 'Designer Wear',
-    subCategory: 'Limited Edition',
+    masterCategory: 'Studio Prêt',
+    subCategory: 'Capsule Drops',
     origin: 'Varanasi',
     tags: ['Sherwani', 'Real Zari', 'Numbered Edition'],
     sticker: 'Limited',
@@ -908,8 +908,8 @@ export const FABRICS: Fabric[] = [
     photo: p(SOURCES.kanjivaram),
     image: swatch('f34', '#0E5E6F', '#C5A059', '#F2EBDD', 'kanjivaram', 'Cape Gown', 'Chennai'),
     category: 'Silk',
-    masterCategory: 'Designer Wear',
-    subCategory: 'Made-to-Measure',
+    masterCategory: 'Studio Prêt',
+    subCategory: 'Ready-to-Wear',
     origin: 'Chennai',
     tags: ['Bespoke', 'Drape', 'Silk'],
     sticker: 'Bestseller',
@@ -992,7 +992,7 @@ export const MASTER_CATEGORIES: MasterCategory[] = [
   'Lehenga Cholis',
   'Anarkalis',
   'Western Wear',
-  'Designer Wear'
+  'Studio Prêt'
 ];
 
 /**
@@ -1007,7 +1007,7 @@ export const MASTER_CATEGORY_TREE: Record<MasterCategory, string[]> = {
   'Lehenga Cholis': ['Bridal', 'Festive', 'Contemporary'],
   Anarkalis: ['Floor-length', 'Knee-length', 'Embroidered'],
   'Western Wear': ['Dresses', 'Tops', 'Co-ords', 'Jumpsuits'],
-  'Designer Wear': ['Couture', 'Limited Edition', 'Made-to-Measure']
+  'Studio Prêt': ['Ready-to-Wear', 'Capsule Drops', 'Atelier Edits']
 };
 
 /** Tile metadata for the home-page CategoryStrip and navbar mega-menu. */
@@ -1018,7 +1018,7 @@ export const MASTER_CATEGORY_TILES: { name: MasterCategory; color: string; tagli
   { name: 'Lehenga Cholis',   color: '#D9B26B', tagline: 'For the aisle and after' },
   { name: 'Anarkalis',        color: '#E0BFA0', tagline: 'Royal silhouettes, modern cuts' },
   { name: 'Western Wear',     color: '#CBC0A7', tagline: 'East-West edit' },
-  { name: 'Designer Wear',    color: '#B8915A', tagline: 'Couture, signed at the selvedge' }
+  { name: 'Studio Prêt',      color: '#B8915A', tagline: 'Ready-to-wear, off the atelier rail' }
 ];
 
 export const SHIPPING_FLAT_RATE = 99;

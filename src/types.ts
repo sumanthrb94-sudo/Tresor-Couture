@@ -9,7 +9,7 @@ export type MasterCategory =
   | 'Lehenga Cholis'
   | 'Anarkalis'
   | 'Western Wear'
-  | 'Designer Wear';
+  | 'Studio Prêt';
 
 export interface Fabric {
   id: string;

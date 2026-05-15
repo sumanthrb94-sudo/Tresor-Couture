@@ -13,10 +13,14 @@ type NavEntry =
   | { kind: 'master'; label: MasterCategory; tone?: 'default' }
   | { kind: 'static'; label: string; tone?: 'default' | 'sale' };
 
-// "Couture Customisations" is the ultra-exclusive customisable collections atelier.
+// "Couture Customisations" is the ultra-exclusive bespoke atelier; "Studio Prêt"
+// is the ready-to-wear master category that immediately follows it in the nav.
 const NAV: NavEntry[] = [
-  ...MASTER_CATEGORIES.map<NavEntry>(m => ({ kind: 'master', label: m })),
+  ...MASTER_CATEGORIES
+    .filter(m => m !== 'Studio Prêt')
+    .map<NavEntry>(m => ({ kind: 'master', label: m })),
   { kind: 'static', label: 'Couture Customisations' },
+  { kind: 'master', label: 'Studio Prêt' },
   { kind: 'static', label: 'Sale', tone: 'sale' }
 ];
 

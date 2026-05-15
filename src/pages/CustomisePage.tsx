@@ -15,7 +15,10 @@ interface Silhouette {
   name: string;
   blurb: string;          // editorial one-liner — the "designer note"
   basePrice: number;
-  masterCategory: MasterCategory;
+  /** Display chip on the card. Free-form because couture silhouettes don't always map to shop master categories. */
+  family: string;
+  /** Master category used to filter eligible fabrics in the customisation flow. Falls back to 'Fabrics'. */
+  fabricCategory?: MasterCategory;
   fabricHint: string[];   // fabric ids the studio recommends with this silhouette
   photoFabricId?: string; // pull the lookbook image from this fabric's photo
 }
@@ -51,7 +54,8 @@ const CAPSULES: Capsule[] = [
         name: 'Chahar-Bagh Bridal Lehenga',
         blurb: 'A hand-woven Banarasi kalidar with twelve floor-skimming panels and a fully embroidered choli.',
         basePrice: 285000,
-        masterCategory: 'Lehenga Cholis',
+        family: 'Bridal Lehenga',
+        fabricCategory: 'Lehenga Cholis',
         fabricHint: ['2', '7'],
         photoFabricId: '2'
       },
@@ -60,7 +64,8 @@ const CAPSULES: Capsule[] = [
         name: 'Anar-Bel Saree',
         blurb: 'Pomegranate-vine zari border on emerald georgette, pleated by the studio\'s senior tailor.',
         basePrice: 78000,
-        masterCategory: 'Sarees',
+        family: 'Bespoke Saree',
+        fabricCategory: 'Sarees',
         fabricHint: ['2', '5'],
         photoFabricId: '5'
       },
@@ -69,7 +74,7 @@ const CAPSULES: Capsule[] = [
         name: 'Jasmine-Trellis Couture Gown',
         blurb: 'A sweep-train gown in midnight Mashru with hand-stitched silver jasmine across the bodice.',
         basePrice: 365000,
-        masterCategory: 'Designer Wear',
+        family: 'Couture Gown',
         fabricHint: ['1', '2'],
         photoFabricId: '1'
       }
@@ -91,7 +96,8 @@ const CAPSULES: Capsule[] = [
         name: 'Aarti Floor-length Anarkali',
         blurb: 'Black Banarasi flare with a constellation of hand-set sequin embroidery.',
         basePrice: 95000,
-        masterCategory: 'Anarkalis',
+        family: 'Anarkali',
+        fabricCategory: 'Anarkalis',
         fabricHint: ['2', '6'],
         photoFabricId: '6'
       },
@@ -100,7 +106,7 @@ const CAPSULES: Capsule[] = [
         name: 'Ghat-Lamp Cape Gown',
         blurb: 'Floor-length gown with a detachable Banarasi cape — the cape is convertible into a dupatta.',
         basePrice: 245000,
-        masterCategory: 'Designer Wear',
+        family: 'Couture Gown',
         fabricHint: ['2', '3'],
         photoFabricId: '3'
       },
@@ -109,7 +115,8 @@ const CAPSULES: Capsule[] = [
         name: 'Obsidian Half-Saree',
         blurb: 'Six-yard half-saree drape with a separate embroidered blouse and skirt — black silk, gold zari border.',
         basePrice: 86000,
-        masterCategory: 'Sarees',
+        family: 'Bespoke Saree',
+        fabricCategory: 'Sarees',
         fabricHint: ['2', '5'],
         photoFabricId: '2'
       }
@@ -131,7 +138,8 @@ const CAPSULES: Capsule[] = [
         name: 'Atelier Slip Dress',
         blurb: 'A bias-cut slip dress in dyeable mulberry silk, finished with a hand-stitched indigo border.',
         basePrice: 42000,
-        masterCategory: 'Western Wear',
+        family: 'East-West',
+        fabricCategory: 'Western Wear',
         fabricHint: ['4', '5'],
         photoFabricId: '4'
       },
@@ -140,7 +148,8 @@ const CAPSULES: Capsule[] = [
         name: 'Studio Anarkali',
         blurb: 'A knee-length anarkali in raw silk with a single block-printed indigo medallion at the hem.',
         basePrice: 38000,
-        masterCategory: 'Anarkalis',
+        family: 'Anarkali',
+        fabricCategory: 'Anarkalis',
         fabricHint: ['1', '4'],
         photoFabricId: '1'
       },
@@ -149,7 +158,8 @@ const CAPSULES: Capsule[] = [
         name: 'Bagru Co-ord Set',
         blurb: 'Wide-leg trousers and a tucked shirt in hand-blocked indigo cotton.',
         basePrice: 28000,
-        masterCategory: 'Western Wear',
+        family: 'East-West',
+        fabricCategory: 'Western Wear',
         fabricHint: ['4'],
         photoFabricId: '4'
       }
@@ -171,7 +181,8 @@ const CAPSULES: Capsule[] = [
         name: 'Numbered Patola Saree',
         blurb: 'A six-yard Patan Patola with a hand-cut hidden zip and a custom matching blouse — each numbered I-XII.',
         basePrice: 1450000,
-        masterCategory: 'Sarees',
+        family: 'Bespoke Saree',
+        fabricCategory: 'Sarees',
         fabricHint: ['3'],
         photoFabricId: '3'
       },
@@ -180,7 +191,7 @@ const CAPSULES: Capsule[] = [
         name: 'Reverie Cape Gown',
         blurb: 'A column gown in plain ivory silk topped with a floor-length Patola cape, fastened with three antique zari clasps.',
         basePrice: 1850000,
-        masterCategory: 'Designer Wear',
+        family: 'Couture Gown',
         fabricHint: ['3', '1'],
         photoFabricId: '3'
       },
@@ -189,7 +200,8 @@ const CAPSULES: Capsule[] = [
         name: 'Crimson Patola Lehenga',
         blurb: 'A two-piece lehenga where the panels are real Patola — the choli is silk with hand-stitched ikat tracing.',
         basePrice: 1650000,
-        masterCategory: 'Lehenga Cholis',
+        family: 'Bridal Lehenga',
+        fabricCategory: 'Lehenga Cholis',
         fabricHint: ['3', '2'],
         photoFabricId: '3'
       }
@@ -271,7 +283,7 @@ const CustomisePage: React.FC<{ productId?: string }> = ({ productId }) => {
       .map(id => findFabric(id))
       .filter((f): f is Fabric => !!f);
     const sameMaster = FABRICS.filter(f =>
-      f.masterCategory === selectedPiece.masterCategory ||
+      (selectedPiece.fabricCategory ? f.masterCategory === selectedPiece.fabricCategory : false) ||
       f.masterCategory === 'Fabrics'
     );
     const merged = [...hinted, ...sameMaster.filter(f => !hinted.includes(f))];
@@ -566,7 +578,7 @@ const CustomisePage: React.FC<{ productId?: string }> = ({ productId }) => {
                       />
                     )}
                     <div className="absolute top-3 left-3 px-2.5 py-1 bg-white/95 text-[9px] font-bold uppercase tracking-[0.18em] text-[#2A1F12] rounded-sm">
-                      {piece.masterCategory}
+                      {piece.family}
                     </div>
                   </div>
                   <div className="p-5 flex-1 flex flex-col">
