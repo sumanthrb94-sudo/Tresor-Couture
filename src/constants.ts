@@ -482,8 +482,8 @@ export const HERO_BANNERS: HeroBanner[] = [
     subtitle: 'Banarasi · Kanjivaram · Patola · Bandhani — shop heritage weaves at festival prices.',
     ctaLabel: 'Shop Bridal',
     ctaCategory: 'Silk',
-    bg: 'linear-gradient(135deg,#FFE3EC 0%,#FFD0DD 60%,#FFB1C4 100%)',
-    accent: '#FF3F6C',
+    bg: 'linear-gradient(135deg,#FBF5EB 0%,#F2E4C4 55%,#E5C97A 100%)',
+    accent: '#B8915A',
     photo: p(SOURCES.banarasi, 1400, 1000),
     fallback: FABRICS[1].image
   },
@@ -494,8 +494,8 @@ export const HERO_BANNERS: HeroBanner[] = [
     subtitle: 'Jamdani muslin, Belgian linen and Kalamkari — breathe easy this season.',
     ctaLabel: 'Shop Summer',
     ctaCategory: 'Linen',
-    bg: 'linear-gradient(135deg,#FFF6E0 0%,#FFE8B5 55%,#FFCB73 100%)',
-    accent: '#FF905A',
+    bg: 'linear-gradient(135deg,#FBF6EE 0%,#F0E2C5 55%,#D9C28B 100%)',
+    accent: '#A07840',
     photo: p(SOURCES.linen, 1400, 1000),
     fallback: FABRICS[6].image
   },
@@ -506,8 +506,8 @@ export const HERO_BANNERS: HeroBanner[] = [
     subtitle: 'Hand-spun cashmere from Ladakh and Super-130s wool from Biella.',
     ctaLabel: 'Shop Wool',
     ctaCategory: 'Wool',
-    bg: 'linear-gradient(135deg,#E3F4F1 0%,#BFE8E0 60%,#7FD0C2 100%)',
-    accent: '#03A685',
+    bg: 'linear-gradient(135deg,#F5EFE2 0%,#E5D9BC 55%,#B89F6E 100%)',
+    accent: '#6B5A2E',
     photo: p(SOURCES.pashmina, 1400, 1000),
     fallback: FABRICS[5].image
   }
@@ -515,14 +515,14 @@ export const HERO_BANNERS: HeroBanner[] = [
 
 /* Pill categories rendered as circular tiles on home. */
 export const CATEGORY_TILES: { name: string; category: string; color: string }[] = [
-  { name: 'Silks', category: 'Silk', color: '#F7C8C3' },
-  { name: 'Cottons', category: 'Cotton', color: '#F5E1B9' },
+  { name: 'Silks', category: 'Silk', color: '#E5C97A' },
+  { name: 'Cottons', category: 'Cotton', color: '#F2E4C4' },
   { name: 'Wool', category: 'Wool', color: '#D8C8AE' },
   { name: 'Linen', category: 'Linen', color: '#D9CDB3' },
-  { name: 'Satin', category: 'Satin', color: '#E8C7C8' },
-  { name: 'Mixed', category: 'Mixed', color: '#B6D7C9' },
-  { name: 'Bridal', category: 'Silk', color: '#FFD0DD' },
-  { name: 'Sale', category: 'All', color: '#FFE0E6' }
+  { name: 'Satin', category: 'Satin', color: '#EDDDB6' },
+  { name: 'Mixed', category: 'Mixed', color: '#C9C09C' },
+  { name: 'Bridal', category: 'Silk', color: '#C9A267' },
+  { name: 'Sale', category: 'All', color: '#B8915A' }
 ];
 
 /* Offer ticker — looks like Myntra's sticky deals strip. */

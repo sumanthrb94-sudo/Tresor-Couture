@@ -21,7 +21,7 @@ const Hero: React.FC = () => {
 
   return (
     <section className="relative pt-[88px] md:pt-[100px]">
-      <div className="relative w-full h-[420px] md:h-[520px] lg:h-[560px] overflow-hidden">
+      <div className="relative w-full h-[520px] md:h-[560px] lg:h-[600px] overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={banner.id}
@@ -30,42 +30,62 @@ const Hero: React.FC = () => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
             style={{ background: banner.bg }}
-            className="absolute inset-0 grid grid-cols-1 md:grid-cols-2 items-center"
+            className="absolute inset-0"
           >
-            <div className="px-6 md:px-12 lg:px-20 py-8 md:py-0 text-[color:var(--color-myntra-navy)]">
-              <p
-                className="text-[11px] md:text-[12px] font-extrabold tracking-[0.2em] uppercase mb-3"
-                style={{ color: banner.accent }}
-              >
-                {banner.eyebrow}
-              </p>
-              <h1 className="text-[34px] md:text-[44px] lg:text-[56px] font-extrabold leading-[1.05] mb-4 max-w-[520px]">
-                {banner.title}
-              </h1>
-              <p className="text-[14px] md:text-[16px] text-[color:var(--color-myntra-ink)] max-w-[480px] mb-7 md:mb-9">
-                {banner.subtitle}
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={() => navigate({ name: 'shop', category: banner.ctaCategory })}
-                  className="btn-primary"
-                  style={{ background: banner.accent }}
-                >
-                  {banner.ctaLabel}
-                </button>
-                <button onClick={() => navigate({ name: 'shop' })} className="btn-outline">
-                  View All
-                </button>
-              </div>
-            </div>
-            <div className="hidden md:block relative h-full overflow-hidden">
+            {/* Mobile: full-bleed image with gradient overlay; Desktop: split layout */}
+            <div className="absolute inset-0 md:hidden">
               <FabricImage
                 photo={banner.photo}
                 fallback={banner.fallback}
                 alt={banner.title}
-                className="absolute inset-0 w-full h-full object-cover"
+                fetchPriority="high"
+                className="w-full h-full object-cover object-center"
               />
-              <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, ${banner.bg.includes('linear-gradient') ? 'rgba(255,255,255,0.0)' : '#fff'} 0%, transparent 30%)` }} />
+              <div className="absolute inset-0 bg-gradient-to-t from-[rgba(42,37,32,0.78)] via-[rgba(42,37,32,0.35)] to-[rgba(42,37,32,0.0)]" />
+            </div>
+
+            <div className="absolute inset-0 grid md:grid-cols-2 items-end md:items-center">
+              <div className="px-6 md:px-12 lg:px-20 pb-10 md:pb-0 pt-8 md:pt-0 text-white md:text-[color:var(--color-myntra-navy)]">
+                <p
+                  className="text-[11px] md:text-[12px] font-extrabold tracking-[0.2em] uppercase mb-3 text-[color:var(--color-myntra-yellow)] md:text-[color:var(--color-myntra-pink)]"
+                  style={{ color: undefined }}
+                >
+                  <span className="md:hidden">{banner.eyebrow}</span>
+                  <span className="hidden md:inline" style={{ color: banner.accent }}>{banner.eyebrow}</span>
+                </p>
+                <h1 className="text-[32px] md:text-[44px] lg:text-[56px] font-extrabold leading-[1.05] mb-4 max-w-[520px] drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)] md:drop-shadow-none">
+                  {banner.title}
+                </h1>
+                <p className="text-[14px] md:text-[16px] text-white/90 md:text-[color:var(--color-myntra-ink)] max-w-[480px] mb-6 md:mb-9 drop-shadow md:drop-shadow-none">
+                  {banner.subtitle}
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={() => navigate({ name: 'shop', category: banner.ctaCategory })}
+                    className="btn-primary"
+                    style={{ background: banner.accent }}
+                  >
+                    {banner.ctaLabel}
+                  </button>
+                  <button onClick={() => navigate({ name: 'shop' })} className="btn-outline">
+                    View All
+                  </button>
+                </div>
+              </div>
+
+              {/* Desktop image panel */}
+              <div className="hidden md:block relative h-full overflow-hidden">
+                <FabricImage
+                  photo={banner.photo}
+                  fallback={banner.fallback}
+                  alt={banner.title}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{ background: 'linear-gradient(90deg, var(--color-myntra-bg) 0%, rgba(251,245,235,0.2) 35%, transparent 60%)' }}
+                />
+              </div>
             </div>
           </motion.div>
         </AnimatePresence>
@@ -74,20 +94,20 @@ const Hero: React.FC = () => {
         <button
           onClick={() => go(idx - 1)}
           aria-label="Previous"
-          className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center"
+          className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center z-10"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
         <button
           onClick={() => go(idx + 1)}
           aria-label="Next"
-          className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center"
+          className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center z-10"
         >
           <ChevronRight className="w-5 h-5" />
         </button>
 
         {/* Dots */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+        <div className="absolute bottom-3 md:bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
           {HERO_BANNERS.map((_, i) => (
             <button
               key={i}

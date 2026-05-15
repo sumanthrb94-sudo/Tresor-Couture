@@ -7,6 +7,7 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import FabricImage from '../components/FabricImage';
 import ProductCard from '../components/ProductCard';
+import ReviewsSection from '../components/ReviewsSection';
 
 interface Props {
   productId: string;
@@ -154,7 +155,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
                       key={c.name}
                       onClick={() => setSelectedColor(c.name)}
                       title={c.name}
-                      className={`flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border transition-all ${selectedColor === c.name ? 'border-[color:var(--color-myntra-pink)] bg-[#FFF1F5]' : 'border-[color:var(--color-myntra-border)] hover:border-[color:var(--color-myntra-navy)]'}`}
+                      className={`flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border transition-all ${selectedColor === c.name ? 'border-[color:var(--color-myntra-pink)] bg-[#F5E8C8]' : 'border-[color:var(--color-myntra-border)] hover:border-[color:var(--color-myntra-navy)]'}`}
                     >
                       <span className="w-5 h-5 rounded-full border border-white outline outline-1 outline-[color:var(--color-myntra-border)]" style={{ background: c.hex }} />
                       <span className="text-[12px] font-semibold">{c.name}</span>
@@ -175,7 +176,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
                   <button
                     key={l}
                     onClick={() => setMeters(l)}
-                    className={`min-w-[56px] h-11 rounded-full border-2 text-[13px] font-bold transition-colors ${meters === l ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)] bg-[#FFF1F5]' : 'border-[color:var(--color-myntra-border)] text-[color:var(--color-myntra-navy)] hover:border-[color:var(--color-myntra-navy)]'}`}
+                    className={`min-w-[56px] h-11 rounded-full border-2 text-[13px] font-bold transition-colors ${meters === l ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)] bg-[#F5E8C8]' : 'border-[color:var(--color-myntra-border)] text-[color:var(--color-myntra-navy)] hover:border-[color:var(--color-myntra-navy)]'}`}
                   >
                     {l} m
                   </button>
@@ -301,6 +302,9 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
             </div>
           </section>
         )}
+
+        {/* Reviews */}
+        <ReviewsSection fabricId={fabric.id} />
       </div>
     </main>
   );

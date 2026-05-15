@@ -10,6 +10,7 @@ import CategoryStrip from './components/CategoryStrip';
 import OffersBanner from './components/OffersBanner';
 import DealsStrip from './components/DealsStrip';
 import ProductRail from './components/ProductRail';
+import LookbookRail from './components/LookbookRail';
 import Footer from './components/Footer';
 import ShopPage from './pages/ShopPage';
 import ProductPage from './pages/ProductPage';
@@ -19,10 +20,15 @@ import ConfirmationPage from './pages/ConfirmationPage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminLandingPage from './pages/AdminLandingPage';
 import AdminBrandKitPage from './pages/AdminBrandKitPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import AccountPage from './pages/AccountPage';
+import AdminPage from './pages/admin/AdminPage';
 import { FABRICS } from './constants';
 import { CartProvider } from './context/CartContext';
 import { OrderProvider } from './context/OrderContext';
 import { WishlistProvider } from './context/WishlistContext';
+import { AuthProvider } from './context/AuthContext';
 import { RouterProvider, useRouter } from './context/RouterContext';
 import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
 
@@ -38,9 +44,10 @@ const Home: React.FC = () => (
     <OffersBanner />
     <DealsStrip />
     <ProductRail eyebrow="Hot on Tresor" title="Trending Weaves" items={trending} bg="white" />
-    <ProductRail eyebrow="The Bridal Edit" title="Heritage Silks for the Aisle" items={bridal} ctaCategory="Silk" bg="soft" />
-    <ProductRail eyebrow="Just Dropped" title="New In · Limited Bolts" items={newIn} bg="white" />
-    <ProductRail eyebrow="Summer Lightweights" title="Cottons, Linens & Muslins" items={summer} ctaCategory="Cotton" bg="soft" />
+    <LookbookRail />
+    <ProductRail eyebrow="The Bridal Edit" title="Heritage Silks for the Aisle" items={bridal} ctaCategory="Silk" bg="white" />
+    <ProductRail eyebrow="Just Dropped" title="New In · Limited Bolts" items={newIn} bg="soft" />
+    <ProductRail eyebrow="Summer Lightweights" title="Cottons, Linens & Muslins" items={summer} ctaCategory="Cotton" bg="white" />
   </main>
 );
 
@@ -60,8 +67,14 @@ const RoutedView: React.FC = () => {
       return <CheckoutPage />;
     case 'confirmation':
       return <ConfirmationPage orderId={route.orderId} />;
+    case 'login':
+      return <LoginPage />;
+    case 'register':
+      return <RegisterPage />;
+    case 'account':
+      return <AccountPage tab={route.tab} />;
     case 'admin':
-      return unlocked ? <AdminLandingPage /> : <AdminLoginPage redirectTo="admin" />;
+      return unlocked ? <AdminPage section={route.section} /> : <AdminLoginPage redirectTo="admin" />;
     case 'admin-brand-kit':
       return unlocked
         ? <AdminBrandKitPage section={route.section} />
@@ -84,15 +97,17 @@ const Chrome: React.FC = () => {
 function App() {
   return (
     <RouterProvider>
-      <AdminAuthProvider>
-        <WishlistProvider>
-          <CartProvider>
-            <OrderProvider>
-              <Chrome />
-            </OrderProvider>
-          </CartProvider>
-        </WishlistProvider>
-      </AdminAuthProvider>
+      <AuthProvider>
+        <AdminAuthProvider>
+          <WishlistProvider>
+            <CartProvider>
+              <OrderProvider>
+                <Chrome />
+              </OrderProvider>
+            </CartProvider>
+          </WishlistProvider>
+        </AdminAuthProvider>
+      </AuthProvider>
     </RouterProvider>
   );
 }

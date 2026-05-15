@@ -22,7 +22,13 @@ const Footer: React.FC = () => {
 
   return (
     <footer className="bg-[color:var(--color-myntra-bg-soft)] mt-10 md:mt-16">
-      <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 py-10 md:py-14 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 md:gap-10">
+      <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 pt-10 md:pt-14 pb-6 flex flex-col items-center text-center border-b border-[color:var(--color-myntra-border-soft)]">
+        <img src="/branding/logo-master.png" alt="Trésor Couture" className="h-20 md:h-24 w-auto object-contain mb-3" />
+        <p className="text-[13px] md:text-[14px] text-[color:var(--color-myntra-ink-soft)] max-w-md">
+          Heritage Indian weaves, hand-cut to the meter and dispatched with an authenticity card signed by the master weaver.
+        </p>
+      </div>
+      <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 py-10 md:py-12 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 md:gap-10">
         {cols.map(col => (
           <div key={col.title}>
             <h4 className="text-[12px] font-extrabold uppercase tracking-[0.15em] text-[color:var(--color-myntra-navy)] mb-4">{col.title}</h4>

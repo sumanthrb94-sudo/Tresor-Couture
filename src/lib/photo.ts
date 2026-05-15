@@ -1,7 +1,7 @@
-// All fabric photographs are routed through images.weserv.nl, a free public
-// CDN proxy that side-steps the per-region hotlink blocks Unsplash and similar
-// hosts apply when called from edge regions like Vercel. Falls back to the
-// inline SVG swatch via FabricImage's onError if a source URL is dead.
+// All fabric photographs are now served from the local `public/products/`
+// directory, sourced from the in-house catalogue shoot. Local paths bypass
+// the images.weserv.nl proxy entirely; legacy upstream URLs continue to be
+// proxied for any future external imagery.
 
 interface PhotoOpts {
   w?: number;
@@ -12,6 +12,9 @@ interface PhotoOpts {
 const PROXY = 'https://images.weserv.nl/';
 
 export const photoUrl = (sourceUrl: string, { w = 1000, h = 1250, fit = 'cover' }: PhotoOpts = {}): string => {
+  // Local assets shipped from /public — return unchanged so Vite serves them directly.
+  if (sourceUrl.startsWith('/') || sourceUrl.startsWith('data:')) return sourceUrl;
+
   const cleaned = sourceUrl.replace(/^https?:\/\//, '');
   const params = new URLSearchParams({
     url: cleaned,
@@ -24,66 +27,66 @@ export const photoUrl = (sourceUrl: string, { w = 1000, h = 1250, fit = 'cover' 
   return `${PROXY}?${params.toString()}`;
 };
 
-// Curated CC0 / Unsplash photography. Each entry is the bare upstream URL;
-// `photoUrl` wraps it with the proxy so the browser fetches a single
-// edge-cached, well-behaved image regardless of source policies.
+// Catalogue photography paths — each is /public/products/<file>.jpg, served
+// at runtime as /products/<file>.jpg. Filenames are descriptive so reordering
+// the catalogue stays obvious in source.
 
 export const SOURCES = {
-  // Mashru Silk-Satin — saffron silk drape
-  mashru: 'images.unsplash.com/photo-1583391733956-3750e0ff4e8b',
-  mashru2: 'images.unsplash.com/photo-1610030469983-98e550d6193c',
-  mashru3: 'images.unsplash.com/photo-1602810316693-3667c854239a',
+  // Mashru Silk-Satin — saffron / yellow drape on swing
+  mashru: '/products/mashru-saffron-1.jpg',
+  mashru2: '/products/bandhani-red-1.jpg',
+  mashru3: '/products/bandhani-red-2.jpg',
 
-  // Real Zari Banarasi — gold brocade
-  banarasi: 'images.unsplash.com/photo-1610030469668-2e9e09f56e54',
-  banarasi2: 'images.unsplash.com/photo-1610030469983-98e550d6193c',
-  banarasi3: 'images.unsplash.com/photo-1583391733975-cebd6e5b4cc1',
+  // Real Zari Banarasi — purple sequined brocade
+  banarasi: '/products/banarasi-purple-1.jpg',
+  banarasi2: '/products/banarasi-purple-2.jpg',
+  banarasi3: '/products/banarasi-purple-4.jpg',
 
-  // Patan Patola — double ikat
-  patola: 'images.unsplash.com/photo-1610030181087-540017dc9d61',
-  patola2: 'images.unsplash.com/photo-1606293459380-e7d8b1c2e8e9',
+  // Patan Patola — purple + kalamkari multicolor border
+  patola: '/products/patola-purple-1.jpg',
+  patola2: '/products/patola-purple-2.jpg',
 
-  // Dhakai Jamdani — translucent muslin
-  jamdani: 'images.unsplash.com/photo-1582719471384-894fbb16e074',
-  jamdani2: 'images.unsplash.com/photo-1544441893-675973e31985',
+  // Dhakai Jamdani — pink/yellow kalamkari prints
+  jamdani: '/products/jamdani-pink-1.jpg',
+  jamdani2: '/products/jamdani-pink-2.jpg',
 
-  // Chanderi — sheer cotton-silk
-  chanderi: 'images.unsplash.com/photo-1551803091-e20673f15770',
-  chanderi2: 'images.unsplash.com/photo-1582719471384-894fbb16e074',
-  chanderi3: 'images.unsplash.com/photo-1583391733956-3750e0ff4e8b',
+  // Chanderi — cream multicolour swirl
+  chanderi: '/products/kalamkari-cream-1.jpg',
+  chanderi2: '/products/kalamkari-cream-2.jpg',
+  chanderi3: '/products/kalamkari-cream-3.jpg',
 
-  // Pashmina — soft wool drape
-  pashmina: 'images.unsplash.com/photo-1605518293442-3eaeae5e421b',
-  pashmina2: 'images.unsplash.com/photo-1620799140408-edc6dcb6d633',
+  // Pashmina — solid purple sari
+  pashmina: '/products/banarasi-purple-3.jpg',
+  pashmina2: '/products/banarasi-purple-2.jpg',
 
-  // Belgian Linen — natural slub
-  linen: 'images.unsplash.com/photo-1620916566398-39f1143ab7be',
-  linen2: 'images.unsplash.com/photo-1606293459380-e7d8b1c2e8e9',
+  // Belgian Linen — olive kalamkari (closest natural-toned shot)
+  linen: '/products/kanjivaram-olive-1.jpg',
+  linen2: '/products/kanjivaram-olive-2.jpg',
 
-  // Kanjivaram — temple-border silk (this one previously rendered for the user)
-  kanjivaram: 'images.unsplash.com/photo-1610030469983-98e550d6193c',
-  kanjivaram2: 'images.unsplash.com/photo-1583391733956-3750e0ff4e8b',
+  // Kanjivaram — peacock / olive kalamkari
+  kanjivaram: '/products/kanjivaram-olive-1.jpg',
+  kanjivaram2: '/products/kanjivaram-olive-2.jpg',
 
-  // Kalamkari — hand-painted cotton
-  kalamkari: 'images.unsplash.com/photo-1599643478518-a784e5dc4c8f',
-  kalamkari2: 'images.unsplash.com/photo-1551803091-e20673f15770',
+  // Kalamkari Cotton — cream hand-painted prints
+  kalamkari: '/products/kalamkari-cream-2.jpg',
+  kalamkari2: '/products/kalamkari-cream-4.jpg',
 
-  // Italian Merino Wool — suiting cloth
-  merino: 'images.unsplash.com/photo-1574169208538-4f45163a14e6',
-  merino2: 'images.unsplash.com/photo-1606293459380-e7d8b1c2e8e9',
+  // Italian Merino Wool — olive / cream tones
+  merino: '/products/kanjivaram-olive-2.jpg',
+  merino2: '/products/kalamkari-cream-3.jpg',
 
-  // Bandhani — tie-dye constellation
-  bandhani: 'images.unsplash.com/photo-1620799140408-edc6dcb6d633',
-  bandhani2: 'images.unsplash.com/photo-1583391733956-3750e0ff4e8b',
+  // Bandhani — red dotted silk on swing
+  bandhani: '/products/bandhani-red-1.jpg',
+  bandhani2: '/products/bandhani-red-2.jpg',
 
-  // Linen-Silk blend — modern drape
-  linenSilk: 'images.unsplash.com/photo-1606293459380-e7d8b1c2e8e9',
-  linenSilk2: 'images.unsplash.com/photo-1620916566398-39f1143ab7be',
+  // Linen-Silk Blend — teal + pink kalamkari
+  linenSilk: '/products/linensilk-teal-1.jpg',
+  linenSilk2: '/products/jamdani-pink-3.jpg',
 
-  // Hero — Varanasi gold
-  hero: 'images.unsplash.com/photo-1583391733975-cebd6e5b4cc1',
+  // Hero — kalamkari cream signature shot
+  hero: '/products/kalamkari-cream-1.jpg',
 
   // Collection covers
-  lostLoom: 'images.unsplash.com/photo-1610030469983-98e550d6193c',
-  aether: 'images.unsplash.com/photo-1582719471384-894fbb16e074'
+  lostLoom: '/products/banarasi-purple-1.jpg',
+  aether: '/products/kalamkari-cream-2.jpg'
 };

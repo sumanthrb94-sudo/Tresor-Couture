@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Heart, Menu, Search, ShoppingBag, User, X } from 'lucide-react';
+import { Heart, LayoutDashboard, Menu, Search, ShoppingBag, User, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
 import { CATEGORIES, FABRICS, OFFER_TICKER } from '../constants';
 
@@ -21,11 +22,13 @@ const NAV: { label: string; category?: string; tone?: 'default' | 'sale' }[] = [
 const Navbar: React.FC = () => {
   const { itemCount } = useCart();
   const { count: wishCount } = useWishlist();
+  const { user, isAdmin } = useAuth();
   const { navigate, route } = useRouter();
 
   const [search, setSearch] = useState('');
   const [searchFocus, setSearchFocus] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [hoverCat, setHoverCat] = useState<string | null>(null);
 
   useEffect(() => {
@@ -120,8 +123,9 @@ const Navbar: React.FC = () => {
         >
           <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--color-myntra-border-soft)]">
             <button onClick={() => { setMobileOpen(false); navigate({ name: 'home' }); }} className="flex items-center gap-2">
-              <span className="font-bold text-xl tracking-tight text-[color:var(--color-myntra-pink)]">TRÉSOR</span>
-              <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-[color:var(--color-myntra-ink-soft)]">couture</span>
+              <img src="/branding/mark-master.png" alt="" className="h-9 w-auto object-contain" draggable={false} />
+              <span className="font-serif font-semibold text-xl tracking-[0.04em] text-[color:var(--color-myntra-navy)]">TRÉSOR</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--color-myntra-ink-soft)]">couture</span>
             </button>
             <button onClick={() => setMobileOpen(false)} aria-label="Close menu">
               <X className="w-6 h-6" />
@@ -152,7 +156,35 @@ const Navbar: React.FC = () => {
             <button onClick={() => { setMobileOpen(false); navigate({ name: 'cart' }); }} className="w-full text-left py-3 font-semibold text-[15px] border-b border-[color:var(--color-myntra-border-soft)]">
               Bag ({cartBadge})
             </button>
-            <button className="w-full text-left py-3 font-semibold text-[15px]">Wishlist ({wishBadge})</button>
+            <button
+              onClick={() => { setMobileOpen(false); navigate(user ? { name: 'account', tab: 'wishlist' } : { name: 'login' }); }}
+              className="w-full text-left py-3 font-semibold text-[15px] border-b border-[color:var(--color-myntra-border-soft)]"
+            >
+              Wishlist ({wishBadge})
+            </button>
+            {user ? (
+              <button
+                onClick={() => { setMobileOpen(false); navigate({ name: 'account' }); }}
+                className="w-full text-left py-3 font-semibold text-[15px] border-b border-[color:var(--color-myntra-border-soft)]"
+              >
+                My Account
+              </button>
+            ) : (
+              <button
+                onClick={() => { setMobileOpen(false); navigate({ name: 'login' }); }}
+                className="w-full text-left py-3 font-semibold text-[15px] border-b border-[color:var(--color-myntra-border-soft)] text-[color:var(--color-myntra-pink)]"
+              >
+                Login / Sign Up
+              </button>
+            )}
+            {isAdmin && (
+              <button
+                onClick={() => { setMobileOpen(false); navigate({ name: 'admin' }); }}
+                className="w-full text-left py-3 font-bold text-[15px] text-[color:var(--color-myntra-pink)]"
+              >
+                Admin Console
+              </button>
+            )}
           </nav>
         </motion.div>
       )}
@@ -173,14 +205,15 @@ const Navbar: React.FC = () => {
               src="/branding/mark-master.png"
               alt=""
               aria-hidden="true"
-              className="h-10 md:h-12 w-auto select-none"
+              className="h-10 md:h-12 w-auto select-none object-contain"
+              loading="eager"
               draggable={false}
             />
             <span className="flex items-baseline gap-1.5">
-              <span className="font-serif font-semibold text-[20px] md:text-[24px] tracking-[0.04em] text-[color:var(--color-myntra-navy)]">
+              <span className="font-serif font-semibold text-[20px] md:text-[24px] tracking-[0.04em] text-[color:var(--color-myntra-navy)] leading-none">
                 TRÉSOR
               </span>
-              <span className="hidden sm:inline text-[10px] md:text-[11px] font-bold uppercase tracking-[0.22em] text-[color:var(--color-myntra-ink-soft)]">
+              <span className="hidden sm:inline text-[10px] md:text-[11px] font-bold uppercase tracking-[0.22em] text-[color:var(--color-myntra-ink-soft)] leading-none">
                 couture
               </span>
             </span>
@@ -250,11 +283,68 @@ const Navbar: React.FC = () => {
 
           {/* Right icons */}
           <div className="flex items-center gap-1 md:gap-2 ml-auto md:ml-0 shrink-0">
-            <button className="hidden md:flex flex-col items-center px-3 py-1 group" aria-label="Profile">
-              <User className="w-5 h-5 text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]" />
-              <span className="text-[10px] font-bold mt-0.5">Profile</span>
-            </button>
-            <button className="hidden md:flex flex-col items-center px-3 py-1 group relative" aria-label="Wishlist">
+            <div
+              className="hidden md:block relative"
+              onMouseEnter={() => setProfileOpen(true)}
+              onMouseLeave={() => setProfileOpen(false)}
+            >
+              <button
+                onClick={() => navigate(user ? { name: 'account' } : { name: 'login' })}
+                className="flex flex-col items-center px-3 py-1 group"
+                aria-label="Profile"
+              >
+                <User className="w-5 h-5 text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]" />
+                <span className="text-[10px] font-bold mt-0.5">Profile</span>
+              </button>
+              {profileOpen && (
+                <div className="absolute top-full right-0 w-60 bg-white border-t-4 border-[color:var(--color-myntra-pink)] shadow-2xl pt-3 pb-2 z-50">
+                  <div className="px-4 pb-3 border-b border-[color:var(--color-myntra-border-soft)]">
+                    {user ? (
+                      <>
+                        <p className="text-[14px] font-extrabold truncate">Hello, {user.fullName.split(' ')[0]}</p>
+                        <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] truncate">{user.email}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-[14px] font-extrabold">Welcome</p>
+                        <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mb-2">To access your bag and orders</p>
+                        <button
+                          onClick={() => navigate({ name: 'login' })}
+                          className="block w-full text-center border border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)] text-[12px] font-bold uppercase tracking-wider py-1.5 rounded"
+                        >
+                          Login / Sign Up
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  <ul className="py-1 text-[13px]">
+                    {user && (
+                      <>
+                        <li><button onClick={() => navigate({ name: 'account', tab: 'profile' })} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)]">My Profile</button></li>
+                        <li><button onClick={() => navigate({ name: 'account', tab: 'orders' })} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)]">My Orders</button></li>
+                        <li><button onClick={() => navigate({ name: 'account', tab: 'wishlist' })} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)]">Wishlist</button></li>
+                        <li><button onClick={() => navigate({ name: 'account', tab: 'addresses' })} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)]">Addresses</button></li>
+                      </>
+                    )}
+                    {isAdmin && (
+                      <li>
+                        <button
+                          onClick={() => navigate({ name: 'admin' })}
+                          className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)] text-[color:var(--color-myntra-pink)] font-bold flex items-center gap-2"
+                        >
+                          <LayoutDashboard className="w-4 h-4" /> Admin Console
+                        </button>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => navigate(user ? { name: 'account', tab: 'wishlist' } : { name: 'login' })}
+              className="hidden md:flex flex-col items-center px-3 py-1 group relative"
+              aria-label="Wishlist"
+            >
               <Heart className="w-5 h-5 text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]" />
               <span className="text-[10px] font-bold mt-0.5">Wishlist</span>
               {wishBadge > 0 && (
