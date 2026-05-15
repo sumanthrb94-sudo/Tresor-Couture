@@ -9,7 +9,6 @@ import Hero from './components/Hero';
 import HyderabadDeliveryStrip from './components/HyderabadDeliveryStrip';
 import CategoryStrip from './components/CategoryStrip';
 import OffersBanner from './components/OffersBanner';
-import DealsStrip from './components/DealsStrip';
 import ProductRail from './components/ProductRail';
 import LookbookRail from './components/LookbookRail';
 import Footer from './components/Footer';
@@ -45,7 +44,6 @@ const Home: React.FC = () => (
     <Hero />
     <CategoryStrip />
     <OffersBanner />
-    <DealsStrip />
     <ProductRail eyebrow="Hot on Tresor" title="Trending Weaves" items={trending} bg="white" />
     <LookbookRail />
     <ProductRail eyebrow="The Bridal Edit" title="Heritage Silks for the Aisle" items={bridal} ctaCategory="Silk" bg="white" />
