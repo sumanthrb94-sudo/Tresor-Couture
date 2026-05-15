@@ -175,4 +175,5 @@ export type Route =
   | { name: 'register' }
   | { name: 'account'; tab?: 'profile' | 'orders' | 'wishlist' | 'addresses' }
   | { name: 'admin'; section?: 'dashboard' | 'products' | 'orders' | 'coupons' | 'reviews' }
-  | { name: 'admin-brand-kit'; section?: string };
+  | { name: 'admin-brand-kit'; section?: string }
+  | { name: 'not-found'; path?: string };

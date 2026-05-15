@@ -28,6 +28,8 @@ const Footer: React.FC = () => {
           alt="Trésor Couture"
           className="h-24 md:h-32 w-auto object-contain mb-3 select-none"
           draggable={false}
+          loading="lazy"
+          decoding="async"
         />
         <p className="text-[13px] md:text-[14px] text-[color:var(--color-myntra-ink-soft)] max-w-md">
           Heritage Indian weaves, hand-cut to the meter — and across Hyderabad, designer pieces at your door inside 40 minutes.

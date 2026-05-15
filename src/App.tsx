@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import CategoryStrip from './components/CategoryStrip';
@@ -11,19 +11,24 @@ import OffersBanner from './components/OffersBanner';
 import ProductRail from './components/ProductRail';
 import LookbookRail from './components/LookbookRail';
 import Footer from './components/Footer';
+import ErrorBoundary from './components/ErrorBoundary';
 import ShopPage from './pages/ShopPage';
 import ProductPage from './pages/ProductPage';
 import CartPage from './pages/CartPage';
-import CheckoutPage from './pages/CheckoutPage';
-import ConfirmationPage from './pages/ConfirmationPage';
-import CustomisePage from './pages/CustomisePage';
-import AdminLoginPage from './pages/AdminLoginPage';
-import AdminLandingPage from './pages/AdminLandingPage';
-import AdminBrandKitPage from './pages/AdminBrandKitPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import AccountPage from './pages/AccountPage';
-import AdminPage from './pages/admin/AdminPage';
+
+// Routes that aren't on the critical home/shop path are lazy-loaded so they
+// don't bloat the initial bundle. React.lazy splits each into its own chunk.
+const CheckoutPage      = lazy(() => import('./pages/CheckoutPage'));
+const ConfirmationPage  = lazy(() => import('./pages/ConfirmationPage'));
+const CustomisePage     = lazy(() => import('./pages/CustomisePage'));
+const LoginPage         = lazy(() => import('./pages/LoginPage'));
+const RegisterPage      = lazy(() => import('./pages/RegisterPage'));
+const AccountPage       = lazy(() => import('./pages/AccountPage'));
+const AdminLoginPage    = lazy(() => import('./pages/AdminLoginPage'));
+const AdminLandingPage  = lazy(() => import('./pages/AdminLandingPage'));
+const AdminBrandKitPage = lazy(() => import('./pages/AdminBrandKitPage'));
+const AdminPage         = lazy(() => import('./pages/admin/AdminPage'));
+const NotFoundPage      = lazy(() => import('./pages/NotFoundPage'));
 import { FABRICS } from './constants';
 import { CartProvider } from './context/CartContext';
 import { OrderProvider } from './context/OrderContext';
@@ -80,8 +85,16 @@ const RoutedView: React.FC = () => {
       return unlocked
         ? <AdminBrandKitPage section={route.section} />
         : <AdminLoginPage redirectTo="admin-brand-kit" section={route.section} />;
+    case 'not-found':
+      return <NotFoundPage />;
   }
 };
+
+const RouteFallback: React.FC = () => (
+  <div className="pt-[120px] min-h-[60vh] flex items-center justify-center">
+    <div className="w-8 h-8 border-2 border-[color:var(--color-myntra-pink)] border-t-transparent rounded-full animate-spin" aria-label="Loading" />
+  </div>
+);
 
 const Chrome: React.FC = () => {
   const { route } = useRouter();
@@ -89,7 +102,11 @@ const Chrome: React.FC = () => {
   return (
     <div className="selection:bg-[color:var(--color-myntra-pink)] selection:text-white bg-white min-h-screen">
       <Navbar />
-      <RoutedView />
+      <ErrorBoundary>
+        <Suspense fallback={<RouteFallback />}>
+          <RoutedView />
+        </Suspense>
+      </ErrorBoundary>
       {!isAdmin && <Footer />}
     </div>
   );

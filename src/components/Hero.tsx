@@ -47,6 +47,7 @@ const Hero: React.FC = () => {
                 photo={banner.photo}
                 fallback={banner.fallback}
                 alt={banner.title}
+                loading="eager"
                 fetchPriority="high"
                 className="w-full h-full object-cover object-center"
               />

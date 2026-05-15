@@ -8,7 +8,7 @@ interface Props extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'src' | 
   alt: string;
 }
 
-const FabricImage: React.FC<Props> = ({ photo, fallback, alt, loading = 'eager', ...rest }) => {
+const FabricImage: React.FC<Props> = ({ photo, fallback, alt, loading = 'lazy', ...rest }) => {
   const [src, setSrc] = useState(photo);
 
   useEffect(() => {
@@ -20,6 +20,7 @@ const FabricImage: React.FC<Props> = ({ photo, fallback, alt, loading = 'eager',
       src={src}
       alt={alt}
       loading={loading}
+      decoding="async"
       onError={() => {
         if (src !== fallback) setSrc(fallback);
       }}

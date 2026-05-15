@@ -50,7 +50,7 @@ const parseHash = (hash: string): Route => {
       return { name: 'admin', section };
     }
     default:
-      return { name: 'home' };
+      return { name: 'not-found', path: cleaned };
   }
 };
 
@@ -84,6 +84,8 @@ const buildHash = (route: Route): string => {
       return route.section ? `#/admin/${route.section}` : '#/admin';
     case 'admin-brand-kit':
       return route.section ? `#/admin/brand-kit?section=${encodeURIComponent(route.section)}` : '#/admin/brand-kit';
+    case 'not-found':
+      return route.path ? `#/${route.path}` : '#/404';
   }
 };
 
