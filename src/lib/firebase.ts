@@ -13,6 +13,8 @@ import {
   getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut as fbSignOut,
   onAuthStateChanged,
   updateProfile,
@@ -74,6 +76,30 @@ export async function register(input: { email: string; password: string; fullNam
 
 export async function login(email: string, password: string) {
   const cred = await signInWithEmailAndPassword(auth, email, password);
+  return cred.user;
+}
+
+/**
+ * Google sign-in via popup. On the first login we materialise a
+ * /users/{uid} profile doc so the rest of the app (Account page, orders,
+ * reviews) can read it without a special-case for Google users.
+ */
+export async function loginWithGoogle() {
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  const cred = await signInWithPopup(auth, provider);
+  const existing = await getDoc(doc(db, 'users', cred.user.uid));
+  if (!existing.exists()) {
+    await setDoc(doc(db, 'users', cred.user.uid), {
+      uid:       cred.user.uid,
+      email:     cred.user.email ?? '',
+      fullName:  cred.user.displayName ?? cred.user.email?.split('@')[0] ?? 'Trésor Member',
+      phone:     cred.user.phoneNumber ?? null,
+      role:      'customer' as const,
+      photoURL:  cred.user.photoURL ?? null,
+      createdAt: new Date().toISOString()
+    });
+  }
   return cred.user;
 }
 

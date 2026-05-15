@@ -67,8 +67,7 @@ const AdminLoginPage: React.FC<{ redirectTo?: 'admin' | 'admin-brand-kit'; secti
         </form>
 
         <p className="text-[11px] text-[#8E6520]/80 mt-6 text-center">
-          Default passcode is <code className="font-mono text-[#2A1F12]">tresor-atelier</code>.
-          Set <code className="font-mono">VITE_ADMIN_PASSCODE</code> in the environment to change it.
+          Atelier staff — speak to your administrator if you've forgotten the passcode.
         </p>
       </div>
     </main>

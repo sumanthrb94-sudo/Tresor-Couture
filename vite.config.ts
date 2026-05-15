@@ -29,6 +29,7 @@ export default defineConfig({
           if (id.includes('/react/') || id.includes('/react-dom/') || id.includes('/scheduler/')) return 'vendor-react';
           if (id.includes('/motion/') || id.includes('framer-motion')) return 'vendor-motion';
           if (id.includes('/lucide-react/')) return 'vendor-icons';
+          if (id.includes('/firebase/') || id.includes('/@firebase/')) return 'vendor-firebase';
           return 'vendor';
         },
       },

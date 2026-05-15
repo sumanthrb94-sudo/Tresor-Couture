@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import type { User } from '../types';
 import { ensureAdminSeed, usersStore } from '../data/storage';
 import { sha256 } from '../data/hash';
+import { loginWithGoogle as firebaseGoogleSignIn } from '../lib/firebase';
 
 const SESSION_KEY = 'tresor:auth:v1';
 
@@ -10,6 +11,7 @@ interface AuthContextValue {
   isAdmin: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   register: (input: { email: string; password: string; fullName: string; phone?: string }) => Promise<void>;
   logout: () => void;
   updateProfile: (patch: Partial<User>) => Promise<void>;
@@ -89,6 +91,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     []
   );
 
+  /**
+   * Google sign-in. Authenticates via Firebase Auth, then bridges into the
+   * existing local user store so cart/orders/wishlist (still localStorage-
+   * backed today) treat the Google account like any other customer. First
+   * login provisions a `customer` user; subsequent logins just resume.
+   */
+  const loginWithGoogle = useCallback(async () => {
+    const fbUser = await firebaseGoogleSignIn();
+    const normalised = (fbUser.email ?? '').trim().toLowerCase();
+    if (!normalised) throw new Error('Google account did not return an email.');
+    const all = await usersStore.list();
+    let local = all.find(u => u.email.toLowerCase() === normalised);
+    if (!local) {
+      local = {
+        id: 'g-' + fbUser.uid,
+        email: normalised,
+        passwordHash: '',
+        fullName: fbUser.displayName ?? normalised.split('@')[0],
+        phone: fbUser.phoneNumber ?? undefined,
+        role: 'customer',
+        createdAt: new Date().toISOString()
+      };
+      await usersStore.create(local);
+    }
+    setUser(local);
+    saveSession(local);
+  }, []);
+
   const logout = useCallback(() => {
     setUser(null);
     saveSession(null);
@@ -106,7 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider
-      value={{ user, isAdmin: user?.role === 'admin', loading, login, register, logout, updateProfile }}
+      value={{ user, isAdmin: user?.role === 'admin', loading, login, loginWithGoogle, register, logout, updateProfile }}
     >
       {children}
     </AuthContext.Provider>

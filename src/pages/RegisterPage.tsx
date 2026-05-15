@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Eye, EyeOff, Lock, Mail, Phone, Sparkles, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 
 interface FieldErrors {
   fullName?: string;
@@ -243,6 +244,14 @@ const RegisterPage: React.FC = () => {
             <button type="submit" disabled={submitting} className="btn-primary w-full">
               {submitting ? 'Creating account…' : 'Create Account'}
             </button>
+
+            <div className="flex items-center gap-3 my-1">
+              <span className="flex-1 h-px bg-[color:var(--color-myntra-border-soft)]" />
+              <span className="text-[10px] uppercase tracking-[0.22em] font-bold text-[color:var(--color-myntra-ink-mute)]">or</span>
+              <span className="flex-1 h-px bg-[color:var(--color-myntra-border-soft)]" />
+            </div>
+
+            <GoogleSignInButton onDone={() => navigate({ name: 'account' })} label="Sign up with Google" />
 
             <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] leading-relaxed">
               By creating an account, you agree to Trésor Couture&apos;s{' '}
