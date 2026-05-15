@@ -3,6 +3,9 @@ import { Eye, EyeOff, Lock, Mail, Phone, Sparkles, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
 import GoogleSignInButton from '../components/GoogleSignInButton';
+import PhoneOtpForm from '../components/PhoneOtpForm';
+
+type Mode = 'email' | 'phone';
 
 interface FieldErrors {
   fullName?: string;
@@ -19,6 +22,7 @@ const RegisterPage: React.FC = () => {
   const { register } = useAuth();
   const { navigate, hrefFor } = useRouter();
 
+  const [mode, setMode] = useState<Mode>('email');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -77,7 +81,7 @@ const RegisterPage: React.FC = () => {
         </h1>
 
         <div className="bg-white border border-[color:var(--color-myntra-border-soft)] p-6 md:p-8">
-          <div className="flex items-start gap-3 mb-5">
+          <div className="flex items-start gap-3 mb-4">
             <Sparkles className="w-5 h-5 text-[color:var(--color-myntra-pink)] mt-0.5 shrink-0" />
             <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)] leading-relaxed">
               Save fabrics to your private wishlist, track every order, and enjoy curated
@@ -85,6 +89,42 @@ const RegisterPage: React.FC = () => {
             </p>
           </div>
 
+          <div role="tablist" aria-label="Sign-up method" className="inline-flex p-1 bg-[color:var(--color-myntra-bg-soft)] border border-[color:var(--color-myntra-border-soft)] rounded mb-5">
+            {(['email', 'phone'] as Mode[]).map(m => (
+              <button
+                key={m}
+                type="button"
+                role="tab"
+                aria-selected={mode === m}
+                onClick={() => { setMode(m); setSubmitError(null); }}
+                className={
+                  'px-4 py-1.5 text-[12px] font-bold uppercase tracking-wider rounded transition-colors ' +
+                  (mode === m
+                    ? 'bg-white text-[color:var(--color-myntra-navy)] shadow-sm'
+                    : 'text-[color:var(--color-myntra-ink-soft)] hover:text-[color:var(--color-myntra-navy)]')
+                }
+              >
+                {m === 'email' ? 'Email' : 'Phone'}
+              </button>
+            ))}
+          </div>
+
+          {mode === 'phone' ? (
+            <div className="space-y-4">
+              <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] leading-relaxed">
+                Verify your number to create an account instantly — no password required.
+              </p>
+              <PhoneOtpForm onDone={() => navigate({ name: 'account' })} verifyLabel="Verify & Create Account" />
+
+              <div className="flex items-center gap-3 my-1">
+                <span className="flex-1 h-px bg-[color:var(--color-myntra-border-soft)]" />
+                <span className="text-[10px] uppercase tracking-[0.22em] font-bold text-[color:var(--color-myntra-ink-mute)]">or</span>
+                <span className="flex-1 h-px bg-[color:var(--color-myntra-border-soft)]" />
+              </div>
+
+              <GoogleSignInButton onDone={() => navigate({ name: 'account' })} label="Sign up with Google" />
+            </div>
+          ) : (
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
             <div>
               <label
@@ -259,6 +299,7 @@ const RegisterPage: React.FC = () => {
               <span className="font-semibold text-[color:var(--color-myntra-ink-soft)]">Privacy Policy</span>.
             </p>
           </form>
+          )}
 
           <hr className="my-5 border-[color:var(--color-myntra-border-soft)]" />
 

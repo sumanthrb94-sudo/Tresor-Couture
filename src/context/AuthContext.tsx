@@ -1,10 +1,16 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { User } from '../types';
-import { ensureAdminSeed, usersStore } from '../data/storage';
-import { sha256 } from '../data/hash';
-import { loginWithGoogle as firebaseGoogleSignIn } from '../lib/firebase';
-
-const SESSION_KEY = 'tresor:auth:v1';
+import {
+  register as fbRegister,
+  login as fbLogin,
+  loginWithGoogle as fbLoginWithGoogle,
+  signOut as fbSignOut,
+  onAuth,
+  isAdminUser,
+  sendPhoneCode,
+  confirmPhoneCode,
+  usersApi
+} from '../lib/firebase';
 
 interface AuthContextValue {
   user: User | null;
@@ -13,56 +19,67 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   register: (input: { email: string; password: string; fullName: string; phone?: string }) => Promise<void>;
-  logout: () => void;
+  loginWithPhone: (e164Number: string) => Promise<void>;
+  confirmPhoneOtp: (code: string) => Promise<void>;
+  logout: () => Promise<void>;
   updateProfile: (patch: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const loadSession = (): User | null => {
-  try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === 'object' ? (parsed as User) : null;
-  } catch {
-    return null;
-  }
-};
+const RECAPTCHA_CONTAINER_ID = 'recaptcha-container';
 
-const saveSession = (user: User | null) => {
-  if (user) localStorage.setItem(SESSION_KEY, JSON.stringify(user));
-  else localStorage.removeItem(SESSION_KEY);
+// Firebase profiles don't carry passwordHash; consumers only read it for
+// equality checks that no longer apply, so an empty string keeps the
+// existing User type happy without leaking a credential.
+const toUser = (uid: string, profile: Record<string, unknown> | null, fallbackEmail: string | null): User => {
+  const p = profile ?? {};
+  return {
+    id: uid,
+    email: (p.email as string) ?? fallbackEmail ?? '',
+    passwordHash: '',
+    fullName: (p.fullName as string) ?? (fallbackEmail?.split('@')[0] ?? 'Trésor Member'),
+    phone: (p.phone as string | undefined) ?? undefined,
+    role: ((p.role as 'customer' | 'admin') ?? 'customer'),
+    createdAt: (p.createdAt as string) ?? new Date().toISOString(),
+    defaultAddress: p.defaultAddress as User['defaultAddress']
+  };
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(() => loadSession());
+  const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const currentUidRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    ensureAdminSeed().finally(() => setLoading(false));
+  const hydrate = useCallback(async (uid: string, email: string | null) => {
+    const profile = (await usersApi.me()) as Record<string, unknown> | null;
+    const admin = await isAdminUser();
+    if (currentUidRef.current !== uid) return;
+    setUser(toUser(uid, profile, email));
+    setIsAdmin(admin);
   }, []);
 
-  // Refresh stored user if its record changes in the users store.
   useEffect(() => {
-    if (!user) return;
-    return usersStore.subscribe(async () => {
-      const fresh = await usersStore.get(user.id);
-      if (fresh) {
-        setUser(fresh);
-        saveSession(fresh);
+    const unsub = onAuth(async (fbUser) => {
+      currentUidRef.current = fbUser?.uid ?? null;
+      if (!fbUser) {
+        setUser(null);
+        setIsAdmin(false);
+        setLoading(false);
+        return;
+      }
+      try {
+        await hydrate(fbUser.uid, fbUser.email);
+      } finally {
+        setLoading(false);
       }
     });
-  }, [user]);
+    return unsub;
+  }, [hydrate]);
 
   const login = useCallback(async (email: string, password: string) => {
-    const normalised = email.trim().toLowerCase();
-    const passwordHash = await sha256(password);
-    const all = await usersStore.list();
-    const match = all.find(u => u.email.toLowerCase() === normalised && u.passwordHash === passwordHash);
-    if (!match) throw new Error('Invalid email or password.');
-    setUser(match);
-    saveSession(match);
+    await fbLogin(email.trim(), password);
   }, []);
 
   const register = useCallback(
@@ -70,73 +87,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const normalised = email.trim().toLowerCase();
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(normalised)) throw new Error('Enter a valid email.');
       if (password.length < 6) throw new Error('Password must be at least 6 characters.');
-      const all = await usersStore.list();
-      if (all.some(u => u.email.toLowerCase() === normalised)) {
-        throw new Error('An account with this email already exists.');
-      }
-      const passwordHash = await sha256(password);
-      const newUser: User = {
-        id: 'u-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-        email: normalised,
-        passwordHash,
-        fullName: fullName.trim(),
-        phone: phone?.trim(),
-        role: 'customer',
-        createdAt: new Date().toISOString()
-      };
-      await usersStore.create(newUser);
-      setUser(newUser);
-      saveSession(newUser);
+      await fbRegister({ email: normalised, password, fullName: fullName.trim(), phone: phone?.trim() });
     },
     []
   );
 
-  /**
-   * Google sign-in. Authenticates via Firebase Auth, then bridges into the
-   * existing local user store so cart/orders/wishlist (still localStorage-
-   * backed today) treat the Google account like any other customer. First
-   * login provisions a `customer` user; subsequent logins just resume.
-   */
   const loginWithGoogle = useCallback(async () => {
-    const fbUser = await firebaseGoogleSignIn();
-    const normalised = (fbUser.email ?? '').trim().toLowerCase();
-    if (!normalised) throw new Error('Google account did not return an email.');
-    const all = await usersStore.list();
-    let local = all.find(u => u.email.toLowerCase() === normalised);
-    if (!local) {
-      local = {
-        id: 'g-' + fbUser.uid,
-        email: normalised,
-        passwordHash: '',
-        fullName: fbUser.displayName ?? normalised.split('@')[0],
-        phone: fbUser.phoneNumber ?? undefined,
-        role: 'customer',
-        createdAt: new Date().toISOString()
-      };
-      await usersStore.create(local);
-    }
-    setUser(local);
-    saveSession(local);
+    await fbLoginWithGoogle();
   }, []);
 
-  const logout = useCallback(() => {
+  const loginWithPhone = useCallback(async (e164Number: string) => {
+    await sendPhoneCode(e164Number, RECAPTCHA_CONTAINER_ID);
+  }, []);
+
+  const confirmPhoneOtp = useCallback(async (code: string) => {
+    await confirmPhoneCode(code);
+  }, []);
+
+  const logout = useCallback(async () => {
+    await fbSignOut();
     setUser(null);
-    saveSession(null);
+    setIsAdmin(false);
   }, []);
 
   const updateProfile = useCallback(
     async (patch: Partial<User>) => {
       if (!user) throw new Error('Not signed in.');
-      const updated = await usersStore.update(user.id, patch);
-      setUser(updated);
-      saveSession(updated);
+      const fsPatch: Record<string, unknown> = {};
+      if (patch.fullName !== undefined) fsPatch.fullName = patch.fullName;
+      if (patch.phone !== undefined) fsPatch.phone = patch.phone ?? null;
+      if (patch.defaultAddress !== undefined) fsPatch.defaultAddress = patch.defaultAddress;
+      await usersApi.updateMe(fsPatch);
+      await hydrate(user.id, user.email);
     },
-    [user]
+    [user, hydrate]
   );
 
   return (
     <AuthContext.Provider
-      value={{ user, isAdmin: user?.role === 'admin', loading, login, loginWithGoogle, register, logout, updateProfile }}
+      value={{
+        user,
+        isAdmin,
+        loading,
+        login,
+        loginWithGoogle,
+        register,
+        loginWithPhone,
+        confirmPhoneOtp,
+        logout,
+        updateProfile
+      }}
     >
       {children}
     </AuthContext.Provider>

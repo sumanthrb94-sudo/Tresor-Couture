@@ -3,10 +3,14 @@ import { Eye, EyeOff, Lock, Mail, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
 import GoogleSignInButton from '../components/GoogleSignInButton';
+import PhoneOtpForm from '../components/PhoneOtpForm';
+
+type Mode = 'email' | 'phone';
 
 const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const { navigate, hrefFor } = useRouter();
+  const [mode, setMode] = useState<Mode>('email');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -59,10 +63,49 @@ const LoginPage: React.FC = () => {
             <h2 className="text-[18px] font-extrabold uppercase tracking-wider mb-1 text-[color:var(--color-myntra-navy)]">
               Welcome back
             </h2>
-            <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)] mb-6">
+            <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)] mb-4">
               Pick up where you left off — saved bolts, orders, and your private wishlist.
             </p>
 
+            <div role="tablist" aria-label="Sign-in method" className="inline-flex p-1 bg-[color:var(--color-myntra-bg-soft)] border border-[color:var(--color-myntra-border-soft)] rounded mb-5">
+              {(['email', 'phone'] as Mode[]).map(m => (
+                <button
+                  key={m}
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === m}
+                  onClick={() => { setMode(m); setError(null); }}
+                  className={
+                    'px-4 py-1.5 text-[12px] font-bold uppercase tracking-wider rounded transition-colors ' +
+                    (mode === m
+                      ? 'bg-white text-[color:var(--color-myntra-navy)] shadow-sm'
+                      : 'text-[color:var(--color-myntra-ink-soft)] hover:text-[color:var(--color-myntra-navy)]')
+                  }
+                >
+                  {m === 'email' ? 'Email' : 'Phone'}
+                </button>
+              ))}
+            </div>
+
+            {mode === 'phone' ? (
+              <div className="space-y-4">
+                <PhoneOtpForm onDone={() => navigate({ name: 'account' })} verifyLabel="Verify & Sign in" />
+
+                <div className="flex items-center gap-3 my-1">
+                  <span className="flex-1 h-px bg-[color:var(--color-myntra-border-soft)]" />
+                  <span className="text-[10px] uppercase tracking-[0.22em] font-bold text-[color:var(--color-myntra-ink-mute)]">or</span>
+                  <span className="flex-1 h-px bg-[color:var(--color-myntra-border-soft)]" />
+                </div>
+
+                <GoogleSignInButton onDone={() => navigate({ name: 'account' })} />
+
+                <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] leading-relaxed">
+                  By continuing, you agree to Trésor Couture&apos;s{' '}
+                  <span className="font-semibold text-[color:var(--color-myntra-ink-soft)]">Terms of Use</span> and{' '}
+                  <span className="font-semibold text-[color:var(--color-myntra-ink-soft)]">Privacy Policy</span>.
+                </p>
+              </div>
+            ) : (
             <form onSubmit={handleSubmit} noValidate className="space-y-4">
               <div>
                 <label
@@ -150,6 +193,7 @@ const LoginPage: React.FC = () => {
                 <span className="font-semibold text-[color:var(--color-myntra-ink-soft)]">Privacy Policy</span>.
               </p>
             </form>
+            )}
           </section>
 
           {/* Right: New to Trésor */}
