@@ -13,10 +13,10 @@ type NavEntry =
   | { kind: 'master'; label: MasterCategory; tone?: 'default' }
   | { kind: 'static'; label: string; tone?: 'default' | 'sale' };
 
-// "Couture Studio" is the bespoke / made-to-measure entry; "Sale" trails as tone='sale'.
+// "Couture Customisations" is the ultra-exclusive customisable collections atelier.
 const NAV: NavEntry[] = [
   ...MASTER_CATEGORIES.map<NavEntry>(m => ({ kind: 'master', label: m })),
-  { kind: 'static', label: 'Couture Studio' },
+  { kind: 'static', label: 'Couture Customisations' },
   { kind: 'static', label: 'Sale', tone: 'sale' }
 ];
 
@@ -189,7 +189,7 @@ const Navbar: React.FC = () => {
             {NAV.map(n => {
               if (n.kind === 'static') {
                 const click = () => {
-                  if (n.label === 'Couture Studio') {
+                  if (n.label === 'Couture Customisations') {
                     setMobileOpen(false);
                     navigate({ name: 'customise' });
                   } else {
@@ -286,7 +286,7 @@ const Navbar: React.FC = () => {
                 (n.kind === 'static' && n.label === 'Sale' && route.name === 'shop' && !activeCat);
               const onClick = () => {
                 if (n.kind === 'master') goShop(n.label);
-                else if (n.label === 'Couture Studio') {
+                else if (n.label === 'Couture Customisations') {
                   setMobileOpen(false);
                   setHoverCat(null);
                   navigate({ name: 'customise' });
