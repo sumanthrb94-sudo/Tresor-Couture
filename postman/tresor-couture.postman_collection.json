@@ -1,18 +1,11 @@
 {
   "info": {
-    "name": "Trésor Couture · API",
-    "_postman_id": "trsr-couture-api",
-    "description": "Full REST surface for the Trésor Couture backend (Cloud Functions on asia-south1). Use the 'Trésor Couture · Production' environment. Auth endpoints capture {{idToken}} into the environment so downstream calls work automatically.",
+    "name": "Trésor Couture · Free-Tier Backend",
+    "_postman_id": "trsr-couture-firebase-free",
+    "description": "Talks directly to Firebase Identity Toolkit + Firestore REST. No Cloud Functions, works on the free Spark plan. Auth requests auto-capture {{idToken}} and {{uid}} into the environment so downstream calls work without manual copy-paste.\n\nFirestore REST uses a verbose document format — every field gets a type tag ('stringValue', 'integerValue', 'doubleValue', etc.). The Postman bodies below show the canonical shape for each resource.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
-    {
-      "name": "Health",
-      "request": {
-        "method": "GET",
-        "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
-      }
-    },
     {
       "name": "Auth",
       "item": [
@@ -21,67 +14,110 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] },
+            "url": {
+              "raw": "{{idtBase}}/accounts:signUp?key={{apiKey}}",
+              "host": ["{{idtBase}}"],
+              "path": ["accounts:signUp"],
+              "query": [{ "key": "key", "value": "{{apiKey}}" }]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\",\n  \"fullName\": \"Test User\",\n  \"phone\": \"+919876543210\"\n}"
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\",\n  \"returnSecureToken\": true\n}"
             }
           },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const body = pm.response.json();",
-                  "if (body.idToken) pm.environment.set('idToken', body.idToken);",
-                  "if (body.uid) pm.environment.set('uid', body.uid);"
-                ]
-              }
-            }
-          ]
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "const b = pm.response.json();",
+              "if (b.idToken)      pm.environment.set('idToken',      b.idToken);",
+              "if (b.refreshToken) pm.environment.set('refreshToken', b.refreshToken);",
+              "if (b.localId)      pm.environment.set('uid',          b.localId);"
+            ]}
+          }]
         },
         {
           "name": "Login",
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+            "url": {
+              "raw": "{{idtBase}}/accounts:signInWithPassword?key={{apiKey}}",
+              "host": ["{{idtBase}}"],
+              "path": ["accounts:signInWithPassword"],
+              "query": [{ "key": "key", "value": "{{apiKey}}" }]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\"\n}"
+              "raw": "{\n  \"email\": \"{{testEmail}}\",\n  \"password\": \"{{testPassword}}\",\n  \"returnSecureToken\": true\n}"
             }
           },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const body = pm.response.json();",
-                  "if (body.idToken) pm.environment.set('idToken', body.idToken);",
-                  "if (body.uid) pm.environment.set('uid', body.uid);"
-                ]
-              }
-            }
-          ]
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "const b = pm.response.json();",
+              "if (b.idToken)      pm.environment.set('idToken',      b.idToken);",
+              "if (b.refreshToken) pm.environment.set('refreshToken', b.refreshToken);",
+              "if (b.localId)      pm.environment.set('uid',          b.localId);"
+            ]}
+          }]
         },
         {
-          "name": "Me",
+          "name": "Refresh token",
           "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{idToken}}" }],
-            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/x-www-form-urlencoded" }],
+            "url": {
+              "raw": "https://securetoken.googleapis.com/v1/token?key={{apiKey}}",
+              "host": ["https://securetoken.googleapis.com"],
+              "path": ["v1", "token"],
+              "query": [{ "key": "key", "value": "{{apiKey}}" }]
+            },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "grant_type",    "value": "refresh_token" },
+                { "key": "refresh_token", "value": "{{refreshToken}}" }
+              ]
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "const b = pm.response.json();",
+              "if (b.id_token)      pm.environment.set('idToken',      b.id_token);",
+              "if (b.refresh_token) pm.environment.set('refreshToken', b.refresh_token);"
+            ]}
+          }]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Create my profile (after Register)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{idToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{fsBase}}/users/{{uid}}",
+              "host": ["{{fsBase}}"], "path": ["users", "{{uid}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fields\": {\n    \"uid\":      { \"stringValue\": \"{{uid}}\" },\n    \"email\":    { \"stringValue\": \"{{testEmail}}\" },\n    \"fullName\": { \"stringValue\": \"Test User\" },\n    \"role\":     { \"stringValue\": \"customer\" },\n    \"createdAt\":{ \"timestampValue\": \"2026-01-01T00:00:00Z\" }\n  }\n}"
+            }
           }
         },
         {
-          "name": "Promote to Admin (admin only)",
+          "name": "Get my profile",
           "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{adminIdToken}}" },
-              { "key": "Content-Type",  "value": "application/json" }
-            ],
-            "url": { "raw": "{{baseUrl}}/auth/promote", "host": ["{{baseUrl}}"], "path": ["auth", "promote"] },
-            "body": { "mode": "raw", "raw": "{\n  \"uid\": \"{{uid}}\"\n}" }
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{idToken}}" }],
+            "url": { "raw": "{{fsBase}}/users/{{uid}}", "host": ["{{fsBase}}"], "path": ["users", "{{uid}}"] }
           }
         }
       ]
@@ -90,37 +126,47 @@
       "name": "Products",
       "item": [
         {
-          "name": "List",
+          "name": "List all",
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/products?limit=50",
-              "host": ["{{baseUrl}}"],
-              "path": ["products"],
-              "query": [
-                { "key": "limit", "value": "50" },
-                { "key": "masterCategory", "value": "Sarees", "disabled": true },
-                { "key": "subCategory",    "value": "Half Sarees", "disabled": true }
-              ]
+              "raw": "{{fsBase}}/products?pageSize=50",
+              "host": ["{{fsBase}}"], "path": ["products"],
+              "query": [{ "key": "pageSize", "value": "50" }]
             }
           },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const body = pm.response.json();",
-                  "if (body.products && body.products[0]) pm.environment.set('productId', body.products[0].id);"
-                ]
-              }
-            }
-          ]
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "const b = pm.response.json();",
+              "if (b.documents && b.documents[0]) {",
+              "  const id = b.documents[0].name.split('/').pop();",
+              "  pm.environment.set('productId', id);",
+              "}"
+            ]}
+          }]
         },
         {
           "name": "Get one",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["products", "{{productId}}"] }
+            "url": { "raw": "{{fsBase}}/products/{{productId}}", "host": ["{{fsBase}}"], "path": ["products", "{{productId}}"] }
+          }
+        },
+        {
+          "name": "Filter by master category (Sarees)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "https://firestore.googleapis.com/v1/projects/{{projectId}}/databases/(default)/documents:runQuery",
+              "host": ["https://firestore.googleapis.com"],
+              "path": ["v1", "projects", "{{projectId}}", "databases", "(default)", "documents:runQuery"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"structuredQuery\": {\n    \"from\": [{ \"collectionId\": \"products\" }],\n    \"where\": {\n      \"fieldFilter\": {\n        \"field\": { \"fieldPath\": \"masterCategory\" },\n        \"op\": \"EQUAL\",\n        \"value\": { \"stringValue\": \"Sarees\" }\n      }\n    },\n    \"limit\": 50\n  }\n}"
+            }
           }
         },
         {
@@ -131,34 +177,46 @@
               { "key": "Authorization", "value": "Bearer {{adminIdToken}}" },
               { "key": "Content-Type",  "value": "application/json" }
             ],
-            "url": { "raw": "{{baseUrl}}/products", "host": ["{{baseUrl}}"], "path": ["products"] },
+            "url": {
+              "raw": "{{fsBase}}/products",
+              "host": ["{{fsBase}}"], "path": ["products"]
+            },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"brand\": \"TRÉSOR\",\n  \"name\": \"Sample Banarasi\",\n  \"description\": \"Test product seeded via Postman.\",\n  \"pricePerMeter\": 4500,\n  \"mrpPerMeter\": 7999,\n  \"photo\": \"/products/banarasi-purple-1.jpg\",\n  \"image\": \"/products/banarasi-purple-1.jpg\",\n  \"category\": \"Silk\",\n  \"masterCategory\": \"Sarees\",\n  \"subCategory\": \"Banarasi\",\n  \"origin\": \"Varanasi\",\n  \"tags\": [\"sample\", \"banarasi\"],\n  \"sticker\": \"Trending\",\n  \"widthInches\": 44,\n  \"inStockMeters\": 20\n}"
+              "raw": "{\n  \"fields\": {\n    \"brand\":          { \"stringValue\": \"TRÉSOR\" },\n    \"name\":           { \"stringValue\": \"Sample Banarasi\" },\n    \"description\":    { \"stringValue\": \"Seeded via Postman.\" },\n    \"pricePerMeter\":  { \"integerValue\": \"4500\" },\n    \"mrpPerMeter\":    { \"integerValue\": \"7999\" },\n    \"photo\":          { \"stringValue\": \"/products/banarasi-purple-1.jpg\" },\n    \"image\":          { \"stringValue\": \"/products/banarasi-purple-1.jpg\" },\n    \"category\":       { \"stringValue\": \"Silk\" },\n    \"masterCategory\": { \"stringValue\": \"Sarees\" },\n    \"subCategory\":    { \"stringValue\": \"Banarasi\" },\n    \"origin\":         { \"stringValue\": \"Varanasi\" },\n    \"tags\":           { \"arrayValue\": { \"values\": [{ \"stringValue\": \"sample\" }] } },\n    \"sticker\":        { \"stringValue\": \"Trending\" },\n    \"inStockMeters\":  { \"integerValue\": \"20\" }\n  }\n}"
             }
           },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const body = pm.response.json();",
-                  "if (body.product && body.product.id) pm.environment.set('productId', body.product.id);"
-                ]
-              }
-            }
-          ]
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "const b = pm.response.json();",
+              "if (b.name) {",
+              "  const id = b.name.split('/').pop();",
+              "  pm.environment.set('productId', id);",
+              "}"
+            ]}
+          }]
         },
         {
-          "name": "Update (admin)",
+          "name": "Update price (admin)",
           "request": {
             "method": "PATCH",
             "header": [
               { "key": "Authorization", "value": "Bearer {{adminIdToken}}" },
               { "key": "Content-Type",  "value": "application/json" }
             ],
-            "url": { "raw": "{{baseUrl}}/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["products", "{{productId}}"] },
-            "body": { "mode": "raw", "raw": "{\n  \"pricePerMeter\": 4800,\n  \"sticker\": \"Bestseller\"\n}" }
+            "url": {
+              "raw": "{{fsBase}}/products/{{productId}}?updateMask.fieldPaths=pricePerMeter&updateMask.fieldPaths=sticker",
+              "host": ["{{fsBase}}"], "path": ["products", "{{productId}}"],
+              "query": [
+                { "key": "updateMask.fieldPaths", "value": "pricePerMeter" },
+                { "key": "updateMask.fieldPaths", "value": "sticker" }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fields\": {\n    \"pricePerMeter\": { \"integerValue\": \"4800\" },\n    \"sticker\":       { \"stringValue\": \"Bestseller\" }\n  }\n}"
+            }
           }
         },
         {
@@ -166,161 +224,7 @@
           "request": {
             "method": "DELETE",
             "header": [{ "key": "Authorization", "value": "Bearer {{adminIdToken}}" }],
-            "url": { "raw": "{{baseUrl}}/products/{{productId}}", "host": ["{{baseUrl}}"], "path": ["products", "{{productId}}"] }
-          }
-        },
-        {
-          "name": "Bulk seed (admin)",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{adminIdToken}}" },
-              { "key": "Content-Type",  "value": "application/json" }
-            ],
-            "url": { "raw": "{{baseUrl}}/products/bulk", "host": ["{{baseUrl}}"], "path": ["products", "bulk"] },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"products\": [\n    {\n      \"brand\": \"TRÉSOR\",\n      \"name\": \"Sample 1\",\n      \"description\": \"d\",\n      \"pricePerMeter\": 1000,\n      \"mrpPerMeter\": 1500,\n      \"photo\": \"/products/banarasi-purple-1.jpg\",\n      \"image\": \"/products/banarasi-purple-1.jpg\",\n      \"category\": \"Silk\",\n      \"masterCategory\": \"Sarees\",\n      \"origin\": \"Varanasi\",\n      \"tags\": []\n    }\n  ]\n}"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Orders",
-      "item": [
-        {
-          "name": "My orders",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{idToken}}" }],
-            "url": { "raw": "{{baseUrl}}/orders", "host": ["{{baseUrl}}"], "path": ["orders"] }
-          }
-        },
-        {
-          "name": "All orders (admin)",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{adminIdToken}}" }],
-            "url": { "raw": "{{baseUrl}}/orders?all=1", "host": ["{{baseUrl}}"], "path": ["orders"], "query": [{ "key": "all", "value": "1" }] }
-          }
-        },
-        {
-          "name": "Get one",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{idToken}}" }],
-            "url": { "raw": "{{baseUrl}}/orders/{{orderId}}", "host": ["{{baseUrl}}"], "path": ["orders", "{{orderId}}"] }
-          }
-        },
-        {
-          "name": "Place order",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{idToken}}" },
-              { "key": "Content-Type",  "value": "application/json" }
-            ],
-            "url": { "raw": "{{baseUrl}}/orders", "host": ["{{baseUrl}}"], "path": ["orders"] },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"items\": [{ \"fabricId\": \"{{productId}}\", \"meters\": 3 }],\n  \"shippingAddress\": {\n    \"fullName\": \"Test User\",\n    \"email\": \"{{testEmail}}\",\n    \"phone\": \"9876543210\",\n    \"line1\": \"Plot 12, Banjara Hills\",\n    \"city\": \"Hyderabad\",\n    \"state\": \"Telangana\",\n    \"postalCode\": \"500034\",\n    \"country\": \"India\"\n  },\n  \"paymentMethod\": \"upi\"\n}"
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const body = pm.response.json();",
-                  "if (body.order && body.order.id) pm.environment.set('orderId', body.order.id);"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Update status (admin)",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{adminIdToken}}" },
-              { "key": "Content-Type",  "value": "application/json" }
-            ],
-            "url": { "raw": "{{baseUrl}}/orders/{{orderId}}/status", "host": ["{{baseUrl}}"], "path": ["orders", "{{orderId}}", "status"] },
-            "body": { "mode": "raw", "raw": "{\n  \"status\": \"shipped\"\n}" }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Users",
-      "item": [
-        {
-          "name": "Me",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{idToken}}" }],
-            "url": { "raw": "{{baseUrl}}/users/me", "host": ["{{baseUrl}}"], "path": ["users", "me"] }
-          }
-        },
-        {
-          "name": "Update me",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{idToken}}" },
-              { "key": "Content-Type",  "value": "application/json" }
-            ],
-            "url": { "raw": "{{baseUrl}}/users/me", "host": ["{{baseUrl}}"], "path": ["users", "me"] },
-            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Test User (renamed)\"\n}" }
-          }
-        },
-        {
-          "name": "List (admin)",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{adminIdToken}}" }],
-            "url": { "raw": "{{baseUrl}}/users?limit=20", "host": ["{{baseUrl}}"], "path": ["users"], "query": [{ "key": "limit", "value": "20" }] }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Reviews",
-      "item": [
-        {
-          "name": "List for product",
-          "request": {
-            "method": "GET",
-            "url": { "raw": "{{baseUrl}}/reviews?fabricId={{productId}}", "host": ["{{baseUrl}}"], "path": ["reviews"], "query": [{ "key": "fabricId", "value": "{{productId}}" }] }
-          }
-        },
-        {
-          "name": "Create",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{idToken}}" },
-              { "key": "Content-Type",  "value": "application/json" }
-            ],
-            "url": { "raw": "{{baseUrl}}/reviews", "host": ["{{baseUrl}}"], "path": ["reviews"] },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"fabricId\": \"{{productId}}\",\n  \"rating\": 5,\n  \"title\": \"Loved the weave\",\n  \"body\": \"Exquisite hand-finish, exactly as photographed.\",\n  \"authorName\": \"Test User\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Moderate (admin)",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{adminIdToken}}" },
-              { "key": "Content-Type",  "value": "application/json" }
-            ],
-            "url": { "raw": "{{baseUrl}}/reviews/:id", "host": ["{{baseUrl}}"], "path": ["reviews", ":id"] },
-            "body": { "mode": "raw", "raw": "{\n  \"status\": \"approved\"\n}" }
+            "url": { "raw": "{{fsBase}}/products/{{productId}}", "host": ["{{fsBase}}"], "path": ["products", "{{productId}}"] }
           }
         }
       ]
@@ -329,35 +233,130 @@
       "name": "Coupons",
       "item": [
         {
-          "name": "Create (admin)",
+          "name": "Create WELCOME10 (admin)",
           "request": {
-            "method": "POST",
+            "method": "PATCH",
             "header": [
               { "key": "Authorization", "value": "Bearer {{adminIdToken}}" },
               { "key": "Content-Type",  "value": "application/json" }
             ],
-            "url": { "raw": "{{baseUrl}}/coupons", "host": ["{{baseUrl}}"], "path": ["coupons"] },
+            "url": { "raw": "{{fsBase}}/coupons/WELCOME10", "host": ["{{fsBase}}"], "path": ["coupons", "WELCOME10"] },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"code\": \"WELCOME10\",\n  \"description\": \"10% off first order\",\n  \"kind\": \"percent\",\n  \"value\": 10,\n  \"minSubtotal\": 1999,\n  \"maxDiscount\": 2000,\n  \"active\": true\n}"
+              "raw": "{\n  \"fields\": {\n    \"code\":        { \"stringValue\": \"WELCOME10\" },\n    \"description\": { \"stringValue\": \"10% off first order\" },\n    \"kind\":        { \"stringValue\": \"percent\" },\n    \"value\":       { \"integerValue\": \"10\" },\n    \"minSubtotal\": { \"integerValue\": \"1999\" },\n    \"maxDiscount\": { \"integerValue\": \"2000\" },\n    \"active\":      { \"booleanValue\": true }\n  }\n}"
             }
           }
         },
         {
-          "name": "List (admin)",
+          "name": "Get WELCOME10",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{adminIdToken}}" }],
-            "url": { "raw": "{{baseUrl}}/coupons", "host": ["{{baseUrl}}"], "path": ["coupons"] }
+            "url": { "raw": "{{fsBase}}/coupons/WELCOME10", "host": ["{{fsBase}}"], "path": ["coupons", "WELCOME10"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Place order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{idToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{fsBase}}/orders", "host": ["{{fsBase}}"], "path": ["orders"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fields\": {\n    \"userId\":   { \"stringValue\": \"{{uid}}\" },\n    \"status\":   { \"stringValue\": \"placed\" },\n    \"placedAt\": { \"timestampValue\": \"2026-05-15T00:00:00Z\" },\n    \"paymentMethod\": { \"stringValue\": \"upi\" },\n    \"subtotal\": { \"integerValue\": \"13500\" },\n    \"tax\":      { \"integerValue\": \"675\" },\n    \"shipping\": { \"integerValue\": \"0\" },\n    \"total\":    { \"integerValue\": \"14175\" },\n    \"shippingAddress\": { \"mapValue\": { \"fields\": {\n      \"fullName\":   { \"stringValue\": \"Test User\" },\n      \"email\":      { \"stringValue\": \"{{testEmail}}\" },\n      \"phone\":      { \"stringValue\": \"9876543210\" },\n      \"line1\":      { \"stringValue\": \"Plot 12, Banjara Hills\" },\n      \"city\":       { \"stringValue\": \"Hyderabad\" },\n      \"state\":      { \"stringValue\": \"Telangana\" },\n      \"postalCode\": { \"stringValue\": \"500034\" },\n      \"country\":    { \"stringValue\": \"India\" }\n    }}},\n    \"items\": { \"arrayValue\": { \"values\": [\n      { \"mapValue\": { \"fields\": {\n        \"fabricId\": { \"stringValue\": \"{{productId}}\" },\n        \"meters\":   { \"integerValue\": \"3\" }\n      }}}\n    ]}}\n  }\n}"
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "const b = pm.response.json();",
+              "if (b.name) pm.environment.set('orderId', b.name.split('/').pop());"
+            ]}
+          }]
+        },
+        {
+          "name": "My orders (runQuery)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{idToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "https://firestore.googleapis.com/v1/projects/{{projectId}}/databases/(default)/documents:runQuery",
+              "host": ["https://firestore.googleapis.com"],
+              "path": ["v1", "projects", "{{projectId}}", "databases", "(default)", "documents:runQuery"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"structuredQuery\": {\n    \"from\": [{ \"collectionId\": \"orders\" }],\n    \"where\": {\n      \"fieldFilter\": {\n        \"field\": { \"fieldPath\": \"userId\" },\n        \"op\": \"EQUAL\",\n        \"value\": { \"stringValue\": \"{{uid}}\" }\n      }\n    },\n    \"orderBy\": [{ \"field\": { \"fieldPath\": \"placedAt\" }, \"direction\": \"DESCENDING\" }],\n    \"limit\": 50\n  }\n}"
+            }
           }
         },
         {
-          "name": "Validate (public)",
+          "name": "Mark shipped (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminIdToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{fsBase}}/orders/{{orderId}}?updateMask.fieldPaths=status",
+              "host": ["{{fsBase}}"], "path": ["orders", "{{orderId}}"],
+              "query": [{ "key": "updateMask.fieldPaths", "value": "status" }]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"fields\": { \"status\": { \"stringValue\": \"shipped\" } }\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Create review",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": { "raw": "{{baseUrl}}/coupons/validate", "host": ["{{baseUrl}}"], "path": ["coupons", "validate"] },
-            "body": { "mode": "raw", "raw": "{\n  \"code\": \"{{couponCode}}\",\n  \"subtotal\": 4500\n}" }
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{idToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": { "raw": "{{fsBase}}/reviews", "host": ["{{fsBase}}"], "path": ["reviews"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fields\": {\n    \"fabricId\":   { \"stringValue\": \"{{productId}}\" },\n    \"userId\":     { \"stringValue\": \"{{uid}}\" },\n    \"authorName\": { \"stringValue\": \"Test User\" },\n    \"rating\":     { \"integerValue\": \"5\" },\n    \"title\":      { \"stringValue\": \"Loved it\" },\n    \"body\":       { \"stringValue\": \"Exquisite hand-finish.\" },\n    \"status\":     { \"stringValue\": \"pending\" },\n    \"createdAt\":  { \"timestampValue\": \"2026-05-15T00:00:00Z\" }\n  }\n}"
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": { "exec": [
+              "const b = pm.response.json();",
+              "if (b.name) pm.environment.set('reviewId', b.name.split('/').pop());"
+            ]}
+          }]
+        },
+        {
+          "name": "Approve (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminIdToken}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{fsBase}}/reviews/{{reviewId}}?updateMask.fieldPaths=status",
+              "host": ["{{fsBase}}"], "path": ["reviews", "{{reviewId}}"],
+              "query": [{ "key": "updateMask.fieldPaths", "value": "status" }]
+            },
+            "body": { "mode": "raw", "raw": "{\n  \"fields\": { \"status\": { \"stringValue\": \"approved\" } }\n}" }
           }
         }
       ]

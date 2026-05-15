@@ -1,122 +1,157 @@
-# Trésor Couture — Backend Deploy Guide
+# Trésor Couture — Free-Tier Deploy Guide
 
-Single-tenant Firebase project: **`tresor-couture`** · region: **`asia-south1`** (Mumbai).
+**Architecture:** Firebase **Spark (free)** plan only. No Cloud Functions, no billing required.
 
-The deployable surface area is:
-- **Cloud Functions** — `functions/` directory, single HTTPS function called `api` (Express app).
-- **Firestore** — rules + indexes in repo root.
-- **Hosting** (optional) — serves the Vite `dist/` and rewrites `/api/**` to the function.
+- **Firestore** — single source of truth (data + business rules)
+- **Firebase Auth** — email/password user accounts
+- **Firebase Hosting** — serves the Vite build
+- **Frontend (Web SDK)** — talks straight to Firestore via `src/lib/firebase.ts`
+- **Postman** — tests via Identity Toolkit + Firestore REST APIs
+
+> **Why no Cloud Functions?** They require the Blaze (pay-as-you-go) plan. On free, every business rule lives in `firestore.rules` and the frontend talks to Firestore directly. Tradeoff: price/total computation runs client-side, so Firestore rules validate the resulting documents instead of recomputing them.
 
 ---
 
-## 1. One-time setup
+## 1. Firebase console (browser, one-time)
+
+1. https://console.firebase.google.com/project/tresor-couture
+2. **Firestore Database → Create database → Production mode → `asia-south1`**
+3. **Authentication → Sign-in method → Email/Password → Enable**
+4. (Optional) **Storage → Get started → same region** — only if you'll upload product photos through the app.
+
+You can stay on the **Spark (free)** plan. No billing prompt needed.
+
+## 2. Local CLI (one-time)
 
 ```bash
-# from repo root
-npm install -g firebase-tools         # if you don't have it
-firebase login                        # uses your Google account
-firebase use tresor-couture           # selects the project from .firebaserc
+npm install -g firebase-tools
+firebase login                   # OAuth in your browser
+firebase use tresor-couture      # picks up .firebaserc
 
-cd functions
-npm install
-cd ..
+cd Tresor-Couture
+npm install                      # installs firebase web SDK + the rest
 ```
 
-## 2. Configure the login secret
-
-`/auth/login` needs the project's Web API key to proxy `signInWithPassword`. Set it once as a function secret (encrypted at rest):
+## 3. Deploy (3 commands, every time)
 
 ```bash
-firebase functions:secrets:set FIREBASE_WEB_API_KEY
-# paste:  AIzaSyAIct4PdHb0YaNCYpLdGxh1kDlukwwc_3M
+firebase deploy --only firestore       # rules + indexes
+npm run build                          # Vite build → dist/
+firebase deploy --only hosting         # static site
 ```
 
-## 3. Bootstrap the first admin
+After this:
+- Storefront: `https://tresor-couture.web.app/`
+- Firestore + Auth: handled by Google's REST endpoints (no per-deploy URL)
 
-Cloud Functions can't promote without an existing admin. Do this once via the SDK from your laptop:
+## 4. Bootstrap the first admin (one-time)
+
+Admin access is gated by the custom claim `admin: true` on the user. Set it once via the Admin SDK from your laptop:
 
 ```bash
-# Replace UID with the user you want to make admin (register them first via /auth/register or Firebase console)
-node -e "require('firebase-admin').initializeApp().auth().setCustomUserClaims('UID_HERE', { admin: true }).then(() => console.log('done'))"
+# Register yourself first via the storefront OR via Postman's Auth → Register
+# Note the uid that comes back
+
+# Then promote (uses your `firebase login` credentials)
+node -e "require('firebase-admin').initializeApp().auth().setCustomUserClaims('YOUR_UID', { admin: true }).then(() => console.log('done'))"
+
+# Log out and back in in the storefront / Postman so the new token carries the admin claim.
 ```
-(requires you to be `firebase login`-ed; the Admin SDK picks up application-default credentials.)
 
-After that, future admins are promoted through `POST /auth/promote` by an existing admin.
+Future admins can be promoted the same way (Admin SDK is the only path on the free plan, since we have no Cloud Function to do it).
 
-## 4. Deploy
+## 5. Test with Postman
+
+1. Postman → **File → Import** → both files from `postman/`
+2. Top-right environment dropdown → **Trésor Couture · Firebase Free Tier**
+3. Edit `testEmail` / `testPassword`
+4. Run in order — each request's test script populates the env for the next:
+
+   | # | Request | Outcome |
+   |---|---|---|
+   | 1 | Auth · Register | captures `{{idToken}}`, `{{uid}}`, `{{refreshToken}}` |
+   | 2 | Users · Create my profile | writes `/users/{{uid}}` |
+   | 3 | *(manual step 4 above)* | promote yourself to admin |
+   | 4 | Auth · Login | fresh token with admin claim — copy into `{{adminIdToken}}` |
+   | 5 | Products · Create (admin) | captures `{{productId}}` |
+   | 6 | Products · Filter by master category | runQuery example |
+   | 7 | Coupons · Create WELCOME10 (admin) | seeds the discount |
+   | 8 | Orders · Place order | captures `{{orderId}}` |
+   | 9 | Orders · My orders (runQuery) | confirms it persisted |
+   | 10 | Orders · Mark shipped (admin) | fulfilment update |
+   | 11 | Reviews · Create review | captures `{{reviewId}}` |
+   | 12 | Reviews · Approve (admin) | moderation |
+   | 13 | Auth · Refresh token | when `{{idToken}}` expires (~1h) |
+
+## 6. Local development (Firestore emulator)
 
 ```bash
-# Firestore rules + indexes
-firebase deploy --only firestore
-
-# Cloud Functions (compiles TS, lints, deploys)
-firebase deploy --only functions
-
-# Hosting (Vite build first)
-npm run build
-firebase deploy --only hosting
-
-# All together
-firebase deploy
+firebase emulators:start         # firestore (8080) + auth (9099) + hosting (5000)
 ```
 
-After deploy, the API is reachable at:
-- **Via Hosting** (with rewrites): `https://tresor-couture.web.app/api/health`
-- **Direct function URL**: `https://asia-south1-tresor-couture.cloudfunctions.net/api/health`
-
-## 5. Test in Postman
-
-1. Postman → **File → Import** → drop in `postman/tresor-couture.postman_collection.json` and `postman/tresor-couture.postman_environment.json`
-2. Select the **Trésor Couture · Production** environment (top-right)
-3. Edit `testEmail` / `testPassword` if you want different credentials
-4. Run the requests in this order — auth scripts auto-capture `{{idToken}}` and `{{productId}}` into the env:
-
-   1. `Health · GET /health` → `{ ok: true }`
-   2. `Auth · Register` → captures `idToken` + `uid`
-   3. `Auth · Me` → returns your profile
-   4. Promote yourself: copy `uid`, set `adminIdToken` = `idToken` for now, run `Auth · Promote to Admin`. Re-login to refresh the token with the new claim, paste new `idToken` into `adminIdToken`.
-   5. `Products · Create (admin)` → captures `productId`
-   6. `Products · List` / `Get one`
-   7. `Coupons · Create (admin)` → seeds `WELCOME10`
-   8. `Coupons · Validate` → confirms ₹450 discount on ₹4,500 subtotal
-   9. `Orders · Place order` → captures `orderId`, server computes subtotal/tax/shipping
-   10. `Orders · My orders` → returns the order
-   11. `Reviews · Create` → pending review
-   12. `Reviews · Moderate (admin)` → approve
-
-## 6. Local development (no deploys needed)
-
-The Firebase Emulator Suite runs everything locally:
-
-```bash
-firebase emulators:start
+Then in `.env.local`:
 ```
+VITE_FIREBASE_AUTH_DOMAIN=localhost
+VITE_USE_EMULATORS=1
+```
+The frontend doesn't currently auto-wire emulator connections — if you want that, search `src/lib/firebase.ts` for `connectAuthEmulator` (one-line addition).
 
-That starts auth (9099), firestore (8080), functions (5001), hosting (5000), and an emulator UI (8081). Postman environment ships an `emulatorUrl` variable — swap `{{baseUrl}}` to `{{emulatorUrl}}` in any request to hit the emulators.
+## 7. Schema (Firestore collections)
 
-## 7. Frontend integration
+| Collection | Doc ID | Required fields | Rule highlights |
+|---|---|---|---|
+| `users` | Firebase Auth UID | `uid · email · fullName · role` | Owner-only read/write; role + uid + createdAt immutable from client; admin can update anything |
+| `products` | auto | `brand · name · pricePerMeter · category · masterCategory` | Public read · admin write; price must be a non-negative number |
+| `coupons` | UPPERCASE code | `code · kind · value · active` | Public read (checkout needs it) · admin write |
+| `orders` | auto | `userId · status='placed' · items[] · total ≥ 0` | Owner reads; only admin updates/deletes; client must include their own uid + initial `placed` status |
+| `reviews` | auto | `fabricId · userId · rating ∈ 1..5 · status='pending'` | Public read; signed-in user can create their own; admin moderates |
 
-`src/lib/firebase.ts` is the typed REST client. Replace the existing localStorage-backed contexts (`CartContext`, `AuthContext`, etc.) when you're ready to cut over:
+Anything outside this list is denied by default (catch-all rule at the bottom of `firestore.rules`).
+
+## 8. Indexes
+
+`firestore.indexes.json` declares the composite indexes needed by the frontend queries:
+- `orders` · `userId` + `placedAt DESC`
+- `orders` · `status` + `placedAt DESC`
+- `reviews` · `fabricId` + `status` + `createdAt DESC`
+- `products` · `masterCategory` + `subCategory`
+
+Deployed automatically by `firebase deploy --only firestore`.
+
+## 9. Frontend integration
+
+`src/lib/firebase.ts` exports typed APIs that match the previous `localStorage` layer 1:1, so cutover is mechanical:
 
 ```ts
-import { api, setIdToken } from './lib/firebase';
+import { productsApi, ordersApi, couponsApi, register, login } from './lib/firebase';
 
-// after login:
-setIdToken(idTokenFromLogin);
-
-// then:
-const { products } = await api.get<{ products: Product[] }>('/products');
-const { order }    = await api.post<{ order: Order }>('/orders', payload, { auth: true });
+await register({ email, password, fullName });
+const list = await productsApi.list({ masterCategory: 'Sarees', limit: 24 });
+const result = await couponsApi.validate('WELCOME10', 4500);
+const order = await ordersApi.place({ items, shippingAddress, paymentMethod: 'upi' });
 ```
 
-## 8. Schema reference (Firestore collections)
+When you're ready, replace `usersStore` / `ordersStore` / etc. in `src/data/storage.ts` and the `localStorage` reads in `AuthContext` with these calls.
 
-| Collection       | Document ID            | Fields (summary)                                                                                          |
-|------------------|-----------------------|-----------------------------------------------------------------------------------------------------------|
-| `users`          | Firebase Auth UID     | `email · fullName · phone? · role · createdAt · defaultAddress?`                                          |
-| `products`       | auto                  | full Fabric record + `createdAt · updatedAt`                                                              |
-| `orders`         | auto                  | `userId · items[] · subtotal · tax · shipping · total · status · placedAt · shippingAddress · paymentMethod` |
-| `reviews`        | auto                  | `fabricId · userId · rating · title? · body · status · createdAt`                                          |
-| `coupons`        | UPPERCASE code        | `kind · value · minSubtotal? · maxDiscount? · expiresAt? · active`                                         |
+## 10. Quotas (Spark plan — what you actually have for free)
 
-Rules: see `firestore.rules`. Most write paths are blocked from clients and go through Cloud Functions which uses the Admin SDK (bypasses rules but enforces its own business logic).
+| Resource | Daily quota | Notes |
+|---|---|---|
+| Firestore reads | 50,000 | A page view of `/shop` ≈ 1 read per product card |
+| Firestore writes | 20,000 | One order = ~1 write |
+| Firestore deletes | 20,000 | |
+| Firestore storage | 1 GiB | ~10,000 products is well within this |
+| Auth | unlimited | Email/password is free |
+| Hosting transfer | 10 GB / month | Static assets are gzipped + cached |
+| Hosting storage | 10 GB | |
+
+If you blow through reads, the **first** thing to add is the Blaze plan — Firestore reads cost ~$0.06 per 100k extra. Cloud Functions can wait until you genuinely need server-side logic.
+
+## 11. Upgrading to Blaze later
+
+If you decide later to add Cloud Functions (price validation server-side, Stripe webhooks, etc.):
+1. Upgrade billing on the Firebase console
+2. `git revert` this commit to restore the `functions/` directory
+3. Re-run `firebase deploy`
+
+Everything's preserved in git history.

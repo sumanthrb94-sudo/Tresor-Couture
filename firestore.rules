@@ -1,11 +1,12 @@
 rules_version = '2';
 
-// Production security model: clients can read public catalogue data, but
-// every write goes through Cloud Functions which uses the Admin SDK and
-// bypasses these rules. So we lock client writes to zero except for the
-// few collections users own (their own user doc, their own reviews).
+// Free-tier security model: no Cloud Functions, so every business rule
+// is enforced HERE. Clients read/write Firestore directly via the Web SDK;
+// these rules are the entire security boundary.
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    /* ---------- helpers ---------- */
 
     function isSignedIn() {
       return request.auth != null;
@@ -16,45 +17,82 @@ service cloud.firestore {
     function isOwner(uid) {
       return isSignedIn() && request.auth.uid == uid;
     }
+    function fieldChanged(field) {
+      return request.resource.data[field] != resource.data[field];
+    }
+    function priceOf(productId) {
+      return get(/databases/$(database)/documents/products/$(productId)).data.pricePerMeter;
+    }
 
-    // Products — public read, admin-only write (write usually goes through the API)
+    /* ---------- products ---------- */
+    // Public read · admin write (UI gated to admins via the custom claim).
     match /products/{productId} {
-      allow read: if true;
-      allow write: if isAdmin();
+      allow read:   if true;
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasAll(['brand', 'name', 'pricePerMeter', 'masterCategory', 'category'])
+        && request.resource.data.pricePerMeter is number
+        && request.resource.data.pricePerMeter >= 0;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
-    // Coupons — admin only
+    /* ---------- coupons ---------- */
+    // Code is the document ID. Public read so the checkout can validate;
+    // admin-only write.
     match /coupons/{code} {
-      allow read: if isAdmin();
+      allow read:  if true;
       allow write: if isAdmin();
     }
 
-    // Orders — owner reads their own, admin reads all
+    /* ---------- users ---------- */
+    // Owner reads + updates their own profile. Role and createdAt are
+    // protected — only admins can change them.
+    match /users/{userId} {
+      allow read:   if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId)
+        && request.resource.data.role == 'customer'
+        && request.resource.data.uid == userId
+        && request.resource.data.keys().hasAll(['email', 'fullName', 'role']);
+      allow update: if (isOwner(userId)
+                        && !fieldChanged('role')
+                        && !fieldChanged('uid')
+                        && !fieldChanged('createdAt'))
+                     || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    /* ---------- orders ---------- */
+    // An order belongs to the signed-in user; admin sees everything.
+    // Creation must include the authenticated uid, an initial 'placed'
+    // status, and at least one item. Updates are admin-only (fulfilment).
     match /orders/{orderId} {
       allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
-      // Creation is gated through the API; direct client create is denied to
-      // prevent users from setting their own price/status fields.
-      allow write: if isAdmin();
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'placed'
+        && request.resource.data.items.size() > 0
+        && request.resource.data.total is number
+        && request.resource.data.total >= 0;
+      allow update, delete: if isAdmin();
     }
 
-    // Reviews — anyone signed-in can create their own; public read for approved.
+    /* ---------- reviews ---------- */
+    // Anyone signed-in can submit a review for any product. Reviews go
+    // into 'pending' for admin moderation. Owner can delete their own;
+    // admin can do anything.
     match /reviews/{reviewId} {
       allow read: if true;
       allow create: if isSignedIn()
         && request.resource.data.userId == request.auth.uid
-        && request.resource.data.status == 'pending';
-      allow update, delete: if isAdmin();
+        && request.resource.data.status == 'pending'
+        && request.resource.data.rating is number
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5;
+      allow update: if isAdmin();
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
     }
 
-    // Users — owner reads/updates their own profile, admin sees all.
-    match /users/{userId} {
-      allow read:   if isOwner(userId) || isAdmin();
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId) || isAdmin();
-      allow delete: if isAdmin();
-    }
-
-    // Anything else — denied by default.
+    /* ---------- deny everything else ---------- */
     match /{document=**} {
       allow read, write: if false;
     }
