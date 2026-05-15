@@ -1,6 +1,7 @@
 import React from 'react';
 import { Facebook, Instagram, Twitter, Youtube, Phone, Mail, ShieldCheck, Truck, Zap } from 'lucide-react';
 import { useRouter } from '../context/RouterContext';
+import { useAuth } from '../context/AuthContext';
 
 const cols = [
   {
@@ -19,6 +20,7 @@ const cols = [
 
 const Footer: React.FC = () => {
   const { navigate } = useRouter();
+  const { user } = useAuth();
 
   return (
     <footer className="bg-[color:var(--color-myntra-bg-soft)] mt-10 md:mt-16">
@@ -84,6 +86,20 @@ const Footer: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {!user && (
+        <div className="border-t border-[color:var(--color-myntra-border-soft)] bg-white">
+          <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 py-4 flex flex-wrap items-center justify-center gap-2 text-center">
+            <span className="text-[13px] text-[color:var(--color-myntra-ink-soft)]">New here?</span>
+            <button
+              onClick={() => navigate({ name: 'register' })}
+              className="text-[13px] font-bold uppercase tracking-[0.08em] text-[color:var(--color-myntra-pink)] hover:underline"
+            >
+              Create your account →
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="border-t border-[color:var(--color-myntra-border-soft)] py-5">
         <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 flex flex-col md:flex-row gap-4 items-center justify-between text-[12px] text-[color:var(--color-myntra-ink-soft)]">

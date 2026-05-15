@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronDown, Heart, LayoutDashboard, LogOut, Menu, Search, ShoppingBag, User, X } from 'lucide-react';
+import { ChevronDown, Heart, LayoutDashboard, LogIn, LogOut, Menu, Search, ShoppingBag, User, UserPlus, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
@@ -172,6 +172,37 @@ const Navbar: React.FC = () => {
               <X className="w-6 h-6" />
             </button>
           </div>
+          {/* Drawer account strip — surfaces sign-in/up (signed-out) or the active
+              member's name + sign-out (signed-in) before the user scrolls categories. */}
+          {user ? (
+            <div className="px-5 py-3 border-b border-[color:var(--color-myntra-border-soft)] flex items-center justify-between gap-3 bg-[color:var(--color-myntra-bg-soft)]">
+              <div className="min-w-0">
+                <p className="text-[14px] font-extrabold truncate">Hello, {user.fullName.split(' ')[0]}</p>
+                <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] truncate">{user.email}</p>
+              </div>
+              <button
+                onClick={() => { setMobileOpen(false); logout(); navigate({ name: 'home' }); }}
+                className="text-[11px] font-bold uppercase tracking-[0.08em] text-[color:var(--color-myntra-pink)] flex items-center gap-1 shrink-0"
+              >
+                <LogOut className="w-4 h-4" /> Sign out
+              </button>
+            </div>
+          ) : (
+            <div className="px-5 py-3 border-b border-[color:var(--color-myntra-border-soft)] grid grid-cols-2 gap-2 bg-[#FBF7EE]">
+              <button
+                onClick={() => { setMobileOpen(false); navigate({ name: 'login' }); }}
+                className="flex items-center justify-center gap-1.5 bg-[color:var(--color-myntra-pink)] text-white text-[12px] font-bold uppercase tracking-[0.08em] py-2.5 rounded"
+              >
+                <LogIn className="w-4 h-4" /> Sign in
+              </button>
+              <button
+                onClick={() => { setMobileOpen(false); navigate({ name: 'register' }); }}
+                className="flex items-center justify-center gap-1.5 bg-white border border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)] text-[12px] font-bold uppercase tracking-[0.08em] py-2.5 rounded"
+              >
+                <UserPlus className="w-4 h-4" /> Sign up
+              </button>
+            </div>
+          )}
           <div className="px-5 py-4 border-b border-[color:var(--color-myntra-border-soft)]">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[color:var(--color-myntra-ink-mute)]" />
@@ -381,22 +412,48 @@ const Navbar: React.FC = () => {
 
           {/* Right icons */}
           <div className="flex items-center gap-1 md:gap-2 ml-auto md:ml-0 shrink-0">
-            <div
-              className="relative"
-              onMouseEnter={() => setProfileOpen(true)}
-              onMouseLeave={() => setProfileOpen(false)}
-            >
+            {/* xl+ signed-out auth cluster — explicit text links so guests can see the
+                sign-up path without first opening the Profile dropdown. */}
+            {!user && (
+              <div className="hidden xl:flex items-center gap-1 mr-1">
+                <button
+                  onClick={() => navigate({ name: 'login' })}
+                  className="text-[12px] font-bold uppercase tracking-[0.08em] text-[color:var(--color-myntra-navy)] hover:text-[color:var(--color-myntra-pink)] px-2 py-1"
+                >
+                  Sign in
+                </button>
+                <span aria-hidden className="text-[color:var(--color-myntra-border)]">·</span>
+                <button
+                  onClick={() => navigate({ name: 'register' })}
+                  className="text-[12px] font-bold uppercase tracking-[0.08em] text-[color:var(--color-myntra-pink)] hover:underline px-2 py-1"
+                >
+                  Sign up
+                </button>
+              </div>
+            )}
+            <div className="relative">
               <button
                 onClick={() => setProfileOpen(v => !v)}
-                className="flex flex-col items-center px-2 md:px-3 py-1 group"
-                aria-label="Profile"
+                onMouseEnter={() => setProfileOpen(true)}
+                className="flex flex-col items-center px-2 md:px-3 py-1 group relative"
+                aria-label={user ? 'Profile' : 'Sign in or sign up'}
                 aria-expanded={profileOpen}
+                aria-haspopup="true"
               >
                 <User className="w-5 h-5 text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]" />
                 <span className="hidden xl:block text-[10px] font-bold mt-0.5">Profile</span>
+                {!user && (
+                  <span
+                    aria-hidden
+                    className="absolute top-0.5 right-1 w-2 h-2 rounded-full bg-[color:var(--color-myntra-pink)] ring-2 ring-white"
+                  />
+                )}
               </button>
               {profileOpen && (
-                <div className="absolute top-full right-0 w-60 bg-white border-t-4 border-[color:var(--color-myntra-pink)] shadow-2xl pt-3 pb-2 z-50">
+                <div
+                  className="absolute top-full right-0 w-64 bg-white border-t-4 border-[color:var(--color-myntra-pink)] shadow-2xl pt-3 pb-2 z-50"
+                  onMouseLeave={() => setProfileOpen(false)}
+                >
                   <div className="px-4 pb-3 border-b border-[color:var(--color-myntra-border-soft)]">
                     {user ? (
                       <>
@@ -405,14 +462,25 @@ const Navbar: React.FC = () => {
                       </>
                     ) : (
                       <>
-                        <p className="text-[14px] font-extrabold">Welcome</p>
-                        <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mb-2">To access your bag and orders</p>
-                        <button
-                          onClick={() => { setProfileOpen(false); navigate({ name: 'login' }); }}
-                          className="block w-full text-center border border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)] text-[12px] font-bold uppercase tracking-wider py-1.5 rounded"
-                        >
-                          Login / Sign Up
-                        </button>
+                        <p className="text-[14px] font-extrabold">Welcome to Trésor</p>
+                        <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mb-3">Access your bag, wishlist and orders.</p>
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={() => { setProfileOpen(false); navigate({ name: 'login' }); }}
+                            className="w-full text-center bg-[color:var(--color-myntra-pink)] text-white text-[12px] font-bold uppercase tracking-[0.08em] py-2 rounded hover:bg-[color:var(--color-myntra-pink-dark)] transition-colors"
+                          >
+                            Login
+                          </button>
+                          <button
+                            onClick={() => { setProfileOpen(false); navigate({ name: 'register' }); }}
+                            className="w-full text-center bg-white border border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)] text-[12px] font-bold uppercase tracking-[0.08em] py-2 rounded hover:bg-[color:var(--color-myntra-pink)] hover:text-white transition-colors"
+                          >
+                            Sign Up
+                          </button>
+                        </div>
+                        <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] mt-3 leading-snug">
+                          Member benefits — saved bolts, faster checkout, bridal previews.
+                        </p>
                       </>
                     )}
                   </div>
