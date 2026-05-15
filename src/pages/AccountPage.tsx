@@ -58,12 +58,24 @@ const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
 const AccountPage: React.FC<Props> = ({ tab = 'profile' }) => {
-  const { user, logout } = useAuth();
+  const { user, loading, logout } = useAuth();
   const { navigate } = useRouter();
 
+  // Only bounce to login once Firebase has finished rehydrating the session.
+  // During the initial ~500ms auth resolution `user` is null even for a
+  // signed-in returning visitor; redirecting then causes a loop with
+  // LoginPage's reciprocal redirect.
   useEffect(() => {
-    if (!user) navigate({ name: 'login' });
-  }, [user, navigate]);
+    if (!loading && !user) navigate({ name: 'login' });
+  }, [user, loading, navigate]);
+
+  if (loading) {
+    return (
+      <main className="pt-[140px] pb-20 min-h-screen flex items-center justify-center bg-[color:var(--color-myntra-bg-soft)]">
+        <div className="w-8 h-8 border-2 border-[color:var(--color-myntra-pink)] border-t-transparent rounded-full animate-spin" aria-label="Loading account" />
+      </main>
+    );
+  }
 
   if (!user) {
     return (
