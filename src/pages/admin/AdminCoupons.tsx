@@ -1,12 +1,13 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Plus, Pencil, Trash2, Tag, X } from 'lucide-react';
 import type { Coupon, CouponKind } from '../../types';
-import { couponsStore } from '../../data/storage';
-import { useStore } from '../../data/useStore';
+import { couponsApi } from '../../lib/firebase';
 import { formatINR } from '../../constants';
-import type { BaseRecord } from '../../data/storage';
 
-type CouponRow = Coupon & BaseRecord;
+// Firestore keeps the coupon code as the doc id, so the row's `id` and
+// `code` are always equal; the alias keeps the rest of the component
+// readable without invasive renames.
+type CouponRow = Coupon & { id: string };
 
 interface FormState {
   code: string;
@@ -57,13 +58,33 @@ const describeKindValue = (c: CouponRow): string => {
 };
 
 const AdminCoupons: React.FC = () => {
-  const { rows: coupons, loading } = useStore(couponsStore);
+  const [coupons, setCoupons] = useState<CouponRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [busyToggleId, setBusyToggleId] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const rows = await couponsApi.list();
+      setCoupons(rows as unknown as CouponRow[]);
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Could not load coupons.');
+      setCoupons([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
 
   const sorted = useMemo(
     () => [...coupons].sort((a, b) => a.code.localeCompare(b.code)),
@@ -93,7 +114,19 @@ const AdminCoupons: React.FC = () => {
   const toggleActive = async (c: CouponRow) => {
     setBusyToggleId(c.id);
     try {
-      await couponsStore.update(c.id, { active: !c.active });
+      await couponsApi.upsert({
+        code: c.code,
+        description: c.description,
+        kind: c.kind,
+        value: c.value,
+        minSubtotal: c.minSubtotal,
+        maxDiscount: c.maxDiscount,
+        expiresAt: c.expiresAt,
+        active: !c.active
+      });
+      setCoupons(rows => rows.map(r => (r.id === c.id ? { ...r, active: !r.active } : r)));
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Could not toggle coupon.');
     } finally {
       setBusyToggleId(null);
     }
@@ -101,7 +134,12 @@ const AdminCoupons: React.FC = () => {
 
   const handleDelete = async (c: CouponRow) => {
     if (!window.confirm(`Delete coupon ${c.code}? This cannot be undone.`)) return;
-    await couponsStore.remove(c.id);
+    try {
+      await couponsApi.remove(c.code);
+      setCoupons(rows => rows.filter(r => r.id !== c.id));
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Could not delete coupon.');
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -162,8 +200,7 @@ const AdminCoupons: React.FC = () => {
 
     setSaving(true);
     try {
-      const record: CouponRow = {
-        id: code,
+      const payload = {
         code,
         description: form.description.trim(),
         kind: form.kind,
@@ -173,7 +210,12 @@ const AdminCoupons: React.FC = () => {
         expiresAt: expiresAtIso,
         active: form.active
       };
-      await couponsStore.upsert(record);
+      await couponsApi.upsert(payload);
+      const record: CouponRow = { id: code, ...payload };
+      setCoupons(rows => {
+        const idx = rows.findIndex(r => r.id === code);
+        return idx === -1 ? [...rows, record] : rows.map((r, i) => (i === idx ? record : r));
+      });
       setModalOpen(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not save coupon.');
@@ -198,6 +240,10 @@ const AdminCoupons: React.FC = () => {
           <Plus className="w-4 h-4" /> Add Coupon
         </button>
       </div>
+
+      {loadError && (
+        <p role="alert" className="text-[12px] font-semibold text-[color:var(--color-myntra-pink)] px-1">{loadError}</p>
+      )}
 
       {/* Body */}
       {loading ? (

@@ -319,16 +319,32 @@ const ProfileTab: React.FC = () => {
 
 const OrdersTab: React.FC = () => {
   const { user } = useAuth();
-  const { orders } = useOrders();
+  const { orders, loading, error, refresh } = useOrders();
   const { navigate } = useRouter();
 
-  const myOrders = useMemo<Order[]>(() => {
-    if (!user) return [];
-    return orders
-      .filter(o => o.userId === user.id)
-      .slice()
-      .sort((a, b) => new Date(b.placedAt).getTime() - new Date(a.placedAt).getTime());
-  }, [orders, user]);
+  // ordersApi.mine() already filters/sorts server-side, so the rows arrive
+  // ready to render — no client-side userId filter needed.
+  const myOrders = useMemo<Order[]>(() => (user ? orders : []), [orders, user]);
+
+  if (loading && myOrders.length === 0) {
+    return (
+      <div className="bg-white border border-[color:var(--color-myntra-border-soft)] px-6 py-12 text-center">
+        <div className="inline-flex flex-col items-center gap-3 text-[color:var(--color-myntra-ink-soft)]">
+          <span className="inline-block w-6 h-6 border-2 border-[color:var(--color-myntra-border)] border-t-[color:var(--color-myntra-pink)] rounded-full animate-spin" aria-hidden />
+          <p className="text-[13px] font-semibold">Loading your orders…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white border border-[color:var(--color-myntra-border-soft)] px-6 py-12 text-center">
+        <p className="text-[13px] font-semibold text-[color:var(--color-myntra-pink)] mb-4">{error}</p>
+        <button onClick={() => void refresh()} className="btn-outline">Try again</button>
+      </div>
+    );
+  }
 
   if (myOrders.length === 0) {
     return (

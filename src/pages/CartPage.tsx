@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useRouter } from '../context/RouterContext';
 import { FABRICS, FREE_SHIPPING_THRESHOLD, formatINR } from '../constants';
+import { couponsApi } from '../lib/firebase';
 import FabricImage from '../components/FabricImage';
 import ProductCard from '../components/ProductCard';
 
@@ -14,6 +15,7 @@ const CartPage: React.FC = () => {
   const [coupon, setCoupon] = useState('');
   const [couponMsg, setCouponMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponBusy, setCouponBusy] = useState(false);
   const [pin, setPin] = useState('');
 
   if (resolved.length === 0) {
@@ -34,18 +36,30 @@ const CartPage: React.FC = () => {
   const totalAfterCoupon = Math.max(0, total - couponDiscount);
   const remainingForFreeShip = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
 
-  const applyCoupon = () => {
+  const applyCoupon = async () => {
     const code = coupon.trim().toUpperCase();
     if (!code) return;
-    if (code === 'WEDDING50') {
-      setCouponDiscount(Math.round(subtotal * 0.1));
-      setCouponMsg({ ok: true, text: '🎉 Extra ₹' + Math.round(subtotal * 0.1).toLocaleString('en-IN') + ' off applied.' });
-    } else if (code === 'UPI10') {
-      setCouponDiscount(Math.round(subtotal * 0.05));
-      setCouponMsg({ ok: true, text: '✅ UPI cashback ₹' + Math.round(subtotal * 0.05).toLocaleString('en-IN') + ' applied.' });
-    } else {
+    setCouponBusy(true);
+    try {
+      const res = await couponsApi.validate(code, subtotal);
+      if (!res.valid) {
+        setCouponDiscount(0);
+        const text =
+          res.reason === 'not_found'    ? 'Coupon code is invalid.'
+        : res.reason === 'inactive'     ? 'This coupon is no longer active.'
+        : res.reason === 'expired'      ? 'This coupon has expired.'
+        : res.reason === 'min_subtotal' ? `Add ${formatINR(res.minSubtotal ?? 0)} more to use this coupon.`
+        : 'This coupon cannot be used.';
+        setCouponMsg({ ok: false, text });
+        return;
+      }
+      setCouponDiscount(res.discount);
+      setCouponMsg({ ok: true, text: `Applied — ${formatINR(res.discount)} off.` });
+    } catch (err) {
       setCouponDiscount(0);
-      setCouponMsg({ ok: false, text: 'Coupon code is invalid or expired.' });
+      setCouponMsg({ ok: false, text: err instanceof Error ? err.message : 'Could not validate coupon.' });
+    } finally {
+      setCouponBusy(false);
     }
   };
 
@@ -169,7 +183,7 @@ const CartPage: React.FC = () => {
                     placeholder="Enter coupon code"
                     className="input-box flex-1"
                   />
-                  <button onClick={applyCoupon} className="text-[13px] font-bold text-[color:var(--color-myntra-pink)] px-3">APPLY</button>
+                  <button onClick={applyCoupon} disabled={couponBusy} className="text-[13px] font-bold text-[color:var(--color-myntra-pink)] px-3 disabled:opacity-60">{couponBusy ? '...' : 'APPLY'}</button>
                 </div>
                 {couponMsg && (
                   <p className={`text-[12px] mt-2 font-semibold ${couponMsg.ok ? 'text-[color:var(--color-myntra-green)]' : 'text-[color:var(--color-myntra-pink)]'}`}>

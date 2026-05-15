@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Search,
   Filter,
@@ -8,10 +8,11 @@ import {
   XCircle,
   ShoppingBag,
   Calendar,
-  ArrowUpRight
+  ArrowUpRight,
+  RefreshCw
 } from 'lucide-react';
-import { ordersStore } from '../../data/storage';
-import { useStore } from '../../data/useStore';
+import { collection, getDocs, orderBy, query as fsQuery, limit as qLimit } from 'firebase/firestore';
+import { db, ordersApi } from '../../lib/firebase';
 import { formatINR } from '../../constants';
 import { useRouter } from '../../context/RouterContext';
 import type { Order, OrderStatus, PaymentMethod } from '../../types';
@@ -389,14 +390,37 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
 /* ───────────── component ───────────── */
 
 const AdminOrders: React.FC = () => {
-  const { rows: orders, loading } = useStore(ordersStore);
   const { navigate } = useRouter();
+
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | OrderStatus>('all');
   const [dateRange, setDateRange] = useState<DateRange>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
+
+  const fetchOrders = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      // Direct Firestore read (vs ordersApi.all) so we can tune constraints
+      // and cap to a stable admin page size.
+      const snap = await getDocs(fsQuery(collection(db, 'orders'), orderBy('placedAt', 'desc'), qLimit(500)));
+      setOrders(snap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<Order, 'id'>) })));
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : 'Could not load orders.');
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchOrders();
+  }, [fetchOrders]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -416,10 +440,16 @@ const AdminOrders: React.FC = () => {
 
   const updateStatus = async (id: string, next: OrderStatus): Promise<void> => {
     setPendingId(id);
+    // Optimistic update — revert on failure so the table reflects truth.
+    const prev = orders;
+    setOrders(rows => rows.map(o => (o.id === id ? { ...o, status: next } : o)));
     try {
-      await ordersStore.update(id, { status: next });
+      await ordersApi.setStatus(id, next);
+    } catch (err) {
+      setOrders(prev);
+      setLoadError(err instanceof Error ? err.message : 'Could not update order.');
     } finally {
-      setPendingId(prev => (prev === id ? null : prev));
+      setPendingId(p => (p === id ? null : p));
     }
   };
 
@@ -490,6 +520,16 @@ const AdminOrders: React.FC = () => {
             </div>
             <button
               type="button"
+              onClick={() => void fetchOrders()}
+              disabled={loading}
+              className="btn-outline whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-1.5"
+              aria-label="Reload orders"
+              title="Reload"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} aria-hidden /> Refresh
+            </button>
+            <button
+              type="button"
               onClick={handleExport}
               disabled={filteredCount === 0}
               className="btn-outline whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
@@ -498,6 +538,9 @@ const AdminOrders: React.FC = () => {
             </button>
           </div>
         </div>
+        {loadError && (
+          <p role="alert" className="text-[12px] font-semibold text-[color:var(--color-myntra-pink)]">{loadError}</p>
+        )}
 
         <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-1 px-1">
           <Filter

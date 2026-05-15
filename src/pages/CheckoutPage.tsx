@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { CheckCircle2, CreditCard, Lock, MapPin, Smartphone, Truck, User } from 'lucide-react';
+import { CheckCircle2, CreditCard, Lock, MapPin, Smartphone, Tag, Truck, User } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useRouter } from '../context/RouterContext';
 import { useOrders } from '../context/OrderContext';
+import { useAuth } from '../context/AuthContext';
 import { formatINR } from '../constants';
-import { Order, PaymentMethod, ShippingAddress } from '../types';
+import { PaymentMethod, ShippingAddress } from '../types';
+import { couponsApi } from '../lib/firebase';
 import FabricImage from '../components/FabricImage';
 
 type Step = 'login' | 'address' | 'payment';
@@ -21,22 +23,30 @@ const initialAddress: ShippingAddress = {
   country: 'India'
 };
 
-const generateOrderId = () =>
-  'TC-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
-
 const CheckoutPage: React.FC = () => {
   const { resolved, subtotal, shipping, tax, total, clear } = useCart();
   const { navigate } = useRouter();
-  const { addOrder } = useOrders();
+  const { placeOrder } = useOrders();
+  const { user } = useAuth();
 
-  const [step, setStep] = useState<Step>('login');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState<ShippingAddress>(initialAddress);
+  const [step, setStep] = useState<Step>(user ? 'address' : 'login');
+  const [phone, setPhone] = useState(user?.phone ?? '');
+  const [address, setAddress] = useState<ShippingAddress>(
+    user?.defaultAddress
+      ?? { ...initialAddress, fullName: user?.fullName ?? '', email: user?.email ?? '', phone: user?.phone ?? '' }
+  );
   const [payment, setPayment] = useState<PaymentMethod>('upi');
   const [card, setCard] = useState({ number: '', name: '', expiry: '', cvv: '' });
   const [upi, setUpi] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [placing, setPlacing] = useState(false);
+  const [placeError, setPlaceError] = useState<string | null>(null);
+
+  const [couponInput, setCouponInput] = useState('');
+  const [couponCode, setCouponCode] = useState<string | null>(null);
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponMsg, setCouponMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [couponBusy, setCouponBusy] = useState(false);
 
   if (resolved.length === 0) {
     return (
@@ -49,6 +59,7 @@ const CheckoutPage: React.FC = () => {
 
   const mrpTotal = resolved.reduce((s, { item, fabric }) => s + fabric.mrpPerMeter * item.meters, 0);
   const productDiscount = mrpTotal - subtotal;
+  const payable = Math.max(0, total - couponDiscount);
 
   const validateAddress = (): boolean => {
     const e: Record<string, string> = {};
@@ -76,24 +87,66 @@ const CheckoutPage: React.FC = () => {
     return Object.keys(e).length === 0;
   };
 
-  const placeOrder = async () => {
+  const applyCoupon = async () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) return;
+    setCouponBusy(true);
+    setCouponMsg(null);
+    try {
+      const res = await couponsApi.validate(code, subtotal);
+      if (!res.valid) {
+        setCouponCode(null);
+        setCouponDiscount(0);
+        const text =
+          res.reason === 'not_found'    ? 'Coupon code is invalid.'
+        : res.reason === 'inactive'     ? 'This coupon is no longer active.'
+        : res.reason === 'expired'      ? 'This coupon has expired.'
+        : res.reason === 'min_subtotal' ? `Add ${formatINR(res.minSubtotal ?? 0)} more to use this coupon.`
+        : 'This coupon cannot be used.';
+        setCouponMsg({ ok: false, text });
+        return;
+      }
+      setCouponCode(code);
+      setCouponDiscount(res.discount);
+      setCouponMsg({ ok: true, text: `Applied — ${formatINR(res.discount)} off.` });
+    } catch (err) {
+      setCouponMsg({ ok: false, text: err instanceof Error ? err.message : 'Could not validate coupon.' });
+    } finally {
+      setCouponBusy(false);
+    }
+  };
+
+  const clearCoupon = () => {
+    setCouponCode(null);
+    setCouponDiscount(0);
+    setCouponMsg(null);
+    setCouponInput('');
+  };
+
+  const handlePlaceOrder = async () => {
     if (!validatePayment()) return;
+    if (!user) {
+      // ordersApi.place() asserts auth; route to login rather than 500.
+      setPlaceError('Please sign in to place your order.');
+      navigate({ name: 'login' });
+      return;
+    }
     setPlacing(true);
-    await new Promise(r => setTimeout(r, 800));
-    const order: Order = {
-      id: generateOrderId(),
-      items: resolved.map(({ item, fabric }) => ({ ...item, fabricSnapshot: fabric })),
-      subtotal,
-      shipping,
-      tax,
-      total,
-      shippingAddress: address,
-      paymentMethod: payment,
-      placedAt: new Date().toISOString()
-    };
-    addOrder(order);
-    clear();
-    navigate({ name: 'confirmation', orderId: order.id });
+    setPlaceError(null);
+    try {
+      const placed = await placeOrder({
+        items: resolved.map(({ item }) => ({ fabricId: item.fabricId, meters: item.meters, color: item.color })),
+        shippingAddress: address,
+        paymentMethod: payment,
+        couponCode: couponCode ?? undefined
+      });
+      clear();
+      navigate({ name: 'confirmation', orderId: placed.id });
+    } catch (err) {
+      setPlaceError(err instanceof Error ? err.message : 'Could not place your order.');
+    } finally {
+      setPlacing(false);
+    }
   };
 
   const StepBlock: React.FC<{ id: Step; index: number; title: string; doneTitle?: string; children: React.ReactNode }> = ({ id, index, title, doneTitle, children }) => {
@@ -137,15 +190,24 @@ const CheckoutPage: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4 lg:gap-6">
           <div>
-            <StepBlock id="login" index={1} title="Login or Sign Up" doneTitle={`Login: ${phone || 'Guest checkout'}`}>
+            <StepBlock id="login" index={1} title="Login or Sign Up" doneTitle={user ? `Signed in: ${user.fullName}` : `Login: ${phone || 'Guest checkout'}`}>
               <div className="flex items-center gap-3 mb-3 text-[color:var(--color-myntra-ink-soft)]">
                 <User className="w-4 h-4" />
-                <p className="text-[13px]">Continue as guest or enter your mobile to track orders.</p>
+                <p className="text-[13px]">
+                  {user
+                    ? 'You are signed in. Continue to delivery.'
+                    : 'Sign in to track your order, or continue as guest.'}
+                </p>
               </div>
-              <div className="flex gap-2 max-w-md">
-                <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91 Mobile number" className="input-box flex-1" />
+              {user ? (
                 <button onClick={() => setStep('address')} className="btn-primary">Continue</button>
-              </div>
+              ) : (
+                <div className="flex flex-wrap gap-2 max-w-md">
+                  <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91 Mobile number" className="input-box flex-1 min-w-[180px]" />
+                  <button onClick={() => navigate({ name: 'login' })} className="btn-outline">Sign In</button>
+                  <button onClick={() => setStep('address')} className="btn-primary">Continue</button>
+                </div>
+              )}
             </StepBlock>
 
             <StepBlock
@@ -253,12 +315,21 @@ const CheckoutPage: React.FC = () => {
                 </p>
               )}
 
+              {placeError && (
+                <p role="alert" className="mt-4 text-[13px] font-semibold text-[color:var(--color-myntra-pink)] bg-[color:var(--color-myntra-bg-sale)] border border-[color:var(--color-myntra-border)] px-3 py-2 rounded">
+                  {placeError}
+                </p>
+              )}
+
               <button
-                onClick={placeOrder}
+                onClick={handlePlaceOrder}
                 disabled={placing}
-                className="btn-primary mt-5 w-full sm:w-auto"
+                className="btn-primary mt-5 w-full sm:w-auto inline-flex items-center justify-center gap-2"
               >
-                {placing ? 'Placing Order…' : `Place Order · ${formatINR(total)}`}
+                {placing && (
+                  <span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" aria-hidden />
+                )}
+                {placing ? 'Placing Order…' : `Place Order · ${formatINR(payable)}`}
               </button>
             </StepBlock>
           </div>
@@ -266,6 +337,38 @@ const CheckoutPage: React.FC = () => {
           {/* Summary */}
           <aside>
             <div className="lg:sticky lg:top-[110px] space-y-3">
+              {/* Coupon */}
+              <div className="bg-white border border-[color:var(--color-myntra-border-soft)] p-4">
+                <p className="text-[12px] font-extrabold uppercase tracking-wider text-[color:var(--color-myntra-navy)] mb-3 inline-flex items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5 text-[color:var(--color-myntra-green)]" /> Apply Coupon
+                </p>
+                {couponCode ? (
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[13px] font-bold text-[color:var(--color-myntra-green)]">
+                      {couponCode} · −{formatINR(couponDiscount)}
+                    </span>
+                    <button onClick={clearCoupon} className="text-[12px] font-bold text-[color:var(--color-myntra-pink)]">REMOVE</button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      value={couponInput}
+                      onChange={e => setCouponInput(e.target.value)}
+                      placeholder="Enter coupon code"
+                      className="input-box flex-1"
+                    />
+                    <button onClick={applyCoupon} disabled={couponBusy} className="text-[13px] font-bold text-[color:var(--color-myntra-pink)] px-3 disabled:opacity-60">
+                      {couponBusy ? '...' : 'APPLY'}
+                    </button>
+                  </div>
+                )}
+                {couponMsg && (
+                  <p className={`text-[12px] mt-2 font-semibold ${couponMsg.ok ? 'text-[color:var(--color-myntra-green)]' : 'text-[color:var(--color-myntra-pink)]'}`}>
+                    {couponMsg.text}
+                  </p>
+                )}
+              </div>
+
               <div className="bg-white border border-[color:var(--color-myntra-border-soft)] p-4">
                 <p className="text-[12px] font-extrabold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-4">Order Summary ({resolved.length})</p>
                 <ul className="space-y-3 max-h-[260px] overflow-y-auto pr-1">
@@ -287,13 +390,16 @@ const CheckoutPage: React.FC = () => {
                 <dl className="space-y-2 text-[14px]">
                   <div className="flex justify-between"><dt>Total MRP</dt><dd>{formatINR(mrpTotal)}</dd></div>
                   <div className="flex justify-between"><dt>Discount</dt><dd className="text-[color:var(--color-myntra-green)]">- {formatINR(productDiscount)}</dd></div>
+                  {couponDiscount > 0 && (
+                    <div className="flex justify-between"><dt>Coupon</dt><dd className="text-[color:var(--color-myntra-green)]">- {formatINR(couponDiscount)}</dd></div>
+                  )}
                   <div className="flex justify-between"><dt>Shipping</dt><dd className={shipping === 0 ? 'text-[color:var(--color-myntra-green)] font-bold' : ''}>{shipping === 0 ? 'FREE' : formatINR(shipping)}</dd></div>
                   <div className="flex justify-between"><dt>GST</dt><dd>{formatINR(tax)}</dd></div>
                 </dl>
 
                 <div className="flex justify-between mt-4 pt-3 border-t border-[color:var(--color-myntra-border)]">
                   <span className="font-extrabold">Total Payable</span>
-                  <span className="font-extrabold">{formatINR(total)}</span>
+                  <span className="font-extrabold">{formatINR(payable)}</span>
                 </div>
               </div>
 

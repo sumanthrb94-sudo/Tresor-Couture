@@ -1,23 +1,59 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { CheckCircle2, MapPin, Package, Truck } from 'lucide-react';
-import { useOrders } from '../context/OrderContext';
+import { ordersApi } from '../lib/firebase';
 import { useRouter } from '../context/RouterContext';
 import { formatINR } from '../constants';
 import FabricImage from '../components/FabricImage';
+import type { Order } from '../types';
 
 interface Props {
   orderId: string;
 }
 
 const ConfirmationPage: React.FC<Props> = ({ orderId }) => {
-  const { getOrder } = useOrders();
   const { navigate } = useRouter();
-  const order = getOrder(orderId);
+  const [order, setOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!order) {
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    ordersApi
+      .get(orderId)
+      .then(res => {
+        if (cancelled) return;
+        setOrder((res as Order | null) ?? null);
+      })
+      .catch(err => {
+        if (cancelled) return;
+        setError(err instanceof Error ? err.message : 'Could not load this order.');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [orderId]);
+
+  if (loading) {
+    return (
+      <main className="pt-[140px] pb-20 min-h-screen text-center px-5 bg-white">
+        <div className="inline-flex flex-col items-center gap-3 text-[color:var(--color-myntra-ink-soft)]">
+          <span className="inline-block w-7 h-7 border-2 border-[color:var(--color-myntra-border)] border-t-[color:var(--color-myntra-pink)] rounded-full animate-spin" aria-hidden />
+          <p className="text-[14px] font-semibold">Confirming your order…</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (error || !order) {
     return (
       <main className="pt-[140px] pb-20 min-h-screen text-center px-5 bg-white">
         <h1 className="text-3xl font-extrabold mb-4">Order not found</h1>
+        {error && <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)] mb-4">{error}</p>}
         <button onClick={() => navigate({ name: 'shop' })} className="btn-primary">Back to Shop</button>
       </main>
     );
@@ -46,7 +82,7 @@ const ConfirmationPage: React.FC<Props> = ({ orderId }) => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-7 pt-7 border-t border-[color:var(--color-myntra-border-soft)] text-left">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1">Order ID</p>
-              <p className="text-[14px] font-bold">{order.id}</p>
+              <p className="text-[14px] font-bold break-all">{order.id}</p>
             </div>
             <div>
               <p className="text-[11px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1">Placed On</p>
@@ -84,8 +120,8 @@ const ConfirmationPage: React.FC<Props> = ({ orderId }) => {
             <Package className="w-4 h-4 text-[color:var(--color-myntra-pink)]" /> Items in this Order
           </h2>
           <ul className="space-y-3">
-            {order.items.map(it => (
-              <li key={`${it.fabricId}-${it.color ?? ''}`} className="flex gap-3 pb-3 border-b border-[color:var(--color-myntra-border-soft)] last:border-b-0 last:pb-0">
+            {order.items.map((it, idx) => (
+              <li key={`${it.fabricId}-${idx}`} className="flex gap-3 pb-3 border-b border-[color:var(--color-myntra-border-soft)] last:border-b-0 last:pb-0">
                 <FabricImage photo={it.fabricSnapshot.photo} fallback={it.fabricSnapshot.image} alt={it.fabricSnapshot.name} className="w-16 h-20 object-cover bg-[color:var(--color-myntra-bg-soft)]" />
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-bold truncate">{it.fabricSnapshot.brand}</p>
@@ -101,6 +137,9 @@ const ConfirmationPage: React.FC<Props> = ({ orderId }) => {
 
           <dl className="space-y-2 mt-4 pt-4 border-t border-[color:var(--color-myntra-border-soft)] text-[14px]">
             <div className="flex justify-between"><dt>Subtotal</dt><dd>{formatINR(order.subtotal)}</dd></div>
+            {order.couponCode && (
+              <div className="flex justify-between"><dt>Coupon · {order.couponCode}</dt><dd className="text-[color:var(--color-myntra-green)]">- {formatINR(order.couponDiscount ?? 0)}</dd></div>
+            )}
             <div className="flex justify-between"><dt>Shipping</dt><dd className={order.shipping === 0 ? 'text-[color:var(--color-myntra-green)] font-bold' : ''}>{order.shipping === 0 ? 'FREE' : formatINR(order.shipping)}</dd></div>
             <div className="flex justify-between"><dt>GST</dt><dd>{formatINR(order.tax)}</dd></div>
             <div className="flex justify-between font-extrabold pt-3 border-t border-[color:var(--color-myntra-border)] mt-2">
