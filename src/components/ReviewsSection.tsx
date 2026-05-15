@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Star, ShieldCheck, MessageSquare } from 'lucide-react';
+import { Star, MessageSquare } from 'lucide-react';
 import type { Review } from '../types';
-import { reviewsStore, ordersStore } from '../data/storage';
-import { useStore } from '../data/useStore';
+import { reviewsApi } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
 
@@ -80,8 +79,9 @@ const initialsOf = (name: string): string => {
 const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
   const { user } = useAuth();
   const { navigate } = useRouter();
-  const { rows: reviews } = useStore(reviewsStore);
-  const { rows: orders } = useStore(ordersStore);
+
+  const [approved, setApproved] = useState<Review[]>([]);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const [rating, setRating] = useState<1 | 2 | 3 | 4 | 5>(5);
   const [title, setTitle] = useState('');
@@ -91,19 +91,24 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
   const [error, setError] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(REVIEWS_PAGE_SIZE);
 
-  /* Approved reviews for this fabric, newest first. */
-  const approved = useMemo(
-    () =>
-      reviews
-        .filter(r => r.fabricId === fabricId && r.status === 'approved')
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
-    [reviews, fabricId]
-  );
-
-  /* Reset pagination when the product changes. */
   useEffect(() => {
+    let cancelled = false;
     setVisibleCount(REVIEWS_PAGE_SIZE);
-  }, [fabricId]);
+    (async () => {
+      try {
+        const rows = (await reviewsApi.forProduct(fabricId)) as unknown as Review[];
+        if (!cancelled) {
+          const sorted = [...rows].sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+          setApproved(sorted);
+        }
+      } catch {
+        if (!cancelled) setApproved([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [fabricId, reloadKey]);
 
   const summary = useMemo(() => {
     const total = approved.length;
@@ -120,16 +125,6 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
     for (const r of approved) breakdown[r.rating]++;
     return { total, average, breakdown };
   }, [approved]);
-
-  /* Whether the signed-in user has bought this fabric. */
-  const verifiedBuyerIds = useMemo(() => {
-    const set = new Set<string>();
-    for (const o of orders) {
-      if (!o.userId) continue;
-      if (o.items.some(it => it.fabricId === fabricId)) set.add(o.userId);
-    }
-    return set;
-  }, [orders, fabricId]);
 
   const resetForm = () => {
     setRating(5);
@@ -155,20 +150,16 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
 
     setSubmitting(true);
     try {
-      const newReview: Review = {
-        id: 'r-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6),
+      await reviewsApi.create({
         fabricId,
-        userId: user.id,
         authorName: user.fullName,
         rating,
         title: title.trim() ? title.trim() : undefined,
-        body: trimmedBody,
-        createdAt: new Date().toISOString(),
-        status: 'pending'
-      };
-      await reviewsStore.create(newReview);
+        body: trimmedBody
+      });
       setSuccess('Review submitted — pending moderation.');
       resetForm();
+      setReloadKey(k => k + 1);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not submit review.');
     } finally {
@@ -320,7 +311,6 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
           ) : (
             <ul className="flex flex-col divide-y divide-[color:var(--color-myntra-border-soft)]">
               {visible.map(r => {
-                const verified = Boolean(r.userId && verifiedBuyerIds.has(r.userId));
                 return (
                   <li key={r.id} className="py-4 first:pt-0">
                     <div className="flex items-start gap-3">
@@ -332,11 +322,6 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
                           <span className="text-[13px] font-bold text-[color:var(--color-myntra-navy)]">
                             {r.authorName}
                           </span>
-                          {verified && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-green)]">
-                              <ShieldCheck className="w-3 h-3" /> Verified buyer
-                            </span>
-                          )}
                           <span className="text-[11px] text-[color:var(--color-myntra-ink-mute)]">
                             {formatDate(r.createdAt)}
                           </span>

@@ -1,8 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Star, Check, X, MessageSquare } from 'lucide-react';
-import type { Review } from '../../types';
-import { reviewsStore, fabricsStore } from '../../data/storage';
-import { useStore } from '../../data/useStore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import type { Review, Fabric } from '../../types';
+import { db, reviewsApi, productsApi } from '../../lib/firebase';
 
 type ReviewStatus = Review['status'];
 
@@ -56,24 +56,55 @@ const Stars: React.FC<{ rating: number }> = ({ rating }) => (
  * reviews. Called after every approve/reject so the storefront stays in sync.
  */
 async function recomputeFabricRating(fabricId: string): Promise<void> {
-  const all = await reviewsStore.list();
-  const approved = all.filter(r => r.fabricId === fabricId && r.status === 'approved');
+  const snap = await getDocs(query(collection(db, 'reviews'), where('fabricId', '==', fabricId), where('status', '==', 'approved')));
+  const approved = snap.docs.map(d => d.data() as Review);
   if (approved.length === 0) {
-    await fabricsStore.update(fabricId, { rating: 0, reviewCount: 0 });
+    await productsApi.update(fabricId, { rating: 0, reviewCount: 0 });
     return;
   }
   const sum = approved.reduce((acc, r) => acc + r.rating, 0);
   const avg = sum / approved.length;
-  // Round to 1 decimal for display consistency.
   const rating = Math.round(avg * 10) / 10;
-  await fabricsStore.update(fabricId, { rating, reviewCount: approved.length });
+  await productsApi.update(fabricId, { rating, reviewCount: approved.length });
+}
+
+async function fetchReviewsAll(): Promise<Review[]> {
+  const snap = await getDocs(collection(db, 'reviews'));
+  return snap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<Review, 'id'>) }));
 }
 
 const AdminReviews: React.FC = () => {
-  const { rows: reviews, loading } = useStore(reviewsStore);
-  const { rows: fabrics } = useStore(fabricsStore);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [fabrics, setFabrics] = useState<Fabric[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
   const [tab, setTab] = useState<ReviewStatus>('pending');
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
+      try {
+        const [rs, fs] = await Promise.all([
+          fetchReviewsAll(),
+          productsApi.list({ limit: 500 }) as unknown as Promise<Fabric[]>
+        ]);
+        if (!cancelled) {
+          setReviews(rs);
+          setFabrics(fs);
+        }
+      } catch {
+        if (!cancelled) {
+          setReviews([]);
+          setFabrics([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [reloadKey]);
 
   const fabricsById = useMemo(() => {
     const map = new Map<string, (typeof fabrics)[number]>();
@@ -99,8 +130,9 @@ const AdminReviews: React.FC = () => {
     if (review.status === next) return;
     setBusyId(review.id);
     try {
-      await reviewsStore.update(review.id, { status: next });
+      await reviewsApi.moderate(review.id, next);
       await recomputeFabricRating(review.fabricId);
+      setReloadKey(k => k + 1);
     } finally {
       setBusyId(null);
     }

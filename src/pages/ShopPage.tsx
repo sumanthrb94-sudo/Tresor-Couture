@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp, Filter, X } from 'lucide-react';
 import {
   CATEGORIES,
-  FABRICS,
   MASTER_CATEGORIES,
   MASTER_CATEGORY_TILES,
   MASTER_CATEGORY_TREE
@@ -10,6 +9,7 @@ import {
 import { Fabric, MasterCategory } from '../types';
 import ProductCard from '../components/ProductCard';
 import { useRouter } from '../context/RouterContext';
+import { productsApi } from '../lib/firebase';
 
 type SortKey = 'recommended' | 'popularity' | 'price-asc' | 'price-desc' | 'rating' | 'newest';
 
@@ -73,13 +73,36 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
     setWeaveTypes(new Set(initialCategory && !isMasterCategory(initialCategory) && initialCategory !== 'All' ? [initialCategory] : []));
   }, [initialCategory]);
 
+  const [products, setProducts] = useState<Fabric[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setProducts(null);
+    (async () => {
+      try {
+        const rows = await productsApi.list({
+          masterCategory: activeMaster ?? undefined,
+          subCategory: activeSub || undefined,
+          limit: 200
+        });
+        if (!cancelled) setProducts(rows as unknown as Fabric[]);
+      } catch {
+        if (!cancelled) setProducts([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [activeMaster, activeSub]);
+
   const allColors = useMemo(() => {
     const s = new Set<string>();
-    FABRICS.forEach(f => f.colors?.forEach(c => s.add(c.name)));
+    (products ?? []).forEach(f => f.colors?.forEach(c => s.add(c.name)));
     return Array.from(s).sort();
-  }, []);
+  }, [products]);
 
-  const allOrigins = useMemo(() => Array.from(new Set(FABRICS.map(f => f.origin.split(',')[0].trim()))).sort(), []);
+  const allOrigins = useMemo(
+    () => Array.from(new Set((products ?? []).map(f => f.origin.split(',')[0].trim()))).sort(),
+    [products]
+  );
 
   const toggleSet = (setter: React.Dispatch<React.SetStateAction<Set<string>>>, v: string) =>
     setter(prev => {
@@ -89,9 +112,8 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
     });
 
   const filtered = useMemo(() => {
-    let list: Fabric[] = FABRICS.filter(f => {
-      if (activeMaster && f.masterCategory !== activeMaster) return false;
-      if (activeSub && f.subCategory !== activeSub) return false;
+    const source = products ?? [];
+    let list: Fabric[] = source.filter(f => {
       if (weaveTypes.size > 0 && !weaveTypes.has(f.category)) return false;
       if (colors.size > 0 && !(f.colors ?? []).some(c => colors.has(c.name))) return false;
       if (origins.size > 0 && !origins.has(f.origin.split(',')[0].trim())) return false;
@@ -110,7 +132,9 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
       case 'newest': list = [...list].reverse(); break;
     }
     return list;
-  }, [activeMaster, activeSub, weaveTypes, colors, origins, priceBrackets, sort]);
+  }, [products, weaveTypes, colors, origins, priceBrackets, sort]);
+
+  const loading = products === null;
 
   const masterTile = activeMaster ? MASTER_CATEGORY_TILES.find(t => t.name === activeMaster) : null;
   const subOptions = activeMaster ? MASTER_CATEGORY_TREE[activeMaster] : [];
@@ -194,7 +218,7 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
       <Section title="Colour" defaultOpen={false}>
         <div className="grid grid-cols-3 gap-2">
           {allColors.map(c => {
-            const hex = FABRICS.find(f => f.colors?.find(x => x.name === c))?.colors?.find(x => x.name === c)?.hex ?? '#ccc';
+            const hex = (products ?? []).find(f => f.colors?.find(x => x.name === c))?.colors?.find(x => x.name === c)?.hex ?? '#ccc';
             const active = colors.has(c);
             return (
               <button
@@ -320,7 +344,20 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
         <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[260px_1fr] gap-6 lg:gap-8">
           <div className="hidden lg:block">{Sidebar}</div>
 
-          {filtered.length === 0 ? (
+          {loading ? (
+            <div className="py-20 flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-[color:var(--color-myntra-pink)] border-t-transparent rounded-full animate-spin" aria-label="Loading products" />
+            </div>
+          ) : (products ?? []).length === 0 ? (
+            <div className="border border-dashed border-[color:var(--color-myntra-border)] py-20 px-6 text-center bg-[color:var(--color-myntra-bg-soft)]">
+              <p className="text-xl font-bold mb-2 text-[color:var(--color-myntra-navy)]">
+                Catalogue is being curated
+              </p>
+              <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)]">
+                Check back soon — new weaves arrive every week.
+              </p>
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="border border-[color:var(--color-myntra-border-soft)] py-20 px-6 text-center bg-[color:var(--color-myntra-bg-soft)]">
               <p className="text-xl font-bold mb-2 text-[color:var(--color-myntra-navy)]">
                 {activeMaster ? `${activeMaster} — coming soon` : 'No weaves match your filters.'}

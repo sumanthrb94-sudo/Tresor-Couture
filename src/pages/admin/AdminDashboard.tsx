@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   ShoppingBag,
   Package,
@@ -13,11 +13,13 @@ import {
   Calendar,
   Tag,
   Star,
-  Palette
+  Palette,
+  Database
 } from 'lucide-react';
 import { ordersStore, fabricsStore } from '../../data/storage';
 import { useStore } from '../../data/useStore';
-import { formatINR } from '../../constants';
+import { FABRICS, formatINR } from '../../constants';
+import { seedCatalog } from '../../lib/firebase';
 import { useRouter } from '../../context/RouterContext';
 import type { Order, OrderStatus, Route } from '../../types';
 
@@ -117,6 +119,26 @@ const AdminDashboard: React.FC = () => {
   const { rows: orders } = useStore(ordersStore);
   const { rows: fabrics } = useStore(fabricsStore);
   const { navigate } = useRouter();
+
+  const [seeding, setSeeding] = useState(false);
+  const [seedMessage, setSeedMessage] = useState<string | null>(null);
+
+  const handleSeed = async () => {
+    setSeeding(true);
+    setSeedMessage(null);
+    try {
+      const result = await seedCatalog(FABRICS as unknown as Record<string, unknown>[], { force: false });
+      setSeedMessage(
+        result.skipped
+          ? 'Catalogue already populated — no changes made.'
+          : `Seeded ${result.seeded} products into Firestore.`
+      );
+    } catch (err) {
+      setSeedMessage(err instanceof Error ? `Seed failed: ${err.message}` : 'Seed failed.');
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   /* Sorted view used everywhere below. */
   const ordersSorted = useMemo(
@@ -260,8 +282,23 @@ const AdminDashboard: React.FC = () => {
               <Icon className="w-3.5 h-3.5" /> {label}
             </button>
           ))}
+          <button
+            type="button"
+            onClick={handleSeed}
+            disabled={seeding}
+            className="chip hover:border-[color:var(--color-myntra-pink)] hover:text-[color:var(--color-myntra-pink)] transition-colors disabled:opacity-60"
+            title="Push the in-repo FABRICS list into Firestore (idempotent)"
+          >
+            <Database className="w-3.5 h-3.5" />
+            {seeding ? 'Seeding…' : 'Seed catalog from FABRICS'}
+          </button>
         </div>
       </div>
+      {seedMessage && (
+        <div className="bg-white border border-[color:var(--color-myntra-border-soft)] rounded-md px-4 py-3 text-[13px] text-[color:var(--color-myntra-ink)]">
+          {seedMessage}
+        </div>
+      )}
 
       {/* KPI tiles */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

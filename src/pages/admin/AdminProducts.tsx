@@ -11,8 +11,7 @@ import {
   Upload,
   Tag
 } from 'lucide-react';
-import { fabricsStore } from '../../data/storage';
-import { useStore } from '../../data/useStore';
+import { productsApi } from '../../lib/firebase';
 import { CATEGORIES, formatINR } from '../../constants';
 import type { Fabric } from '../../types';
 
@@ -740,7 +739,25 @@ const Confirm: React.FC<ConfirmProps> = ({ name, busy, onCancel, onDelete }) => 
 type CategoryFilter = Fabric['category'] | 'all';
 
 const AdminProducts: React.FC = () => {
-  const { rows, loading } = useStore(fabricsStore);
+  const [rows, setRows] = useState<Fabric[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
+      try {
+        const list = (await productsApi.list({ limit: 500 })) as unknown as Fabric[];
+        if (!cancelled) setRows(list);
+      } catch {
+        if (!cancelled) setRows([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [reloadKey]);
 
   const [query, setQuery] = useState('');
   const [catFilter, setCatFilter] = useState<CategoryFilter>('all');
@@ -798,11 +815,16 @@ const AdminProducts: React.FC = () => {
     setSaving(true);
     try {
       const record = draftToFabric(draft, editingExisting ?? undefined);
-      await fabricsStore.upsert(record);
+      const { id, ...payload } = record;
+      if (editingExisting) {
+        await productsApi.update(editingExisting.id, payload as unknown as Record<string, unknown>);
+      } else {
+        await productsApi.create({ ...payload, id } as unknown as Record<string, unknown>);
+      }
       setEditorOpen(false);
       setEditingExisting(null);
+      setReloadKey(k => k + 1);
     } catch (err) {
-      // surface a generic save error against the photo field so users see it
       const message = err instanceof Error ? err.message : 'Save failed';
       setErrors(prev => ({ ...prev, photo: message }));
     } finally {
@@ -814,8 +836,9 @@ const AdminProducts: React.FC = () => {
     if (!pendingDelete) return;
     setDeleting(true);
     try {
-      await fabricsStore.remove(pendingDelete.id);
+      await productsApi.remove(pendingDelete.id);
       setPendingDelete(null);
+      setReloadKey(k => k + 1);
     } finally {
       setDeleting(false);
     }

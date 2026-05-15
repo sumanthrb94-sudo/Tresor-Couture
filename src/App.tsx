@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import CategoryStrip from './components/CategoryStrip';
@@ -15,6 +15,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 import ShopPage from './pages/ShopPage';
 import ProductPage from './pages/ProductPage';
 import CartPage from './pages/CartPage';
+import { productsApi, seedCatalog } from './lib/firebase';
+import type { Fabric } from './types';
 
 // Routes that aren't on the critical home/shop path are lazy-loaded so they
 // don't bloat the initial bundle. React.lazy splits each into its own chunk.
@@ -37,23 +39,54 @@ import { AuthProvider } from './context/AuthContext';
 import { RouterProvider, useRouter } from './context/RouterContext';
 import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
 
-const trending = FABRICS.filter(f => f.sticker === 'Trending' || f.sticker === 'Bestseller').slice(0, 5);
-const newIn = FABRICS.filter(f => f.sticker === 'New In' || f.sticker === 'Limited').slice(0, 5);
-const bridal = FABRICS.filter(f => f.category === 'Silk' || f.category === 'Satin').slice(0, 5);
-const summer = FABRICS.filter(f => f.category === 'Cotton' || f.category === 'Linen').slice(0, 5);
+// Module-level guard so the auto-seed attempt fires at most once per page load
+// regardless of how many Home re-mounts happen during the session.
+let autoSeedAttempted = false;
 
-const Home: React.FC = () => (
-  <main>
-    <Hero />
-    <CategoryStrip />
-    <OffersBanner />
-    <ProductRail eyebrow="Hot on Tresor" title="Trending Weaves" items={trending} bg="white" />
-    <LookbookRail />
-    <ProductRail eyebrow="The Bridal Edit" title="Heritage Silks for the Aisle" items={bridal} ctaCategory="Silk" bg="white" />
-    <ProductRail eyebrow="Just Dropped" title="New In · Limited Bolts" items={newIn} bg="soft" />
-    <ProductRail eyebrow="Summer Lightweights" title="Cottons, Linens & Muslins" items={summer} ctaCategory="Cotton" bg="white" />
-  </main>
-);
+const Home: React.FC = () => {
+  const [products, setProducts] = useState<Fabric[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        if (!autoSeedAttempted) {
+          autoSeedAttempted = true;
+          // seedCatalog is idempotent: it bails out if the collection is non-empty.
+          await seedCatalog(FABRICS as unknown as Record<string, unknown>[]);
+        }
+        const rows = await productsApi.list({ limit: 200 });
+        if (!cancelled) setProducts(rows as unknown as Fabric[]);
+      } catch {
+        if (!cancelled) setProducts([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const { trending, newIn, bridal, summer } = useMemo(() => {
+    const list = products ?? [];
+    return {
+      trending: list.filter(f => f.sticker === 'Trending' || f.sticker === 'Bestseller').slice(0, 5),
+      newIn:    list.filter(f => f.sticker === 'New In' || f.sticker === 'Limited').slice(0, 5),
+      bridal:   list.filter(f => f.category === 'Silk' || f.category === 'Satin').slice(0, 5),
+      summer:   list.filter(f => f.category === 'Cotton' || f.category === 'Linen').slice(0, 5)
+    };
+  }, [products]);
+
+  return (
+    <main>
+      <Hero />
+      <CategoryStrip />
+      <OffersBanner />
+      <ProductRail eyebrow="Hot on Tresor" title="Trending Weaves" items={trending} bg="white" />
+      <LookbookRail />
+      <ProductRail eyebrow="The Bridal Edit" title="Heritage Silks for the Aisle" items={bridal} ctaCategory="Silk" bg="white" />
+      <ProductRail eyebrow="Just Dropped" title="New In · Limited Bolts" items={newIn} bg="soft" />
+      <ProductRail eyebrow="Summer Lightweights" title="Cottons, Linens & Muslins" items={summer} ctaCategory="Cotton" bg="white" />
+    </main>
+  );
+};
 
 const RoutedView: React.FC = () => {
   const { route } = useRouter();

@@ -32,9 +32,17 @@ const ProductRail: React.FC<Props> = ({ title, eyebrow, items, ctaCategory, mast
           </button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
-          {items.slice(0, 5).map(f => <ProductCard key={f.id} fabric={f} />)}
-        </div>
+        {items.length === 0 ? (
+          <div className="border border-dashed border-[color:var(--color-myntra-border)] py-10 px-6 text-center bg-[color:var(--color-myntra-bg-soft)] rounded">
+            <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)]">
+              Catalogue is being curated — check back soon.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
+            {items.slice(0, 5).map(f => <ProductCard key={f.id} fabric={f} />)}
+          </div>
+        )}
       </div>
     </section>
   );

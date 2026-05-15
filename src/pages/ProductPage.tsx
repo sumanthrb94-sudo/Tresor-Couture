@@ -1,13 +1,15 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { ChevronDown, ChevronUp, Heart, MapPin, ShieldCheck, ShoppingBag, Star, Truck, Zap } from 'lucide-react';
-import { FABRICS, formatINR } from '../constants';
+import { formatINR } from '../constants';
 import { useRouter } from '../context/RouterContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import FabricImage from '../components/FabricImage';
 import ProductCard from '../components/ProductCard';
 import ReviewsSection from '../components/ReviewsSection';
+import { productsApi } from '../lib/firebase';
+import type { Fabric } from '../types';
 
 interface Props {
   productId: string;
@@ -17,11 +19,43 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
   const { navigate } = useRouter();
   const { addItem } = useCart();
   const { has: hasWish, toggle: toggleWish } = useWishlist();
-  const fabric = FABRICS.find(f => f.id === productId);
+
+  const [fabric, setFabric] = useState<Fabric | null | undefined>(undefined);
+  const [similar, setSimilar] = useState<Fabric[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setFabric(undefined);
+    (async () => {
+      try {
+        const f = (await productsApi.get(productId)) as unknown as Fabric | null;
+        if (cancelled) return;
+        setFabric(f);
+        if (f) {
+          const peers = (await productsApi.list({ limit: 100 })) as unknown as Fabric[];
+          if (!cancelled) {
+            setSimilar(peers.filter(p => p.id !== f.id && p.category === f.category).slice(0, 5));
+          }
+        } else {
+          setSimilar([]);
+        }
+      } catch {
+        if (!cancelled) setFabric(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [productId]);
 
   const defaultColor = fabric?.colors?.[0]?.name;
   const [selectedColor, setSelectedColor] = useState<string | undefined>(defaultColor);
   const [meters, setMeters] = useState<number>(fabric?.lengthOptions?.[0] ?? 1);
+
+  useEffect(() => {
+    if (fabric) {
+      setSelectedColor(fabric.colors?.[0]?.name);
+      setMeters(fabric.lengthOptions?.[0] ?? 1);
+    }
+  }, [fabric]);
   const [activeImage, setActiveImage] = useState<number>(0);
   const [pin, setPin] = useState('');
   const [pinChecked, setPinChecked] = useState<null | boolean>(null);
@@ -33,6 +67,14 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
     const fallbacks = fabric.gallery?.length ? fabric.gallery : [fabric.image];
     return photos.map((photo, i) => ({ photo, fallback: fallbacks[i] ?? fallbacks[0] ?? fabric.image }));
   }, [fabric]);
+
+  if (fabric === undefined) {
+    return (
+      <main className="pt-[160px] pb-20 min-h-screen flex items-center justify-center bg-white">
+        <div className="w-8 h-8 border-2 border-[color:var(--color-myntra-pink)] border-t-transparent rounded-full animate-spin" aria-label="Loading product" />
+      </main>
+    );
+  }
 
   if (!fabric) {
     return (
@@ -61,8 +103,6 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
     if (/^[0-9]{6}$/.test(pin.trim())) setPinChecked(true);
     else setPinChecked(false);
   };
-
-  const similar = FABRICS.filter(f => f.id !== fabric.id && f.category === fabric.category).slice(0, 5);
 
   return (
     <main className="pt-[100px] pb-12 md:pb-16 bg-white min-h-screen">
