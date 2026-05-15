@@ -4,6 +4,7 @@ import {
   register as fbRegister,
   login as fbLogin,
   loginWithGoogle as fbLoginWithGoogle,
+  resumeGoogleRedirect,
   signOut as fbSignOut,
   onAuth,
   isAdminUser,
@@ -58,6 +59,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (currentUidRef.current !== uid) return;
     setUser(toUser(uid, profile, email));
     setIsAdmin(admin);
+  }, []);
+
+  // Capture the result of a Google sign-in redirect (mobile path) before
+  // onAuth subscribes — otherwise the profile-materialise step might race.
+  useEffect(() => {
+    void resumeGoogleRedirect();
   }, []);
 
   useEffect(() => {

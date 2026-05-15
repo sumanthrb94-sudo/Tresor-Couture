@@ -8,7 +8,7 @@ import PhoneOtpForm from '../components/PhoneOtpForm';
 type Mode = 'email' | 'phone';
 
 const LoginPage: React.FC = () => {
-  const { login } = useAuth();
+  const { login, user, loading } = useAuth();
   const { navigate, hrefFor } = useRouter();
   const [mode, setMode] = useState<Mode>('email');
   const [email, setEmail] = useState('');
@@ -16,6 +16,13 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // If the user signs in via Google redirect (mobile), they bounce back to
+  // this page already authed — route them to /account so they don't stare
+  // at the login form.
+  useEffect(() => {
+    if (!loading && user) navigate({ name: 'account' });
+  }, [user, loading, navigate]);
 
   useEffect(() => {
     if (!error) return;

@@ -19,7 +19,7 @@ const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const PHONE_RE = /^[0-9+\-\s()]{7,}$/;
 
 const RegisterPage: React.FC = () => {
-  const { register } = useAuth();
+  const { register, user, loading } = useAuth();
   const { navigate, hrefFor } = useRouter();
 
   const [mode, setMode] = useState<Mode>('email');
@@ -33,6 +33,10 @@ const RegisterPage: React.FC = () => {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!loading && user) navigate({ name: 'account' });
+  }, [user, loading, navigate]);
 
   useEffect(() => {
     if (!submitError) return;

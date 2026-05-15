@@ -14,6 +14,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   RecaptchaVerifier,
   signInWithPhoneNumber,
@@ -21,7 +23,8 @@ import {
   signOut as fbSignOut,
   onAuthStateChanged,
   updateProfile,
-  type User as FbUser
+  type User as FbUser,
+  type UserCredential
 } from 'firebase/auth';
 import {
   getFirestore,
@@ -83,27 +86,84 @@ export async function login(email: string, password: string) {
 }
 
 /**
- * Google sign-in via popup. On the first login we materialise a
- * /users/{uid} profile doc so the rest of the app (Account page, orders,
- * reviews) can read it without a special-case for Google users.
+ * Mobile browsers (iOS Safari especially, also some Android Chrome configs)
+ * routinely block or break signInWithPopup — the popup gets killed before
+ * Firebase can complete the auth handshake, leaving the user stuck. The
+ * documented fix is signInWithRedirect on those clients; we feature-detect
+ * touch + small viewport as the proxy.
+ */
+const isMobileLikeClient = (): boolean => {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
+  const touch = ('ontouchstart' in window) || (navigator.maxTouchPoints ?? 0) > 0;
+  const narrow = window.innerWidth <= 820;
+  const ua = navigator.userAgent || '';
+  const mobileUa = /Android|iPhone|iPad|iPod|Mobile|BlackBerry|Opera Mini|IEMobile/i.test(ua);
+  return mobileUa || (touch && narrow);
+};
+
+async function materialiseGoogleProfile(user: FbUser) {
+  const existing = await getDoc(doc(db, 'users', user.uid));
+  if (existing.exists()) return;
+  await setDoc(doc(db, 'users', user.uid), {
+    uid:       user.uid,
+    email:     user.email ?? '',
+    fullName:  user.displayName ?? user.email?.split('@')[0] ?? 'Trésor Member',
+    phone:     user.phoneNumber ?? null,
+    role:      'customer' as const,
+    photoURL:  user.photoURL ?? null,
+    createdAt: new Date().toISOString()
+  });
+}
+
+/**
+ * Google sign-in. Uses popup on desktop and signInWithRedirect on mobile
+ * (popups are unreliable there). On the popup path returns the user;
+ * on the redirect path the page navigates away and resumes through
+ * resumeGoogleRedirect() below.
  */
 export async function loginWithGoogle() {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
-  const cred = await signInWithPopup(auth, provider);
-  const existing = await getDoc(doc(db, 'users', cred.user.uid));
-  if (!existing.exists()) {
-    await setDoc(doc(db, 'users', cred.user.uid), {
-      uid:       cred.user.uid,
-      email:     cred.user.email ?? '',
-      fullName:  cred.user.displayName ?? cred.user.email?.split('@')[0] ?? 'Trésor Member',
-      phone:     cred.user.phoneNumber ?? null,
-      role:      'customer' as const,
-      photoURL:  cred.user.photoURL ?? null,
-      createdAt: new Date().toISOString()
-    });
+
+  if (isMobileLikeClient()) {
+    // Stash a flag so the post-redirect resumer knows to finalise.
+    try { window.sessionStorage.setItem('tresor.google.redirect', '1'); } catch { /* ignore */ }
+    await signInWithRedirect(auth, provider);
+    return null; // page navigates away — caller won't see this.
   }
-  return cred.user;
+
+  try {
+    const cred: UserCredential = await signInWithPopup(auth, provider);
+    await materialiseGoogleProfile(cred.user);
+    return cred.user;
+  } catch (err) {
+    const code = (err as { code?: string }).code;
+    // Popup blocked or aborted by environment → fall back to redirect.
+    if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment' || code === 'auth/cancelled-popup-request') {
+      try { window.sessionStorage.setItem('tresor.google.redirect', '1'); } catch { /* ignore */ }
+      await signInWithRedirect(auth, provider);
+      return null;
+    }
+    throw err;
+  }
+}
+
+/**
+ * Call once on app load. If we're returning from a Google redirect, finalise
+ * the sign-in and materialise the profile. Safe to call when no redirect is
+ * pending (returns silently).
+ */
+export async function resumeGoogleRedirect(): Promise<FbUser | null> {
+  try {
+    const result = await getRedirectResult(auth);
+    try { window.sessionStorage.removeItem('tresor.google.redirect'); } catch { /* ignore */ }
+    if (!result) return null;
+    await materialiseGoogleProfile(result.user);
+    return result.user;
+  } catch (err) {
+    console.warn('[auth] resumeGoogleRedirect failed:', (err as Error).message);
+    return null;
+  }
 }
 
 /* ---------- Phone OTP ---------- */
