@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { ChevronDown, MapPin, ShieldCheck, ShoppingBag, Tag, Trash2 } from 'lucide-react';
+import { ChevronDown, MapPin, RefreshCw, ShieldCheck, ShoppingBag, Tag, Trash2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
 import { FABRICS, FREE_SHIPPING_THRESHOLD, formatINR } from '../constants';
 import { couponsApi } from '../lib/firebase';
@@ -11,6 +12,7 @@ import ProductCard from '../components/ProductCard';
 const CartPage: React.FC = () => {
   const { resolved, updateMeters, removeItem, subtotal, shipping, tax, total } = useCart();
   const { add: addWish } = useWishlist();
+  const { user } = useAuth();
   const { navigate } = useRouter();
   const [coupon, setCoupon] = useState('');
   const [couponMsg, setCouponMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -68,9 +70,24 @@ const CartPage: React.FC = () => {
   return (
     <main className="pt-[100px] pb-12 md:pb-16 bg-[color:var(--color-myntra-bg-soft)] min-h-screen">
       <div className="max-w-[1200px] mx-auto px-4 md:px-8 lg:px-10">
-        <h1 className="text-xl md:text-2xl font-extrabold mb-4 text-[color:var(--color-myntra-navy)]">
+        <h1 className="text-xl md:text-2xl font-extrabold mb-2 text-[color:var(--color-myntra-navy)]">
           My Bag <span className="text-[14px] font-medium text-[color:var(--color-myntra-ink-mute)] ml-2">{resolved.length} item{resolved.length === 1 ? '' : 's'}</span>
         </h1>
+
+        {user ? (
+          <p className="text-[12px] text-[color:var(--color-myntra-green)] font-semibold mb-4 inline-flex items-center gap-1.5">
+            <RefreshCw className="w-3.5 h-3.5" /> Synced across your devices
+          </p>
+        ) : (
+          <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] font-semibold mb-4">
+            <button
+              onClick={() => navigate({ name: 'login' })}
+              className="text-[color:var(--color-myntra-pink)] hover:underline"
+            >
+              Sign in to save your bag across devices →
+            </button>
+          </p>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4 lg:gap-6">
           <div className="space-y-3">

@@ -8,6 +8,7 @@ import { useWishlist } from '../context/WishlistContext';
 import FabricImage from '../components/FabricImage';
 import ProductCard from '../components/ProductCard';
 import ReviewsSection from '../components/ReviewsSection';
+import StickyAddToCart from '../components/StickyAddToCart';
 import { productsApi } from '../lib/firebase';
 import type { Fabric } from '../types';
 
@@ -234,6 +235,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
             {/* CTAs */}
             <div className="flex gap-3 mb-7">
               <button
+                id="pdp-add-to-bag"
                 onClick={handleAdd}
                 disabled={meters <= 0 || meters > stock}
                 className="btn-primary flex-1 inline-flex justify-center items-center gap-2"
@@ -351,6 +353,16 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
         {/* Reviews */}
         <ReviewsSection fabricId={fabric.id} />
       </div>
+
+      {/* Mobile-only sticky add-to-bag — appears once the in-card CTA scrolls out of view. */}
+      <StickyAddToCart
+        product={fabric}
+        onAdd={handleAdd}
+        onWishlist={handleWish}
+        wished={wished}
+        disabled={meters <= 0 || meters > stock}
+        triggerId="pdp-add-to-bag"
+      />
     </main>
   );
 };

@@ -1,8 +1,19 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { useAuth } from './AuthContext';
 import { CartItem, Fabric } from '../types';
 import { FABRICS, FREE_SHIPPING_THRESHOLD, SHIPPING_FLAT_RATE, TAX_RATE } from '../constants';
 
 const STORAGE_KEY = 'tresor-cart-v1';
+// Tracks the uid we've already performed the one-time guest-merge for, so a
+// page refresh while signed in doesn't keep re-merging stale localStorage.
+const MERGE_FLAG_KEY = 'tresor-cart-merged-uid';
+// Throttle Firestore writes so a flurry of +/- clicks collapses to one doc
+// write. 600 ms is generous for human input cadence and keeps the free-tier
+// write budget healthy (20k writes/day): even an aggressive editor making
+// 100 mutations in a session costs ~100 writes (one per debounced burst).
+const FIRESTORE_WRITE_DEBOUNCE_MS = 600;
 
 interface CartContextValue {
   items: CartItem[];
@@ -10,6 +21,8 @@ interface CartContextValue {
   updateMeters: (fabricId: string, color: string | undefined, meters: number) => void;
   removeItem: (fabricId: string, color: string | undefined) => void;
   clear: () => void;
+  /** Alias of clear() — semantic name used by checkout/payment flow. */
+  clearCart: () => void;
   itemCount: number;
   meterCount: number;
   subtotal: number;
@@ -36,9 +49,44 @@ const loadCart = (): CartItem[] => {
 const sameLine = (a: CartItem, b: CartItem) =>
   a.fabricId === b.fabricId && (a.color ?? '') === (b.color ?? '');
 
+const mergeLines = (a: CartItem[], b: CartItem[]): CartItem[] => {
+  const out: CartItem[] = [...a];
+  for (const inc of b) {
+    const idx = out.findIndex(x => sameLine(x, inc));
+    if (idx === -1) out.push(inc);
+    else out[idx] = { ...out[idx], meters: out[idx].meters + inc.meters };
+  }
+  return out.filter(x => x.meters > 0);
+};
+
+const sanitiseItems = (raw: unknown): CartItem[] => {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((x): x is CartItem =>
+      !!x && typeof x === 'object'
+      && typeof (x as CartItem).fabricId === 'string'
+      && typeof (x as CartItem).meters === 'number'
+    )
+    .map(x => ({ fabricId: x.fabricId, meters: x.meters, color: x.color }));
+};
+
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
   const [items, setItems] = useState<CartItem[]>(() => loadCart());
 
+  // Source-of-truth gate: while a signed-in user's Firestore doc is still
+  // loading, local edits must NOT push ahead and clobber the remote bag
+  // with a stale snapshot.
+  const remoteReadyRef = useRef(false);
+  // After we adopt an incoming Firestore snapshot, the resulting setItems
+  // would otherwise echo back as a Firestore write. Suppress that one tick.
+  const skipNextSyncRef = useRef(false);
+  const writeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingWriteRef = useRef<CartItem[] | null>(null);
+  const currentUidRef = useRef<string | null>(null);
+
+  // localStorage mirror — always on, so guests and offline signed-in users
+  // both keep working without the network.
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
@@ -46,6 +94,102 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       /* ignore quota errors */
     }
   }, [items]);
+
+  // Firestore subscription + write pipeline. Lives entirely inside the
+  // signed-in branch; signing out tears it down and reverts to localStorage.
+  useEffect(() => {
+    if (!user) {
+      currentUidRef.current = null;
+      remoteReadyRef.current = false;
+      if (writeTimerRef.current) {
+        clearTimeout(writeTimerRef.current);
+        writeTimerRef.current = null;
+      }
+      pendingWriteRef.current = null;
+      // Drop the merge marker so a future sign-in merges from a clean slate.
+      try { localStorage.removeItem(MERGE_FLAG_KEY); } catch { /* ignore */ }
+      return;
+    }
+
+    const uid = user.id;
+    currentUidRef.current = uid;
+    remoteReadyRef.current = false;
+    const cartRef = doc(db, 'carts', uid);
+
+    const unsub = onSnapshot(
+      cartRef,
+      snap => {
+        if (currentUidRef.current !== uid) return; // user changed mid-flight
+        const remoteItems = snap.exists()
+          ? sanitiseItems((snap.data() as { items?: unknown }).items)
+          : [];
+
+        let mergedFlagRaw: string | null = null;
+        try { mergedFlagRaw = localStorage.getItem(MERGE_FLAG_KEY); } catch { /* ignore */ }
+        const alreadyMerged = mergedFlagRaw === uid;
+
+        if (!alreadyMerged) {
+          // ONE-TIME merge of any items the user added as a guest (now in
+          // local state) into whatever Firestore already has. This is the
+          // only place we union the two bags — every subsequent update
+          // treats Firestore as authoritative, so a delete on device A
+          // actually removes the line on device B.
+          const guestItems = loadCart();
+          const merged = mergeLines(remoteItems, guestItems);
+          remoteReadyRef.current = true;
+          // We're about to write `merged` ourselves; suppress the echo.
+          skipNextSyncRef.current = true;
+          setItems(merged);
+          try { localStorage.setItem(MERGE_FLAG_KEY, uid); } catch { /* ignore */ }
+          if (JSON.stringify(merged) !== JSON.stringify(remoteItems)) {
+            void setDoc(
+              cartRef,
+              { uid, items: merged, updatedAt: new Date().toISOString() },
+              { merge: true }
+            ).catch(() => { /* offline / rules — localStorage still works */ });
+          }
+        } else {
+          // Remote is authoritative; adopt it verbatim and don't loop.
+          skipNextSyncRef.current = true;
+          remoteReadyRef.current = true;
+          setItems(remoteItems);
+        }
+      },
+      () => {
+        // Permission/network error — fall back silently to local state.
+        remoteReadyRef.current = true;
+      }
+    );
+
+    return () => {
+      unsub();
+      if (writeTimerRef.current) {
+        clearTimeout(writeTimerRef.current);
+        writeTimerRef.current = null;
+      }
+    };
+  }, [user]);
+
+  // Debounced Firestore write whenever local items change while signed in.
+  useEffect(() => {
+    if (!user || !remoteReadyRef.current) return;
+    if (skipNextSyncRef.current) {
+      skipNextSyncRef.current = false;
+      return;
+    }
+    const uid = user.id;
+    pendingWriteRef.current = items;
+    if (writeTimerRef.current) clearTimeout(writeTimerRef.current);
+    writeTimerRef.current = setTimeout(() => {
+      const snapshot = pendingWriteRef.current ?? items;
+      void setDoc(
+        doc(db, 'carts', uid),
+        { uid, items: snapshot, updatedAt: new Date().toISOString() },
+        { merge: true }
+      ).catch(() => { /* offline — localStorage keeps the bag */ });
+      writeTimerRef.current = null;
+    }, FIRESTORE_WRITE_DEBOUNCE_MS);
+  }, [items, user]);
 
   const addItem = (incoming: CartItem) => {
     setItems(prev => {
@@ -70,6 +214,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const clear = () => setItems([]);
+  const clearCart = clear;
 
   const value = useMemo<CartContextValue>(() => {
     const resolved = items
@@ -92,6 +237,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updateMeters,
       removeItem,
       clear,
+      clearCart,
       itemCount,
       meterCount,
       subtotal,

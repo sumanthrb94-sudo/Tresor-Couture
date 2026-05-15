@@ -92,6 +92,14 @@ service cloud.firestore {
       allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
     }
 
+    /* ---------- carts ---------- */
+    // Each signed-in user owns exactly one cart doc keyed by their uid.
+    // Used by CartContext to sync the bag across devices; guests stay on
+    // localStorage. No public read — carts are private to the owner.
+    match /carts/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
     /* ---------- deny everything else ---------- */
     match /{document=**} {
       allow read, write: if false;
