@@ -21,7 +21,7 @@ export const FABRICS: Fabric[] = [
   {
     id: '1',
     brand: BRAND,
-    name: 'Mashru Silk-Satin Fabric (per meter)',
+    name: 'Mashru Silk-Satin Fabric',
     description:
       'A "permitted" fabric where silk never touches the skin. Hand-woven by the last four families of Mandvi keeping this craft alive. Lustrous satin face on a cotton ground, ideal for jackets, lehengas and cushion covers.',
     pricePerMeter: 4500,
@@ -166,7 +166,6 @@ export const FABRICS: Fabric[] = [
     masterCategory: 'Fabrics',
     origin: 'Chanderi, Madhya Pradesh',
     tags: ['Sheer', 'Lightweight', 'Summer'],
-    sticker: 'Hot Deal',
     colors: [
       { name: 'Powder Pink', hex: '#E8C7C8' },
       { name: 'Mint', hex: '#B6D7C9' },
@@ -213,7 +212,7 @@ export const FABRICS: Fabric[] = [
   {
     id: '7',
     brand: BRAND,
-    name: 'Belgian Linen Fabric (per meter)',
+    name: 'Belgian Linen Fabric',
     description:
       'European flax linen with a crisp hand and natural slub. Ages beautifully and softens with each wash. A modern essential.',
     pricePerMeter: 1850,
@@ -231,7 +230,6 @@ export const FABRICS: Fabric[] = [
     masterCategory: 'Fabrics',
     origin: 'Flanders, Belgium',
     tags: ['Sustainable', 'Modern', 'Everyday'],
-    sticker: 'Hot Deal',
     colors: [
       { name: 'Oat', hex: '#D9CDB3' },
       { name: 'Slate', hex: '#6E747B' },
@@ -295,7 +293,6 @@ export const FABRICS: Fabric[] = [
     masterCategory: 'Fabrics',
     origin: 'Srikalahasti, Andhra Pradesh',
     tags: ['Hand-painted', 'Natural Dyes', 'Story Cloth'],
-    sticker: 'Hot Deal',
     colors: [
       { name: 'Madder Red', hex: '#9B3A2A' },
       { name: 'Indigo', hex: '#2A3F66' }
@@ -441,7 +438,6 @@ export const FABRICS: Fabric[] = [
     subCategory: 'Cotton',
     origin: 'Kolkata, West Bengal',
     tags: ['Undyed', 'Featherlight', 'Dye-Ready'],
-    sticker: 'Hot Deal',
     colors: [{ name: 'Optic White', hex: '#F7F2E8' }],
     lengthOptions: [1, 2, 3, 5, 10],
     widthInches: 44,
@@ -726,7 +722,6 @@ export const FABRICS: Fabric[] = [
     subCategory: 'Knee-length',
     origin: 'Jaipur',
     tags: ['Block Print', 'Daywear', 'Handloom'],
-    sticker: 'Hot Deal',
     colors: [{ name: 'Saffron', hex: '#E2A33A' }],
     widthInches: 0,
     inStockMeters: 16,
@@ -795,7 +790,6 @@ export const FABRICS: Fabric[] = [
     subCategory: 'Co-ords',
     origin: 'Bengaluru',
     tags: ['Co-ord', 'Resort', 'Linen'],
-    sticker: 'Hot Deal',
     colors: [{ name: 'Oat', hex: '#D9CDB3' }],
     widthInches: 0,
     inStockMeters: 22,
@@ -1053,8 +1047,8 @@ export const HERO_BANNERS: HeroBanner[] = [
   {
     id: 'bridal',
     eyebrow: 'WEDDING EDIT · LIVE NOW',
-    title: 'Up to 60% Off Bridal Silks',
-    subtitle: 'Banarasi · Kanjivaram · Patola · Bandhani — shop heritage weaves at festival prices.',
+    title: 'Heritage Bridal Silks',
+    subtitle: 'Banarasi · Kanjivaram · Patola · Bandhani — six families of weavers, one atelier.',
     ctaLabel: 'Shop Bridal',
     ctaCategory: 'Silk',
     bg: 'linear-gradient(135deg,#FBF5EB 0%,#F2E4C4 55%,#E5C97A 100%)',
@@ -1065,8 +1059,8 @@ export const HERO_BANNERS: HeroBanner[] = [
   {
     id: 'summer',
     eyebrow: 'SUMMER LIGHTWEIGHTS',
-    title: 'Flat 50% Off Cottons & Linens',
-    subtitle: 'Jamdani muslin, Belgian linen and Kalamkari — breathe easy this season.',
+    title: 'Cottons & Linens for the Season',
+    subtitle: 'Jamdani muslin, Belgian linen and Kalamkari — breathe easy in heritage weaves.',
     ctaLabel: 'Shop Summer',
     ctaCategory: 'Linen',
     bg: 'linear-gradient(135deg,#FBF6EE 0%,#F0E2C5 55%,#D9C28B 100%)',
@@ -1077,7 +1071,7 @@ export const HERO_BANNERS: HeroBanner[] = [
   {
     id: 'winter',
     eyebrow: 'WARM ESSENTIALS',
-    title: 'Pashmina & Merino · From ₹1,850',
+    title: 'Pashmina & Merino · From the Mountains',
     subtitle: 'Hand-spun cashmere from Ladakh and Super-130s wool from Biella.',
     ctaLabel: 'Shop Wool',
     ctaCategory: 'Wool',
@@ -1104,7 +1098,5 @@ export const CATEGORY_TILES: { name: string; category: string; color: string }[]
 export const OFFER_TICKER: string[] = [
   '⚡ 40-MINUTE DELIVERY IN HYDERABAD ON DESIGNER WEAR',
   'FREE SHIPPING ON ORDERS ABOVE ₹1,999',
-  'FLAT 50% OFF ON BRIDAL SILKS · CODE WEDDING50',
-  'EXTRA 10% OFF ON UPI · CODE UPI10',
   'HAND-CUT IN INDIA · SHIPPED WORLDWIDE'
 ];

@@ -5,14 +5,13 @@ import {
   FABRICS,
   MASTER_CATEGORIES,
   MASTER_CATEGORY_TILES,
-  MASTER_CATEGORY_TREE,
-  discountPct
+  MASTER_CATEGORY_TREE
 } from '../constants';
 import { Fabric, MasterCategory } from '../types';
 import ProductCard from '../components/ProductCard';
 import { useRouter } from '../context/RouterContext';
 
-type SortKey = 'recommended' | 'popularity' | 'discount' | 'price-asc' | 'price-desc' | 'rating' | 'newest';
+type SortKey = 'recommended' | 'popularity' | 'price-asc' | 'price-desc' | 'rating' | 'newest';
 
 interface Props {
   initialCategory?: string;
@@ -24,14 +23,6 @@ const PRICE_BRACKETS = [
   { id: '2000-5000', label: '₹2,000 – ₹5,000', min: 2000, max: 5000 },
   { id: '5000-10000', label: '₹5,000 – ₹10,000', min: 5000, max: 10000 },
   { id: '10000-99999999', label: 'Over ₹10,000', min: 10000, max: Number.MAX_SAFE_INTEGER }
-];
-
-const DISCOUNT_BRACKETS = [
-  { id: '10', label: '10% and above', min: 10 },
-  { id: '20', label: '20% and above', min: 20 },
-  { id: '30', label: '30% and above', min: 30 },
-  { id: '40', label: '40% and above', min: 40 },
-  { id: '50', label: '50% and above', min: 50 }
 ];
 
 const isMasterCategory = (v: string | undefined): v is MasterCategory =>
@@ -75,7 +66,6 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
   const [colors, setColors] = useState<Set<string>>(new Set());
   const [origins, setOrigins] = useState<Set<string>>(new Set());
   const [priceBrackets, setPriceBrackets] = useState<Set<string>>(new Set());
-  const [discountBracket, setDiscountBracket] = useState<string>('');
   const [sort, setSort] = useState<SortKey>('recommended');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
@@ -109,10 +99,6 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
         const ok = PRICE_BRACKETS.some(b => priceBrackets.has(b.id) && f.pricePerMeter >= b.min && f.pricePerMeter < b.max);
         if (!ok) return false;
       }
-      if (discountBracket) {
-        const need = DISCOUNT_BRACKETS.find(b => b.id === discountBracket);
-        if (need && discountPct(f.pricePerMeter, f.mrpPerMeter) < need.min) return false;
-      }
       return true;
     });
 
@@ -121,11 +107,10 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
       case 'price-desc': list = [...list].sort((a, b) => b.pricePerMeter - a.pricePerMeter); break;
       case 'rating': list = [...list].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0)); break;
       case 'popularity': list = [...list].sort((a, b) => (b.reviewCount ?? 0) - (a.reviewCount ?? 0)); break;
-      case 'discount': list = [...list].sort((a, b) => discountPct(b.pricePerMeter, b.mrpPerMeter) - discountPct(a.pricePerMeter, a.mrpPerMeter)); break;
       case 'newest': list = [...list].reverse(); break;
     }
     return list;
-  }, [activeMaster, activeSub, weaveTypes, colors, origins, priceBrackets, discountBracket, sort]);
+  }, [activeMaster, activeSub, weaveTypes, colors, origins, priceBrackets, sort]);
 
   const masterTile = activeMaster ? MASTER_CATEGORY_TILES.find(t => t.name === activeMaster) : null;
   const subOptions = activeMaster ? MASTER_CATEGORY_TREE[activeMaster] : [];
@@ -141,17 +126,12 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
     const b = PRICE_BRACKETS.find(p => p.id === id);
     if (b) activeChips.push({ label: b.label, clear: () => toggleSet(setPriceBrackets, id) });
   });
-  if (discountBracket) {
-    const b = DISCOUNT_BRACKETS.find(d => d.id === discountBracket);
-    if (b) activeChips.push({ label: b.label, clear: () => setDiscountBracket('') });
-  }
 
   const clearAll = () => {
     setWeaveTypes(new Set());
     setColors(new Set());
     setOrigins(new Set());
     setPriceBrackets(new Set());
-    setDiscountBracket('');
   };
 
   const selectMaster = (m: MasterCategory) => {
@@ -208,21 +188,6 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
       <Section title="Price">
         {PRICE_BRACKETS.map(b => (
           <Checkbox key={b.id} checked={priceBrackets.has(b.id)} onChange={() => toggleSet(setPriceBrackets, b.id)} label={b.label} />
-        ))}
-      </Section>
-
-      <Section title="Discount Range">
-        {DISCOUNT_BRACKETS.map(b => (
-          <label key={b.id} className="flex items-center gap-2 text-[13px] cursor-pointer hover:text-[color:var(--color-myntra-pink)]">
-            <input
-              type="radio"
-              name="discount"
-              checked={discountBracket === b.id}
-              onChange={() => setDiscountBracket(discountBracket === b.id ? '' : b.id)}
-              className="accent-[color:var(--color-myntra-pink)] w-4 h-4"
-            />
-            {b.label}
-          </label>
         ))}
       </Section>
 
@@ -308,7 +273,6 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
                 >
                   <option value="recommended">Recommended</option>
                   <option value="popularity">Popularity</option>
-                  <option value="discount">Better Discount</option>
                   <option value="price-asc">Price: Low to High</option>
                   <option value="price-desc">Price: High to Low</option>
                   <option value="rating">Customer Rating</option>

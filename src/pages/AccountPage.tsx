@@ -467,9 +467,6 @@ const WishlistTab: React.FC = () => {
               <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] truncate">{fabric.name}</p>
               <div className="flex items-baseline gap-1.5 mt-1">
                 <span className="text-[13px] font-bold">{formatINR(fabric.pricePerMeter)}</span>
-                {fabric.mrpPerMeter > fabric.pricePerMeter && (
-                  <span className="text-[11px] mrp">{formatINR(fabric.mrpPerMeter)}</span>
-                )}
               </div>
               <div className="mt-3 grid grid-cols-2 gap-1.5">
                 <button

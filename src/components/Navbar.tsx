@@ -11,18 +11,17 @@ import type { MasterCategory } from '../types';
 
 type NavEntry =
   | { kind: 'master'; label: MasterCategory; tone?: 'default' | 'premium' }
-  | { kind: 'static'; label: string; tone?: 'default' | 'sale' | 'premium' };
+  | { kind: 'static'; label: string; tone?: 'default' | 'premium' };
 
 // The two atelier lines ("Couture Customisations" and "Studios Prêt") render with
 // a distinct serif/gold treatment so they read as signature offerings, not regular
-// shop categories. Sale keeps its red/pink tone.
+// shop categories.
 const NAV: NavEntry[] = [
   ...MASTER_CATEGORIES
     .filter(m => m !== 'Studios Prêt')
     .map<NavEntry>(m => ({ kind: 'master', label: m })),
   { kind: 'static', label: 'Couture Customisations', tone: 'premium' },
-  { kind: 'master', label: 'Studios Prêt', tone: 'premium' },
-  { kind: 'static', label: 'Sale', tone: 'sale' }
+  { kind: 'master', label: 'Studios Prêt', tone: 'premium' }
 ];
 
 const Navbar: React.FC = () => {
@@ -209,7 +208,7 @@ const Navbar: React.FC = () => {
                     className={
                       premium
                         ? 'w-full text-left py-3.5 border-b border-[#E8DCC4] bg-[#FBF7EE] -mx-5 px-5 flex items-center gap-2 font-serif italic text-[17px] text-[#8E6520]'
-                        : `w-full text-left py-3 text-[15px] border-b border-[color:var(--color-myntra-border-soft)] ${n.tone === 'sale' ? 'text-[color:var(--color-myntra-pink)] font-bold' : 'font-semibold'}`
+                        : 'w-full text-left py-3 text-[15px] border-b border-[color:var(--color-myntra-border-soft)] font-semibold'
                     }
                   >
                     {premium && <span aria-hidden className="w-1.5 h-1.5 rounded-full bg-[color:var(--color-myntra-pink)]" />}
@@ -311,7 +310,6 @@ const Navbar: React.FC = () => {
                 else goShop();
               };
               const isPremium = n.tone === 'premium';
-              const isSale = n.kind === 'static' && n.tone === 'sale';
               return (
                 <div
                   key={n.label}
@@ -333,9 +331,7 @@ const Navbar: React.FC = () => {
                         : `h-full px-2 xl:px-3 flex items-center whitespace-nowrap text-[11px] xl:text-[13px] font-bold uppercase tracking-[0.04em] transition-colors no-tap-highlight border-b-[3px] ${
                             isActive
                               ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)]'
-                              : isSale
-                                ? 'border-transparent text-[color:var(--color-myntra-pink)] hover:text-[color:var(--color-myntra-pink-dark)]'
-                                : 'border-transparent text-[color:var(--color-myntra-navy)] hover:text-[color:var(--color-myntra-pink)]'
+                              : 'border-transparent text-[color:var(--color-myntra-navy)] hover:text-[color:var(--color-myntra-pink)]'
                           }`
                     }
                   >

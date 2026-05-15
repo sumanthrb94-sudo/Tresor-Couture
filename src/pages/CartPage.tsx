@@ -3,7 +3,7 @@ import { ChevronDown, MapPin, ShieldCheck, ShoppingBag, Tag, Trash2 } from 'luci
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useRouter } from '../context/RouterContext';
-import { FABRICS, FREE_SHIPPING_THRESHOLD, discountPct, formatINR } from '../constants';
+import { FABRICS, FREE_SHIPPING_THRESHOLD, formatINR } from '../constants';
 import FabricImage from '../components/FabricImage';
 import ProductCard from '../components/ProductCard';
 
@@ -31,8 +31,6 @@ const CartPage: React.FC = () => {
     );
   }
 
-  const mrpTotal = resolved.reduce((s, { item, fabric }) => s + fabric.mrpPerMeter * item.meters, 0);
-  const productDiscount = mrpTotal - subtotal;
   const totalAfterCoupon = Math.max(0, total - couponDiscount);
   const remainingForFreeShip = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
 
@@ -85,8 +83,6 @@ const CartPage: React.FC = () => {
             {/* Items */}
             {resolved.map(({ item, fabric }) => {
               const linePrice = item.meters * fabric.pricePerMeter;
-              const lineMrp = item.meters * fabric.mrpPerMeter;
-              const pct = discountPct(fabric.pricePerMeter, fabric.mrpPerMeter);
               const stock = fabric.inStockMeters ?? 999;
               const options = fabric.lengthOptions?.filter(l => l <= stock) ?? [1, 2, 3, 5];
 
@@ -125,12 +121,6 @@ const CartPage: React.FC = () => {
 
                     <div className="flex items-baseline gap-2 flex-wrap mt-2">
                       <span className="text-[15px] font-bold">{formatINR(linePrice)}</span>
-                      {lineMrp > linePrice && (
-                        <>
-                          <span className="text-[13px] mrp">{formatINR(lineMrp)}</span>
-                          <span className="text-[13px] font-bold text-[color:var(--color-myntra-orange)]">({pct}% OFF)</span>
-                        </>
-                      )}
                     </div>
                     <p className="text-[12px] text-[color:var(--color-myntra-green)] font-semibold mt-1">
                       Delivery by {new Date(Date.now() + 5 * 86400000).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} | Free
@@ -200,12 +190,8 @@ const CartPage: React.FC = () => {
 
                 <dl className="space-y-2.5 text-[14px]">
                   <div className="flex justify-between">
-                    <dt className="text-[color:var(--color-myntra-ink)]">Total MRP</dt>
-                    <dd>{formatINR(mrpTotal)}</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-[color:var(--color-myntra-ink)]">Discount on MRP</dt>
-                    <dd className="text-[color:var(--color-myntra-green)]">- {formatINR(productDiscount)}</dd>
+                    <dt className="text-[color:var(--color-myntra-ink)]">Subtotal</dt>
+                    <dd>{formatINR(subtotal)}</dd>
                   </div>
                   {couponDiscount > 0 && (
                     <div className="flex justify-between">

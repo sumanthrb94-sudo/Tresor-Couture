@@ -37,7 +37,7 @@ export interface Fabric {
   origin: string;
   tags: string[];
   /** Optional sticker (e.g. "Trending", "Bestseller", "New In"). */
-  sticker?: 'Trending' | 'Bestseller' | 'New In' | 'Limited' | 'Hot Deal';
+  sticker?: 'Trending' | 'Bestseller' | 'New In' | 'Limited';
   colors?: { name: string; hex: string }[];
   /** Pre-cut length presets shown as "size" pills. */
   lengthOptions?: number[];

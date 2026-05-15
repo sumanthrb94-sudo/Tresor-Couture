@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { ChevronDown, ChevronUp, Heart, MapPin, ShieldCheck, ShoppingBag, Star, Truck, Zap } from 'lucide-react';
-import { FABRICS, discountPct, formatINR } from '../constants';
+import { FABRICS, formatINR } from '../constants';
 import { useRouter } from '../context/RouterContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -45,11 +45,8 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
 
   const stock = fabric.inStockMeters ?? 0;
   const lengthOptions = fabric.lengthOptions ?? [1, 2, 3, 5];
-  const pct = discountPct(fabric.pricePerMeter, fabric.mrpPerMeter);
   const wished = hasWish(fabric.id);
   const linePrice = fabric.pricePerMeter * meters;
-  const lineMrp = fabric.mrpPerMeter * meters;
-  const lineSavings = lineMrp - linePrice;
 
   const handleAdd = () => {
     addItem({ fabricId: fabric.id, meters, color: selectedColor });
@@ -145,17 +142,8 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
 
             <div className="flex items-baseline gap-2 flex-wrap mb-1">
               <span className="text-[24px] font-extrabold text-[color:var(--color-myntra-navy)]">{formatINR(fabric.pricePerMeter)}</span>
-              {fabric.mrpPerMeter > fabric.pricePerMeter && (
-                <>
-                  <span className="text-[15px] mrp">MRP {formatINR(fabric.mrpPerMeter)}</span>
-                  <span className="text-[15px] font-bold text-[color:var(--color-myntra-orange)]">({pct}% OFF)</span>
-                </>
-              )}
             </div>
-            <p className="text-[13px] font-bold text-[color:var(--color-myntra-green)] mb-1">inclusive of all taxes · per meter</p>
-            {lineSavings > 0 && meters > 1 && (
-              <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mb-4">You save {formatINR(lineSavings)} on {meters}m</p>
-            )}
+            <p className="text-[13px] font-bold text-[color:var(--color-myntra-green)] mb-1">inclusive of all taxes</p>
 
             {/* Colour */}
             {fabric.colors && fabric.colors.length > 0 && (

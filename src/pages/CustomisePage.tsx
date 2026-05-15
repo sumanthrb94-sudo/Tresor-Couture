@@ -682,7 +682,7 @@ const CustomisePage: React.FC<{ productId?: string }> = ({ productId }) => {
                           </div>
                           <div className="p-2.5">
                             <p className="text-[11px] font-bold text-[#2A1F12] truncate">{f.name.replace(' Fabric', '').replace(' (per meter)', '')}</p>
-                            <p className="text-[10px] text-[#8A7656]">{formatINR(f.pricePerMeter)}/m</p>
+                            <p className="text-[10px] text-[#8A7656]">{formatINR(f.pricePerMeter)}</p>
                           </div>
                         </button>
                       );
@@ -768,7 +768,7 @@ const CustomisePage: React.FC<{ productId?: string }> = ({ productId }) => {
                       <div className="p-4 bg-[#FBF7EE] rounded">
                         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--color-myntra-pink)] mb-1">Fabric</p>
                         <p className="text-[14px] font-bold text-[#2A1F12]">{fabric.name}</p>
-                        <p className="text-[12px] text-[#8A7656]">{formatINR(fabric.pricePerMeter)} / m · {fabric.origin}</p>
+                        <p className="text-[12px] text-[#8A7656]">{formatINR(fabric.pricePerMeter)} · {fabric.origin}</p>
                       </div>
                     )}
                     <div className="p-4 bg-[#FBF7EE] rounded">

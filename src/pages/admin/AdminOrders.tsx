@@ -248,7 +248,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
                 <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)]">
                   {it.meters.toLocaleString('en-IN')} m
                   {it.color ? ` · ${it.color}` : ''} ·{' '}
-                  {formatINR(it.fabricSnapshot.pricePerMeter)}/m
+                  {formatINR(it.fabricSnapshot.pricePerMeter)}
                 </p>
               </div>
               <p className="text-[13px] font-extrabold text-[color:var(--color-myntra-navy)] tabular-nums shrink-0">

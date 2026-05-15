@@ -22,8 +22,7 @@ const STICKERS: NonNullable<Fabric['sticker']>[] = [
   'Trending',
   'Bestseller',
   'New In',
-  'Limited',
-  'Hot Deal'
+  'Limited'
 ];
 
 const AVAILABLE_PHOTOS: string[] = [
