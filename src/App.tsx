@@ -16,11 +16,15 @@ import ProductPage from './pages/ProductPage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import ConfirmationPage from './pages/ConfirmationPage';
+import AdminLoginPage from './pages/AdminLoginPage';
+import AdminLandingPage from './pages/AdminLandingPage';
+import AdminBrandKitPage from './pages/AdminBrandKitPage';
 import { FABRICS } from './constants';
 import { CartProvider } from './context/CartContext';
 import { OrderProvider } from './context/OrderContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { RouterProvider, useRouter } from './context/RouterContext';
+import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
 
 const trending = FABRICS.filter(f => f.sticker === 'Trending' || f.sticker === 'Bestseller').slice(0, 5);
 const newIn = FABRICS.filter(f => f.sticker === 'New In' || f.sticker === 'Limited').slice(0, 5);
@@ -42,6 +46,7 @@ const Home: React.FC = () => (
 
 const RoutedView: React.FC = () => {
   const { route } = useRouter();
+  const { unlocked } = useAdminAuth();
   switch (route.name) {
     case 'home':
       return <Home />;
@@ -55,23 +60,39 @@ const RoutedView: React.FC = () => {
       return <CheckoutPage />;
     case 'confirmation':
       return <ConfirmationPage orderId={route.orderId} />;
+    case 'admin':
+      return unlocked ? <AdminLandingPage /> : <AdminLoginPage redirectTo="admin" />;
+    case 'admin-brand-kit':
+      return unlocked
+        ? <AdminBrandKitPage section={route.section} />
+        : <AdminLoginPage redirectTo="admin-brand-kit" section={route.section} />;
   }
+};
+
+const Chrome: React.FC = () => {
+  const { route } = useRouter();
+  const isAdmin = route.name === 'admin' || route.name === 'admin-brand-kit';
+  return (
+    <div className="selection:bg-[color:var(--color-myntra-pink)] selection:text-white bg-white min-h-screen">
+      <Navbar />
+      <RoutedView />
+      {!isAdmin && <Footer />}
+    </div>
+  );
 };
 
 function App() {
   return (
     <RouterProvider>
-      <WishlistProvider>
-        <CartProvider>
-          <OrderProvider>
-            <div className="selection:bg-[color:var(--color-myntra-pink)] selection:text-white bg-white min-h-screen">
-              <Navbar />
-              <RoutedView />
-              <Footer />
-            </div>
-          </OrderProvider>
-        </CartProvider>
-      </WishlistProvider>
+      <AdminAuthProvider>
+        <WishlistProvider>
+          <CartProvider>
+            <OrderProvider>
+              <Chrome />
+            </OrderProvider>
+          </CartProvider>
+        </WishlistProvider>
+      </AdminAuthProvider>
     </RouterProvider>
   );
 }

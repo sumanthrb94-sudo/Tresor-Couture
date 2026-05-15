@@ -23,6 +23,11 @@ const parseHash = (hash: string): Route => {
     case 'confirmation':
       if (segments[1]) return { name: 'confirmation', orderId: segments[1] };
       return { name: 'home' };
+    case 'admin':
+      if (segments[1] === 'brand-kit') {
+        return { name: 'admin-brand-kit', section: params.get('section') ?? undefined };
+      }
+      return { name: 'admin' };
     default:
       return { name: 'home' };
   }
@@ -42,6 +47,10 @@ const buildHash = (route: Route): string => {
       return '#/checkout';
     case 'confirmation':
       return `#/confirmation/${route.orderId}`;
+    case 'admin':
+      return '#/admin';
+    case 'admin-brand-kit':
+      return route.section ? `#/admin/brand-kit?section=${encodeURIComponent(route.section)}` : '#/admin/brand-kit';
   }
 };
 

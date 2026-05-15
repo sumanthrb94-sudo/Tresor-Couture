@@ -79,7 +79,15 @@ const Footer: React.FC = () => {
             <span className="inline-flex items-center gap-1.5"><RotateCcw className="w-4 h-4 text-[color:var(--color-myntra-pink)]" /> Easy 30-Day Returns</span>
             <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-[color:var(--color-myntra-pink)]" /> 100% Authentic Weaves</span>
           </div>
-          <p>© {new Date().getFullYear()} Trésor Couture · All rights reserved.</p>
+          <p className="flex items-center gap-4">
+            <span>© {new Date().getFullYear()} Trésor Couture · All rights reserved.</span>
+            <button
+              onClick={() => navigate({ name: 'admin' })}
+              className="text-[11px] tracking-[0.18em] uppercase hover:text-[color:var(--color-myntra-pink)] transition-colors"
+            >
+              Atelier Admin
+            </button>
+          </p>
         </div>
       </div>
     </footer>

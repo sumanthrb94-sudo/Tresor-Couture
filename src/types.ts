@@ -86,4 +86,6 @@ export type Route =
   | { name: 'product'; id: string }
   | { name: 'cart' }
   | { name: 'checkout' }
-  | { name: 'confirmation'; orderId: string };
+  | { name: 'confirmation'; orderId: string }
+  | { name: 'admin' }
+  | { name: 'admin-brand-kit'; section?: string };
