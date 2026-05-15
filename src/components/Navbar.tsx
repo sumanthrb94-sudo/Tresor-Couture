@@ -295,7 +295,7 @@ const Navbar: React.FC = () => {
           </button>
 
           {/* Desktop mega-menu */}
-          <nav className="hidden lg:flex items-stretch gap-0 xl:gap-1 h-full" aria-label="Primary">
+          <nav className="hidden lg:flex items-stretch gap-0 xl:gap-1 h-full min-w-0 flex-shrink overflow-x-auto scrollbar-none" aria-label="Primary">
             {NAV.map(n => {
               const isActive =
                 (n.kind === 'master' && activeCat === n.label) ||
@@ -347,7 +347,7 @@ const Navbar: React.FC = () => {
           </nav>
 
           {/* Search */}
-          <form onSubmit={onSearchSubmit} className="hidden md:block flex-1 max-w-[560px] relative">
+          <form onSubmit={onSearchSubmit} className="hidden md:block lg:hidden xl:block flex-1 min-w-0 max-w-[560px] relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[color:var(--color-myntra-ink-mute)] pointer-events-none" />
             <input
               value={search}

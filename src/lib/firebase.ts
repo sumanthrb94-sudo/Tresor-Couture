@@ -49,7 +49,7 @@ import {
 const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
 
 const firebaseConfig = {
-  apiKey:            env.VITE_FIREBASE_API_KEY            ?? 'AIzaSyAIct4PdHb0YaNCYpLdGxh1kDlukwwc_3M',
+  apiKey:            env.VITE_FIREBASE_API_KEY            ?? 'AIzaSyAIct4PdHbOYaNCYpLdGxh1kDlukwwc_3M',
   authDomain:        env.VITE_FIREBASE_AUTH_DOMAIN        ?? 'tresor-couture.firebaseapp.com',
   projectId:         env.VITE_FIREBASE_PROJECT_ID         ?? 'tresor-couture',
   storageBucket:     env.VITE_FIREBASE_STORAGE_BUCKET     ?? 'tresor-couture.firebasestorage.app',
