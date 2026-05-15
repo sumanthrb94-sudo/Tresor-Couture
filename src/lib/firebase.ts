@@ -15,6 +15,9 @@ import {
   createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  type ConfirmationResult,
   signOut as fbSignOut,
   onAuthStateChanged,
   updateProfile,
@@ -103,6 +106,53 @@ export async function loginWithGoogle() {
   return cred.user;
 }
 
+/* ---------- Phone OTP ---------- */
+
+let recaptcha: RecaptchaVerifier | null = null;
+let pendingConfirmation: ConfirmationResult | null = null;
+
+/**
+ * Render an invisible reCAPTCHA into the given DOM element id, ONCE.
+ * The element is required by Firebase before any phone-auth call.
+ */
+function ensureRecaptcha(containerId: string) {
+  if (recaptcha) return recaptcha;
+  recaptcha = new RecaptchaVerifier(auth, containerId, { size: 'invisible' });
+  return recaptcha;
+}
+
+/**
+ * Step 1 of phone login. Triggers Firebase to send an SMS to the number.
+ * Returns nothing; call confirmPhoneCode() after the user enters the OTP.
+ */
+export async function sendPhoneCode(e164PhoneNumber: string, recaptchaContainerId: string) {
+  const verifier = ensureRecaptcha(recaptchaContainerId);
+  pendingConfirmation = await signInWithPhoneNumber(auth, e164PhoneNumber, verifier);
+}
+
+/**
+ * Step 2: confirms the OTP code the user typed in. Materialises a profile
+ * doc on first sign-in (mirrors the Google flow).
+ */
+export async function confirmPhoneCode(code: string) {
+  if (!pendingConfirmation) throw new Error('No pending OTP. Call sendPhoneCode() first.');
+  const cred = await pendingConfirmation.confirm(code);
+  pendingConfirmation = null;
+  const profileDoc = doc(db, 'users', cred.user.uid);
+  const existing = await getDoc(profileDoc);
+  if (!existing.exists()) {
+    await setDoc(profileDoc, {
+      uid:       cred.user.uid,
+      email:     cred.user.email ?? '',
+      fullName:  cred.user.displayName ?? cred.user.phoneNumber ?? 'Trésor Member',
+      phone:     cred.user.phoneNumber ?? null,
+      role:      'customer' as const,
+      createdAt: new Date().toISOString()
+    });
+  }
+  return cred.user;
+}
+
 export const signOut = () => fbSignOut(auth);
 
 export function onAuth(cb: (user: FbUser | null) => void) {
@@ -134,6 +184,25 @@ async function getOne<T>(name: string, id: string): Promise<(T & { id: string })
 /* ------------------------------------------------------------------ */
 /*  Resource APIs                                                     */
 /* ------------------------------------------------------------------ */
+
+/**
+ * One-shot bulk import. Used by the admin "Seed catalog" button to push the
+ * in-repo FABRICS array into Firestore on first run, so the storefront
+ * doesn't show empty rails before any product is added through the CRUD.
+ * Idempotent — checks the products collection size and bails if already
+ * populated, unless `force: true` is passed.
+ */
+export async function seedCatalog(items: DocumentData[], opts: { force?: boolean } = {}): Promise<{ seeded: number; skipped: boolean }> {
+  const existing = await getDocs(query(collection(db, 'products'), qLimit(1)));
+  if (!existing.empty && !opts.force) return { seeded: 0, skipped: true };
+  let seeded = 0;
+  for (const it of items) {
+    const ref = doc(collection(db, 'products'));
+    await setDoc(ref, { ...it, id: ref.id, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+    seeded += 1;
+  }
+  return { seeded, skipped: false };
+}
 
 export const productsApi = {
   list:   (opts: { masterCategory?: string; subCategory?: string; limit?: number } = {}) => {

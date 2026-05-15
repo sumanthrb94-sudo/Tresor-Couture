@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronDown, Heart, LayoutDashboard, Menu, Search, ShoppingBag, User, X } from 'lucide-react';
+import { ChevronDown, Heart, LayoutDashboard, LogOut, Menu, Search, ShoppingBag, User, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
@@ -27,7 +27,7 @@ const NAV: NavEntry[] = [
 const Navbar: React.FC = () => {
   const { itemCount } = useCart();
   const { count: wishCount } = useWishlist();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
   const { navigate, route } = useRouter();
 
   const [search, setSearch] = useState('');
@@ -432,6 +432,16 @@ const Navbar: React.FC = () => {
                           className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)] text-[color:var(--color-myntra-pink)] font-bold flex items-center gap-2"
                         >
                           <LayoutDashboard className="w-4 h-4" /> Admin Console
+                        </button>
+                      </li>
+                    )}
+                    {user && (
+                      <li className="border-t border-[color:var(--color-myntra-border-soft)] mt-1 pt-1">
+                        <button
+                          onClick={() => { setProfileOpen(false); logout(); navigate({ name: 'home' }); }}
+                          className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)] flex items-center gap-2 text-[color:var(--color-myntra-ink-soft)] hover:text-[color:var(--color-myntra-pink)]"
+                        >
+                          <LogOut className="w-4 h-4" /> Sign out
                         </button>
                       </li>
                     )}
