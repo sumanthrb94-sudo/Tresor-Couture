@@ -11,7 +11,8 @@ const parseHash = (hash: string): Route => {
   switch (segments[0]) {
     case 'shop': {
       const category = params.get('category') ?? undefined;
-      return { name: 'shop', category };
+      const subCategory = params.get('subcategory') ?? undefined;
+      return { name: 'shop', category, subCategory };
     }
     case 'product':
       if (segments[1]) return { name: 'product', id: segments[1] };
@@ -53,8 +54,12 @@ const buildHash = (route: Route): string => {
   switch (route.name) {
     case 'home':
       return '#/';
-    case 'shop':
-      return route.category ? `#/shop?category=${encodeURIComponent(route.category)}` : '#/shop';
+    case 'shop': {
+      const parts: string[] = [];
+      if (route.category) parts.push(`category=${encodeURIComponent(route.category)}`);
+      if (route.subCategory) parts.push(`subcategory=${encodeURIComponent(route.subCategory)}`);
+      return parts.length ? `#/shop?${parts.join('&')}` : '#/shop';
+    }
     case 'product':
       return `#/product/${route.id}`;
     case 'cart':

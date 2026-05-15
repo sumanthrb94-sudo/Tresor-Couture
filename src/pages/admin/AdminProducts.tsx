@@ -204,6 +204,8 @@ const draftToFabric = (d: Draft, existing?: Fabric): Fabric => {
     image: existing?.image ?? photo,
     gallery: existing?.gallery,
     category: (d.category || 'Silk') as Fabric['category'],
+    masterCategory: existing?.masterCategory ?? 'Fabrics',
+    subCategory: existing?.subCategory,
     origin: d.origin.trim(),
     tags,
     sticker: d.sticker || undefined,

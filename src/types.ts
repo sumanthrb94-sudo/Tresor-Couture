@@ -1,3 +1,16 @@
+/**
+ * Top-level catalogue sections surfaced in the Navbar, CategoryStrip and
+ * mobile drawer. Subcategories live in `MASTER_CATEGORY_TREE` in constants.ts.
+ */
+export type MasterCategory =
+  | 'Fabrics'
+  | 'Dyeable Fabrics'
+  | 'Sarees'
+  | 'Lehenga Cholis'
+  | 'Anarkalis'
+  | 'Western Wear'
+  | 'Designer Wear';
+
 export interface Fabric {
   id: string;
   /** Brand label shown in Myntra-style cards (uppercase, bold). */
@@ -15,7 +28,12 @@ export interface Fabric {
   /** Guaranteed-loading SVG fabric swatch used as onError fallback. */
   image: string;
   gallery?: string[];
+  /** Fabric weave / base material — kept for filter facets and garment material. */
   category: 'Silk' | 'Cotton' | 'Wool' | 'Linen' | 'Mixed' | 'Satin';
+  /** Top-level catalogue section. Drives the navbar + category strip. */
+  masterCategory: MasterCategory;
+  /** Secondary classification under a master category (e.g. "Half Sarees"). */
+  subCategory?: string;
   origin: string;
   tags: string[];
   /** Optional sticker (e.g. "Trending", "Bestseller", "New In"). */
@@ -146,7 +164,7 @@ export interface Review {
 
 export type Route =
   | { name: 'home' }
-  | { name: 'shop'; category?: string }
+  | { name: 'shop'; category?: string; subCategory?: string }
   | { name: 'product'; id: string }
   | { name: 'cart' }
   | { name: 'checkout' }

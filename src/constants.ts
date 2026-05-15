@@ -1,4 +1,5 @@
 import { Fabric, Collection, Testimonial } from './types';
+import type { MasterCategory } from './types';
 import { fabricSwatch } from './lib/swatch';
 import { photoUrl, SOURCES } from './lib/photo';
 
@@ -34,6 +35,7 @@ export const FABRICS: Fabric[] = [
       swatch('f1c', '#F2EBDD', '#C5A059', '#7A1F2C', 'satin', 'Mashru Silk-Satin', 'Ivory')
     ],
     category: 'Satin',
+    masterCategory: 'Fabrics',
     origin: 'Mandvi, Gujarat',
     tags: ['Endangered', 'Handloom', 'Heritage'],
     sticker: 'Bestseller',
@@ -66,6 +68,7 @@ export const FABRICS: Fabric[] = [
       swatch('f2c', '#C5A059', '#7A1F2C', '#F2EBDD', 'brocade', 'Real Zari Banarasi', 'Gold')
     ],
     category: 'Silk',
+    masterCategory: 'Fabrics',
     origin: 'Varanasi',
     tags: ['Royal Heritage', 'Silver Thread', 'Authentic'],
     sticker: 'Trending',
@@ -97,6 +100,7 @@ export const FABRICS: Fabric[] = [
       swatch('f3b', '#1E3A8A', '#C5A059', '#F2EBDD', 'ikat', 'Patan Patola', 'Royal Blue')
     ],
     category: 'Silk',
+    masterCategory: 'Fabrics',
     origin: 'Patan, Gujarat',
     tags: ['Rarest', 'Double Ikkat', 'Museum Grade'],
     sticker: 'Limited',
@@ -127,6 +131,7 @@ export const FABRICS: Fabric[] = [
       swatch('f4b', '#B5B8B1', '#EDE7DA', '#7A7A4F', 'jamdani', 'Dhakai Jamdani', 'Mist Grey')
     ],
     category: 'Cotton',
+    masterCategory: 'Fabrics',
     origin: 'West Bengal',
     tags: ['Ethereal', 'Ancient Craft', 'Hand-spun'],
     sticker: 'New In',
@@ -158,6 +163,7 @@ export const FABRICS: Fabric[] = [
       swatch('f5c', '#E5D3A8', '#C5A059', '#7A1F2C', 'plain', 'Chanderi', 'Champagne')
     ],
     category: 'Mixed',
+    masterCategory: 'Fabrics',
     origin: 'Chanderi, Madhya Pradesh',
     tags: ['Sheer', 'Lightweight', 'Summer'],
     sticker: 'Hot Deal',
@@ -189,6 +195,7 @@ export const FABRICS: Fabric[] = [
       swatch('f6b', '#3A3A3A', '#D8C8AE', '#C5A059', 'twill', 'Pashmina', 'Charcoal')
     ],
     category: 'Wool',
+    masterCategory: 'Fabrics',
     origin: 'Ladakh',
     tags: ['Heirloom', 'Hand-spun', 'Winter'],
     sticker: 'Bestseller',
@@ -221,6 +228,7 @@ export const FABRICS: Fabric[] = [
       swatch('f7d', '#F2EBDD', '#D9CDB3', '#7A7A4F', 'plain', 'Belgian Linen', 'Ivory')
     ],
     category: 'Linen',
+    masterCategory: 'Fabrics',
     origin: 'Flanders, Belgium',
     tags: ['Sustainable', 'Modern', 'Everyday'],
     sticker: 'Hot Deal',
@@ -253,6 +261,7 @@ export const FABRICS: Fabric[] = [
       swatch('f8b', '#C9266B', '#C5A059', '#F2EBDD', 'kanjivaram', 'Kanjivaram', 'Rani Pink')
     ],
     category: 'Silk',
+    masterCategory: 'Fabrics',
     origin: 'Kanchipuram, Tamil Nadu',
     tags: ['Bridal', 'Temple Border', 'Mulberry'],
     sticker: 'Trending',
@@ -283,6 +292,7 @@ export const FABRICS: Fabric[] = [
       swatch('f9b', '#2A3F66', '#9B3A2A', '#F2EBDD', 'kalamkari', 'Kalamkari', 'Indigo')
     ],
     category: 'Cotton',
+    masterCategory: 'Fabrics',
     origin: 'Srikalahasti, Andhra Pradesh',
     tags: ['Hand-painted', 'Natural Dyes', 'Story Cloth'],
     sticker: 'Hot Deal',
@@ -314,6 +324,7 @@ export const FABRICS: Fabric[] = [
       swatch('f10c', '#9A958A', '#3A3A3A', '#C5A059', 'twill', 'Italian Merino', 'Stone')
     ],
     category: 'Wool',
+    masterCategory: 'Fabrics',
     origin: 'Biella, Italy',
     tags: ['Suiting', 'Super 130s', 'Bespoke'],
     sticker: 'Bestseller',
@@ -345,6 +356,7 @@ export const FABRICS: Fabric[] = [
       swatch('f11b', '#D6A93B', '#C8312B', '#F2EBDD', 'tie-dye', 'Bandhani', 'Mustard')
     ],
     category: 'Silk',
+    masterCategory: 'Fabrics',
     origin: 'Kutch, Gujarat',
     tags: ['Tie-Dye', 'Festive', 'Hand-knotted'],
     sticker: 'Trending',
@@ -375,6 +387,7 @@ export const FABRICS: Fabric[] = [
       swatch('f12b', '#A6B89A', '#E7DFCF', '#C5A059', 'plain', 'Linen-Silk', 'Sage')
     ],
     category: 'Mixed',
+    masterCategory: 'Fabrics',
     origin: 'Bhagalpur',
     tags: ['Blend', 'Drape', 'Versatile'],
     sticker: 'New In',
@@ -444,7 +457,51 @@ export const TESTIMONIALS: Testimonial[] = [
   }
 ];
 
+/**
+ * Legacy weave-type filter values (silk / cotton / etc). Used as facet filters
+ * INSIDE the "Fabrics" master category.
+ */
 export const CATEGORIES: Fabric['category'][] = ['Silk', 'Cotton', 'Wool', 'Linen', 'Satin', 'Mixed'];
+
+/**
+ * The seven top-level catalogue sections. These drive the navbar mega-menu,
+ * the home-page CategoryStrip, the mobile drawer and the shop filter UI.
+ */
+export const MASTER_CATEGORIES: MasterCategory[] = [
+  'Fabrics',
+  'Dyeable Fabrics',
+  'Sarees',
+  'Lehenga Cholis',
+  'Anarkalis',
+  'Western Wear',
+  'Designer Wear'
+];
+
+/**
+ * Hierarchical taxonomy: each master category may have sub-categories that
+ * surface as a second-tier filter (Half Sarees under Sarees, weave types
+ * under Fabrics, etc.).
+ */
+export const MASTER_CATEGORY_TREE: Record<MasterCategory, string[]> = {
+  Fabrics: ['Silk', 'Cotton', 'Wool', 'Linen', 'Satin', 'Mixed'],
+  'Dyeable Fabrics': ['Cotton', 'Silk', 'Linen', 'Mixed'],
+  Sarees: ['Half Sarees', 'Banarasi', 'Kanjivaram', 'Patola', 'Bandhani', 'Jamdani', 'Mashru'],
+  'Lehenga Cholis': ['Bridal', 'Festive', 'Contemporary'],
+  Anarkalis: ['Floor-length', 'Knee-length', 'Embroidered'],
+  'Western Wear': ['Dresses', 'Tops', 'Co-ords', 'Jumpsuits'],
+  'Designer Wear': ['Couture', 'Limited Edition', 'Made-to-Measure']
+};
+
+/** Tile metadata for the home-page CategoryStrip and navbar mega-menu. */
+export const MASTER_CATEGORY_TILES: { name: MasterCategory; color: string; tagline: string }[] = [
+  { name: 'Fabrics',          color: '#E5C97A', tagline: 'Hand-loomed by the metre' },
+  { name: 'Dyeable Fabrics',  color: '#F2E4C4', tagline: 'Ready for your palette' },
+  { name: 'Sarees',           color: '#C9A267', tagline: 'Six yards of heritage' },
+  { name: 'Lehenga Cholis',   color: '#D9B26B', tagline: 'For the aisle and after' },
+  { name: 'Anarkalis',        color: '#E0BFA0', tagline: 'Royal silhouettes, modern cuts' },
+  { name: 'Western Wear',     color: '#CBC0A7', tagline: 'East-West edit' },
+  { name: 'Designer Wear',    color: '#B8915A', tagline: 'Couture, signed at the selvedge' }
+];
 
 export const SHIPPING_FLAT_RATE = 99;
 export const FREE_SHIPPING_THRESHOLD = 1999;
