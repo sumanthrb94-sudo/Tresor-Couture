@@ -13,3 +13,6 @@ firebase-debug.log
 firebase-debug.*.log
 functions/lib/
 functions/node_modules/
+
+# Newman / Postman run artefacts — regenerated locally, not part of source.
+postman/run-report.json
