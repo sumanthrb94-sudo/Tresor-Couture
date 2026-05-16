@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "seed": "tsx scripts/seed-firestore.ts",
+    "seed:force": "tsx scripts/seed-firestore.ts --force"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",
@@ -25,7 +27,9 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.21",
+    "firebase-admin": "^13.10.0",
     "tailwindcss": "^4.1.14",
+    "tsx": "^4.22.0",
     "typescript": "~5.8.2"
   }
 }
