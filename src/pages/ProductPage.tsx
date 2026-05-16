@@ -59,20 +59,36 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
     return () => { cancelled = true; };
   }, [productId, reloadKey]);
 
-  const defaultColor = fabric?.colors?.[0]?.name;
-  const [selectedColor, setSelectedColor] = useState<string | undefined>(defaultColor);
+  const [selectedColor, setSelectedColor] = useState<string | undefined>(fabric?.colors?.[0]?.name);
   const [meters, setMeters] = useState<number>(fabric?.lengthOptions?.[0] ?? 1);
-
-  useEffect(() => {
-    if (fabric) {
-      setSelectedColor(fabric.colors?.[0]?.name);
-      setMeters(fabric.lengthOptions?.[0] ?? 1);
-    }
-  }, [fabric]);
   const [activeImage, setActiveImage] = useState<number>(0);
   const [pin, setPin] = useState('');
   const [pinChecked, setPinChecked] = useState<null | boolean>(null);
   const [openSection, setOpenSection] = useState<'specs' | 'care' | 'delivery' | null>('specs');
+
+  // Re-sync defaults when the fabric finishes loading or changes. Resetting
+  // activeImage here is essential — without it, navigating from a 5-photo
+  // PDP to a 1-photo PDP would leave activeImage at 4 and crash on
+  // gallery[activeImage].photo below.
+  useEffect(() => {
+    if (fabric) {
+      setSelectedColor(fabric.colors?.[0]?.name);
+      setMeters(fabric.lengthOptions?.[0] ?? 1);
+      setActiveImage(0);
+    }
+  }, [fabric]);
+
+  // Brief visual confirmation before bouncing to /cart — gives the user a
+  // beat to register that the action took effect (and softens slow networks).
+  // These hooks MUST live above the conditional early returns below, otherwise
+  // the loading→loaded transition changes the hook count and React throws
+  // "Rendered more hooks than during the previous render" — which is exactly
+  // what was crashing the PDP into the ErrorBoundary fallback.
+  const [justAdded, setJustAdded] = useState(false);
+  const addTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (addTimerRef.current) clearTimeout(addTimerRef.current);
+  }, []);
 
   const gallery = useMemo(() => {
     if (!fabric) return [] as { photo: string; fallback: string }[];
@@ -140,15 +156,6 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
   const stock = fabric.inStockMeters ?? 0;
   const lengthOptions = fabric.lengthOptions ?? [1, 2, 3, 5];
   const wished = hasWish(fabric.id);
-  const linePrice = fabric.pricePerMeter * meters;
-
-  // Brief visual confirmation before bouncing to /cart — gives the user a
-  // beat to register that the action took effect (and softens slow networks).
-  const [justAdded, setJustAdded] = useState(false);
-  const addTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => {
-    if (addTimerRef.current) clearTimeout(addTimerRef.current);
-  }, []);
 
   const handleAdd = () => {
     if (!fabric) return;
