@@ -25,7 +25,7 @@ import { FABRICS, formatINR } from '../constants';
 import FabricImage from '../components/FabricImage';
 import OrderStatusTracker from '../components/OrderStatusTracker';
 import AddressBookEditor from '../components/AddressBookEditor';
-import { auth } from '../lib/firebase';
+import { auth, ordersApi } from '../lib/firebase';
 import type { Order, OrderStatus } from '../types';
 
 type Tab = 'profile' | 'orders' | 'wishlist' | 'addresses';
@@ -416,6 +416,18 @@ const ProfileTab: React.FC = () => {
 
 /* ─────────── Orders tab ─────────── */
 
+const OrderSkeleton: React.FC = () => (
+  <div className="bg-white border border-[color:var(--color-myntra-border-soft)] p-4 flex gap-4 animate-pulse">
+    <div className="w-16 h-20 md:w-20 md:h-24 shrink-0 bg-[color:var(--color-myntra-bg-soft)]" />
+    <div className="flex-1 space-y-2">
+      <div className="h-3 w-24 bg-[color:var(--color-myntra-bg-soft)]" />
+      <div className="h-4 w-40 bg-[color:var(--color-myntra-bg-soft)]" />
+      <div className="h-3 w-56 bg-[color:var(--color-myntra-bg-soft)]" />
+      <div className="h-4 w-20 bg-[color:var(--color-myntra-bg-soft)] mt-3" />
+    </div>
+  </div>
+);
+
 const OrdersTab: React.FC = () => {
   const { user } = useAuth();
   const { orders, loading, error, refresh } = useOrders();
@@ -423,6 +435,8 @@ const OrdersTab: React.FC = () => {
   const { addItem } = useCart();
   const [expanded, setExpanded] = useState<string | null>(null);
   const [reordered, setReordered] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState<string | null>(null);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   // ordersApi.mine() already filters/sorts server-side, so the rows arrive
   // ready to render — no client-side userId filter needed.
@@ -436,14 +450,10 @@ const OrdersTab: React.FC = () => {
 
   if (loading && myOrders.length === 0) {
     return (
-      <div className="bg-white border border-[color:var(--color-myntra-border-soft)] px-6 py-12 text-center">
-        <div className="inline-flex flex-col items-center gap-3 text-[color:var(--color-myntra-ink-soft)]">
-          <span
-            className="inline-block w-6 h-6 border-2 border-[color:var(--color-myntra-border)] border-t-[color:var(--color-myntra-pink)] rounded-full animate-spin"
-            aria-hidden
-          />
-          <p className="text-[13px] font-semibold">Loading your orders…</p>
-        </div>
+      <div className="space-y-3" aria-busy="true" aria-live="polite">
+        <OrderSkeleton />
+        <OrderSkeleton />
+        <OrderSkeleton />
       </div>
     );
   }
@@ -467,10 +477,10 @@ const OrdersTab: React.FC = () => {
           No orders yet
         </h2>
         <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)] mb-5">
-          When you place your first order, you&apos;ll find it here.
+          Start your first commission and your orders will live here.
         </p>
         <button onClick={() => navigate({ name: 'shop' })} className="btn-primary">
-          Start Shopping
+          Shop Now
         </button>
       </div>
     );
@@ -479,6 +489,23 @@ const OrdersTab: React.FC = () => {
   const reorder = (order: Order) => {
     order.items.forEach(it => addItem({ fabricId: it.fabricId, meters: it.meters, color: it.color }));
     setReordered(order.id);
+    // Slight delay so the user sees the "added" toast before we whisk them away.
+    window.setTimeout(() => navigate({ name: 'cart' }), 350);
+  };
+
+  const cancelOrder = async (order: Order) => {
+    const ok = window.confirm(`Cancel order ${shortOrderId(order.id)}? This cannot be undone.`);
+    if (!ok) return;
+    setCancelError(null);
+    setCancelling(order.id);
+    try {
+      await ordersApi.setStatus(order.id, 'cancelled');
+      await refresh();
+    } catch (err) {
+      setCancelError(err instanceof Error ? err.message : 'Unable to cancel this order.');
+    } finally {
+      setCancelling(null);
+    }
   };
 
   return (
@@ -498,6 +525,7 @@ const OrdersTab: React.FC = () => {
         const firstItem = order.items[0]?.fabricSnapshot;
         const isOpen = expanded === order.id;
         const eta = !isCancelled && !isDelivered ? computeEta(order) : null;
+        const canCancel = status === 'placed' || status === 'processing';
 
         return (
           <article
@@ -556,7 +584,7 @@ const OrdersTab: React.FC = () => {
 
                 <div className="flex items-center justify-between mt-3 gap-2 flex-wrap">
                   <p className="text-[14px] font-extrabold">{formatINR(order.total)}</p>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-wrap">
                     <button
                       onClick={() => reorder(order)}
                       className="text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] inline-flex items-center gap-1 hover:text-[color:var(--color-myntra-pink)]"
@@ -564,6 +592,16 @@ const OrdersTab: React.FC = () => {
                       <RotateCw className="w-3.5 h-3.5" />
                       Reorder
                     </button>
+                    {canCancel && (
+                      <button
+                        onClick={() => void cancelOrder(order)}
+                        disabled={cancelling === order.id}
+                        className="text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-pink)] inline-flex items-center gap-1 hover:underline disabled:opacity-50"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        {cancelling === order.id ? 'Cancelling…' : 'Cancel'}
+                      </button>
+                    )}
                     {!isCancelled && (
                       <button
                         onClick={() => setExpanded(isOpen ? null : order.id)}
@@ -591,7 +629,15 @@ const OrdersTab: React.FC = () => {
                     role="status"
                     className="text-[12px] font-semibold text-[color:var(--color-myntra-green)] mt-2"
                   >
-                    Items added to your bag.
+                    Items added to your bag — taking you there…
+                  </p>
+                )}
+                {cancelError && cancelling === order.id && (
+                  <p
+                    role="alert"
+                    className="text-[12px] font-semibold text-[color:var(--color-myntra-pink)] mt-2"
+                  >
+                    {cancelError}
                   </p>
                 )}
               </div>
@@ -682,26 +728,42 @@ const WishlistTab: React.FC = () => {
   const { addItem } = useCart();
   const { navigate } = useRouter();
 
+  // Prefer the context's `resolved` (hydrated from Firestore + seed) so
+  // wishlist works for products that aren't in the static FABRICS array.
+  // Fall back to the seed lookup for safety during context warm-up.
   const items = useMemo(
     () =>
-      wishlist.ids
-        .map(id => FABRICS.find(f => f.id === id))
-        .filter((f): f is NonNullable<typeof f> => Boolean(f)),
-    [wishlist.ids]
+      wishlist.resolved.length > 0
+        ? wishlist.resolved
+        : wishlist.ids
+            .map(id => FABRICS.find(f => f.id === id))
+            .filter((f): f is NonNullable<typeof f> => Boolean(f)),
+    [wishlist.resolved, wishlist.ids]
   );
+
+  if (items.length === 0 && wishlist.resolving) {
+    return (
+      <div className="bg-white border border-[color:var(--color-myntra-border-soft)] px-6 py-12 text-center">
+        <span
+          className="inline-block w-6 h-6 border-2 border-[color:var(--color-myntra-border)] border-t-[color:var(--color-myntra-pink)] rounded-full animate-spin"
+          aria-label="Loading wishlist"
+        />
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
       <div className="bg-white border border-[color:var(--color-myntra-border-soft)] px-6 py-12 text-center">
         <Heart className="w-12 h-12 mx-auto text-[color:var(--color-myntra-ink-mute)] mb-4" />
         <h2 className="text-[16px] font-extrabold uppercase tracking-wider mb-1 text-[color:var(--color-myntra-navy)]">
-          Your wishlist is empty
+          Save fabrics you love
         </h2>
         <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)] mb-5">
           Tap the heart on any fabric to keep it close.
         </p>
         <button onClick={() => navigate({ name: 'shop' })} className="btn-primary">
-          Discover Fabrics
+          Browse
         </button>
       </div>
     );
