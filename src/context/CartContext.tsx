@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db, productsApi } from '../lib/firebase';
 import { useAuth } from './AuthContext';
 import { CartItem, Fabric } from '../types';
 import { FABRICS, FREE_SHIPPING_THRESHOLD, SHIPPING_FLAT_RATE, TAX_RATE } from '../constants';
@@ -30,6 +30,9 @@ interface CartContextValue {
   tax: number;
   total: number;
   resolved: { item: CartItem; fabric: Fabric }[];
+  /** True while we're still fetching product details for cart items from
+   *  Firestore. Use to gate the "empty cart" UI so it doesn't flash. */
+  resolving: boolean;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -84,6 +87,39 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const writeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingWriteRef = useRef<CartItem[] | null>(null);
   const currentUidRef = useRef<string | null>(null);
+
+  // Product details cache — cart items only store the fabricId, so we resolve
+  // the rest from Firestore on demand. FABRICS (static seed) is the fallback
+  // for legacy cart entries that predate the Firestore migration.
+  const [productCache, setProductCache] = useState<Map<string, Fabric>>(() => {
+    const m = new Map<string, Fabric>();
+    for (const f of FABRICS) m.set(f.id, f);
+    return m;
+  });
+  const [resolving, setResolving] = useState(false);
+
+  useEffect(() => {
+    const missingIds = Array.from(new Set(items.map(i => i.fabricId))).filter(id => !productCache.has(id));
+    if (missingIds.length === 0) {
+      setResolving(false);
+      return;
+    }
+    let cancelled = false;
+    setResolving(true);
+    (async () => {
+      const fetched = await Promise.all(missingIds.map(id => productsApi.get(id).catch(() => null)));
+      if (cancelled) return;
+      setProductCache(prev => {
+        const next = new Map(prev);
+        fetched.forEach((p, i) => {
+          if (p) next.set(missingIds[i], p as unknown as Fabric);
+        });
+        return next;
+      });
+      setResolving(false);
+    })();
+    return () => { cancelled = true; };
+  }, [items, productCache]);
 
   // localStorage mirror — always on, so guests and offline signed-in users
   // both keep working without the network.
@@ -219,7 +255,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const value = useMemo<CartContextValue>(() => {
     const resolved = items
       .map(item => {
-        const fabric = FABRICS.find(f => f.id === item.fabricId);
+        const fabric = productCache.get(item.fabricId);
         return fabric ? { item, fabric } : null;
       })
       .filter((x): x is { item: CartItem; fabric: Fabric } => x !== null);
@@ -244,9 +280,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       shipping,
       tax,
       total,
-      resolved
+      resolved,
+      resolving
     };
-  }, [items]);
+  }, [items, productCache, resolving]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };

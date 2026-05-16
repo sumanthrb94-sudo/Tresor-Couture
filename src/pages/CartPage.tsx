@@ -10,7 +10,7 @@ import FabricImage from '../components/FabricImage';
 import ProductCard from '../components/ProductCard';
 
 const CartPage: React.FC = () => {
-  const { resolved, updateMeters, removeItem, subtotal, shipping, tax, total } = useCart();
+  const { items, resolved, resolving, updateMeters, removeItem, subtotal, shipping, tax, total } = useCart();
   const { add: addWish } = useWishlist();
   const { user } = useAuth();
   const { navigate } = useRouter();
@@ -20,6 +20,17 @@ const CartPage: React.FC = () => {
   const [couponBusy, setCouponBusy] = useState(false);
   const [pin, setPin] = useState('');
 
+  // Items are in the cart but their product details haven't been fetched yet
+  // (first visit after Firestore sync). Show a spinner instead of an "empty"
+  // false-positive.
+  if (resolving && items.length > 0 && resolved.length === 0) {
+    return (
+      <main className="pt-[140px] pb-20 min-h-screen flex items-center justify-center bg-[color:var(--color-myntra-bg-soft)]">
+        <div className="w-8 h-8 border-2 border-[color:var(--color-myntra-pink)] border-t-transparent rounded-full animate-spin" aria-label="Loading bag" />
+      </main>
+    );
+  }
+
   if (resolved.length === 0) {
     return (
       <main className="pt-[140px] pb-20 min-h-screen bg-[color:var(--color-myntra-bg-soft)]">
@@ -27,7 +38,14 @@ const CartPage: React.FC = () => {
           <ShoppingBag className="w-14 h-14 mx-auto text-[color:var(--color-myntra-ink-mute)] mb-5" />
           <h1 className="text-2xl font-extrabold mb-2">Your bag is empty</h1>
           <p className="text-[14px] text-[color:var(--color-myntra-ink-soft)] mb-6">
-            Have an account? <span className="text-[color:var(--color-myntra-pink)] font-bold">Log in</span> to see saved items.
+            {user
+              ? 'Add hand-cut fabrics from the shop to start a bag — saved across your devices.'
+              : (<>
+                  <button onClick={() => navigate({ name: 'login' })} className="text-[color:var(--color-myntra-pink)] font-bold hover:underline">
+                    Sign in
+                  </button>
+                  {' '}to see items saved from a previous visit, or start a new bag below.
+                </>)}
           </p>
           <button onClick={() => navigate({ name: 'shop' })} className="btn-primary">Shop Now</button>
         </div>
