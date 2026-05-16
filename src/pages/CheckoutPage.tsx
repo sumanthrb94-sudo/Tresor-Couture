@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { CheckCircle2, CreditCard, Lock, MapPin, Smartphone, Tag, Truck, User } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { CheckCircle2, CreditCard, Lock, MapPin, Pencil, Smartphone, Tag, Truck, User } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../context/AuthContext';
@@ -23,17 +23,34 @@ const initialAddress: ShippingAddress = {
   country: 'India'
 };
 
+// Indian phone: optional +91 / 0 prefix, then a 10-digit number starting 6-9.
+const PHONE_RE = /^(?:\+?91[\s-]?|0)?[6-9]\d{9}$/;
+const PIN_RE = /^[1-9]\d{5}$/;
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+const FIELD_ORDER: (keyof ShippingAddress)[] = [
+  'fullName', 'email', 'phone', 'line1', 'city', 'state', 'postalCode', 'country'
+];
+
 const CheckoutPage: React.FC = () => {
   const { resolved, subtotal, shipping, tax, total, clearCart } = useCart();
   const { navigate } = useRouter();
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
 
   const [step, setStep] = useState<Step>(user ? 'address' : 'login');
   const [phone, setPhone] = useState(user?.phone ?? '');
+
+  // Whether the saved address banner is currently active. When true, the
+  // form is presented as a single read-only line + "Use a different address".
+  const [useSavedAddress, setUseSavedAddress] = useState<boolean>(!!user?.defaultAddress);
   const [address, setAddress] = useState<ShippingAddress>(
     user?.defaultAddress
       ?? { ...initialAddress, fullName: user?.fullName ?? '', email: user?.email ?? '', phone: user?.phone ?? '' }
   );
+  // Save the (possibly edited) address back to the user profile after order
+  // success. Default ON for signed-in users without a saved address.
+  const [saveAddress, setSaveAddress] = useState<boolean>(!!user && !user?.defaultAddress);
+
   const [payment, setPayment] = useState<PaymentMethod>('upi');
   const [card, setCard] = useState({ number: '', name: '', expiry: '', cvv: '' });
   const [upi, setUpi] = useState('');
@@ -47,6 +64,33 @@ const CheckoutPage: React.FC = () => {
   const [couponMsg, setCouponMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [couponBusy, setCouponBusy] = useState(false);
 
+  // Refs for "focus first invalid field" on validation failure.
+  const fieldRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  // Hydrate the form whenever the user (or their saved address) changes —
+  // covers the case where auth resolves after the page mounts.
+  useEffect(() => {
+    if (user?.defaultAddress) {
+      setAddress(user.defaultAddress);
+      setUseSavedAddress(true);
+      setSaveAddress(false);
+    } else if (user) {
+      setAddress(prev => ({
+        ...prev,
+        fullName: prev.fullName || user.fullName,
+        email: prev.email || user.email,
+        phone: prev.phone || (user.phone ?? '')
+      }));
+      setSaveAddress(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, user?.defaultAddress]);
+
+  const mrpTotal = useMemo(
+    () => resolved.reduce((s, { item, fabric }) => s + fabric.mrpPerMeter * item.meters, 0),
+    [resolved]
+  );
+
   if (resolved.length === 0) {
     return (
       <main className="pt-[140px] pb-20 min-h-screen text-center px-5 bg-white">
@@ -56,21 +100,26 @@ const CheckoutPage: React.FC = () => {
     );
   }
 
-  const mrpTotal = resolved.reduce((s, { item, fabric }) => s + fabric.mrpPerMeter * item.meters, 0);
   const productDiscount = mrpTotal - subtotal;
   const payable = Math.max(0, total - couponDiscount);
 
   const validateAddress = (): boolean => {
     const e: Record<string, string> = {};
     if (!address.fullName.trim()) e.fullName = 'Required';
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(address.email)) e.email = 'Valid email required';
-    if (!/^[0-9+\-\s()]{7,}$/.test(address.phone)) e.phone = 'Valid phone required';
+    if (!EMAIL_RE.test(address.email)) e.email = 'Enter a valid email';
+    if (!PHONE_RE.test(address.phone.trim())) e.phone = 'Enter a 10-digit Indian mobile';
     if (!address.line1.trim()) e.line1 = 'Required';
     if (!address.city.trim()) e.city = 'Required';
     if (!address.state.trim()) e.state = 'Required';
-    if (!/^[0-9A-Za-z\- ]{4,}$/.test(address.postalCode)) e.postalCode = 'Valid postal code required';
+    if (!PIN_RE.test(address.postalCode.trim())) e.postalCode = 'Enter a 6-digit PIN';
+    if (!address.country.trim()) e.country = 'Required';
     setErrors(e);
-    return Object.keys(e).length === 0;
+    if (Object.keys(e).length > 0) {
+      const firstBad = FIELD_ORDER.find(f => e[f]);
+      if (firstBad) fieldRefs.current[firstBad]?.focus();
+      return false;
+    }
+    return true;
   };
 
   const validatePayment = (): boolean => {
@@ -122,9 +171,28 @@ const CheckoutPage: React.FC = () => {
     setCouponInput('');
   };
 
+  const handleUseDifferentAddress = () => {
+    setUseSavedAddress(false);
+    // Pre-fill with the user's name/email/phone but blank out the postal bits
+    // so the user can clearly type a new destination.
+    setAddress({
+      ...initialAddress,
+      fullName: user?.fullName ?? '',
+      email: user?.email ?? '',
+      phone: user?.phone ?? ''
+    });
+    setSaveAddress(true);
+    // Focus the first real input on next tick.
+    setTimeout(() => fieldRefs.current.fullName?.focus(), 0);
+  };
+
   // Quick lightweight gate before opening the payment modal — the modal
   // re-validates payment-instrument details itself.
   const handleStartPayment = () => {
+    if (!validateAddress()) {
+      setStep('address');
+      return;
+    }
     if (!validatePayment()) return;
     if (!user) {
       setPlaceError('Please sign in to place your order.');
@@ -135,7 +203,14 @@ const CheckoutPage: React.FC = () => {
     setShowPayment(true);
   };
 
-  const handlePaymentSuccess = (orderId: string) => {
+  const handlePaymentSuccess = (orderId: string, placedAddress: ShippingAddress) => {
+    // Fire-and-forget save of the shipping address as the new default. Don't
+    // block confirmation navigation on Firestore latency or failure.
+    if (saveAddress && user) {
+      void updateProfile({ defaultAddress: placedAddress }).catch(err => {
+        console.warn('[checkout] could not save default address', err);
+      });
+    }
     // Cart MUST be emptied before navigation so the user can't accidentally
     // re-place the same order by hitting back.
     clearCart();
@@ -169,10 +244,15 @@ const CheckoutPage: React.FC = () => {
     );
   };
 
-  const Field: React.FC<{ label: string; field: string; children: React.ReactNode; cols?: number }> = ({ label, field, children, cols = 1 }) => (
+  const Field: React.FC<{
+    label: string;
+    field: keyof ShippingAddress;
+    children: (ref: (el: HTMLInputElement | null) => void) => React.ReactNode;
+    cols?: number;
+  }> = ({ label, field, children, cols = 1 }) => (
     <div className={cols === 2 ? 'sm:col-span-2' : ''}>
       <label className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">{label}</label>
-      {children}
+      {children(el => { fieldRefs.current[field] = el; })}
       {errors[field] && <p className="text-[12px] text-[color:var(--color-myntra-pink)] mt-1 font-semibold">{errors[field]}</p>}
     </div>
   );
@@ -210,39 +290,80 @@ const CheckoutPage: React.FC = () => {
               title="Delivery Address"
               doneTitle={address.fullName ? `Delivery to: ${address.fullName}, ${address.city}` : 'Delivery Address'}
             >
+              {/* Saved-address banner — shown only when we're using the user's stored default. */}
+              {useSavedAddress && user?.defaultAddress && (
+                <div className="mb-4 border border-[color:var(--color-myntra-green)]/30 bg-[color:var(--color-myntra-green)]/5 px-4 py-3 rounded flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-4 h-4 mt-0.5 text-[color:var(--color-myntra-green)]" aria-hidden />
+                    <div>
+                      <p className="text-[13px] font-bold text-[color:var(--color-myntra-navy)]">
+                        Delivering to your saved address — {user.defaultAddress.city}, {user.defaultAddress.state}
+                      </p>
+                      <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mt-0.5 leading-relaxed">
+                        {user.defaultAddress.fullName} · {user.defaultAddress.line1}
+                        {user.defaultAddress.line2 ? `, ${user.defaultAddress.line2}` : ''} · {user.defaultAddress.postalCode}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleUseDifferentAddress}
+                    className="self-start sm:self-center inline-flex items-center gap-1.5 text-[12px] font-bold text-[color:var(--color-myntra-pink)] whitespace-nowrap"
+                  >
+                    <Pencil className="w-3.5 h-3.5" /> Use a different address
+                  </button>
+                </div>
+              )}
+
               <div className="flex items-center gap-3 mb-4 text-[color:var(--color-myntra-ink-soft)]">
                 <MapPin className="w-4 h-4" />
                 <p className="text-[13px]">Where would you like your weaves delivered?</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Full Name" field="fullName" cols={2}>
-                  <input className="input-box" value={address.fullName} onChange={e => setAddress(a => ({ ...a, fullName: e.target.value }))} />
+                  {ref => <input ref={ref} className="input-box" value={address.fullName} onChange={e => setAddress(a => ({ ...a, fullName: e.target.value }))} />}
                 </Field>
                 <Field label="Email" field="email">
-                  <input className="input-box" type="email" value={address.email} onChange={e => setAddress(a => ({ ...a, email: e.target.value }))} />
+                  {ref => <input ref={ref} className="input-box" type="email" value={address.email} onChange={e => setAddress(a => ({ ...a, email: e.target.value }))} />}
                 </Field>
                 <Field label="Phone" field="phone">
-                  <input className="input-box" type="tel" value={address.phone} onChange={e => setAddress(a => ({ ...a, phone: e.target.value }))} />
+                  {ref => <input ref={ref} className="input-box" type="tel" inputMode="tel" placeholder="10-digit mobile" value={address.phone} onChange={e => setAddress(a => ({ ...a, phone: e.target.value }))} />}
                 </Field>
                 <Field label="Address Line 1" field="line1" cols={2}>
-                  <input className="input-box" value={address.line1} onChange={e => setAddress(a => ({ ...a, line1: e.target.value }))} />
+                  {ref => <input ref={ref} className="input-box" value={address.line1} onChange={e => setAddress(a => ({ ...a, line1: e.target.value }))} />}
                 </Field>
-                <Field label="Address Line 2 (optional)" field="line2" cols={2}>
+                <div className="sm:col-span-2">
+                  <label className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">Address Line 2 (optional)</label>
                   <input className="input-box" value={address.line2 ?? ''} onChange={e => setAddress(a => ({ ...a, line2: e.target.value }))} />
-                </Field>
+                </div>
                 <Field label="City" field="city">
-                  <input className="input-box" value={address.city} onChange={e => setAddress(a => ({ ...a, city: e.target.value }))} />
+                  {ref => <input ref={ref} className="input-box" value={address.city} onChange={e => setAddress(a => ({ ...a, city: e.target.value }))} />}
                 </Field>
                 <Field label="State" field="state">
-                  <input className="input-box" value={address.state} onChange={e => setAddress(a => ({ ...a, state: e.target.value }))} />
+                  {ref => <input ref={ref} className="input-box" value={address.state} onChange={e => setAddress(a => ({ ...a, state: e.target.value }))} />}
                 </Field>
                 <Field label="PIN Code" field="postalCode">
-                  <input className="input-box" value={address.postalCode} onChange={e => setAddress(a => ({ ...a, postalCode: e.target.value }))} />
+                  {ref => <input ref={ref} className="input-box" inputMode="numeric" maxLength={6} placeholder="6-digit PIN" value={address.postalCode} onChange={e => setAddress(a => ({ ...a, postalCode: e.target.value.replace(/\D/g, '').slice(0, 6) }))} />}
                 </Field>
                 <Field label="Country" field="country">
-                  <input className="input-box" value={address.country} onChange={e => setAddress(a => ({ ...a, country: e.target.value }))} />
+                  {ref => <input ref={ref} className="input-box" value={address.country} onChange={e => setAddress(a => ({ ...a, country: e.target.value }))} />}
                 </Field>
               </div>
+
+              {user && (
+                <label className="mt-4 inline-flex items-start gap-2 text-[13px] text-[color:var(--color-myntra-ink-soft)] cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={saveAddress}
+                    onChange={e => setSaveAddress(e.target.checked)}
+                    className="mt-0.5 accent-[color:var(--color-myntra-pink)]"
+                  />
+                  <span>
+                    Save this address to my profile for faster checkout next time.
+                  </span>
+                </label>
+              )}
+
               <button
                 onClick={() => { if (validateAddress()) setStep('payment'); }}
                 className="btn-primary mt-5"
@@ -282,25 +403,35 @@ const CheckoutPage: React.FC = () => {
 
               {payment === 'card' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Field label="Card Number" field="cardNumber" cols={2}>
+                  <div className="sm:col-span-2">
+                    <label className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">Card Number</label>
                     <input className="input-box" inputMode="numeric" placeholder="1234 5678 9012 3456" value={card.number} onChange={e => setCard(c => ({ ...c, number: e.target.value }))} />
-                  </Field>
-                  <Field label="Name on Card" field="cardName" cols={2}>
+                    {errors.cardNumber && <p className="text-[12px] text-[color:var(--color-myntra-pink)] mt-1 font-semibold">{errors.cardNumber}</p>}
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">Name on Card</label>
                     <input className="input-box" value={card.name} onChange={e => setCard(c => ({ ...c, name: e.target.value }))} />
-                  </Field>
-                  <Field label="Expiry (MM/YY)" field="cardExpiry">
+                    {errors.cardName && <p className="text-[12px] text-[color:var(--color-myntra-pink)] mt-1 font-semibold">{errors.cardName}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">Expiry (MM/YY)</label>
                     <input className="input-box" value={card.expiry} onChange={e => setCard(c => ({ ...c, expiry: e.target.value }))} />
-                  </Field>
-                  <Field label="CVV" field="cardCvv">
+                    {errors.cardExpiry && <p className="text-[12px] text-[color:var(--color-myntra-pink)] mt-1 font-semibold">{errors.cardExpiry}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">CVV</label>
                     <input className="input-box" type="password" inputMode="numeric" value={card.cvv} onChange={e => setCard(c => ({ ...c, cvv: e.target.value }))} />
-                  </Field>
+                    {errors.cardCvv && <p className="text-[12px] text-[color:var(--color-myntra-pink)] mt-1 font-semibold">{errors.cardCvv}</p>}
+                  </div>
                 </div>
               )}
 
               {payment === 'upi' && (
-                <Field label="UPI ID" field="upi">
+                <div>
+                  <label className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">UPI ID</label>
                   <input className="input-box max-w-md" placeholder="yourname@bank" value={upi} onChange={e => setUpi(e.target.value)} />
-                </Field>
+                  {errors.upi && <p className="text-[12px] text-[color:var(--color-myntra-pink)] mt-1 font-semibold">{errors.upi}</p>}
+                </div>
               )}
 
               {payment === 'cod' && (
@@ -413,7 +544,7 @@ const CheckoutPage: React.FC = () => {
         items={resolved.map(({ item }) => ({ fabricId: item.fabricId, meters: item.meters, color: item.color }))}
         couponCode={couponCode ?? undefined}
         onClose={() => setShowPayment(false)}
-        onSuccess={placed => handlePaymentSuccess(placed.id)}
+        onSuccess={placed => handlePaymentSuccess(placed.id, address)}
       />
     </main>
   );

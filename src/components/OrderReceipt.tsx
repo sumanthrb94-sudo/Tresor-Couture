@@ -1,6 +1,7 @@
 import React from 'react';
 import { Printer } from 'lucide-react';
 import { formatINR } from '../constants';
+import FabricImage from './FabricImage';
 import type { Order } from '../types';
 
 interface Props {
@@ -21,22 +22,28 @@ const OrderReceipt: React.FC<Props> = ({ order }) => {
     dateStyle: 'medium',
     timeStyle: 'short'
   });
+  const shortHash = `TC-${order.id.replace(/[^a-zA-Z0-9]/g, '').slice(-6) || order.id.slice(0, 6)}`;
 
   return (
     <section className="receipt bg-white border border-[color:var(--color-myntra-border-soft)] print:border-0">
-      {/* Print stylesheet: hide chrome, A4-ish width, page break-friendly. */}
+      {/* Print stylesheet: hide chrome (nav, footer, modals, page hero & buttons),
+          force white background, target A4 paper. */}
       <style>{`
         @media print {
           @page { size: A4; margin: 14mm; }
-          body { background: #fff !important; }
-          .no-print { display: none !important; }
+          html, body { background: #fff !important; }
+          body * { visibility: hidden !important; }
+          .receipt, .receipt * { visibility: visible !important; }
           .receipt {
+            position: absolute !important;
+            inset: 0 !important;
             box-shadow: none !important;
             border: none !important;
             max-width: 100% !important;
             font-size: 12px;
+            background: #fff !important;
           }
-          main, header, footer, nav { background: #fff !important; }
+          .no-print { display: none !important; }
         }
       `}</style>
 
@@ -64,7 +71,8 @@ const OrderReceipt: React.FC<Props> = ({ order }) => {
           </div>
           <div className="text-right">
             <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)]">Receipt</p>
-            <p className="text-[12px] font-bold break-all">{order.id}</p>
+            <p className="font-mono text-[13px] font-bold">{shortHash}</p>
+            <p className="text-[10px] text-[color:var(--color-myntra-ink-mute)] break-all mt-0.5">{order.id}</p>
           </div>
         </header>
 
@@ -81,7 +89,9 @@ const OrderReceipt: React.FC<Props> = ({ order }) => {
           </div>
           <div className="col-span-2 sm:col-span-1">
             <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1">Status</p>
-            <p className="capitalize">{order.status ?? 'placed'}</p>
+            <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[color:var(--color-myntra-green)]/10 text-[color:var(--color-myntra-green)] border border-[color:var(--color-myntra-green)]/30">
+              {order.status ?? 'placed'}
+            </span>
           </div>
         </div>
 
@@ -103,8 +113,18 @@ const OrderReceipt: React.FC<Props> = ({ order }) => {
                 return (
                   <tr key={`${it.fabricId}-${idx}`} className="border-t border-[color:var(--color-myntra-border-soft)] align-top">
                     <td className="px-3 py-2">
-                      <p className="font-bold">{it.fabricSnapshot.brand}</p>
-                      <p className="text-[color:var(--color-myntra-ink-soft)]">{it.fabricSnapshot.name}</p>
+                      <div className="flex gap-3 items-start">
+                        <FabricImage
+                          photo={it.fabricSnapshot.photo}
+                          fallback={it.fabricSnapshot.image}
+                          alt={it.fabricSnapshot.name}
+                          className="w-10 h-12 object-cover bg-[color:var(--color-myntra-bg-soft)] flex-shrink-0 print:hidden"
+                        />
+                        <div className="min-w-0">
+                          <p className="font-bold">{it.fabricSnapshot.brand}</p>
+                          <p className="text-[color:var(--color-myntra-ink-soft)]">{it.fabricSnapshot.name}</p>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-3 py-2">{it.color ?? '—'}</td>
                     <td className="px-3 py-2 text-right">{it.meters}</td>
@@ -151,7 +171,8 @@ const OrderReceipt: React.FC<Props> = ({ order }) => {
         </div>
 
         <footer className="mt-8 pt-4 border-t border-dashed border-[color:var(--color-myntra-border)] text-center text-[10px] text-[color:var(--color-myntra-ink-mute)]">
-          Thank you for choosing Trésor Couture. For assistance with this order, quote your receipt ID above when contacting our atelier concierge.
+          <p className="font-bold text-[color:var(--color-myntra-ink-soft)] mb-1">Sold by Trésor Atelier, Hyderabad</p>
+          <p>Thank you for choosing Trésor Couture. For assistance with this order, quote receipt <span className="font-mono font-bold">{shortHash}</span> when contacting our atelier concierge.</p>
         </footer>
       </div>
     </section>

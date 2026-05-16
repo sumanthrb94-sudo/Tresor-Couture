@@ -76,15 +76,31 @@ const ConfirmationPage: React.FC<Props> = ({ orderId }) => {
   if (error || !order) {
     return (
       <main className="pt-[140px] pb-20 min-h-screen text-center px-5 bg-white">
-        <h1 className="text-3xl font-extrabold mb-4">Order not found</h1>
-        {error && <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)] mb-4">{error}</p>}
-        <button onClick={() => navigate({ name: 'shop' })} className="btn-primary">Back to Shop</button>
+        <h1 className="text-3xl font-extrabold mb-2 text-[color:var(--color-myntra-navy)]">
+          We couldn't find that order
+        </h1>
+        <p className="text-[14px] text-[color:var(--color-myntra-ink-soft)] max-w-md mx-auto mb-6">
+          {error
+            ? error
+            : 'The order may have been placed under a different account, or the link may have expired.'}
+        </p>
+        <div className="flex flex-col sm:flex-row gap-2 justify-center">
+          <button onClick={() => navigate({ name: 'account', tab: 'orders' })} className="btn-primary">
+            View my orders
+          </button>
+          <button onClick={() => navigate({ name: 'shop' })} className="btn-outline">
+            Back to shop
+          </button>
+        </div>
       </main>
     );
   }
 
   const eta = computeEta(order);
   const etaLabel = eta.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+  // Short, human-friendly receipt hash for the hero — keeps the long Firestore
+  // id off the page chrome while still being unique enough to read aloud.
+  const shortHash = `TC-${order.id.replace(/[^a-zA-Z0-9]/g, '').slice(-6) || order.id.slice(0, 6)}`;
 
   return (
     <main className="pt-[100px] pb-12 md:pb-16 bg-[color:var(--color-myntra-bg-soft)] min-h-screen">
@@ -101,11 +117,14 @@ const ConfirmationPage: React.FC<Props> = ({ orderId }) => {
           </div>
 
           <p className="text-[11px] font-extrabold tracking-[0.2em] uppercase text-[color:var(--color-myntra-green)] mb-2">
-            Order placed
+            Order confirmed
           </p>
-          <h1 className="font-serif text-3xl md:text-4xl font-extrabold mb-3 text-[color:var(--color-myntra-navy)]">
+          <h1 className="font-serif text-3xl md:text-4xl font-extrabold mb-2 text-[color:var(--color-myntra-navy)]">
             Your atelier is on it.
           </h1>
+          <p className="font-mono text-[12px] tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-3">
+            Receipt <span className="text-[color:var(--color-myntra-navy)] font-bold">{shortHash}</span>
+          </p>
           <p className="text-[14px] text-[color:var(--color-myntra-ink-soft)] max-w-md mx-auto">
             Thank you{order.shippingAddress.fullName ? `, ${order.shippingAddress.fullName.split(' ')[0]}` : ''}. A confirmation has been emailed to{' '}
             <span className="text-[color:var(--color-myntra-navy)] font-semibold">{order.shippingAddress.email}</span>.
