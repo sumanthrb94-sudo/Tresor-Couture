@@ -50,7 +50,12 @@ const env = (import.meta as unknown as { env?: Record<string, string | undefined
 
 const firebaseConfig = {
   apiKey:            env.VITE_FIREBASE_API_KEY            ?? 'AIzaSyAIct4PdHbOYaNCYpLdGxh1kDlukwwc_3M',
-  authDomain:        env.VITE_FIREBASE_AUTH_DOMAIN        ?? 'tresor-couture.firebaseapp.com',
+  // Default authDomain points at the Vercel deployment so the OAuth
+  // redirect flow's session lives on the same origin as the app
+  // (vercel.json rewrites /__/auth/* to firebaseapp.com under the hood).
+  // Override via VITE_FIREBASE_AUTH_DOMAIN when deploying to a custom
+  // domain or to Firebase Hosting directly.
+  authDomain:        env.VITE_FIREBASE_AUTH_DOMAIN        ?? 'tresor-couture.vercel.app',
   projectId:         env.VITE_FIREBASE_PROJECT_ID         ?? 'tresor-couture',
   storageBucket:     env.VITE_FIREBASE_STORAGE_BUCKET     ?? 'tresor-couture.firebasestorage.app',
   messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID ?? '102541847727',
@@ -86,21 +91,19 @@ export async function login(email: string, password: string) {
 }
 
 /**
- * Mobile browsers (iOS Safari especially, also some Android Chrome configs)
- * routinely block or break signInWithPopup — the popup gets killed before
- * Firebase can complete the auth handshake, leaving the user stuck. The
- * documented fix is signInWithRedirect on those clients; we feature-detect
- * touch + small viewport as the proxy.
+ * Production note: we deploy on Vercel (`*.vercel.app`) but the Firebase
+ * authDomain is `*.firebaseapp.com`. The `signInWithRedirect` flow stores
+ * the OAuth credential in the authDomain's IndexedDB during the OAuth
+ * handler step; when the browser lands back on the Vercel origin, that
+ * storage is on the wrong origin and the session never propagates.
+ *
+ * Workaround: always use `signInWithPopup` first (the credential comes
+ * back via window.postMessage so it doesn't depend on cross-origin
+ * storage). Only fall back to redirect when the popup is genuinely
+ * blocked — and for that case, vercel.json rewrites /__/auth/* to the
+ * Firebase auth handler so the redirect-flow session lives on the same
+ * origin as the app.
  */
-const isMobileLikeClient = (): boolean => {
-  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
-  const touch = ('ontouchstart' in window) || (navigator.maxTouchPoints ?? 0) > 0;
-  const narrow = window.innerWidth <= 820;
-  const ua = navigator.userAgent || '';
-  const mobileUa = /Android|iPhone|iPad|iPod|Mobile|BlackBerry|Opera Mini|IEMobile/i.test(ua);
-  return mobileUa || (touch && narrow);
-};
-
 async function materialiseGoogleProfile(user: FbUser) {
   const existing = await getDoc(doc(db, 'users', user.uid));
   if (existing.exists()) return;
@@ -116,21 +119,13 @@ async function materialiseGoogleProfile(user: FbUser) {
 }
 
 /**
- * Google sign-in. Uses popup on desktop and signInWithRedirect on mobile
- * (popups are unreliable there). On the popup path returns the user;
- * on the redirect path the page navigates away and resumes through
- * resumeGoogleRedirect() below.
+ * Google sign-in. Popup first (resilient across mobile + desktop because
+ * postMessage doesn't depend on cross-origin cookies); redirect only as
+ * a fallback when the popup is blocked.
  */
 export async function loginWithGoogle() {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
-
-  if (isMobileLikeClient()) {
-    // Stash a flag so the post-redirect resumer knows to finalise.
-    try { window.sessionStorage.setItem('tresor.google.redirect', '1'); } catch { /* ignore */ }
-    await signInWithRedirect(auth, provider);
-    return null; // page navigates away — caller won't see this.
-  }
 
   try {
     const cred: UserCredential = await signInWithPopup(auth, provider);
