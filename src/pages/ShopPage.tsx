@@ -74,10 +74,13 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
   }, [initialCategory]);
 
   const [products, setProducts] = useState<Fabric[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     setProducts(null);
+    setLoadError(null);
     (async () => {
       try {
         const rows = await productsApi.list({
@@ -86,12 +89,15 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
           limit: 200
         });
         if (!cancelled) setProducts(rows as unknown as Fabric[]);
-      } catch {
-        if (!cancelled) setProducts([]);
+      } catch (err) {
+        if (!cancelled) {
+          setProducts([]);
+          setLoadError(err instanceof Error ? err.message : 'Could not load products.');
+        }
       }
     })();
     return () => { cancelled = true; };
-  }, [activeMaster, activeSub]);
+  }, [activeMaster, activeSub, reloadKey]);
 
   const allColors = useMemo(() => {
     const s = new Set<string>();
@@ -344,47 +350,89 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
         <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[260px_1fr] gap-6 lg:gap-8">
           <div className="hidden lg:block">{Sidebar}</div>
 
-          {loading ? (
-            <div className="py-20 flex items-center justify-center">
-              <div className="w-8 h-8 border-2 border-[color:var(--color-myntra-pink)] border-t-transparent rounded-full animate-spin" aria-label="Loading products" />
-            </div>
-          ) : (products ?? []).length === 0 ? (
-            <div className="border border-dashed border-[color:var(--color-myntra-border)] py-20 px-6 text-center bg-[color:var(--color-myntra-bg-soft)]">
-              <p className="text-xl font-bold mb-2 text-[color:var(--color-myntra-navy)]">
-                Catalogue is being curated
-              </p>
-              <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)]">
-                Check back soon — new weaves arrive every week.
-              </p>
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="border border-[color:var(--color-myntra-border-soft)] py-20 px-6 text-center bg-[color:var(--color-myntra-bg-soft)]">
-              <p className="text-xl font-bold mb-2 text-[color:var(--color-myntra-navy)]">
-                {activeMaster ? `${activeMaster} — coming soon` : 'No weaves match your filters.'}
-              </p>
-              {masterTile && (
-                <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)] mb-5 italic">{masterTile.tagline}</p>
-              )}
-              {!masterTile && (
-                <p className="text-[14px] text-[color:var(--color-myntra-ink-soft)] mb-5">Try widening your selection.</p>
-              )}
-              <div className="flex gap-3 justify-center flex-wrap">
-                {activeMaster && activeMaster !== 'Fabrics' && (
-                  <button
-                    onClick={() => navigate({ name: 'shop', category: 'Fabrics' })}
-                    className="btn-primary"
-                  >
-                    Browse Fabrics →
+          <div>
+            {loadError && (
+              <div className="mb-4 border border-[color:var(--color-myntra-pink)] bg-[color:var(--color-myntra-bg-soft)] rounded p-4 flex items-center justify-between gap-3 flex-wrap">
+                <p className="text-[13px] text-[color:var(--color-myntra-navy)] font-semibold">
+                  Couldn't fetch this section. {loadError}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setReloadKey(k => k + 1)}
+                  className="text-[13px] font-bold text-[color:var(--color-myntra-pink)] underline"
+                >
+                  Try again
+                </button>
+              </div>
+            )}
+
+            {loading ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="aspect-[3/4] bg-[color:var(--color-myntra-bg-soft)] rounded" />
+                    <div className="mt-2 h-3 w-3/4 bg-[color:var(--color-myntra-bg-soft)] rounded" />
+                    <div className="mt-1.5 h-3 w-1/2 bg-[color:var(--color-myntra-bg-soft)] rounded" />
+                    <div className="mt-2 h-4 w-1/3 bg-[color:var(--color-myntra-bg-soft)] rounded" />
+                  </div>
+                ))}
+              </div>
+            ) : (products ?? []).length === 0 && !loadError ? (
+              <div className="border border-dashed border-[color:var(--color-myntra-border)] py-20 px-6 text-center bg-[color:var(--color-myntra-bg-soft)]">
+                <p className="font-serif text-2xl md:text-3xl mb-2 text-[color:var(--color-myntra-navy)]">
+                  Curated stock is on the loom
+                </p>
+                <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)] mb-5">
+                  Check back soon, or browse another atelier section.
+                </p>
+                <div className="flex gap-2 justify-center flex-wrap">
+                  {MASTER_CATEGORIES.filter(m => m !== activeMaster).slice(0, 4).map(m => (
+                    <button
+                      key={m}
+                      onClick={() => navigate({ name: 'shop', category: m })}
+                      className="chip"
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="border border-[color:var(--color-myntra-border-soft)] py-20 px-6 text-center bg-[color:var(--color-myntra-bg-soft)]">
+                <p className="font-serif text-2xl md:text-3xl mb-2 text-[color:var(--color-myntra-navy)]">
+                  {activeMaster ? `${activeMaster} — curated stock is on the loom` : 'Curated stock is on the loom'}
+                </p>
+                {masterTile && (
+                  <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)] mb-5 italic">{masterTile.tagline}</p>
+                )}
+                {!masterTile && (
+                  <p className="text-[14px] text-[color:var(--color-myntra-ink-soft)] mb-5">
+                    Check back soon, or browse another section.
+                  </p>
+                )}
+                <div className="flex gap-2 justify-center flex-wrap mb-3">
+                  {MASTER_CATEGORIES.filter(m => m !== activeMaster).slice(0, 4).map(m => (
+                    <button
+                      key={m}
+                      onClick={() => navigate({ name: 'shop', category: m })}
+                      className="chip"
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+                {activeChips.length > 0 && (
+                  <button onClick={() => { clearAll(); navigate({ name: 'shop' }); }} className="btn-outline">
+                    Clear Filters
                   </button>
                 )}
-                <button onClick={() => { clearAll(); navigate({ name: 'shop' }); }} className="btn-outline">Clear Filters</button>
               </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
-              {filtered.map(f => <ProductCard key={f.id} fabric={f} />)}
-            </div>
-          )}
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
+                {filtered.map(f => <ProductCard key={f.id} fabric={f} />)}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

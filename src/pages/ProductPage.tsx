@@ -23,29 +23,41 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
 
   const [fabric, setFabric] = useState<Fabric | null | undefined>(undefined);
   const [similar, setSimilar] = useState<Fabric[]>([]);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     setFabric(undefined);
+    setFetchError(null);
     (async () => {
       try {
         const f = (await productsApi.get(productId)) as unknown as Fabric | null;
         if (cancelled) return;
         setFabric(f);
         if (f) {
-          const peers = (await productsApi.list({ limit: 100 })) as unknown as Fabric[];
-          if (!cancelled) {
-            setSimilar(peers.filter(p => p.id !== f.id && p.category === f.category).slice(0, 5));
+          // Similar-products fetch is best-effort — a failure here shouldn't
+          // blank the PDP, so we swallow and just render no rail.
+          try {
+            const peers = (await productsApi.list({ limit: 100 })) as unknown as Fabric[];
+            if (!cancelled) {
+              setSimilar(peers.filter(p => p.id !== f.id && p.category === f.category).slice(0, 5));
+            }
+          } catch {
+            if (!cancelled) setSimilar([]);
           }
         } else {
           setSimilar([]);
         }
-      } catch {
-        if (!cancelled) setFabric(null);
+      } catch (err) {
+        if (!cancelled) {
+          setFabric(null);
+          setFetchError(err instanceof Error ? err.message : 'Could not load this product.');
+        }
       }
     })();
     return () => { cancelled = true; };
-  }, [productId]);
+  }, [productId, reloadKey]);
 
   const defaultColor = fabric?.colors?.[0]?.name;
   const [selectedColor, setSelectedColor] = useState<string | undefined>(defaultColor);
@@ -71,8 +83,33 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
 
   if (fabric === undefined) {
     return (
-      <main className="pt-[160px] pb-20 min-h-screen flex items-center justify-center bg-white">
-        <div className="w-8 h-8 border-2 border-[color:var(--color-myntra-pink)] border-t-transparent rounded-full animate-spin" aria-label="Loading product" />
+      <main className="pt-[100px] pb-20 min-h-screen bg-white">
+        <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10">
+          <div className="h-3 w-64 bg-[color:var(--color-myntra-bg-soft)] rounded animate-pulse mb-4" />
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_460px] gap-8 lg:gap-12">
+            {/* Gallery skeleton */}
+            <div className="grid grid-cols-[64px_1fr] md:grid-cols-[80px_1fr] gap-3">
+              <div className="flex flex-col gap-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="aspect-[3/4] bg-[color:var(--color-myntra-bg-soft)] rounded animate-pulse" />
+                ))}
+              </div>
+              <div className="aspect-[3/4] bg-[color:var(--color-myntra-bg-soft)] rounded animate-pulse" />
+            </div>
+            {/* Info skeleton */}
+            <div className="space-y-3">
+              <div className="h-5 w-1/3 bg-[color:var(--color-myntra-bg-soft)] rounded animate-pulse" />
+              <div className="h-4 w-2/3 bg-[color:var(--color-myntra-bg-soft)] rounded animate-pulse" />
+              <div className="h-8 w-32 bg-[color:var(--color-myntra-bg-soft)] rounded animate-pulse mt-6" />
+              <div className="h-3 w-48 bg-[color:var(--color-myntra-bg-soft)] rounded animate-pulse" />
+              <div className="flex gap-2 mt-6">
+                <div className="h-12 flex-1 bg-[color:var(--color-myntra-bg-soft)] rounded animate-pulse" />
+                <div className="h-12 flex-1 bg-[color:var(--color-myntra-bg-soft)] rounded animate-pulse" />
+              </div>
+              <div className="h-24 w-full bg-[color:var(--color-myntra-bg-soft)] rounded animate-pulse mt-4" />
+            </div>
+          </div>
+        </div>
       </main>
     );
   }
@@ -80,8 +117,22 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
   if (!fabric) {
     return (
       <main className="pt-[160px] pb-20 min-h-screen text-center px-5 bg-white">
-        <h1 className="text-3xl font-extrabold mb-4">Weave not found</h1>
-        <button onClick={() => navigate({ name: 'shop' })} className="btn-primary">Back to Shop</button>
+        <h1 className="font-serif text-3xl md:text-4xl mb-3 text-[color:var(--color-myntra-navy)]">
+          This weave isn't on the loom right now
+        </h1>
+        <p className="text-[14px] text-[color:var(--color-myntra-ink-soft)] mb-6 max-w-md mx-auto">
+          {fetchError
+            ? `We hit a snag fetching this product. ${fetchError}`
+            : "It may have moved to the archive — our atelier rotates stock regularly."}
+        </p>
+        <div className="flex gap-3 justify-center flex-wrap">
+          {fetchError && (
+            <button onClick={() => setReloadKey(k => k + 1)} className="btn-outline">
+              Try again
+            </button>
+          )}
+          <button onClick={() => navigate({ name: 'shop' })} className="btn-primary">Back to Shop</button>
+        </div>
       </main>
     );
   }
@@ -362,10 +413,21 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
           </div>
         </div>
 
-        {/* Similar */}
+        {/* More from this weave — best-effort rail; ProductRail self-hides when items=[] */}
         {similar.length > 0 && (
           <section className="mt-12 md:mt-16">
-            <h2 className="text-xl md:text-2xl font-extrabold mb-5">Similar Products</h2>
+            <div className="flex items-end justify-between mb-5">
+              <div>
+                <span className="section-eyebrow">{fabric.category} weaves</span>
+                <h2 className="text-xl md:text-2xl font-extrabold mt-1">More from this weave</h2>
+              </div>
+              <button
+                onClick={() => navigate({ name: 'shop' })}
+                className="text-[13px] font-bold uppercase tracking-wide text-[color:var(--color-myntra-pink)] hover:underline"
+              >
+                See All →
+              </button>
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
               {similar.map(s => <ProductCard key={s.id} fabric={s} />)}
             </div>

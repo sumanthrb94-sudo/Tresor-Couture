@@ -47,10 +47,14 @@ let autoSeedAttempted = false;
 
 const Home: React.FC = () => {
   const [products, setProducts] = useState<Fabric[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const { isAdmin } = useAuth();
 
   useEffect(() => {
     let cancelled = false;
+    setLoadError(null);
+    setProducts(null);
     (async () => {
       try {
         // Only admins can write under firestore.rules; guest visitors trigger
@@ -61,21 +65,36 @@ const Home: React.FC = () => {
         }
         const rows = await productsApi.list({ limit: 200 });
         if (!cancelled) setProducts(rows as unknown as Fabric[]);
-      } catch {
-        if (!cancelled) setProducts([]);
+      } catch (err) {
+        if (!cancelled) {
+          setProducts([]);
+          setLoadError(err instanceof Error ? err.message : 'Could not load the catalogue.');
+        }
       }
     })();
     return () => { cancelled = true; };
-  }, [isAdmin]);
+  }, [isAdmin, reloadKey]);
 
+  const loading = products === null;
+
+  // Rails defined by spec. Bridal prefers master categories (Sarees, Lehenga Cholis)
+  // when there are enough; otherwise falls back to silk/satin fabrics so the rail
+  // doesn't collapse on a catalogue weighted toward yardage.
   const { trending, newIn, bridal, summer } = useMemo(() => {
     const list = products ?? [];
+    const byMaster = list.filter(f => f.masterCategory === 'Sarees' || f.masterCategory === 'Lehenga Cholis');
+    const byCategory = list.filter(f => f.category === 'Silk' || f.category === 'Satin');
     return {
       trending: list.filter(f => f.sticker === 'Trending' || f.sticker === 'Bestseller').slice(0, 5),
       newIn:    list.filter(f => f.sticker === 'New In' || f.sticker === 'Limited').slice(0, 5),
-      bridal:   list.filter(f => f.category === 'Silk' || f.category === 'Satin').slice(0, 5),
+      bridal:   (byMaster.length >= 3 ? byMaster : byCategory).slice(0, 5),
       summer:   list.filter(f => f.category === 'Cotton' || f.category === 'Linen').slice(0, 5)
     };
+  }, [products]);
+
+  const bridalUsesMaster = useMemo(() => {
+    const list = products ?? [];
+    return list.filter(f => f.masterCategory === 'Sarees' || f.masterCategory === 'Lehenga Cholis').length >= 3;
   }, [products]);
 
   return (
@@ -85,11 +104,44 @@ const Home: React.FC = () => {
       <OffersBanner />
       {/* SignupCallout self-gates on auth + session dismissal — safe to always mount here. */}
       <SignupCallout />
-      <ProductRail eyebrow="Hot on Tresor" title="Trending Weaves" items={trending} bg="white" />
+
+      {loadError && (
+        <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 py-4">
+          <div className="border border-[color:var(--color-myntra-pink)] bg-[color:var(--color-myntra-bg-soft)] rounded p-4 flex items-center justify-between gap-3 flex-wrap">
+            <p className="text-[13px] text-[color:var(--color-myntra-navy)] font-semibold">
+              We couldn't reach the catalogue. {loadError}
+            </p>
+            <button
+              type="button"
+              onClick={() => setReloadKey(k => k + 1)}
+              className="text-[13px] font-bold text-[color:var(--color-myntra-pink)] underline"
+            >
+              Try again
+            </button>
+          </div>
+        </div>
+      )}
+
+      <ProductRail eyebrow="Hot on Tresor" title="Trending Weaves" items={trending} loading={loading} bg="white" />
       <LookbookRail />
-      <ProductRail eyebrow="The Bridal Edit" title="Heritage Silks for the Aisle" items={bridal} ctaCategory="Silk" bg="white" />
-      <ProductRail eyebrow="Just Dropped" title="New In · Limited Bolts" items={newIn} bg="soft" />
-      <ProductRail eyebrow="Summer Lightweights" title="Cottons, Linens & Muslins" items={summer} ctaCategory="Cotton" bg="white" />
+      <ProductRail
+        eyebrow="The Bridal Edit"
+        title="Heritage Silks for the Aisle"
+        items={bridal}
+        loading={loading}
+        masterCategory={bridalUsesMaster ? 'Sarees' : undefined}
+        ctaCategory={bridalUsesMaster ? undefined : 'Silk'}
+        bg="white"
+      />
+      <ProductRail eyebrow="Just Dropped" title="New In · Limited Bolts" items={newIn} loading={loading} bg="soft" />
+      <ProductRail
+        eyebrow="Summer Lightweights"
+        title="Cottons, Linens & Muslins"
+        items={summer}
+        loading={loading}
+        ctaCategory="Cotton"
+        bg="white"
+      />
     </main>
   );
 };

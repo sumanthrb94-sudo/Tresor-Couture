@@ -80,8 +80,9 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
   const { user } = useAuth();
   const { navigate } = useRouter();
 
-  const [approved, setApproved] = useState<Review[]>([]);
+  const [approved, setApproved] = useState<Review[] | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const [rating, setRating] = useState<1 | 2 | 3 | 4 | 5>(5);
   const [title, setTitle] = useState('');
@@ -94,6 +95,8 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
   useEffect(() => {
     let cancelled = false;
     setVisibleCount(REVIEWS_PAGE_SIZE);
+    setApproved(null);
+    setFetchError(null);
     (async () => {
       try {
         const rows = (await reviewsApi.forProduct(fabricId)) as unknown as Review[];
@@ -103,15 +106,21 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
           );
           setApproved(sorted);
         }
-      } catch {
-        if (!cancelled) setApproved([]);
+      } catch (err) {
+        if (!cancelled) {
+          setApproved([]);
+          setFetchError(err instanceof Error ? err.message : 'Could not load reviews.');
+        }
       }
     })();
     return () => { cancelled = true; };
   }, [fabricId, reloadKey]);
 
+  const reviews = approved ?? [];
+  const loading = approved === null;
+
   const summary = useMemo(() => {
-    const total = approved.length;
+    const total = reviews.length;
     if (total === 0) {
       return {
         total,
@@ -119,12 +128,12 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
         breakdown: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } as Record<1 | 2 | 3 | 4 | 5, number>
       };
     }
-    const sum = approved.reduce((acc, r) => acc + r.rating, 0);
+    const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
     const average = sum / total;
     const breakdown: Record<1 | 2 | 3 | 4 | 5, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-    for (const r of approved) breakdown[r.rating]++;
+    for (const r of reviews) breakdown[r.rating]++;
     return { total, average, breakdown };
-  }, [approved]);
+  }, [reviews]);
 
   const resetForm = () => {
     setRating(5);
@@ -139,8 +148,8 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
     setSuccess(null);
 
     const trimmedBody = body.trim();
-    if (trimmedBody.length < 10) {
-      setError('Review must be at least 10 characters.');
+    if (trimmedBody.length < 4) {
+      setError('Review must be at least 4 characters.');
       return;
     }
     if (trimmedBody.length > 1000) {
@@ -167,8 +176,8 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
     }
   };
 
-  const visible = approved.slice(0, visibleCount);
-  const hasMore = visibleCount < approved.length;
+  const visible = reviews.slice(0, visibleCount);
+  const hasMore = visibleCount < reviews.length;
 
   return (
     <section className="mt-12 md:mt-16">
@@ -270,14 +279,14 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
                     onChange={e => setBody(e.target.value)}
                     placeholder="How does the fabric feel? Did it match the description?"
                     rows={4}
-                    minLength={10}
+                    minLength={4}
                     maxLength={1000}
                     required
                     className="input-box w-full resize-y"
                     disabled={submitting}
                   />
                   <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] mt-1">
-                    {body.trim().length}/1000 — minimum 10 characters
+                    {body.trim().length}/1000 — minimum 4 characters
                   </p>
                 </div>
 
@@ -297,16 +306,54 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
             )}
           </div>
 
+          {/* Fetch error banner — never blanks the whole section */}
+          {fetchError && (
+            <div className="mb-4 border border-[color:var(--color-myntra-pink)] bg-[color:var(--color-myntra-bg-soft)] rounded p-3 flex items-center justify-between gap-3 flex-wrap">
+              <p className="text-[12px] text-[color:var(--color-myntra-navy)] font-semibold">
+                Couldn't load reviews. {fetchError}
+              </p>
+              <button
+                type="button"
+                onClick={() => setReloadKey(k => k + 1)}
+                className="text-[12px] font-bold text-[color:var(--color-myntra-pink)] underline"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+
           {/* Reviews list */}
-          {approved.length === 0 ? (
+          {loading ? (
+            <div className="flex flex-col gap-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="animate-pulse flex gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[color:var(--color-myntra-bg-soft)] shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 w-1/3 bg-[color:var(--color-myntra-bg-soft)] rounded" />
+                    <div className="h-3 w-full bg-[color:var(--color-myntra-bg-soft)] rounded" />
+                    <div className="h-3 w-5/6 bg-[color:var(--color-myntra-bg-soft)] rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : reviews.length === 0 ? (
             <div className="border border-dashed border-[color:var(--color-myntra-border)] rounded p-8 text-center">
               <MessageSquare className="w-8 h-8 mx-auto text-[color:var(--color-myntra-ink-mute)] mb-2" />
               <p className="text-[14px] font-bold text-[color:var(--color-myntra-navy)]">
-                Be the first to review this weave.
+                Be the first to write about this weave.
               </p>
-              <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mt-1">
+              <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mt-1 mb-4">
                 Your insights help other heirloom-hunters choose with confidence.
               </p>
+              {!user && (
+                <button
+                  type="button"
+                  onClick={() => navigate({ name: 'login' })}
+                  className="btn-outline"
+                >
+                  Sign in to leave a review
+                </button>
+              )}
             </div>
           ) : (
             <ul className="flex flex-col divide-y divide-[color:var(--color-myntra-border-soft)]">
