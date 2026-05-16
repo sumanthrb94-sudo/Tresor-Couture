@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { ChevronDown, ChevronUp, Heart, MapPin, ShieldCheck, ShoppingBag, Star, Truck, Zap } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Heart, MapPin, ShieldCheck, ShoppingBag, Star, Truck, Zap } from 'lucide-react';
 import { formatINR } from '../constants';
 import { useRouter } from '../context/RouterContext';
 import { useCart } from '../context/CartContext';
@@ -91,12 +91,26 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
   const wished = hasWish(fabric.id);
   const linePrice = fabric.pricePerMeter * meters;
 
+  // Brief visual confirmation before bouncing to /cart — gives the user a
+  // beat to register that the action took effect (and softens slow networks).
+  const [justAdded, setJustAdded] = useState(false);
+  const addTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => {
+    if (addTimerRef.current) clearTimeout(addTimerRef.current);
+  }, []);
+
   const handleAdd = () => {
+    if (!fabric) return;
     addItem({ fabricId: fabric.id, meters, color: selectedColor });
-    navigate({ name: 'cart' });
+    setJustAdded(true);
+    if (addTimerRef.current) clearTimeout(addTimerRef.current);
+    addTimerRef.current = setTimeout(() => {
+      navigate({ name: 'cart' });
+    }, 650);
   };
 
   const handleWish = () => {
+    if (!fabric) return;
     toggleWish(fabric.id);
   };
 
@@ -237,10 +251,18 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
               <button
                 id="pdp-add-to-bag"
                 onClick={handleAdd}
-                disabled={meters <= 0 || meters > stock}
+                disabled={meters <= 0 || meters > stock || justAdded}
                 className="btn-primary flex-1 inline-flex justify-center items-center gap-2"
               >
-                <ShoppingBag className="w-5 h-5" /> Add to Bag
+                {justAdded ? (
+                  <>
+                    <Check className="w-5 h-5" /> Added to Bag
+                  </>
+                ) : (
+                  <>
+                    <ShoppingBag className="w-5 h-5" /> Add to Bag
+                  </>
+                )}
               </button>
               <button
                 onClick={handleWish}

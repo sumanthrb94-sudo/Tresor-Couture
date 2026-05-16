@@ -25,8 +25,11 @@ const NAV: NavEntry[] = [
 ];
 
 const Navbar: React.FC = () => {
-  const { itemCount } = useCart();
-  const { count: wishCount } = useWishlist();
+  // Use the raw items array for badge counts — `itemCount` derives from
+  // `resolved` which is empty until the Firestore product cache hydrates,
+  // so the badge would briefly read "0" right after Add to Bag.
+  const { items: cartItems } = useCart();
+  const { ids: wishIds } = useWishlist();
   const { user, isAdmin, logout } = useAuth();
   const { navigate, route } = useRouter();
 
@@ -42,8 +45,8 @@ const Navbar: React.FC = () => {
     return () => { document.body.style.overflow = ''; };
   }, [mobileOpen]);
 
-  const cartBadge = Math.min(itemCount, 99);
-  const wishBadge = Math.min(wishCount, 99);
+  const cartBadge = Math.min(cartItems.length, 99);
+  const wishBadge = Math.min(wishIds.length, 99);
 
   const suggestions = useMemo(() => {
     const q = search.trim().toLowerCase();
