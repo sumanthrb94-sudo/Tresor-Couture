@@ -1,0 +1,108 @@
+rules_version = '2';
+
+// Free-tier security model: no Cloud Functions, so every business rule
+// is enforced HERE. Clients read/write Firestore directly via the Web SDK;
+// these rules are the entire security boundary.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /* ---------- helpers ---------- */
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+    function fieldChanged(field) {
+      return request.resource.data[field] != resource.data[field];
+    }
+    function priceOf(productId) {
+      return get(/databases/$(database)/documents/products/$(productId)).data.pricePerMeter;
+    }
+
+    /* ---------- products ---------- */
+    // Public read · admin write (UI gated to admins via the custom claim).
+    match /products/{productId} {
+      allow read:   if true;
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasAll(['brand', 'name', 'pricePerMeter', 'masterCategory', 'category'])
+        && request.resource.data.pricePerMeter is number
+        && request.resource.data.pricePerMeter >= 0;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    /* ---------- coupons ---------- */
+    // Code is the document ID. Public read so the checkout can validate;
+    // admin-only write.
+    match /coupons/{code} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    /* ---------- users ---------- */
+    // Owner reads + updates their own profile. Role and createdAt are
+    // protected — only admins can change them.
+    match /users/{userId} {
+      allow read:   if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId)
+        && request.resource.data.role == 'customer'
+        && request.resource.data.uid == userId
+        && request.resource.data.keys().hasAll(['email', 'fullName', 'role']);
+      allow update: if (isOwner(userId)
+                        && !fieldChanged('role')
+                        && !fieldChanged('uid')
+                        && !fieldChanged('createdAt'))
+                     || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    /* ---------- orders ---------- */
+    // An order belongs to the signed-in user; admin sees everything.
+    // Creation must include the authenticated uid, an initial 'placed'
+    // status, and at least one item. Updates are admin-only (fulfilment).
+    match /orders/{orderId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'placed'
+        && request.resource.data.items.size() > 0
+        && request.resource.data.total is number
+        && request.resource.data.total >= 0;
+      allow update, delete: if isAdmin();
+    }
+
+    /* ---------- reviews ---------- */
+    // Anyone signed-in can submit a review for any product. Reviews go
+    // into 'pending' for admin moderation. Owner can delete their own;
+    // admin can do anything.
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.rating is number
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5;
+      allow update: if isAdmin();
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    /* ---------- carts ---------- */
+    // Each signed-in user owns exactly one cart doc keyed by their uid.
+    // Used by CartContext to sync the bag across devices; guests stay on
+    // localStorage. No public read — carts are private to the owner.
+    match /carts/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    /* ---------- deny everything else ---------- */
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

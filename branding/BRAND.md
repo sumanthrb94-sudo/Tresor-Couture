@@ -51,3 +51,15 @@ Loaded from Google Fonts in `src/index.css`.
 ## Tone
 
 Curated, restrained, archival. Treat every product like a museum artefact. Avoid exclamation marks. Prefer present tense, second person, and Indian-English spelling.
+
+## Social media & print kit
+
+The full production-ready kit (favicons, OG previews, Instagram / Facebook / Twitter / LinkedIn / Pinterest / YouTube graphics, business card, letterhead, invoice, packing slip, hangtag, care card, thank-you card, wax-seal sticker, email signature) lives in `branding/favicons/`, `branding/social/`, and `branding/print/`. See `branding/KIT-INDEX.md` for the full catalog.
+
+To regenerate every raster asset from source:
+
+```sh
+python3 branding/generate.py
+```
+
+The script reads `palette.json` + `monogram-master.png` + fonts from `branding/_fonts/`, writes into `branding/favicons/` and `branding/social/`, then mirrors them into `public/branding/` so the site serves them immediately.

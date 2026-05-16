@@ -5,27 +5,27 @@
   --font-sans: "Assistant", "Whitney", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-display: "Manrope", "Assistant", system-ui, sans-serif;
 
-  /* Myntra / Jabong inspired palette */
-  --color-myntra-pink: #FF3F6C;
-  --color-myntra-pink-dark: #E5325E;
-  --color-myntra-orange: #FF905A;
-  --color-myntra-yellow: #F1AC11;
-  --color-myntra-green: #03A685;
-  --color-myntra-green-light: #14CDA8;
-  --color-myntra-navy: #282C3F;
-  --color-myntra-ink: #3E4152;
-  --color-myntra-ink-soft: #696B79;
-  --color-myntra-ink-mute: #94969F;
-  --color-myntra-border: #D4D5D9;
-  --color-myntra-border-soft: #EAEAEC;
-  --color-myntra-bg: #FFFFFF;
-  --color-myntra-bg-soft: #F5F5F6;
-  --color-myntra-bg-sale: #FFF4D6;
-  --color-myntra-rating-bg: #14958F;
+  /* Trésor Couture palette — cream + champagne gold, drawn from the master logo. */
+  --color-myntra-pink: #B8915A;        /* primary CTA: champagne gold (was Myntra pink) */
+  --color-myntra-pink-dark: #8B6F2E;   /* CTA hover: deep antique gold */
+  --color-myntra-orange: #C9A267;      /* warm gold accent (was orange) */
+  --color-myntra-yellow: #E5C97A;      /* soft cream gold */
+  --color-myntra-green: #6B7F4F;       /* muted olive — success / savings */
+  --color-myntra-green-light: #8FA571; /* sage hover */
+  --color-myntra-navy: #2A2520;        /* warm charcoal-brown (was cool navy) */
+  --color-myntra-ink: #3D362B;
+  --color-myntra-ink-soft: #6B6358;
+  --color-myntra-ink-mute: #98917F;
+  --color-myntra-border: #DECCAC;
+  --color-myntra-border-soft: #EAD9BB;
+  --color-myntra-bg: #F1E1C3;          /* warm cream — matches logo background */
+  --color-myntra-bg-soft: #ECDBBC;     /* slightly deeper cream surface */
+  --color-myntra-bg-sale: #F5E5C2;     /* pale gold deals strip */
+  --color-myntra-rating-bg: #6B7F4F;
 }
 
 @layer base {
-  html, body { background: #FFFFFF; }
+  html, body { background: var(--color-myntra-bg); }
   body {
     @apply text-[color:var(--color-myntra-navy)] font-sans antialiased;
     font-feature-settings: "ss01" on, "cv01" on;
@@ -36,6 +36,7 @@
 }
 
 /* ───────────── Buttons ───────────── */
+@layer components {
 .btn-primary {
   background: var(--color-myntra-pink);
   color: #fff;
@@ -160,7 +161,7 @@
 .chip-active {
   border-color: var(--color-myntra-pink);
   color: var(--color-myntra-pink);
-  background: #FFF1F5;
+  background: #F5E8C8;
 }
 
 /* ───────────── Section headings ───────────── */
@@ -193,6 +194,13 @@
 
 .no-tap-highlight { -webkit-tap-highlight-color: transparent; }
 
+/* Logo blend — the master PNG has a cream backdrop; multiply blend with the
+   surrounding cream chrome makes the rectangular edge disappear. */
+.logo-blend {
+  mix-blend-mode: multiply;
+  filter: contrast(1.02) saturate(1.05);
+}
+
 /* Strike-through MRP */
 .mrp { color: var(--color-myntra-ink-mute); text-decoration: line-through; font-weight: 500; }
 
@@ -212,3 +220,5 @@
   to { transform: translateX(-50%); }
 }
 .marquee-track { animation: marquee 28s linear infinite; }
+
+}

@@ -1,20 +1,35 @@
 import React, { useState } from 'react';
-import { ChevronDown, MapPin, ShieldCheck, ShoppingBag, Tag, Trash2 } from 'lucide-react';
+import { ChevronDown, MapPin, RefreshCw, ShieldCheck, ShoppingBag, Tag, Trash2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
-import { FABRICS, FREE_SHIPPING_THRESHOLD, discountPct, formatINR } from '../constants';
+import { FABRICS, FREE_SHIPPING_THRESHOLD, formatINR } from '../constants';
+import { couponsApi } from '../lib/firebase';
 import FabricImage from '../components/FabricImage';
 import ProductCard from '../components/ProductCard';
 
 const CartPage: React.FC = () => {
-  const { resolved, updateMeters, removeItem, subtotal, shipping, tax, total } = useCart();
+  const { items, resolved, resolving, updateMeters, removeItem, subtotal, shipping, tax, total } = useCart();
   const { add: addWish } = useWishlist();
+  const { user } = useAuth();
   const { navigate } = useRouter();
   const [coupon, setCoupon] = useState('');
   const [couponMsg, setCouponMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponBusy, setCouponBusy] = useState(false);
   const [pin, setPin] = useState('');
+
+  // Items are in the cart but their product details haven't been fetched yet
+  // (first visit after Firestore sync). Show a spinner instead of an "empty"
+  // false-positive.
+  if (resolving && items.length > 0 && resolved.length === 0) {
+    return (
+      <main className="pt-[140px] pb-20 min-h-screen flex items-center justify-center bg-[color:var(--color-myntra-bg-soft)]">
+        <div className="w-8 h-8 border-2 border-[color:var(--color-myntra-pink)] border-t-transparent rounded-full animate-spin" aria-label="Loading bag" />
+      </main>
+    );
+  }
 
   if (resolved.length === 0) {
     return (
@@ -23,7 +38,14 @@ const CartPage: React.FC = () => {
           <ShoppingBag className="w-14 h-14 mx-auto text-[color:var(--color-myntra-ink-mute)] mb-5" />
           <h1 className="text-2xl font-extrabold mb-2">Your bag is empty</h1>
           <p className="text-[14px] text-[color:var(--color-myntra-ink-soft)] mb-6">
-            Have an account? <span className="text-[color:var(--color-myntra-pink)] font-bold">Log in</span> to see saved items.
+            {user
+              ? 'Add hand-cut fabrics from the shop to start a bag — saved across your devices.'
+              : (<>
+                  <button onClick={() => navigate({ name: 'login' })} className="text-[color:var(--color-myntra-pink)] font-bold hover:underline">
+                    Sign in
+                  </button>
+                  {' '}to see items saved from a previous visit, or start a new bag below.
+                </>)}
           </p>
           <button onClick={() => navigate({ name: 'shop' })} className="btn-primary">Shop Now</button>
         </div>
@@ -31,23 +53,33 @@ const CartPage: React.FC = () => {
     );
   }
 
-  const mrpTotal = resolved.reduce((s, { item, fabric }) => s + fabric.mrpPerMeter * item.meters, 0);
-  const productDiscount = mrpTotal - subtotal;
   const totalAfterCoupon = Math.max(0, total - couponDiscount);
   const remainingForFreeShip = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
 
-  const applyCoupon = () => {
+  const applyCoupon = async () => {
     const code = coupon.trim().toUpperCase();
     if (!code) return;
-    if (code === 'WEDDING50') {
-      setCouponDiscount(Math.round(subtotal * 0.1));
-      setCouponMsg({ ok: true, text: '🎉 Extra ₹' + Math.round(subtotal * 0.1).toLocaleString('en-IN') + ' off applied.' });
-    } else if (code === 'UPI10') {
-      setCouponDiscount(Math.round(subtotal * 0.05));
-      setCouponMsg({ ok: true, text: '✅ UPI cashback ₹' + Math.round(subtotal * 0.05).toLocaleString('en-IN') + ' applied.' });
-    } else {
+    setCouponBusy(true);
+    try {
+      const res = await couponsApi.validate(code, subtotal);
+      if (!res.valid) {
+        setCouponDiscount(0);
+        const text =
+          res.reason === 'not_found'    ? 'Coupon code is invalid.'
+        : res.reason === 'inactive'     ? 'This coupon is no longer active.'
+        : res.reason === 'expired'      ? 'This coupon has expired.'
+        : res.reason === 'min_subtotal' ? `Add ${formatINR(res.minSubtotal ?? 0)} more to use this coupon.`
+        : 'This coupon cannot be used.';
+        setCouponMsg({ ok: false, text });
+        return;
+      }
+      setCouponDiscount(res.discount);
+      setCouponMsg({ ok: true, text: `Applied — ${formatINR(res.discount)} off.` });
+    } catch (err) {
       setCouponDiscount(0);
-      setCouponMsg({ ok: false, text: 'Coupon code is invalid or expired.' });
+      setCouponMsg({ ok: false, text: err instanceof Error ? err.message : 'Could not validate coupon.' });
+    } finally {
+      setCouponBusy(false);
     }
   };
 
@@ -56,9 +88,24 @@ const CartPage: React.FC = () => {
   return (
     <main className="pt-[100px] pb-12 md:pb-16 bg-[color:var(--color-myntra-bg-soft)] min-h-screen">
       <div className="max-w-[1200px] mx-auto px-4 md:px-8 lg:px-10">
-        <h1 className="text-xl md:text-2xl font-extrabold mb-4 text-[color:var(--color-myntra-navy)]">
+        <h1 className="text-xl md:text-2xl font-extrabold mb-2 text-[color:var(--color-myntra-navy)]">
           My Bag <span className="text-[14px] font-medium text-[color:var(--color-myntra-ink-mute)] ml-2">{resolved.length} item{resolved.length === 1 ? '' : 's'}</span>
         </h1>
+
+        {user ? (
+          <p className="text-[12px] text-[color:var(--color-myntra-green)] font-semibold mb-4 inline-flex items-center gap-1.5">
+            <RefreshCw className="w-3.5 h-3.5" /> Synced across your devices
+          </p>
+        ) : (
+          <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] font-semibold mb-4">
+            <button
+              onClick={() => navigate({ name: 'login' })}
+              className="text-[color:var(--color-myntra-pink)] hover:underline"
+            >
+              Sign in to save your bag across devices →
+            </button>
+          </p>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4 lg:gap-6">
           <div className="space-y-3">
@@ -85,8 +132,6 @@ const CartPage: React.FC = () => {
             {/* Items */}
             {resolved.map(({ item, fabric }) => {
               const linePrice = item.meters * fabric.pricePerMeter;
-              const lineMrp = item.meters * fabric.mrpPerMeter;
-              const pct = discountPct(fabric.pricePerMeter, fabric.mrpPerMeter);
               const stock = fabric.inStockMeters ?? 999;
               const options = fabric.lengthOptions?.filter(l => l <= stock) ?? [1, 2, 3, 5];
 
@@ -125,12 +170,6 @@ const CartPage: React.FC = () => {
 
                     <div className="flex items-baseline gap-2 flex-wrap mt-2">
                       <span className="text-[15px] font-bold">{formatINR(linePrice)}</span>
-                      {lineMrp > linePrice && (
-                        <>
-                          <span className="text-[13px] mrp">{formatINR(lineMrp)}</span>
-                          <span className="text-[13px] font-bold text-[color:var(--color-myntra-orange)]">({pct}% OFF)</span>
-                        </>
-                      )}
                     </div>
                     <p className="text-[12px] text-[color:var(--color-myntra-green)] font-semibold mt-1">
                       Delivery by {new Date(Date.now() + 5 * 86400000).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} | Free
@@ -179,7 +218,7 @@ const CartPage: React.FC = () => {
                     placeholder="Enter coupon code"
                     className="input-box flex-1"
                   />
-                  <button onClick={applyCoupon} className="text-[13px] font-bold text-[color:var(--color-myntra-pink)] px-3">APPLY</button>
+                  <button onClick={applyCoupon} disabled={couponBusy} className="text-[13px] font-bold text-[color:var(--color-myntra-pink)] px-3 disabled:opacity-60">{couponBusy ? '...' : 'APPLY'}</button>
                 </div>
                 {couponMsg && (
                   <p className={`text-[12px] mt-2 font-semibold ${couponMsg.ok ? 'text-[color:var(--color-myntra-green)]' : 'text-[color:var(--color-myntra-pink)]'}`}>
@@ -200,12 +239,8 @@ const CartPage: React.FC = () => {
 
                 <dl className="space-y-2.5 text-[14px]">
                   <div className="flex justify-between">
-                    <dt className="text-[color:var(--color-myntra-ink)]">Total MRP</dt>
-                    <dd>{formatINR(mrpTotal)}</dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-[color:var(--color-myntra-ink)]">Discount on MRP</dt>
-                    <dd className="text-[color:var(--color-myntra-green)]">- {formatINR(productDiscount)}</dd>
+                    <dt className="text-[color:var(--color-myntra-ink)]">Subtotal</dt>
+                    <dd>{formatINR(subtotal)}</dd>
                   </div>
                   {couponDiscount > 0 && (
                     <div className="flex justify-between">
@@ -240,7 +275,7 @@ const CartPage: React.FC = () => {
               <div className="bg-white border border-[color:var(--color-myntra-border-soft)] p-4 flex items-center gap-3">
                 <ShieldCheck className="w-7 h-7 text-[color:var(--color-myntra-ink-soft)]" />
                 <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] leading-snug">
-                  Safe and Secure Payments. Easy returns. 100% authentic hand-woven products.
+                  Safe and secure payments. Free shipping over ₹1,999. 40-minute delivery across Hyderabad. 100% authentic hand-woven.
                 </p>
               </div>
             </div>

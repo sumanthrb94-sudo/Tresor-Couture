@@ -1,7 +1,7 @@
 import React from 'react';
 import { Heart, Star } from 'lucide-react';
 import { Fabric } from '../types';
-import { discountPct, formatINR } from '../constants';
+import { formatINR } from '../constants';
 import { useRouter } from '../context/RouterContext';
 import { useWishlist } from '../context/WishlistContext';
 import FabricImage from './FabricImage';
@@ -16,7 +16,6 @@ const ProductCard: React.FC<Props> = ({ fabric, compact = false }) => {
   const { navigate } = useRouter();
   const { has, toggle } = useWishlist();
   const wished = has(fabric.id);
-  const pct = discountPct(fabric.pricePerMeter, fabric.mrpPerMeter);
 
   return (
     <div className={`card-product group ${compact ? 'w-[170px] md:w-[200px] shrink-0' : ''}`}>
@@ -50,20 +49,16 @@ const ProductCard: React.FC<Props> = ({ fabric, compact = false }) => {
           <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)] truncate mb-1.5">
             {fabric.name}
           </p>
+          {fabric.subCategory && (
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.08em] text-[color:var(--color-myntra-ink-mute)] mb-1">
+              {fabric.subCategory}
+            </p>
+          )}
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className="text-[14px] font-bold text-[color:var(--color-myntra-navy)]">
               {formatINR(fabric.pricePerMeter)}
             </span>
-            {fabric.mrpPerMeter > fabric.pricePerMeter && (
-              <>
-                <span className="text-[12px] mrp">{formatINR(fabric.mrpPerMeter)}</span>
-                <span className="text-[12px] font-bold text-[color:var(--color-myntra-orange)]">
-                  ({pct}% OFF)
-                </span>
-              </>
-            )}
           </div>
-          <p className="text-[11px] mt-1 text-[color:var(--color-myntra-ink-mute)]">per meter</p>
         </div>
       </button>
 

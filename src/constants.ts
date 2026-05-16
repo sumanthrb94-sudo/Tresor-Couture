@@ -1,4 +1,5 @@
 import { Fabric, Collection, Testimonial } from './types';
+import type { MasterCategory } from './types';
 import { fabricSwatch } from './lib/swatch';
 import { photoUrl, SOURCES } from './lib/photo';
 
@@ -20,7 +21,7 @@ export const FABRICS: Fabric[] = [
   {
     id: '1',
     brand: BRAND,
-    name: 'Mashru Silk-Satin Fabric (per meter)',
+    name: 'Mashru Silk-Satin Fabric',
     description:
       'A "permitted" fabric where silk never touches the skin. Hand-woven by the last four families of Mandvi keeping this craft alive. Lustrous satin face on a cotton ground, ideal for jackets, lehengas and cushion covers.',
     pricePerMeter: 4500,
@@ -34,6 +35,7 @@ export const FABRICS: Fabric[] = [
       swatch('f1c', '#F2EBDD', '#C5A059', '#7A1F2C', 'satin', 'Mashru Silk-Satin', 'Ivory')
     ],
     category: 'Satin',
+    masterCategory: 'Fabrics',
     origin: 'Mandvi, Gujarat',
     tags: ['Endangered', 'Handloom', 'Heritage'],
     sticker: 'Bestseller',
@@ -66,6 +68,7 @@ export const FABRICS: Fabric[] = [
       swatch('f2c', '#C5A059', '#7A1F2C', '#F2EBDD', 'brocade', 'Real Zari Banarasi', 'Gold')
     ],
     category: 'Silk',
+    masterCategory: 'Fabrics',
     origin: 'Varanasi',
     tags: ['Royal Heritage', 'Silver Thread', 'Authentic'],
     sticker: 'Trending',
@@ -97,6 +100,7 @@ export const FABRICS: Fabric[] = [
       swatch('f3b', '#1E3A8A', '#C5A059', '#F2EBDD', 'ikat', 'Patan Patola', 'Royal Blue')
     ],
     category: 'Silk',
+    masterCategory: 'Fabrics',
     origin: 'Patan, Gujarat',
     tags: ['Rarest', 'Double Ikkat', 'Museum Grade'],
     sticker: 'Limited',
@@ -127,6 +131,7 @@ export const FABRICS: Fabric[] = [
       swatch('f4b', '#B5B8B1', '#EDE7DA', '#7A7A4F', 'jamdani', 'Dhakai Jamdani', 'Mist Grey')
     ],
     category: 'Cotton',
+    masterCategory: 'Fabrics',
     origin: 'West Bengal',
     tags: ['Ethereal', 'Ancient Craft', 'Hand-spun'],
     sticker: 'New In',
@@ -158,9 +163,9 @@ export const FABRICS: Fabric[] = [
       swatch('f5c', '#E5D3A8', '#C5A059', '#7A1F2C', 'plain', 'Chanderi', 'Champagne')
     ],
     category: 'Mixed',
+    masterCategory: 'Fabrics',
     origin: 'Chanderi, Madhya Pradesh',
     tags: ['Sheer', 'Lightweight', 'Summer'],
-    sticker: 'Hot Deal',
     colors: [
       { name: 'Powder Pink', hex: '#E8C7C8' },
       { name: 'Mint', hex: '#B6D7C9' },
@@ -189,6 +194,7 @@ export const FABRICS: Fabric[] = [
       swatch('f6b', '#3A3A3A', '#D8C8AE', '#C5A059', 'twill', 'Pashmina', 'Charcoal')
     ],
     category: 'Wool',
+    masterCategory: 'Fabrics',
     origin: 'Ladakh',
     tags: ['Heirloom', 'Hand-spun', 'Winter'],
     sticker: 'Bestseller',
@@ -206,7 +212,7 @@ export const FABRICS: Fabric[] = [
   {
     id: '7',
     brand: BRAND,
-    name: 'Belgian Linen Fabric (per meter)',
+    name: 'Belgian Linen Fabric',
     description:
       'European flax linen with a crisp hand and natural slub. Ages beautifully and softens with each wash. A modern essential.',
     pricePerMeter: 1850,
@@ -221,9 +227,9 @@ export const FABRICS: Fabric[] = [
       swatch('f7d', '#F2EBDD', '#D9CDB3', '#7A7A4F', 'plain', 'Belgian Linen', 'Ivory')
     ],
     category: 'Linen',
+    masterCategory: 'Fabrics',
     origin: 'Flanders, Belgium',
     tags: ['Sustainable', 'Modern', 'Everyday'],
-    sticker: 'Hot Deal',
     colors: [
       { name: 'Oat', hex: '#D9CDB3' },
       { name: 'Slate', hex: '#6E747B' },
@@ -253,6 +259,7 @@ export const FABRICS: Fabric[] = [
       swatch('f8b', '#C9266B', '#C5A059', '#F2EBDD', 'kanjivaram', 'Kanjivaram', 'Rani Pink')
     ],
     category: 'Silk',
+    masterCategory: 'Fabrics',
     origin: 'Kanchipuram, Tamil Nadu',
     tags: ['Bridal', 'Temple Border', 'Mulberry'],
     sticker: 'Trending',
@@ -283,9 +290,9 @@ export const FABRICS: Fabric[] = [
       swatch('f9b', '#2A3F66', '#9B3A2A', '#F2EBDD', 'kalamkari', 'Kalamkari', 'Indigo')
     ],
     category: 'Cotton',
+    masterCategory: 'Fabrics',
     origin: 'Srikalahasti, Andhra Pradesh',
     tags: ['Hand-painted', 'Natural Dyes', 'Story Cloth'],
-    sticker: 'Hot Deal',
     colors: [
       { name: 'Madder Red', hex: '#9B3A2A' },
       { name: 'Indigo', hex: '#2A3F66' }
@@ -314,6 +321,7 @@ export const FABRICS: Fabric[] = [
       swatch('f10c', '#9A958A', '#3A3A3A', '#C5A059', 'twill', 'Italian Merino', 'Stone')
     ],
     category: 'Wool',
+    masterCategory: 'Fabrics',
     origin: 'Biella, Italy',
     tags: ['Suiting', 'Super 130s', 'Bespoke'],
     sticker: 'Bestseller',
@@ -345,6 +353,7 @@ export const FABRICS: Fabric[] = [
       swatch('f11b', '#D6A93B', '#C8312B', '#F2EBDD', 'tie-dye', 'Bandhani', 'Mustard')
     ],
     category: 'Silk',
+    masterCategory: 'Fabrics',
     origin: 'Kutch, Gujarat',
     tags: ['Tie-Dye', 'Festive', 'Hand-knotted'],
     sticker: 'Trending',
@@ -375,6 +384,7 @@ export const FABRICS: Fabric[] = [
       swatch('f12b', '#A6B89A', '#E7DFCF', '#C5A059', 'plain', 'Linen-Silk', 'Sage')
     ],
     category: 'Mixed',
+    masterCategory: 'Fabrics',
     origin: 'Bhagalpur',
     tags: ['Blend', 'Drape', 'Versatile'],
     sticker: 'New In',
@@ -388,6 +398,521 @@ export const FABRICS: Fabric[] = [
     weaveType: 'Plain weave',
     rating: 4.5,
     reviewCount: 67
+  },
+  {
+    id: '13',
+    brand: BRAND,
+    name: 'Pure Mulberry Silk — Undyed Greige',
+    description:
+      'A blank canvas of pure mulberry silk in its natural greige state. Ready for your dyer, your motif, your story. Soft, lustrous and uniformly woven for flawless dye uptake.',
+    pricePerMeter: 1450,
+    mrpPerMeter: 2299,
+    photo: p(SOURCES.linenSilk),
+    image: swatch('f13', '#EFE7D2', '#D9CDB3', '#C5A059', 'plain', 'Undyed Mulberry Silk', 'Bengaluru'),
+    category: 'Silk',
+    masterCategory: 'Dyeable Fabrics',
+    subCategory: 'Silk',
+    origin: 'Bengaluru, Karnataka',
+    tags: ['Undyed', 'Dye-Ready', 'Pure Silk'],
+    sticker: 'New In',
+    colors: [{ name: 'Greige', hex: '#EFE7D2' }],
+    lengthOptions: [1, 2, 3, 5, 8],
+    widthInches: 44,
+    inStockMeters: 180,
+    weaveType: 'Plain weave',
+    rating: 4.6,
+    reviewCount: 41
+  },
+  {
+    id: '14',
+    brand: BRAND,
+    name: 'Cotton Mulmul — Bleached White',
+    description:
+      'Featherweight cotton mulmul, gently bleached and primed for your dye bath. Breathes like a whisper, drapes like air. The dyer\'s favourite ground cloth.',
+    pricePerMeter: 480,
+    mrpPerMeter: 799,
+    photo: p(SOURCES.kalamkari),
+    image: swatch('f14', '#F7F2E8', '#EDE7DA', '#C5A059', 'plain', 'Cotton Mulmul', 'Kolkata'),
+    category: 'Cotton',
+    masterCategory: 'Dyeable Fabrics',
+    subCategory: 'Cotton',
+    origin: 'Kolkata, West Bengal',
+    tags: ['Undyed', 'Featherlight', 'Dye-Ready'],
+    colors: [{ name: 'Optic White', hex: '#F7F2E8' }],
+    lengthOptions: [1, 2, 3, 5, 10],
+    widthInches: 44,
+    inStockMeters: 420,
+    weaveType: 'Plain weave',
+    rating: 4.4,
+    reviewCount: 86
+  },
+  {
+    id: '15',
+    brand: BRAND,
+    name: 'Raw Linen — Natural Flax',
+    description:
+      'Slubbed European flax linen in its undyed, unbleached state. Honey-toned warmth straight from the loom — accepts plant and acid dyes with depth and character.',
+    pricePerMeter: 1180,
+    mrpPerMeter: 1899,
+    photo: p(SOURCES.linen),
+    image: swatch('f15', '#D9CDB3', '#B89F6E', '#7A7A4F', 'plain', 'Raw Linen', 'Bhagalpur'),
+    category: 'Linen',
+    masterCategory: 'Dyeable Fabrics',
+    subCategory: 'Linen',
+    origin: 'Bhagalpur, Bihar',
+    tags: ['Undyed', 'Natural Flax', 'Sustainable'],
+    sticker: 'New In',
+    colors: [{ name: 'Natural Flax', hex: '#D9CDB3' }],
+    lengthOptions: [1, 2, 3, 5, 8],
+    widthInches: 58,
+    inStockMeters: 210,
+    weaveType: 'Plain weave',
+    rating: 4.5,
+    reviewCount: 53
+  },
+  {
+    id: '16',
+    brand: BRAND,
+    name: 'Banarasi Katan Silk Saree — Imperial Maroon',
+    description:
+      'Six and a half yards of hand-woven Banarasi katan silk, brocaded with kadhua zari florals. Pit-loom crafted in Varanasi over forty days. A bridal heirloom.',
+    pricePerMeter: 38500,
+    mrpPerMeter: 54999,
+    photo: p(SOURCES.banarasi),
+    photoGallery: [p(SOURCES.banarasi), p(SOURCES.banarasi2), p(SOURCES.banarasi3)],
+    image: swatch('f16', '#7A1F2C', '#C5A059', '#F2EBDD', 'brocade', 'Banarasi Saree', 'Varanasi'),
+    category: 'Silk',
+    masterCategory: 'Sarees',
+    subCategory: 'Banarasi',
+    origin: 'Varanasi',
+    tags: ['Bridal', 'Pure Zari', 'Heirloom'],
+    sticker: 'Bestseller',
+    colors: [{ name: 'Imperial Maroon', hex: '#7A1F2C' }],
+    widthInches: 47,
+    inStockMeters: 6,
+    weaveType: 'Kadhua Brocade',
+    rating: 4.9,
+    reviewCount: 73
+  },
+  {
+    id: '17',
+    brand: BRAND,
+    name: 'Kanjivaram Silk Saree — Peacock Temple Border',
+    description:
+      'Three-shuttle Kanjivaram silk with korvai temple borders and a contrast pallu. Heavyweight, regal and finished with hand-tied jasdi.',
+    pricePerMeter: 24500,
+    mrpPerMeter: 36999,
+    photo: p(SOURCES.kanjivaram),
+    photoGallery: [p(SOURCES.kanjivaram), p(SOURCES.kanjivaram2)],
+    image: swatch('f17', '#0E5E6F', '#C5A059', '#F2EBDD', 'kanjivaram', 'Kanjivaram Saree', 'Kanchipuram'),
+    category: 'Silk',
+    masterCategory: 'Sarees',
+    subCategory: 'Kanjivaram',
+    origin: 'Kanchipuram, Tamil Nadu',
+    tags: ['Temple Border', 'Korvai', 'South Indian'],
+    sticker: 'Trending',
+    colors: [{ name: 'Peacock', hex: '#0E5E6F' }],
+    widthInches: 47,
+    inStockMeters: 9,
+    weaveType: 'Three-shuttle Korvai',
+    rating: 4.8,
+    reviewCount: 58
+  },
+  {
+    id: '18',
+    brand: BRAND,
+    name: 'Patola Silk Saree — Crimson Geometry',
+    description:
+      'Single-ikat Rajkot Patola in vermilion and indigo. Geometric parrots and elephants march along the pallu — a Gujarati legacy distilled into a single drape.',
+    pricePerMeter: 42000,
+    mrpPerMeter: 59999,
+    photo: p(SOURCES.patola),
+    photoGallery: [p(SOURCES.patola), p(SOURCES.patola2)],
+    image: swatch('f18', '#9B1B30', '#1E3A8A', '#F2EBDD', 'ikat', 'Patola Saree', 'Rajkot'),
+    category: 'Silk',
+    masterCategory: 'Sarees',
+    subCategory: 'Patola',
+    origin: 'Rajkot, Gujarat',
+    tags: ['Single Ikat', 'Heritage', 'Festive'],
+    sticker: 'Limited',
+    colors: [{ name: 'Crimson', hex: '#9B1B30' }],
+    widthInches: 45,
+    inStockMeters: 4,
+    weaveType: 'Single Ikat',
+    rating: 4.9,
+    reviewCount: 31
+  },
+  {
+    id: '19',
+    brand: BRAND,
+    name: 'Half Saree Set — Powder Pink Chanderi',
+    description:
+      'A three-piece langa-voni in featherlight Chanderi silk-cotton: pleated lehenga, fitted blouse and four-yard dupatta. A coming-of-age silhouette reimagined for today.',
+    pricePerMeter: 8900,
+    mrpPerMeter: 13999,
+    photo: p(SOURCES.jamdani),
+    image: swatch('f19', '#E8C7C8', '#C5A059', '#F2EBDD', 'plain', 'Half Saree', 'Hyderabad'),
+    category: 'Mixed',
+    masterCategory: 'Sarees',
+    subCategory: 'Half Sarees',
+    origin: 'Hyderabad',
+    tags: ['Langa Voni', 'Three-Piece', 'Festive'],
+    sticker: 'New In',
+    colors: [{ name: 'Powder Pink', hex: '#E8C7C8' }],
+    widthInches: 44,
+    inStockMeters: 12,
+    weaveType: 'Chanderi plain weave',
+    rating: 4.6,
+    reviewCount: 27
+  },
+  {
+    id: '20',
+    brand: BRAND,
+    name: 'Bandhani Gharchola Saree — Vermilion & Gold',
+    description:
+      'A Gujarati bridal classic: silk grid of zari checks dotted with hand-tied bandhani. Worn by Gujarati and Marwari brides for generations.',
+    pricePerMeter: 3800,
+    mrpPerMeter: 5999,
+    photo: p(SOURCES.bandhani),
+    photoGallery: [p(SOURCES.bandhani), p(SOURCES.bandhani2)],
+    image: swatch('f20', '#C8312B', '#D6A93B', '#F2EBDD', 'tie-dye', 'Bandhani Gharchola', 'Kutch'),
+    category: 'Silk',
+    masterCategory: 'Sarees',
+    subCategory: 'Bandhani',
+    origin: 'Kutch, Gujarat',
+    tags: ['Gharchola', 'Bridal', 'Hand-knotted'],
+    sticker: 'Trending',
+    colors: [{ name: 'Vermilion', hex: '#C8312B' }],
+    widthInches: 44,
+    inStockMeters: 14,
+    weaveType: 'Resist-dyed silk',
+    rating: 4.7,
+    reviewCount: 64
+  },
+  {
+    id: '21',
+    brand: BRAND,
+    name: 'Bridal Lehenga — Banarasi Tissue & Pearl',
+    description:
+      'A nine-kali bridal lehenga in tissue Banarasi silk, hand-embroidered with seed pearls and zardozi. Includes choli and four-yard tissue dupatta. Made-to-measure in four weeks.',
+    pricePerMeter: 165000,
+    mrpPerMeter: 229999,
+    photo: p(SOURCES.banarasi),
+    photoGallery: [p(SOURCES.banarasi), p(SOURCES.banarasi2)],
+    image: swatch('f21', '#7A1F2C', '#C5A059', '#F2EBDD', 'brocade', 'Bridal Lehenga', 'Varanasi'),
+    category: 'Silk',
+    masterCategory: 'Lehenga Cholis',
+    subCategory: 'Bridal',
+    origin: 'Varanasi',
+    tags: ['Bridal', 'Zardozi', 'Made-to-Measure'],
+    sticker: 'Limited',
+    colors: [{ name: 'Imperial Maroon', hex: '#7A1F2C' }],
+    widthInches: 0,
+    inStockMeters: 3,
+    weaveType: 'Tissue Banarasi with hand embroidery',
+    rating: 5.0,
+    reviewCount: 18
+  },
+  {
+    id: '22',
+    brand: BRAND,
+    name: 'Festive Lehenga — Peacock Kanjivaram',
+    description:
+      'A flared Kanjivaram silk lehenga with korvai border, paired with a hand-stitched choli and tissue dupatta. Sangeet, mehendi and reception-ready.',
+    pricePerMeter: 78500,
+    mrpPerMeter: 109999,
+    photo: p(SOURCES.kanjivaram),
+    photoGallery: [p(SOURCES.kanjivaram), p(SOURCES.kanjivaram2)],
+    image: swatch('f22', '#0E5E6F', '#C5A059', '#F2EBDD', 'kanjivaram', 'Festive Lehenga', 'Kanchipuram'),
+    category: 'Silk',
+    masterCategory: 'Lehenga Cholis',
+    subCategory: 'Festive',
+    origin: 'Kanchipuram, Tamil Nadu',
+    tags: ['Sangeet', 'Korvai', 'Silk'],
+    sticker: 'Trending',
+    colors: [{ name: 'Peacock', hex: '#0E5E6F' }],
+    widthInches: 0,
+    inStockMeters: 5,
+    weaveType: 'Three-shuttle silk',
+    rating: 4.8,
+    reviewCount: 26
+  },
+  {
+    id: '23',
+    brand: BRAND,
+    name: 'Contemporary Lehenga — Ivory Chanderi & Sequin',
+    description:
+      'A pared-back lehenga in ivory Chanderi with hand-applied sequin scatter. Crop blouse with cami straps and a single-shaded organza dupatta. For the modern minimalist bride.',
+    pricePerMeter: 42500,
+    mrpPerMeter: 59999,
+    photo: p(SOURCES.chanderi),
+    photoGallery: [p(SOURCES.chanderi), p(SOURCES.chanderi2)],
+    image: swatch('f23', '#F2EBDD', '#C5A059', '#E5D3A8', 'plain', 'Ivory Lehenga', 'Delhi'),
+    category: 'Mixed',
+    masterCategory: 'Lehenga Cholis',
+    subCategory: 'Contemporary',
+    origin: 'Delhi',
+    tags: ['Minimalist', 'Sequin', 'Cocktail'],
+    sticker: 'New In',
+    colors: [{ name: 'Ivory', hex: '#F2EBDD' }],
+    widthInches: 0,
+    inStockMeters: 7,
+    weaveType: 'Chanderi with hand sequin work',
+    rating: 4.7,
+    reviewCount: 22
+  },
+  {
+    id: '24',
+    brand: BRAND,
+    name: 'Reception Lehenga — Emerald Velvet & Zari',
+    description:
+      'A heavyweight velvet lehenga in deep emerald with raised zardozi vines and a tissue lining. Sweeping kalis for a dramatic spin under the lights.',
+    pricePerMeter: 98500,
+    mrpPerMeter: 139999,
+    photo: p(SOURCES.patola),
+    image: swatch('f24', '#1F5D4F', '#C5A059', '#F2EBDD', 'brocade', 'Velvet Lehenga', 'Delhi'),
+    category: 'Silk',
+    masterCategory: 'Lehenga Cholis',
+    subCategory: 'Bridal',
+    origin: 'Delhi',
+    tags: ['Velvet', 'Zardozi', 'Reception'],
+    sticker: 'Bestseller',
+    colors: [{ name: 'Emerald', hex: '#1F5D4F' }],
+    widthInches: 0,
+    inStockMeters: 4,
+    weaveType: 'Velvet with raised zardozi',
+    rating: 4.9,
+    reviewCount: 19
+  },
+  {
+    id: '25',
+    brand: BRAND,
+    name: 'Floor-Length Anarkali — Blush Georgette',
+    description:
+      'A sweeping floor-length Anarkali in blush georgette with mirror-and-thread chikankari across the bodice. Cinched waist, churidar sleeves, scalloped hem.',
+    pricePerMeter: 28500,
+    mrpPerMeter: 41999,
+    photo: p(SOURCES.jamdani),
+    image: swatch('f25', '#E8C7C8', '#C5A059', '#F2EBDD', 'plain', 'Anarkali', 'Lucknow'),
+    category: 'Mixed',
+    masterCategory: 'Anarkalis',
+    subCategory: 'Floor-length',
+    origin: 'Lucknow',
+    tags: ['Chikankari', 'Floor-length', 'Festive'],
+    sticker: 'Bestseller',
+    colors: [{ name: 'Blush', hex: '#E8C7C8' }],
+    widthInches: 0,
+    inStockMeters: 8,
+    weaveType: 'Georgette with chikankari',
+    rating: 4.8,
+    reviewCount: 44
+  },
+  {
+    id: '26',
+    brand: BRAND,
+    name: 'Knee-Length Anarkali — Saffron Cotton',
+    description:
+      'A breezy knee-length Anarkali in handloom cotton with block-printed kalamkari panels. Pair with a churidar or palazzos for daywear ease.',
+    pricePerMeter: 9800,
+    mrpPerMeter: 14999,
+    photo: p(SOURCES.mashru),
+    image: swatch('f26', '#E2A33A', '#7A1F2C', '#F2EBDD', 'kalamkari', 'Cotton Anarkali', 'Jaipur'),
+    category: 'Cotton',
+    masterCategory: 'Anarkalis',
+    subCategory: 'Knee-length',
+    origin: 'Jaipur',
+    tags: ['Block Print', 'Daywear', 'Handloom'],
+    colors: [{ name: 'Saffron', hex: '#E2A33A' }],
+    widthInches: 0,
+    inStockMeters: 16,
+    weaveType: 'Cotton with kalamkari print',
+    rating: 4.5,
+    reviewCount: 38
+  },
+  {
+    id: '27',
+    brand: BRAND,
+    name: 'Embroidered Anarkali — Indigo Mashru',
+    description:
+      'A floor-grazing Anarkali in Mashru satin, embellished with resham vine work and gota-patti detailing along the placket. Sangeet-ready and unforgettable.',
+    pricePerMeter: 32500,
+    mrpPerMeter: 47999,
+    photo: p(SOURCES.banarasi),
+    image: swatch('f27', '#2A3F66', '#C5A059', '#F2EBDD', 'satin', 'Embroidered Anarkali', 'Mandvi'),
+    category: 'Satin',
+    masterCategory: 'Anarkalis',
+    subCategory: 'Embroidered',
+    origin: 'Mandvi, Gujarat',
+    tags: ['Gota Patti', 'Embroidered', 'Sangeet'],
+    sticker: 'Trending',
+    colors: [{ name: 'Indigo', hex: '#2A3F66' }],
+    widthInches: 0,
+    inStockMeters: 6,
+    weaveType: 'Mashru with hand embroidery',
+    rating: 4.7,
+    reviewCount: 29
+  },
+  {
+    id: '28',
+    brand: BRAND,
+    name: 'Slip Dress — Bias-Cut Silk-Satin',
+    description:
+      'A whisper-thin bias-cut slip in Mashru silk-satin. Cowl neckline, spaghetti straps, hem grazing the ankle. East-meets-West in one fluid line.',
+    pricePerMeter: 8900,
+    mrpPerMeter: 13499,
+    photo: p(SOURCES.mashru),
+    image: swatch('f28', '#7A1F2C', '#E2A33A', '#F2EBDD', 'satin', 'Slip Dress', 'Mumbai'),
+    category: 'Satin',
+    masterCategory: 'Western Wear',
+    subCategory: 'Dresses',
+    origin: 'Mumbai',
+    tags: ['Bias Cut', 'Cocktail', 'Silk'],
+    sticker: 'New In',
+    colors: [{ name: 'Wine', hex: '#7A1F2C' }],
+    widthInches: 0,
+    inStockMeters: 18,
+    weaveType: 'Mashru silk-satin',
+    rating: 4.6,
+    reviewCount: 34
+  },
+  {
+    id: '29',
+    brand: BRAND,
+    name: 'Linen Co-ord Set — Oat Stone',
+    description:
+      'A relaxed two-piece in Belgian linen: oversized camp shirt and high-waist wide-leg trouser. Throw on, walk out.',
+    pricePerMeter: 4800,
+    mrpPerMeter: 7499,
+    photo: p(SOURCES.linen),
+    image: swatch('f29', '#D9CDB3', '#7A7A4F', '#F2EBDD', 'plain', 'Linen Co-ord', 'Bengaluru'),
+    category: 'Linen',
+    masterCategory: 'Western Wear',
+    subCategory: 'Co-ords',
+    origin: 'Bengaluru',
+    tags: ['Co-ord', 'Resort', 'Linen'],
+    colors: [{ name: 'Oat', hex: '#D9CDB3' }],
+    widthInches: 0,
+    inStockMeters: 22,
+    weaveType: 'Belgian linen',
+    rating: 4.5,
+    reviewCount: 51
+  },
+  {
+    id: '30',
+    brand: BRAND,
+    name: 'Jumpsuit — Kalamkari Cotton Wide-Leg',
+    description:
+      'A sleeveless V-neck jumpsuit in hand-painted kalamkari cotton with a self-tie waist and wide cropped leg. A travel-ready statement.',
+    pricePerMeter: 6500,
+    mrpPerMeter: 9999,
+    photo: p(SOURCES.kalamkari),
+    image: swatch('f30', '#9B3A2A', '#2A3F66', '#F2EBDD', 'kalamkari', 'Kalamkari Jumpsuit', 'Hyderabad'),
+    category: 'Cotton',
+    masterCategory: 'Western Wear',
+    subCategory: 'Jumpsuits',
+    origin: 'Hyderabad',
+    tags: ['Jumpsuit', 'Hand-painted', 'Resort'],
+    sticker: 'Trending',
+    colors: [{ name: 'Madder Red', hex: '#9B3A2A' }],
+    widthInches: 0,
+    inStockMeters: 14,
+    weaveType: 'Cotton with kalamkari',
+    rating: 4.6,
+    reviewCount: 33
+  },
+  {
+    id: '31',
+    brand: BRAND,
+    name: 'Wrap Blouse — Bandhani Silk',
+    description:
+      'A fluid bandhani silk wrap blouse with kimono sleeves and a tasselled tie. Pairs as easily with jeans as with a lehenga skirt.',
+    pricePerMeter: 3200,
+    mrpPerMeter: 4999,
+    photo: p(SOURCES.bandhani),
+    image: swatch('f31', '#C8312B', '#D6A93B', '#F2EBDD', 'tie-dye', 'Bandhani Top', 'Kutch'),
+    category: 'Silk',
+    masterCategory: 'Western Wear',
+    subCategory: 'Tops',
+    origin: 'Kutch',
+    tags: ['Wrap', 'Fusion', 'Bandhani'],
+    sticker: 'New In',
+    colors: [{ name: 'Vermilion', hex: '#C8312B' }],
+    widthInches: 0,
+    inStockMeters: 24,
+    weaveType: 'Bandhani silk',
+    rating: 4.4,
+    reviewCount: 28
+  },
+  {
+    id: '32',
+    brand: BRAND,
+    name: 'Couture Gown — Hand-Embroidered Patola Tulle',
+    description:
+      'A signed couture gown: ivory French tulle base, embroidered with miniature Patola motifs in silk floss, sequin and bugle bead. Two-hundred-hour atelier piece, single edition.',
+    pricePerMeter: 385000,
+    mrpPerMeter: 549999,
+    photo: p(SOURCES.patola),
+    photoGallery: [p(SOURCES.patola), p(SOURCES.patola2)],
+    image: swatch('f32', '#F2EBDD', '#9B1B30', '#C5A059', 'ikat', 'Couture Gown', 'Mumbai Atelier'),
+    category: 'Silk',
+    masterCategory: 'Studios Prêt',
+    subCategory: 'Atelier Edits',
+    origin: 'Mumbai Atelier',
+    tags: ['One-of-One', 'Atelier', 'Red Carpet'],
+    sticker: 'Limited',
+    colors: [{ name: 'Ivory', hex: '#F2EBDD' }],
+    widthInches: 0,
+    inStockMeters: 1,
+    weaveType: 'French tulle with hand embroidery',
+    rating: 5.0,
+    reviewCount: 8
+  },
+  {
+    id: '33',
+    brand: BRAND,
+    name: 'Limited Edition Sherwani — Real Zari Banarasi',
+    description:
+      'A ten-piece numbered run: hand-tailored sherwani in real silver-and-gold Banarasi zari brocade, finished with mother-of-pearl buttons and a hand-rolled silk lapel.',
+    pricePerMeter: 185000,
+    mrpPerMeter: 259999,
+    photo: p(SOURCES.banarasi),
+    photoGallery: [p(SOURCES.banarasi), p(SOURCES.banarasi3)],
+    image: swatch('f33', '#7A1F2C', '#C5A059', '#F2EBDD', 'brocade', 'Sherwani', 'Varanasi'),
+    category: 'Silk',
+    masterCategory: 'Studios Prêt',
+    subCategory: 'Capsule Drops',
+    origin: 'Varanasi',
+    tags: ['Sherwani', 'Real Zari', 'Numbered Edition'],
+    sticker: 'Limited',
+    colors: [{ name: 'Imperial Maroon', hex: '#7A1F2C' }],
+    widthInches: 0,
+    inStockMeters: 2,
+    weaveType: 'Pure zari brocade',
+    rating: 4.9,
+    reviewCount: 12
+  },
+  {
+    id: '34',
+    brand: BRAND,
+    name: 'Made-to-Measure Cape Gown — Kanjivaram Drape',
+    description:
+      'A drape cape gown cut from a single Kanjivaram silk panel, made to your measurements over six weeks. Asymmetric pallu over the shoulder, fluted hem at the ankle.',
+    pricePerMeter: 92000,
+    mrpPerMeter: 134999,
+    photo: p(SOURCES.kanjivaram),
+    image: swatch('f34', '#0E5E6F', '#C5A059', '#F2EBDD', 'kanjivaram', 'Cape Gown', 'Chennai'),
+    category: 'Silk',
+    masterCategory: 'Studios Prêt',
+    subCategory: 'Ready-to-Wear',
+    origin: 'Chennai',
+    tags: ['Bespoke', 'Drape', 'Silk'],
+    sticker: 'Bestseller',
+    colors: [{ name: 'Peacock', hex: '#0E5E6F' }],
+    widthInches: 0,
+    inStockMeters: 3,
+    weaveType: 'Kanjivaram silk',
+    rating: 4.9,
+    reviewCount: 14
   }
 ];
 
@@ -444,7 +969,52 @@ export const TESTIMONIALS: Testimonial[] = [
   }
 ];
 
+/**
+ * Legacy weave-type filter values (silk / cotton / etc). Used as facet filters
+ * INSIDE the "Fabrics" master category.
+ */
 export const CATEGORIES: Fabric['category'][] = ['Silk', 'Cotton', 'Wool', 'Linen', 'Satin', 'Mixed'];
+
+/**
+ * The seven top-level catalogue sections. These drive the navbar mega-menu,
+ * the home-page CategoryStrip, the mobile drawer and the shop filter UI.
+ */
+export const MASTER_CATEGORIES: MasterCategory[] = [
+  'Dyeable Fabrics',
+  'Lace',
+  'Sarees',
+  'Lehenga Cholis',
+  'Anarkalis',
+  'Western Wear',
+  'Studios Prêt'
+];
+
+/**
+ * Hierarchical taxonomy: each master category may have sub-categories that
+ * surface as a second-tier filter (Half Sarees under Sarees, weave types
+ * under Fabrics, etc.).
+ */
+export const MASTER_CATEGORY_TREE: Record<MasterCategory, string[]> = {
+  Fabrics: ['Silk', 'Cotton', 'Wool', 'Linen', 'Satin', 'Mixed'],
+  'Dyeable Fabrics': ['Cotton', 'Silk', 'Linen', 'Mixed'],
+  Lace: ['Chantilly', 'French', 'Embroidered', 'Cotton', 'Trim & Edging'],
+  Sarees: ['Half Sarees', 'Banarasi', 'Kanjivaram', 'Patola', 'Bandhani', 'Jamdani', 'Mashru'],
+  'Lehenga Cholis': ['Bridal', 'Festive', 'Contemporary'],
+  Anarkalis: ['Floor-length', 'Knee-length', 'Embroidered'],
+  'Western Wear': ['Dresses', 'Tops', 'Co-ords', 'Jumpsuits'],
+  'Studios Prêt': ['Ready-to-Wear', 'Capsule Drops', 'Atelier Edits']
+};
+
+/** Tile metadata for the home-page CategoryStrip and navbar mega-menu. */
+export const MASTER_CATEGORY_TILES: { name: MasterCategory; color: string; tagline: string }[] = [
+  { name: 'Dyeable Fabrics',  color: '#F2E4C4', tagline: 'Ready for your palette' },
+  { name: 'Lace',             color: '#EDE4D2', tagline: 'Hand-knotted trims & edging' },
+  { name: 'Sarees',           color: '#C9A267', tagline: 'Six yards of heritage' },
+  { name: 'Lehenga Cholis',   color: '#D9B26B', tagline: 'For the aisle and after' },
+  { name: 'Anarkalis',        color: '#E0BFA0', tagline: 'Royal silhouettes, modern cuts' },
+  { name: 'Western Wear',     color: '#CBC0A7', tagline: 'East-West edit' },
+  { name: 'Studios Prêt',     color: '#B8915A', tagline: 'Ready-to-wear, off the atelier rail' }
+];
 
 export const SHIPPING_FLAT_RATE = 99;
 export const FREE_SHIPPING_THRESHOLD = 1999;
@@ -478,36 +1048,36 @@ export const HERO_BANNERS: HeroBanner[] = [
   {
     id: 'bridal',
     eyebrow: 'WEDDING EDIT · LIVE NOW',
-    title: 'Up to 60% Off Bridal Silks',
-    subtitle: 'Banarasi · Kanjivaram · Patola · Bandhani — shop heritage weaves at festival prices.',
+    title: 'Heritage Bridal Silks',
+    subtitle: 'Banarasi · Kanjivaram · Patola · Bandhani — six families of weavers, one atelier.',
     ctaLabel: 'Shop Bridal',
     ctaCategory: 'Silk',
-    bg: 'linear-gradient(135deg,#FFE3EC 0%,#FFD0DD 60%,#FFB1C4 100%)',
-    accent: '#FF3F6C',
+    bg: 'linear-gradient(135deg,#FBF5EB 0%,#F2E4C4 55%,#E5C97A 100%)',
+    accent: '#B8915A',
     photo: p(SOURCES.banarasi, 1400, 1000),
     fallback: FABRICS[1].image
   },
   {
     id: 'summer',
     eyebrow: 'SUMMER LIGHTWEIGHTS',
-    title: 'Flat 50% Off Cottons & Linens',
-    subtitle: 'Jamdani muslin, Belgian linen and Kalamkari — breathe easy this season.',
+    title: 'Cottons & Linens for the Season',
+    subtitle: 'Jamdani muslin, Belgian linen and Kalamkari — breathe easy in heritage weaves.',
     ctaLabel: 'Shop Summer',
     ctaCategory: 'Linen',
-    bg: 'linear-gradient(135deg,#FFF6E0 0%,#FFE8B5 55%,#FFCB73 100%)',
-    accent: '#FF905A',
+    bg: 'linear-gradient(135deg,#FBF6EE 0%,#F0E2C5 55%,#D9C28B 100%)',
+    accent: '#A07840',
     photo: p(SOURCES.linen, 1400, 1000),
     fallback: FABRICS[6].image
   },
   {
     id: 'winter',
     eyebrow: 'WARM ESSENTIALS',
-    title: 'Pashmina & Merino · From ₹1,850',
+    title: 'Pashmina & Merino · From the Mountains',
     subtitle: 'Hand-spun cashmere from Ladakh and Super-130s wool from Biella.',
     ctaLabel: 'Shop Wool',
     ctaCategory: 'Wool',
-    bg: 'linear-gradient(135deg,#E3F4F1 0%,#BFE8E0 60%,#7FD0C2 100%)',
-    accent: '#03A685',
+    bg: 'linear-gradient(135deg,#F5EFE2 0%,#E5D9BC 55%,#B89F6E 100%)',
+    accent: '#6B5A2E',
     photo: p(SOURCES.pashmina, 1400, 1000),
     fallback: FABRICS[5].image
   }
@@ -515,21 +1085,19 @@ export const HERO_BANNERS: HeroBanner[] = [
 
 /* Pill categories rendered as circular tiles on home. */
 export const CATEGORY_TILES: { name: string; category: string; color: string }[] = [
-  { name: 'Silks', category: 'Silk', color: '#F7C8C3' },
-  { name: 'Cottons', category: 'Cotton', color: '#F5E1B9' },
+  { name: 'Silks', category: 'Silk', color: '#E5C97A' },
+  { name: 'Cottons', category: 'Cotton', color: '#F2E4C4' },
   { name: 'Wool', category: 'Wool', color: '#D8C8AE' },
   { name: 'Linen', category: 'Linen', color: '#D9CDB3' },
-  { name: 'Satin', category: 'Satin', color: '#E8C7C8' },
-  { name: 'Mixed', category: 'Mixed', color: '#B6D7C9' },
-  { name: 'Bridal', category: 'Silk', color: '#FFD0DD' },
-  { name: 'Sale', category: 'All', color: '#FFE0E6' }
+  { name: 'Satin', category: 'Satin', color: '#EDDDB6' },
+  { name: 'Mixed', category: 'Mixed', color: '#C9C09C' },
+  { name: 'Bridal', category: 'Silk', color: '#C9A267' },
+  { name: 'Sale', category: 'All', color: '#B8915A' }
 ];
 
 /* Offer ticker — looks like Myntra's sticky deals strip. */
 export const OFFER_TICKER: string[] = [
+  '⚡ 40-MINUTE DELIVERY IN HYDERABAD ON DESIGNER WEAR',
   'FREE SHIPPING ON ORDERS ABOVE ₹1,999',
-  'FLAT 50% OFF ON BRIDAL SILKS · CODE WEDDING50',
-  'EXTRA 10% OFF ON UPI · CODE UPI10',
-  'EASY 30-DAY RETURNS · AUTHENTICITY CARD WITH EVERY METER',
   'HAND-CUT IN INDIA · SHIPPED WORLDWIDE'
 ];

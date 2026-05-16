@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="8.27in" height="11.69in" viewBox="0 0 2480 3508">
+  <title>Trésor Couture — letterhead (A4)</title>
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#D8B97A"/>
+      <stop offset="50%" stop-color="#B8893A"/>
+      <stop offset="100%" stop-color="#8E6520"/>
+    </linearGradient>
+  </defs>
+  <rect width="2480" height="3508" fill="#F5ECDC"/>
+
+  <!-- top mark + wordmark -->
+  <g transform="translate(1240 280)">
+    <g transform="translate(-380 -40) scale(1.7)" fill="url(#gold)">
+      <path d="M 12 14 L 12 12 Q 12 11 13 11 L 38 11 Q 39 11 39 12 L 39 14 L 36 16 L 17 16 L 14 14 Z"/>
+      <path d="M 23 16 L 23 56 L 21 58 L 21 60 L 30 58 L 30 56 L 28 54 L 28 16 Z"/>
+    </g>
+    <g text-anchor="middle" font-family="'Cormorant Garamond', 'Times New Roman', serif" fill="#2A1F12">
+      <text font-size="120" font-weight="300" letter-spacing="22">TRÉSOR</text>
+      <text y="56" font-size="26" letter-spacing="22" font-family="'Inter', sans-serif" font-weight="600">COUTURE</text>
+    </g>
+  </g>
+
+  <!-- gold double rule -->
+  <line x1="240" y1="430" x2="2240" y2="430" stroke="url(#gold)" stroke-width="1.4"/>
+  <line x1="240" y1="442" x2="2240" y2="442" stroke="url(#gold)" stroke-width="0.6" opacity="0.7"/>
+
+  <!-- writing area marker (faint) -->
+  <text x="240" y="540" font-family="'Inter', sans-serif" font-size="22" fill="#8E6520" letter-spacing="6" font-weight="600">DATE · RECIPIENT</text>
+
+  <!-- footer -->
+  <line x1="240" y1="3260" x2="2240" y2="3260" stroke="url(#gold)" stroke-width="0.8"/>
+  <g font-family="'Inter', sans-serif" fill="#46382A" text-anchor="middle">
+    <text x="1240" y="3310" font-size="22" letter-spacing="4">Trésor Couture · Heritage Indian Weaves</text>
+    <text x="1240" y="3346" font-size="20" fill="#8E6520">concierge@tresorcouture.com  ·  +91 80 1234 5678  ·  tresorcouture.com</text>
+    <text x="1240" y="3388" font-size="18">Atelier · 14 Cunningham Crescent, Bengaluru 560 052, India</text>
+  </g>
+</svg>

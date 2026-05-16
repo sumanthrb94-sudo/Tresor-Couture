@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="8.27in" height="11.69in" viewBox="0 0 2480 3508">
+  <title>Trésor Couture — invoice template</title>
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#D8B97A"/>
+      <stop offset="50%" stop-color="#B8893A"/>
+      <stop offset="100%" stop-color="#8E6520"/>
+    </linearGradient>
+  </defs>
+  <rect width="2480" height="3508" fill="#F5ECDC"/>
+
+  <!-- header -->
+  <g font-family="'Cormorant Garamond', 'Times New Roman', serif">
+    <text x="240" y="320" font-size="120" font-weight="300" letter-spacing="22" fill="#2A1F12">TRÉSOR</text>
+    <text x="240" y="370" font-size="26" letter-spacing="16" font-family="'Inter', sans-serif" font-weight="600" fill="#2A1F12">COUTURE</text>
+  </g>
+  <g text-anchor="end" font-family="'Cormorant Garamond', serif" fill="#8E6520">
+    <text x="2240" y="280" font-size="80" font-weight="300" letter-spacing="14">INVOICE</text>
+  </g>
+  <line x1="240" y1="420" x2="2240" y2="420" stroke="url(#gold)" stroke-width="1.4"/>
+
+  <!-- meta -->
+  <g font-family="'Inter', sans-serif" fill="#2A1F12">
+    <text x="240" y="500" font-size="22" font-weight="600" letter-spacing="4" fill="#8E6520">BILL TO</text>
+    <text x="240" y="546" font-size="26">{CUSTOMER_NAME}</text>
+    <text x="240" y="586" font-size="22">{CUSTOMER_ADDRESS_1}</text>
+    <text x="240" y="622" font-size="22">{CUSTOMER_ADDRESS_2}</text>
+
+    <text x="1700" y="500" font-size="22" font-weight="600" letter-spacing="4" fill="#8E6520">INVOICE</text>
+    <text x="1700" y="546" font-size="22">No.  {INVOICE_NO}</text>
+    <text x="1700" y="586" font-size="22">Date {INVOICE_DATE}</text>
+    <text x="1700" y="622" font-size="22">Due  {DUE_DATE}</text>
+  </g>
+
+  <!-- table header -->
+  <rect x="240" y="780" width="2000" height="56" fill="#EAD9BA"/>
+  <g font-family="'Inter', sans-serif" font-size="20" font-weight="600" fill="#2A1F12" letter-spacing="3">
+    <text x="260" y="816">ITEM</text>
+    <text x="1500" y="816">METRES</text>
+    <text x="1740" y="816">RATE</text>
+    <text x="2220" y="816" text-anchor="end">AMOUNT</text>
+  </g>
+
+  <!-- table rows (placeholders) -->
+  <g font-family="'Inter', sans-serif" font-size="22" fill="#2A1F12">
+    <text x="260" y="900">{ITEM_1_NAME}</text>
+    <text x="1500" y="900">{ITEM_1_MTR}</text>
+    <text x="1740" y="900">{ITEM_1_RATE}</text>
+    <text x="2220" y="900" text-anchor="end">{ITEM_1_AMOUNT}</text>
+    <line x1="240" y1="930" x2="2240" y2="930" stroke="#2A1F12" stroke-opacity="0.12"/>
+
+    <text x="260" y="990">{ITEM_2_NAME}</text>
+    <text x="1500" y="990">{ITEM_2_MTR}</text>
+    <text x="1740" y="990">{ITEM_2_RATE}</text>
+    <text x="2220" y="990" text-anchor="end">{ITEM_2_AMOUNT}</text>
+    <line x1="240" y1="1020" x2="2240" y2="1020" stroke="#2A1F12" stroke-opacity="0.12"/>
+
+    <text x="260" y="1080">{ITEM_3_NAME}</text>
+    <text x="1500" y="1080">{ITEM_3_MTR}</text>
+    <text x="1740" y="1080">{ITEM_3_RATE}</text>
+    <text x="2220" y="1080" text-anchor="end">{ITEM_3_AMOUNT}</text>
+    <line x1="240" y1="1110" x2="2240" y2="1110" stroke="#2A1F12" stroke-opacity="0.12"/>
+  </g>
+
+  <!-- totals -->
+  <g font-family="'Inter', sans-serif" fill="#2A1F12">
+    <text x="1700" y="1340" font-size="22">Subtotal</text>
+    <text x="2220" y="1340" font-size="22" text-anchor="end">{SUBTOTAL}</text>
+    <text x="1700" y="1390" font-size="22">GST 5%</text>
+    <text x="2220" y="1390" font-size="22" text-anchor="end">{GST}</text>
+    <text x="1700" y="1440" font-size="22">Shipping</text>
+    <text x="2220" y="1440" font-size="22" text-anchor="end">{SHIPPING}</text>
+    <line x1="1700" y1="1470" x2="2240" y2="1470" stroke="url(#gold)" stroke-width="1"/>
+    <text x="1700" y="1520" font-size="28" font-weight="700">TOTAL</text>
+    <text x="2220" y="1520" font-size="28" font-weight="700" text-anchor="end" fill="#8E6520">{TOTAL}</text>
+  </g>
+
+  <!-- footer / payment -->
+  <line x1="240" y1="3260" x2="2240" y2="3260" stroke="url(#gold)" stroke-width="0.8"/>
+  <g font-family="'Inter', sans-serif" fill="#46382A" text-anchor="middle">
+    <text x="1240" y="3320" font-size="22">Payable to · Trésor Couture · A/c 1234567890 · IFSC HDFC0001234</text>
+    <text x="1240" y="3360" font-size="20" fill="#8E6520">concierge@tresorcouture.com  ·  tresorcouture.com</text>
+  </g>
+</svg>

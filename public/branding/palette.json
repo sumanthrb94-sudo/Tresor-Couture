@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "Trésor Couture",
+  "version": "1.0.0",
+  "description": "Brand colour tokens for Trésor Couture. Sampled from the founder's logo paper. All values are sRGB.",
+  "tokens": {
+    "brand-bg": {
+      "value": "#F5ECDC",
+      "role": "Primary canvas. Warm cream sampled from the logo paper.",
+      "css": "--color-brand-bg",
+      "tailwind": "bg-brand-bg"
+    },
+    "brand-bg-soft": {
+      "value": "#FBF5EA",
+      "role": "Secondary canvas / cards / inputs.",
+      "css": "--color-brand-bg-soft"
+    },
+    "brand-ink": {
+      "value": "#2A1F12",
+      "role": "Primary text and outlines.",
+      "css": "--color-brand-ink"
+    },
+    "brand-gold": {
+      "value": "#B8893A",
+      "role": "Accents, callouts, numbers, gold details.",
+      "css": "--color-brand-gold"
+    },
+    "brand-gold-soft": {
+      "value": "#D8B97A",
+      "role": "Highlights and gradient stops.",
+      "css": "--color-brand-gold-soft"
+    },
+    "brand-gold-deep": {
+      "value": "#8E6520",
+      "role": "Lower stops in gold gradients, hover states.",
+      "css": "--color-brand-gold-deep"
+    },
+    "brand-accent": {
+      "value": "#EAD9BA",
+      "role": "Soft secondary fills, hover backgrounds.",
+      "css": "--color-brand-accent"
+    },
+    "brand-border": {
+      "value": "rgba(42, 31, 18, 0.12)",
+      "role": "Hairline borders, dividers."
+    }
+  },
+  "typography": {
+    "serif": {
+      "family": "'Cormorant Garamond', 'Times New Roman', serif",
+      "weights": [300, 400, 500, 600, 700],
+      "use": "Headings, wordmark, editorial body."
+    },
+    "sans": {
+      "family": "'Inter', ui-sans-serif, system-ui, sans-serif",
+      "weights": [300, 400, 500, 600, 700],
+      "use": "UI labels, microcopy, form fields."
+    }
+  },
+  "usage": {
+    "hero": ["brand-bg", "brand-ink", "brand-gold"],
+    "cta": ["brand-ink (button)", "brand-bg (text)"],
+    "callout": ["brand-gold (text)", "brand-bg (bg)"]
+  }
+}

@@ -11,7 +11,13 @@ const parseHash = (hash: string): Route => {
   switch (segments[0]) {
     case 'shop': {
       const category = params.get('category') ?? undefined;
-      return { name: 'shop', category };
+      const subCategory = params.get('subcategory') ?? undefined;
+      return { name: 'shop', category, subCategory };
+    }
+    case 'search': {
+      const q = (params.get('q') ?? '').trim();
+      if (!q) return { name: 'not-found', path: cleaned };
+      return { name: 'search', q };
     }
     case 'product':
       if (segments[1]) return { name: 'product', id: segments[1] };
@@ -23,8 +29,33 @@ const parseHash = (hash: string): Route => {
     case 'confirmation':
       if (segments[1]) return { name: 'confirmation', orderId: segments[1] };
       return { name: 'home' };
+    case 'customise':
+    case 'couture':
+    case 'studio':
+      return { name: 'customise', productId: segments[1] || params.get('product') || undefined };
+    case 'login':
+      return { name: 'login' };
+    case 'register':
+      return { name: 'register' };
+    case 'account': {
+      const tab = segments[1] as 'profile' | 'orders' | 'wishlist' | 'addresses' | undefined;
+      return { name: 'account', tab };
+    }
+    case 'admin': {
+      if (segments[1] === 'brand-kit') {
+        return { name: 'admin-brand-kit', section: params.get('section') ?? undefined };
+      }
+      const section = segments[1] as
+        | 'dashboard'
+        | 'products'
+        | 'orders'
+        | 'coupons'
+        | 'reviews'
+        | undefined;
+      return { name: 'admin', section };
+    }
     default:
-      return { name: 'home' };
+      return { name: 'not-found', path: cleaned };
   }
 };
 
@@ -32,8 +63,14 @@ const buildHash = (route: Route): string => {
   switch (route.name) {
     case 'home':
       return '#/';
-    case 'shop':
-      return route.category ? `#/shop?category=${encodeURIComponent(route.category)}` : '#/shop';
+    case 'shop': {
+      const parts: string[] = [];
+      if (route.category) parts.push(`category=${encodeURIComponent(route.category)}`);
+      if (route.subCategory) parts.push(`subcategory=${encodeURIComponent(route.subCategory)}`);
+      return parts.length ? `#/shop?${parts.join('&')}` : '#/shop';
+    }
+    case 'search':
+      return `#/search?q=${encodeURIComponent(route.q)}`;
     case 'product':
       return `#/product/${route.id}`;
     case 'cart':
@@ -42,6 +79,20 @@ const buildHash = (route: Route): string => {
       return '#/checkout';
     case 'confirmation':
       return `#/confirmation/${route.orderId}`;
+    case 'customise':
+      return route.productId ? `#/customise/${route.productId}` : '#/customise';
+    case 'login':
+      return '#/login';
+    case 'register':
+      return '#/register';
+    case 'account':
+      return route.tab ? `#/account/${route.tab}` : '#/account';
+    case 'admin':
+      return route.section ? `#/admin/${route.section}` : '#/admin';
+    case 'admin-brand-kit':
+      return route.section ? `#/admin/brand-kit?section=${encodeURIComponent(route.section)}` : '#/admin/brand-kit';
+    case 'not-found':
+      return route.path ? `#/${route.path}` : '#/404';
   }
 };
 
