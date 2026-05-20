@@ -36,12 +36,21 @@ const STATUS_STYLE: Record<OrderStatus, { bg: string; text: string; border: stri
 
 const statusOf = (o: Order): OrderStatus => o.status ?? 'placed';
 
-// Cancelled / refunded orders are excluded from revenue — the goods went
-// back to inventory and no money was collected (or it was refunded).
+// Soft-deleted orders are "returned to supplier" — they stay in the DB for
+// reporting but aren't realised revenue.
+const isRts = (o: Order): boolean => Boolean(o.deletedAt);
+
+// Cancelled / refunded / soft-deleted orders are excluded from revenue —
+// the goods went back to inventory (or to the supplier) and no money was
+// collected (or it was refunded).
 const isRealised = (o: Order): boolean => {
+  if (isRts(o)) return false;
   const s = statusOf(o);
   return s !== 'cancelled' && s !== 'refunded';
 };
+
+const sumMeters = (o: Order): number =>
+  o.items.reduce((n, it) => n + (it.meters ?? 0), 0);
 
 const timeAgo = (iso: string): string => {
   const then = new Date(iso).getTime();
@@ -206,6 +215,17 @@ const AdminDashboard: React.FC = () => {
     [fabrics]
   );
 
+  /* Returned-to-supplier (soft-deleted) totals. Row appears in the sales
+     report only when at least one such unit exists. */
+  const rts = useMemo(() => {
+    const rows = orders.filter(isRts);
+    return {
+      orderCount: rows.length,
+      meters:     rows.reduce((n, o) => n + sumMeters(o), 0),
+      value:      rows.reduce((n, o) => n + (o.total ?? 0), 0)
+    };
+  }, [orders]);
+
   /* Quick stats. */
   const pendingCount = useMemo(
     () => orders.filter(o => statusOf(o) === 'placed' || statusOf(o) === 'processing').length,
@@ -362,6 +382,44 @@ const AdminDashboard: React.FC = () => {
           iconColor="var(--color-myntra-orange)"
           onClick={() => navigate({ name: 'admin', section: 'products' })}
         />
+      </div>
+
+      {/* Sales report */}
+      <div className="bg-white border border-[color:var(--color-myntra-border-soft)] rounded-md overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--color-myntra-border-soft)]">
+          <h2 className="font-[family-name:var(--font-display)] text-[16px] font-extrabold text-[color:var(--color-myntra-navy)]">
+            Sales Report
+          </h2>
+          <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)]">all time</p>
+        </div>
+        <table className="w-full text-[13px]">
+          <thead className="bg-[color:var(--color-myntra-cream)] text-[11px] uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)]">
+            <tr>
+              <th className="text-left  font-bold px-5 py-2.5">Line</th>
+              <th className="text-right font-bold px-5 py-2.5">Orders</th>
+              <th className="text-right font-bold px-5 py-2.5">Meters</th>
+              <th className="text-right font-bold px-5 py-2.5">Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="border-t border-[color:var(--color-myntra-border-soft)]">
+              <td className="px-5 py-3 font-bold text-[color:var(--color-myntra-navy)]">Realised revenue</td>
+              <td className="px-5 py-3 text-right">{realisedOrders.length.toLocaleString('en-IN')}</td>
+              <td className="px-5 py-3 text-right">
+                {realisedOrders.reduce((n, o) => n + sumMeters(o), 0).toLocaleString('en-IN')}
+              </td>
+              <td className="px-5 py-3 text-right font-bold">{formatINR(totalRevenue)}</td>
+            </tr>
+            {rts.orderCount > 0 && (
+              <tr className="border-t border-[color:var(--color-myntra-border-soft)]" style={{ color: '#A12626', backgroundColor: '#FBE6E6' }}>
+                <td className="px-5 py-3 font-bold">Returned to supplier</td>
+                <td className="px-5 py-3 text-right">{rts.orderCount.toLocaleString('en-IN')}</td>
+                <td className="px-5 py-3 text-right">{rts.meters.toLocaleString('en-IN')}</td>
+                <td className="px-5 py-3 text-right font-bold">{formatINR(rts.value)}</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Two-column section */}
