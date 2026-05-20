@@ -112,6 +112,10 @@ export interface Order {
   couponCode?: string;
   /** Discount amount applied via coupon (₹). */
   couponDiscount?: number;
+  /** Soft-delete marker. Set when the unit is returned to the supplier — row
+   *  stays in the DB for reporting (sales report shows it in red) but is
+   *  excluded from realised-revenue figures. */
+  deletedAt?: string;
 }
 
 /* ─────────── e-commerce entities ─────────── */
