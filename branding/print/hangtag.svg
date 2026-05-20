@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="2.5in" height="4in" viewBox="0 0 750 1200">
-  <title>Trésor Couture — fabric hangtag</title>
+  <title>Tresor Couture — fabric hangtag</title>
   <defs>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#D8B97A"/>
@@ -26,7 +26,7 @@
   </g>
 
   <g text-anchor="middle">
-    <text x="375" y="500" font-family="'Cormorant Garamond', serif" font-size="46" font-weight="300" fill="#2A1F12" letter-spacing="6">TRÉSOR</text>
+    <text x="375" y="500" font-family="'Cormorant Garamond', serif" font-size="46" font-weight="300" fill="#2A1F12" letter-spacing="6">TRESOR</text>
     <text x="375" y="538" font-family="'Inter', sans-serif" font-size="16" font-weight="600" letter-spacing="8" fill="#2A1F12">COUTURE</text>
     <line x1="295" y1="580" x2="455" y2="580" stroke="url(#gold)" stroke-width="0.8"/>
     <text x="375" y="650" font-family="'Inter', sans-serif" font-size="16" font-weight="600" letter-spacing="6" fill="#8E6520">WEAVE</text>
@@ -37,6 +37,6 @@
     <text x="375" y="940" font-family="'Inter', sans-serif" font-size="22" fill="#2A1F12">{WEAVER}</text>
     <line x1="200" y1="1000" x2="550" y2="1000" stroke="url(#gold)" stroke-width="0.8"/>
     <text x="375" y="1060" font-family="'Inter', sans-serif" font-size="18" fill="#2A1F12">₹ {PRICE} / metre</text>
-    <text x="375" y="1130" font-family="'Inter', sans-serif" font-size="14" letter-spacing="6" font-weight="600" fill="#8E6520">TRÉSORCOUTURE.COM</text>
+    <text x="375" y="1130" font-family="'Inter', sans-serif" font-size="14" letter-spacing="6" font-weight="600" fill="#8E6520">TRESORCOUTURE.COM</text>
   </g>
 </svg>

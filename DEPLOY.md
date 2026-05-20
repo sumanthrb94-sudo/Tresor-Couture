@@ -1,4 +1,4 @@
-# Trésor Couture — Free-Tier Deploy Guide
+# Tresor Couture — Free-Tier Deploy Guide
 
 **Architecture:** Firebase **Spark (free)** plan only. No Cloud Functions, no billing required.
 
@@ -63,7 +63,7 @@ Future admins can be promoted the same way (Admin SDK is the only path on the fr
 ## 5. Test with Postman
 
 1. Postman → **File → Import** → both files from `postman/`
-2. Top-right environment dropdown → **Trésor Couture · Firebase Free Tier**
+2. Top-right environment dropdown → **Tresor Couture · Firebase Free Tier**
 3. Edit `testEmail` / `testPassword`
 4. Run in order — each request's test script populates the env for the next:
 

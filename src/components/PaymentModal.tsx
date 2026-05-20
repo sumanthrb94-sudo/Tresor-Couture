@@ -202,7 +202,7 @@ const PaymentModal: React.FC<Props> = ({
           <div className="flex items-center gap-2">
             <Landmark className="w-5 h-5 text-[color:var(--color-myntra-gold)]" aria-hidden />
             <h2 id="payment-modal-title" className="text-[14px] font-extrabold tracking-wider uppercase">
-              Trésor Pay · Secure Checkout
+              Tresor Pay · Secure Checkout
             </h2>
           </div>
           <button

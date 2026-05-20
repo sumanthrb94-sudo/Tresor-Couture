@@ -48,7 +48,7 @@ const AVAILABLE_PHOTOS: string[] = [
 ];
 
 const PLACEHOLDER_SVG =
-  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 100'><rect width='80' height='100' fill='%23F2EBDD'/><text x='50%25' y='52%25' font-size='10' fill='%23A0826D' text-anchor='middle' font-family='serif'>Trésor</text></svg>";
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 100'><rect width='80' height='100' fill='%23F2EBDD'/><text x='50%25' y='52%25' font-size='10' fill='%23A0826D' text-anchor='middle' font-family='serif'>Tresor</text></svg>";
 
 const newId = (): string =>
   'f-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -100,7 +100,7 @@ interface Draft {
 
 const emptyDraft = (): Draft => ({
   id: '',
-  brand: 'TRÉSOR',
+  brand: 'TRESOR',
   name: '',
   description: '',
   pricePerMeter: '',

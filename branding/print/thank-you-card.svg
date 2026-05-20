@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="5in" height="7in" viewBox="0 0 1500 2100">
-  <title>Trésor Couture — thank you card</title>
+  <title>Tresor Couture — thank you card</title>
   <defs>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#D8B97A"/>
@@ -30,9 +30,9 @@
       <text x="750" y="1180">to yours. Wear it like an heirloom.</text>
     </g>
 
-    <text x="750" y="1480" font-family="'Cormorant Garamond', serif" font-size="42" font-style="italic" font-weight="300" fill="#46382A">— The Trésor Atelier</text>
+    <text x="750" y="1480" font-family="'Cormorant Garamond', serif" font-size="42" font-style="italic" font-weight="300" fill="#46382A">— The Tresor Atelier</text>
 
     <line x1="600" y1="1840" x2="900" y2="1840" stroke="url(#gold)" stroke-width="0.8"/>
-    <text x="750" y="1900" font-family="'Inter', sans-serif" font-size="22" fill="#8E6520" letter-spacing="6" font-weight="600">TRÉSORCOUTURE.COM</text>
+    <text x="750" y="1900" font-family="'Inter', sans-serif" font-size="22" fill="#8E6520" letter-spacing="6" font-weight="600">TRESORCOUTURE.COM</text>
   </g>
 </svg>

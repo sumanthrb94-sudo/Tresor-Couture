@@ -359,7 +359,7 @@ const AdminBrandKitPage: React.FC<{ section?: string }> = ({ section }) => {
             </h2>
             <p className="text-[15px] text-[#46382A] max-w-[640px] leading-relaxed">
               Every logo variant, favicon size, social-media tile, print template and tone-of-voice
-              note for Trésor Couture lives here. Click any asset to preview, download, or copy its
+              note for Tresor Couture lives here. Click any asset to preview, download, or copy its
               public URL. Edits to <code className="font-mono text-[13px]">branding/generate.py</code>{' '}
               regenerate every raster in one command.
             </p>

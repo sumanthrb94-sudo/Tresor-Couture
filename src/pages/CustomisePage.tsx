@@ -213,7 +213,7 @@ const CAPSULES: Capsule[] = [
 
 const FINISHING_OPTIONS = [
   { id: 'zardozi',    label: 'Zardozi metal-thread embroidery',       surcharge: 65000 },
-  { id: 'gota-patti', label: 'Gota patti appliqué',                   surcharge: 38000 },
+  { id: 'gota-patti', label: 'Gota patti applique',                   surcharge: 38000 },
   { id: 'sequins',    label: 'Hand-stitched sequins (per panel)',     surcharge: 22000 },
   { id: 'mirror',     label: 'Shisha mirror work',                    surcharge: 18000 },
   { id: 'pearl',      label: 'River-pearl drops',                     surcharge: 28000 },
@@ -409,7 +409,7 @@ const CustomisePage: React.FC<{ productId?: string }> = ({ productId }) => {
               <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#C5A059] to-[#7A1F2C] flex items-center justify-center font-serif text-white text-[22px]">A</div>
               <div>
                 <p className="font-serif text-[20px] text-[#2A1F12] leading-tight">Aanya Mehta</p>
-                <p className="text-[12px] text-[#8A7656] uppercase tracking-[0.16em]">Couturier · Trésor</p>
+                <p className="text-[12px] text-[#8A7656] uppercase tracking-[0.16em]">Couturier · Tresor</p>
               </div>
             </div>
             <Quote className="w-5 h-5 text-[color:var(--color-myntra-pink)] mb-2" />

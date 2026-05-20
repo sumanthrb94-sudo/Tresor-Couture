@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="8.27in" height="11.69in" viewBox="0 0 2480 3508">
-  <title>Trésor Couture — letterhead (A4)</title>
+  <title>Tresor Couture — letterhead (A4)</title>
   <defs>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#D8B97A"/>
@@ -17,7 +17,7 @@
       <path d="M 23 16 L 23 56 L 21 58 L 21 60 L 30 58 L 30 56 L 28 54 L 28 16 Z"/>
     </g>
     <g text-anchor="middle" font-family="'Cormorant Garamond', 'Times New Roman', serif" fill="#2A1F12">
-      <text font-size="120" font-weight="300" letter-spacing="22">TRÉSOR</text>
+      <text font-size="120" font-weight="300" letter-spacing="22">TRESOR</text>
       <text y="56" font-size="26" letter-spacing="22" font-family="'Inter', sans-serif" font-weight="600">COUTURE</text>
     </g>
   </g>
@@ -32,7 +32,7 @@
   <!-- footer -->
   <line x1="240" y1="3260" x2="2240" y2="3260" stroke="url(#gold)" stroke-width="0.8"/>
   <g font-family="'Inter', sans-serif" fill="#46382A" text-anchor="middle">
-    <text x="1240" y="3310" font-size="22" letter-spacing="4">Trésor Couture · Heritage Indian Weaves</text>
+    <text x="1240" y="3310" font-size="22" letter-spacing="4">Tresor Couture · Heritage Indian Weaves</text>
     <text x="1240" y="3346" font-size="20" fill="#8E6520">concierge@tresorcouture.com  ·  +91 80 1234 5678  ·  tresorcouture.com</text>
     <text x="1240" y="3388" font-size="18">Atelier · 14 Cunningham Crescent, Bengaluru 560 052, India</text>
   </g>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="4in" height="6in" viewBox="0 0 1200 1800">
-  <title>Trésor Couture — fabric care card</title>
+  <title>Tresor Couture — fabric care card</title>
   <defs>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#D8B97A"/>
@@ -42,5 +42,5 @@
     </g>
   </g>
 
-  <text x="600" y="1680" text-anchor="middle" font-family="'Inter', sans-serif" font-size="20" letter-spacing="6" font-weight="600" fill="#8E6520">TRÉSORCOUTURE.COM</text>
+  <text x="600" y="1680" text-anchor="middle" font-family="'Inter', sans-serif" font-size="20" letter-spacing="6" font-weight="600" fill="#8E6520">TRESORCOUTURE.COM</text>
 </svg>

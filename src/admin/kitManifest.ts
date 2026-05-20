@@ -44,7 +44,7 @@ export const KIT_SECTIONS: KitSection[] = [
       {
         id: 'master-logo',
         name: 'Master logo (full lockup)',
-        description: 'The definitive painted lockup — TC monogram with reclining figure and floral sprig over TRÉSOR · COUTURE. Use everywhere print, web, and social pull from this file.',
+        description: 'The definitive painted lockup — TC monogram with reclining figure and floral sprig over TRESOR · COUTURE. Use everywhere print, web, and social pull from this file.',
         url: `${ROOT}/master-logo.png`,
         size: '1920 × 1080',
         aspect: 'wide',
@@ -94,7 +94,7 @@ export const KIT_SECTIONS: KitSection[] = [
       {
         id: 'wordmark',
         name: 'Wordmark only',
-        description: 'TRÉSOR / COUTURE in the brand serif with hairline rule. Use when a mark is already nearby.',
+        description: 'TRESOR / COUTURE in the brand serif with hairline rule. Use when a mark is already nearby.',
         url: `${ROOT}/wordmark.svg`,
         size: 'Vector',
         aspect: 'wide',

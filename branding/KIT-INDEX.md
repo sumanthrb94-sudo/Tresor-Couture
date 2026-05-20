@@ -1,4 +1,4 @@
-# Trésor Couture — Brand Kit Index
+# Tresor Couture — Brand Kit Index
 
 Every asset below is **production-ready** and regenerable.
 Run `python3 branding/generate.py` to rebuild rasters from source.

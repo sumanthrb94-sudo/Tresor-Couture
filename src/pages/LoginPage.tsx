@@ -59,7 +59,7 @@ const LoginPage: React.FC = () => {
   return (
     <main className="pt-[100px] pb-12 md:pb-16 bg-[color:var(--color-myntra-bg-soft)] min-h-screen">
       <div className="max-w-[960px] mx-auto px-4 md:px-8 lg:px-10">
-        <p className="section-eyebrow mb-2">Members of Trésor</p>
+        <p className="section-eyebrow mb-2">Members of Tresor</p>
         <h1 className="text-xl md:text-2xl font-extrabold mb-4 text-[color:var(--color-myntra-navy)]">
           Sign in to your atelier
         </h1>
@@ -107,7 +107,7 @@ const LoginPage: React.FC = () => {
                 <GoogleSignInButton onDone={() => navigate({ name: 'home' })} />
 
                 <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] leading-relaxed">
-                  By continuing, you agree to Trésor Couture&apos;s{' '}
+                  By continuing, you agree to Tresor Couture&apos;s{' '}
                   <span className="font-semibold text-[color:var(--color-myntra-ink-soft)]">Terms of Use</span> and{' '}
                   <span className="font-semibold text-[color:var(--color-myntra-ink-soft)]">Privacy Policy</span>.
                 </p>
@@ -195,7 +195,7 @@ const LoginPage: React.FC = () => {
               <GoogleSignInButton onDone={() => navigate({ name: 'home' })} />
 
               <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] leading-relaxed">
-                By continuing, you agree to Trésor Couture&apos;s{' '}
+                By continuing, you agree to Tresor Couture&apos;s{' '}
                 <span className="font-semibold text-[color:var(--color-myntra-ink-soft)]">Terms of Use</span> and{' '}
                 <span className="font-semibold text-[color:var(--color-myntra-ink-soft)]">Privacy Policy</span>.
               </p>
@@ -203,11 +203,11 @@ const LoginPage: React.FC = () => {
             )}
           </section>
 
-          {/* Right: New to Trésor */}
+          {/* Right: New to Tresor */}
           <aside className="p-6 md:p-8 bg-[color:var(--color-myntra-bg-sale)] flex flex-col">
             <Sparkles className="w-6 h-6 text-[color:var(--color-myntra-pink)] mb-3" />
             <h2 className="text-[18px] font-extrabold uppercase tracking-wider mb-2 text-[color:var(--color-myntra-navy)]">
-              New to Trésor?
+              New to Tresor?
             </h2>
             <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)] mb-6 leading-relaxed">
               Create an account to unlock curated drops, faster checkout, complimentary

@@ -110,7 +110,7 @@ async function materialiseGoogleProfile(user: FbUser) {
   await setDoc(doc(db, 'users', user.uid), {
     uid:       user.uid,
     email:     user.email ?? '',
-    fullName:  user.displayName ?? user.email?.split('@')[0] ?? 'Trésor Member',
+    fullName:  user.displayName ?? user.email?.split('@')[0] ?? 'Tresor Member',
     phone:     user.phoneNumber ?? null,
     role:      'customer' as const,
     photoURL:  user.photoURL ?? null,
@@ -199,7 +199,7 @@ export async function confirmPhoneCode(code: string) {
     await setDoc(profileDoc, {
       uid:       cred.user.uid,
       email:     cred.user.email ?? '',
-      fullName:  cred.user.displayName ?? cred.user.phoneNumber ?? 'Trésor Member',
+      fullName:  cred.user.displayName ?? cred.user.phoneNumber ?? 'Tresor Member',
       phone:     cred.user.phoneNumber ?? null,
       role:      'customer' as const,
       createdAt: new Date().toISOString()

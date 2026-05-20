@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Trésor Couture — brand kit generator.
+Tresor Couture — brand kit generator.
 
 Regenerates every raster asset under branding/ (favicons, social, OG image)
 from the source palette + master monogram. Run:
@@ -206,13 +206,13 @@ def wordmark_block(
     tracking_secondary: int = 14,
     show_rule: bool = True,
 ):
-    """TRÉSOR / hairline / COUTURE."""
+    """TRESOR / hairline / COUTURE."""
     primary = cormorant(primary_size, "Light")
     secondary = inter(secondary_size, "SemiBold")
-    pw, ph = text_size(primary, "TRÉSOR")
+    pw, ph = text_size(primary, "TRESOR")
     sw, sh = text_size(secondary, "COUTURE")
     # primary
-    draw_letters(draw, "TRÉSOR", primary, cx, cy - primary_size // 4, color, tracking_primary)
+    draw_letters(draw, "TRESOR", primary, cx, cy - primary_size // 4, color, tracking_primary)
     if show_rule:
         rule_y = cy + primary_size // 5
         rule_half = max(pw, sw) // 2 + primary_size // 6
@@ -261,7 +261,7 @@ def build_favicons():
         The painted master is too detailed (figure, drape, floral) to read
         at 16/32 px.
       • ≥ 128 px — composite the painted TC mark (mark-master.png, the
-        upper portion of the lockup without the TRÉSOR/COUTURE wordmark)
+        upper portion of the lockup without the TRESOR/COUTURE wordmark)
         on a cream tile with the gold-border frame. This carries the real
         brand artwork on PWA install, apple-touch, and OS app surfaces.
     """
@@ -328,8 +328,8 @@ def build_favicons():
     )
     # webmanifest
     manifest = {
-        "name": "Trésor Couture",
-        "short_name": "Trésor",
+        "name": "Tresor Couture",
+        "short_name": "Tresor",
         "icons": [
             {"src": "/branding/favicons/favicon-192x192.png", "sizes": "192x192", "type": "image/png"},
             {"src": "/branding/favicons/favicon-512x512.png", "sizes": "512x512", "type": "image/png"},
@@ -552,7 +552,7 @@ def social_profile_1080():
     paste_logo(im, 700, (W // 2, H // 2 - 40))
     # micro wordmark
     f = inter(28, "SemiBold")
-    txt = "TRÉSOR COUTURE"
+    txt = "TRESOR COUTURE"
     draw_letters(d, txt, f, W // 2, H - 200, INK, 10)
     im.convert("RGB").save(SOCIAL / "instagram-profile-1080.png", "PNG", optimize=True)
     # also resize for fb/twitter/linkedin
@@ -756,7 +756,7 @@ PRINT_SVGS = {
     # ---- business card front (3.5"x2" @ 300dpi = 1050x600, with 0.125" bleed -> 1125x675)
     "business-card-front.svg": """<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="3.625in" height="2.125in" viewBox="0 0 1088 638">
-  <title>Trésor Couture — business card (front)</title>
+  <title>Tresor Couture — business card (front)</title>
   <desc>Print: 3.5×2 in at 300 dpi with 0.0625 in bleed on every side.</desc>
   <defs>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
@@ -782,7 +782,7 @@ PRINT_SVGS = {
 
   <!-- wordmark, centred -->
   <g text-anchor="middle" font-family="'Cormorant Garamond', 'Times New Roman', serif">
-    <text x="544" y="270" font-size="120" font-weight="300" letter-spacing="20" fill="#2A1F12">TRÉSOR</text>
+    <text x="544" y="270" font-size="120" font-weight="300" letter-spacing="20" fill="#2A1F12">TRESOR</text>
   </g>
   <line x1="380" y1="305" x2="498" y2="305" stroke="url(#gold)" stroke-width="1"/>
   <circle cx="544" cy="305" r="4" fill="url(#gold)"/>
@@ -794,7 +794,7 @@ PRINT_SVGS = {
 
     "business-card-back.svg": """<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="3.625in" height="2.125in" viewBox="0 0 1088 638">
-  <title>Trésor Couture — business card (back)</title>
+  <title>Tresor Couture — business card (back)</title>
   <defs>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#D8B97A"/>
@@ -834,7 +834,7 @@ PRINT_SVGS = {
 
 LETTERHEAD = """<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="8.27in" height="11.69in" viewBox="0 0 2480 3508">
-  <title>Trésor Couture — letterhead (A4)</title>
+  <title>Tresor Couture — letterhead (A4)</title>
   <defs>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#D8B97A"/>
@@ -851,7 +851,7 @@ LETTERHEAD = """<?xml version="1.0" encoding="UTF-8"?>
       <path d="M 23 16 L 23 56 L 21 58 L 21 60 L 30 58 L 30 56 L 28 54 L 28 16 Z"/>
     </g>
     <g text-anchor="middle" font-family="'Cormorant Garamond', 'Times New Roman', serif" fill="#2A1F12">
-      <text font-size="120" font-weight="300" letter-spacing="22">TRÉSOR</text>
+      <text font-size="120" font-weight="300" letter-spacing="22">TRESOR</text>
       <text y="56" font-size="26" letter-spacing="22" font-family="'Inter', sans-serif" font-weight="600">COUTURE</text>
     </g>
   </g>
@@ -866,7 +866,7 @@ LETTERHEAD = """<?xml version="1.0" encoding="UTF-8"?>
   <!-- footer -->
   <line x1="240" y1="3260" x2="2240" y2="3260" stroke="url(#gold)" stroke-width="0.8"/>
   <g font-family="'Inter', sans-serif" fill="#46382A" text-anchor="middle">
-    <text x="1240" y="3310" font-size="22" letter-spacing="4">Trésor Couture · Heritage Indian Weaves</text>
+    <text x="1240" y="3310" font-size="22" letter-spacing="4">Tresor Couture · Heritage Indian Weaves</text>
     <text x="1240" y="3346" font-size="20" fill="#8E6520">concierge@tresorcouture.com  ·  +91 80 1234 5678  ·  tresorcouture.com</text>
     <text x="1240" y="3388" font-size="18">Atelier · 14 Cunningham Crescent, Bengaluru 560 052, India</text>
   </g>
@@ -876,7 +876,7 @@ LETTERHEAD = """<?xml version="1.0" encoding="UTF-8"?>
 
 INVOICE = """<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="8.27in" height="11.69in" viewBox="0 0 2480 3508">
-  <title>Trésor Couture — invoice template</title>
+  <title>Tresor Couture — invoice template</title>
   <defs>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#D8B97A"/>
@@ -888,7 +888,7 @@ INVOICE = """<?xml version="1.0" encoding="UTF-8"?>
 
   <!-- header -->
   <g font-family="'Cormorant Garamond', 'Times New Roman', serif">
-    <text x="240" y="320" font-size="120" font-weight="300" letter-spacing="22" fill="#2A1F12">TRÉSOR</text>
+    <text x="240" y="320" font-size="120" font-weight="300" letter-spacing="22" fill="#2A1F12">TRESOR</text>
     <text x="240" y="370" font-size="26" letter-spacing="16" font-family="'Inter', sans-serif" font-weight="600" fill="#2A1F12">COUTURE</text>
   </g>
   <g text-anchor="end" font-family="'Cormorant Garamond', serif" fill="#8E6520">
@@ -955,7 +955,7 @@ INVOICE = """<?xml version="1.0" encoding="UTF-8"?>
   <!-- footer / payment -->
   <line x1="240" y1="3260" x2="2240" y2="3260" stroke="url(#gold)" stroke-width="0.8"/>
   <g font-family="'Inter', sans-serif" fill="#46382A" text-anchor="middle">
-    <text x="1240" y="3320" font-size="22">Payable to · Trésor Couture · A/c 1234567890 · IFSC HDFC0001234</text>
+    <text x="1240" y="3320" font-size="22">Payable to · Tresor Couture · A/c 1234567890 · IFSC HDFC0001234</text>
     <text x="1240" y="3360" font-size="20" fill="#8E6520">concierge@tresorcouture.com  ·  tresorcouture.com</text>
   </g>
 </svg>
@@ -963,7 +963,7 @@ INVOICE = """<?xml version="1.0" encoding="UTF-8"?>
 
 THANK_YOU = """<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="5in" height="7in" viewBox="0 0 1500 2100">
-  <title>Trésor Couture — thank you card</title>
+  <title>Tresor Couture — thank you card</title>
   <defs>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#D8B97A"/>
@@ -993,17 +993,17 @@ THANK_YOU = """<?xml version="1.0" encoding="UTF-8"?>
       <text x="750" y="1180">to yours. Wear it like an heirloom.</text>
     </g>
 
-    <text x="750" y="1480" font-family="'Cormorant Garamond', serif" font-size="42" font-style="italic" font-weight="300" fill="#46382A">— The Trésor Atelier</text>
+    <text x="750" y="1480" font-family="'Cormorant Garamond', serif" font-size="42" font-style="italic" font-weight="300" fill="#46382A">— The Tresor Atelier</text>
 
     <line x1="600" y1="1840" x2="900" y2="1840" stroke="url(#gold)" stroke-width="0.8"/>
-    <text x="750" y="1900" font-family="'Inter', sans-serif" font-size="22" fill="#8E6520" letter-spacing="6" font-weight="600">TRÉSORCOUTURE.COM</text>
+    <text x="750" y="1900" font-family="'Inter', sans-serif" font-size="22" fill="#8E6520" letter-spacing="6" font-weight="600">TRESORCOUTURE.COM</text>
   </g>
 </svg>
 """
 
 CARE_CARD = """<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="4in" height="6in" viewBox="0 0 1200 1800">
-  <title>Trésor Couture — fabric care card</title>
+  <title>Tresor Couture — fabric care card</title>
   <defs>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#D8B97A"/>
@@ -1045,13 +1045,13 @@ CARE_CARD = """<?xml version="1.0" encoding="UTF-8"?>
     </g>
   </g>
 
-  <text x="600" y="1680" text-anchor="middle" font-family="'Inter', sans-serif" font-size="20" letter-spacing="6" font-weight="600" fill="#8E6520">TRÉSORCOUTURE.COM</text>
+  <text x="600" y="1680" text-anchor="middle" font-family="'Inter', sans-serif" font-size="20" letter-spacing="6" font-weight="600" fill="#8E6520">TRESORCOUTURE.COM</text>
 </svg>
 """
 
 HANGTAG = """<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="2.5in" height="4in" viewBox="0 0 750 1200">
-  <title>Trésor Couture — fabric hangtag</title>
+  <title>Tresor Couture — fabric hangtag</title>
   <defs>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#D8B97A"/>
@@ -1077,7 +1077,7 @@ HANGTAG = """<?xml version="1.0" encoding="UTF-8"?>
   </g>
 
   <g text-anchor="middle">
-    <text x="375" y="500" font-family="'Cormorant Garamond', serif" font-size="46" font-weight="300" fill="#2A1F12" letter-spacing="6">TRÉSOR</text>
+    <text x="375" y="500" font-family="'Cormorant Garamond', serif" font-size="46" font-weight="300" fill="#2A1F12" letter-spacing="6">TRESOR</text>
     <text x="375" y="538" font-family="'Inter', sans-serif" font-size="16" font-weight="600" letter-spacing="8" fill="#2A1F12">COUTURE</text>
     <line x1="295" y1="580" x2="455" y2="580" stroke="url(#gold)" stroke-width="0.8"/>
     <text x="375" y="650" font-family="'Inter', sans-serif" font-size="16" font-weight="600" letter-spacing="6" fill="#8E6520">WEAVE</text>
@@ -1088,14 +1088,14 @@ HANGTAG = """<?xml version="1.0" encoding="UTF-8"?>
     <text x="375" y="940" font-family="'Inter', sans-serif" font-size="22" fill="#2A1F12">{WEAVER}</text>
     <line x1="200" y1="1000" x2="550" y2="1000" stroke="url(#gold)" stroke-width="0.8"/>
     <text x="375" y="1060" font-family="'Inter', sans-serif" font-size="18" fill="#2A1F12">₹ {PRICE} / metre</text>
-    <text x="375" y="1130" font-family="'Inter', sans-serif" font-size="14" letter-spacing="6" font-weight="600" fill="#8E6520">TRÉSORCOUTURE.COM</text>
+    <text x="375" y="1130" font-family="'Inter', sans-serif" font-size="14" letter-spacing="6" font-weight="600" fill="#8E6520">TRESORCOUTURE.COM</text>
   </g>
 </svg>
 """
 
 PACKING_SLIP = """<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="8.27in" height="11.69in" viewBox="0 0 2480 3508">
-  <title>Trésor Couture — packing slip</title>
+  <title>Tresor Couture — packing slip</title>
   <defs>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#D8B97A"/>
@@ -1106,7 +1106,7 @@ PACKING_SLIP = """<?xml version="1.0" encoding="UTF-8"?>
   <rect width="2480" height="3508" fill="#F5ECDC"/>
 
   <g font-family="'Cormorant Garamond', serif">
-    <text x="240" y="320" font-size="120" font-weight="300" letter-spacing="22" fill="#2A1F12">TRÉSOR</text>
+    <text x="240" y="320" font-size="120" font-weight="300" letter-spacing="22" fill="#2A1F12">TRESOR</text>
     <text x="240" y="370" font-size="26" letter-spacing="16" font-family="'Inter', sans-serif" font-weight="600" fill="#2A1F12">COUTURE</text>
   </g>
   <g text-anchor="end" font-family="'Cormorant Garamond', serif" fill="#8E6520">
@@ -1146,14 +1146,14 @@ PACKING_SLIP = """<?xml version="1.0" encoding="UTF-8"?>
   </g>
   <g font-family="'Inter', sans-serif" text-anchor="middle" fill="#46382A">
     <text x="1240" y="3300" font-size="22">Returns within 30 days · concierge@tresorcouture.com · +91 80 1234 5678</text>
-    <text x="1240" y="3340" font-size="20" fill="#8E6520" letter-spacing="6" font-weight="600">TRÉSORCOUTURE.COM</text>
+    <text x="1240" y="3340" font-size="20" fill="#8E6520" letter-spacing="6" font-weight="600">TRESORCOUTURE.COM</text>
   </g>
 </svg>
 """
 
 STICKER_SEAL = """<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="2in" height="2in" viewBox="0 0 600 600">
-  <title>Trésor Couture — wax seal sticker (round, 2in)</title>
+  <title>Tresor Couture — wax seal sticker (round, 2in)</title>
   <defs>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#D8B97A"/>
@@ -1174,12 +1174,12 @@ STICKER_SEAL = """<?xml version="1.0" encoding="UTF-8"?>
 
   <text x="300" y="420" text-anchor="middle" font-family="'Cormorant Garamond', serif" font-size="34" font-style="italic" font-weight="300" fill="#2A1F12">sealed at the atelier</text>
   <line x1="220" y1="450" x2="380" y2="450" stroke="url(#gold)" stroke-width="0.8"/>
-  <text x="300" y="500" text-anchor="middle" font-family="'Inter', sans-serif" font-size="18" letter-spacing="8" font-weight="600" fill="#8E6520">TRÉSOR COUTURE</text>
+  <text x="300" y="500" text-anchor="middle" font-family="'Inter', sans-serif" font-size="18" letter-spacing="8" font-weight="600" fill="#8E6520">TRESOR COUTURE</text>
 </svg>
 """
 
 EMAIL_SIG_HTML = """<!--
-  Trésor Couture — email signature.
+  Tresor Couture — email signature.
   Paste into Gmail / Apple Mail / Outlook "stationery". Inline styles are mandatory.
   Edit the four spans marked DATA-EDIT.
 -->
@@ -1205,7 +1205,7 @@ EMAIL_SIG_HTML = """<!--
       </svg>
     </td>
     <td style="vertical-align:top;padding-left:22px;">
-      <div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;font-weight:600;color:#2A1F12;letter-spacing:2px;">TRÉSOR COUTURE</div>
+      <div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;font-weight:600;color:#2A1F12;letter-spacing:2px;">TRESOR COUTURE</div>
       <div style="font-size:11px;color:#8E6520;letter-spacing:4px;font-weight:600;margin-top:2px;">HERITAGE INDIAN WEAVES</div>
       <div style="height:1px;background:#B8893A;opacity:0.5;margin:10px 0;width:240px;"></div>
       <div style="font-size:14px;font-weight:600;"><span>{NAME}</span></div>

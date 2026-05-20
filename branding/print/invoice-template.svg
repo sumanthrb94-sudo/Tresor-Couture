@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="8.27in" height="11.69in" viewBox="0 0 2480 3508">
-  <title>Trésor Couture — invoice template</title>
+  <title>Tresor Couture — invoice template</title>
   <defs>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#D8B97A"/>
@@ -12,7 +12,7 @@
 
   <!-- header -->
   <g font-family="'Cormorant Garamond', 'Times New Roman', serif">
-    <text x="240" y="320" font-size="120" font-weight="300" letter-spacing="22" fill="#2A1F12">TRÉSOR</text>
+    <text x="240" y="320" font-size="120" font-weight="300" letter-spacing="22" fill="#2A1F12">TRESOR</text>
     <text x="240" y="370" font-size="26" letter-spacing="16" font-family="'Inter', sans-serif" font-weight="600" fill="#2A1F12">COUTURE</text>
   </g>
   <g text-anchor="end" font-family="'Cormorant Garamond', serif" fill="#8E6520">
@@ -79,7 +79,7 @@
   <!-- footer / payment -->
   <line x1="240" y1="3260" x2="2240" y2="3260" stroke="url(#gold)" stroke-width="0.8"/>
   <g font-family="'Inter', sans-serif" fill="#46382A" text-anchor="middle">
-    <text x="1240" y="3320" font-size="22">Payable to · Trésor Couture · A/c 1234567890 · IFSC HDFC0001234</text>
+    <text x="1240" y="3320" font-size="22">Payable to · Tresor Couture · A/c 1234567890 · IFSC HDFC0001234</text>
     <text x="1240" y="3360" font-size="20" fill="#8E6520">concierge@tresorcouture.com  ·  tresorcouture.com</text>
   </g>
 </svg>
