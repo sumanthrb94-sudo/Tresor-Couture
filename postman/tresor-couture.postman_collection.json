@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "Trésor Couture · Free-Tier Backend",
+    "name": "Tresor Couture · Free-Tier Backend",
     "_postman_id": "trsr-couture-firebase-free",
     "description": "Talks directly to Firebase Identity Toolkit + Firestore REST against the tresor-couture project.\n\nThe collection-level pre-request hook generates a unique testEmail/testPassword per run so Newman re-runs do not collide with the previous user.\n\n**Run with Newman:** `npx newman run postman/tresor-couture.postman_collection.json -e postman/tresor-couture.postman_environment.json`\n\n**Admin-only requests** (product CRUD, coupon write, order admin update, review approve) are sent with the regular {{idToken}} and ASSERT 403 — that proves firestore.rules is correctly denying non-admin writes. If you have an admin custom-claim token, populate {{adminIdToken}} and switch the Authorization header back to test the success path.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -393,7 +393,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"fields\": {\n    \"brand\":          { \"stringValue\": \"TRÉSOR\" },\n    \"name\":           { \"stringValue\": \"Sample Banarasi\" },\n    \"description\":    { \"stringValue\": \"Seeded via Postman.\" },\n    \"pricePerMeter\":  { \"integerValue\": \"4500\" },\n    \"mrpPerMeter\":    { \"integerValue\": \"7999\" },\n    \"photo\":          { \"stringValue\": \"/products/banarasi-purple-1.jpg\" },\n    \"image\":          { \"stringValue\": \"/products/banarasi-purple-1.jpg\" },\n    \"category\":       { \"stringValue\": \"Silk\" },\n    \"masterCategory\": { \"stringValue\": \"Sarees\" },\n    \"subCategory\":    { \"stringValue\": \"Banarasi\" },\n    \"origin\":         { \"stringValue\": \"Varanasi\" },\n    \"tags\":           { \"arrayValue\": { \"values\": [{ \"stringValue\": \"sample\" }] } },\n    \"sticker\":        { \"stringValue\": \"Trending\" },\n    \"inStockMeters\":  { \"integerValue\": \"20\" }\n  }\n}"
+              "raw": "{\n  \"fields\": {\n    \"brand\":          { \"stringValue\": \"TRESOR\" },\n    \"name\":           { \"stringValue\": \"Sample Banarasi\" },\n    \"description\":    { \"stringValue\": \"Seeded via Postman.\" },\n    \"pricePerMeter\":  { \"integerValue\": \"4500\" },\n    \"mrpPerMeter\":    { \"integerValue\": \"7999\" },\n    \"photo\":          { \"stringValue\": \"/products/banarasi-purple-1.jpg\" },\n    \"image\":          { \"stringValue\": \"/products/banarasi-purple-1.jpg\" },\n    \"category\":       { \"stringValue\": \"Silk\" },\n    \"masterCategory\": { \"stringValue\": \"Sarees\" },\n    \"subCategory\":    { \"stringValue\": \"Banarasi\" },\n    \"origin\":         { \"stringValue\": \"Varanasi\" },\n    \"tags\":           { \"arrayValue\": { \"values\": [{ \"stringValue\": \"sample\" }] } },\n    \"sticker\":        { \"stringValue\": \"Trending\" },\n    \"inStockMeters\":  { \"integerValue\": \"20\" }\n  }\n}"
             }
           },
           "event": [

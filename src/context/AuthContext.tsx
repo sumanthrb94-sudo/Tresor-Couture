@@ -39,7 +39,7 @@ const toUser = (uid: string, profile: Record<string, unknown> | null, fallbackEm
     id: uid,
     email: (p.email as string) ?? fallbackEmail ?? '',
     passwordHash: '',
-    fullName: (p.fullName as string) ?? (fallbackEmail?.split('@')[0] ?? 'Trésor Member'),
+    fullName: (p.fullName as string) ?? (fallbackEmail?.split('@')[0] ?? 'Tresor Member'),
     phone: (p.phone as string | undefined) ?? undefined,
     role: ((p.role as 'customer' | 'admin') ?? 'customer'),
     createdAt: (p.createdAt as string) ?? new Date().toISOString(),

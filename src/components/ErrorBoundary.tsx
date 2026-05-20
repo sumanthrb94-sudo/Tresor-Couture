@@ -21,7 +21,7 @@ class ErrorBoundary extends React.Component<Props, State> {
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     // Surface in DevTools; in real production hook this up to Sentry/Datadog.
-    console.error('[Trésor] caught render error', error, info);
+    console.error('[Tresor] caught render error', error, info);
   }
 
   render() {

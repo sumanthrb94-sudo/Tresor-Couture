@@ -130,7 +130,7 @@ const AccountPage: React.FC<Props> = ({ tab = 'profile' }) => {
   return (
     <main className="pt-[100px] pb-12 md:pb-16 bg-[color:var(--color-myntra-bg-soft)] min-h-screen">
       <div className="max-w-[1100px] mx-auto px-4 md:px-8 lg:px-10">
-        <p className="section-eyebrow mb-2">My Trésor</p>
+        <p className="section-eyebrow mb-2">My Tresor</p>
         <h1 className="text-xl md:text-2xl font-extrabold mb-4 text-[color:var(--color-myntra-navy)]">
           Hello, {user.fullName.split(' ')[0] || 'there'}
         </h1>
@@ -316,7 +316,7 @@ const ProfileTab: React.FC = () => {
         )}
         <div className="min-w-0">
           <h2 className="text-[16px] font-extrabold text-[color:var(--color-myntra-navy)] truncate">
-            {user.fullName || 'Trésor Member'}
+            {user.fullName || 'Tresor Member'}
           </h2>
           <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)] truncate">{user.email}</p>
           <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] mt-0.5">

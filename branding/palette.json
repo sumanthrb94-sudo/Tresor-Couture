@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "name": "Trésor Couture",
+  "name": "Tresor Couture",
   "version": "1.0.0",
-  "description": "Brand colour tokens for Trésor Couture. Sampled from the founder's logo paper. All values are sRGB.",
+  "description": "Brand colour tokens for Tresor Couture. Sampled from the founder's logo paper. All values are sRGB.",
   "tokens": {
     "brand-bg": {
       "value": "#F5ECDC",

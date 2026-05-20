@@ -63,7 +63,7 @@ const OrderReceipt: React.FC<Props> = ({ order }) => {
         <header className="flex items-start justify-between border-b border-[color:var(--color-myntra-border)] pb-4 mb-4">
           <div>
             <p className="font-serif text-[22px] font-extrabold text-[color:var(--color-myntra-navy)] tracking-wide">
-              Trésor Couture
+              Tresor Couture
             </p>
             <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] uppercase tracking-[0.2em]">
               Hand-woven · Atelier-cut
@@ -171,8 +171,8 @@ const OrderReceipt: React.FC<Props> = ({ order }) => {
         </div>
 
         <footer className="mt-8 pt-4 border-t border-dashed border-[color:var(--color-myntra-border)] text-center text-[10px] text-[color:var(--color-myntra-ink-mute)]">
-          <p className="font-bold text-[color:var(--color-myntra-ink-soft)] mb-1">Sold by Trésor Atelier, Hyderabad</p>
-          <p>Thank you for choosing Trésor Couture. For assistance with this order, quote receipt <span className="font-mono font-bold">{shortHash}</span> when contacting our atelier concierge.</p>
+          <p className="font-bold text-[color:var(--color-myntra-ink-soft)] mb-1">Sold by Tresor Atelier, Hyderabad</p>
+          <p>Thank you for choosing Tresor Couture. For assistance with this order, quote receipt <span className="font-mono font-bold">{shortHash}</span> when contacting our atelier concierge.</p>
         </footer>
       </div>
     </section>

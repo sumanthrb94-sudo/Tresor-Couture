@@ -168,7 +168,7 @@ const Navbar: React.FC = () => {
           <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--color-myntra-border-soft)]">
             <button onClick={() => { setMobileOpen(false); navigate({ name: 'home' }); }} className="flex items-center gap-2">
               <img src="/branding/mark-master.png" alt="" className="h-9 w-auto object-contain" draggable={false} />
-              <span className="font-serif font-semibold text-xl tracking-[0.04em] text-[color:var(--color-myntra-navy)]">TRÉSOR</span>
+              <span className="font-serif font-semibold text-xl tracking-[0.04em] text-[color:var(--color-myntra-navy)]">TRESOR</span>
               <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--color-myntra-ink-soft)]">couture</span>
             </button>
             <button onClick={() => setMobileOpen(false)} aria-label="Close menu">
@@ -308,7 +308,7 @@ const Navbar: React.FC = () => {
           <button
             onClick={() => navigate({ name: 'home' })}
             className="flex items-center gap-2 md:gap-2.5 shrink-0 no-tap-highlight"
-            aria-label="Trésor Couture — Home"
+            aria-label="Tresor Couture — Home"
           >
             <img
               src="/branding/mark-master.png"
@@ -320,7 +320,7 @@ const Navbar: React.FC = () => {
             />
             <span className="flex items-baseline gap-1.5">
               <span className="font-serif font-semibold text-[20px] md:text-[24px] tracking-[0.04em] text-[color:var(--color-myntra-navy)] leading-none">
-                TRÉSOR
+                TRESOR
               </span>
               <span className="hidden sm:inline text-[10px] md:text-[11px] font-bold uppercase tracking-[0.22em] text-[color:var(--color-myntra-ink-soft)] leading-none">
                 couture
@@ -465,7 +465,7 @@ const Navbar: React.FC = () => {
                       </>
                     ) : (
                       <>
-                        <p className="text-[14px] font-extrabold">Welcome to Trésor</p>
+                        <p className="text-[14px] font-extrabold">Welcome to Tresor</p>
                         <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mb-3">Access your bag, wishlist and orders.</p>
                         <div className="flex flex-col gap-2">
                           <button

@@ -27,7 +27,7 @@ const Footer: React.FC = () => {
       <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 pt-10 md:pt-14 pb-6 flex flex-col items-center text-center border-b border-[color:var(--color-myntra-border-soft)]">
         <img
           src="/branding/master-logo-trim.png"
-          alt="Trésor Couture"
+          alt="Tresor Couture"
           className="h-24 md:h-32 w-auto object-contain mb-3 select-none"
           draggable={false}
           loading="lazy"
@@ -109,7 +109,7 @@ const Footer: React.FC = () => {
             <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-[color:var(--color-myntra-pink)]" /> 100% authentic weaves</span>
           </div>
           <p className="flex items-center gap-4">
-            <span>© {new Date().getFullYear()} Trésor Couture · All rights reserved.</span>
+            <span>© {new Date().getFullYear()} Tresor Couture · All rights reserved.</span>
             <button
               onClick={() => navigate({ name: 'admin' })}
               className="text-[11px] tracking-[0.18em] uppercase hover:text-[color:var(--color-myntra-pink)] transition-colors"

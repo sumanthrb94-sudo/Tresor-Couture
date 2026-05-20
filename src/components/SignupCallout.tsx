@@ -60,13 +60,13 @@ const SignupCallout: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-[1.1fr_1fr] gap-6 md:gap-10 items-center">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#8E6520] mb-2 flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5" /> The Trésor Atelier
+              <Sparkles className="w-3.5 h-3.5" /> The Tresor Atelier
             </p>
             <h2
               id="signup-callout-title"
               className="font-serif text-[26px] md:text-[34px] leading-tight text-[color:var(--color-myntra-navy)] mb-3"
             >
-              Become a member of Trésor
+              Become a member of Tresor
             </h2>
             <p className="text-[13px] md:text-[15px] text-[color:var(--color-myntra-ink-soft)] max-w-md mb-5">
               An invitation-only ledger of heritage bolts, private bridal previews, and

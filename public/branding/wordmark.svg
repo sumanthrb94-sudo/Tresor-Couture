@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 100" role="img" aria-label="Trésor Couture">
-  <title>Trésor Couture</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 100" role="img" aria-label="Tresor Couture">
+  <title>Tresor Couture</title>
   <defs>
     <linearGradient id="wm-gold" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%" stop-color="#8E6520"/>
@@ -9,7 +9,7 @@
     </linearGradient>
   </defs>
   <g fill="url(#wm-gold)" font-family="'Cormorant Garamond', 'Times New Roman', serif" text-anchor="middle">
-    <text x="240" y="56" font-size="48" letter-spacing="10">TRÉSOR</text>
+    <text x="240" y="56" font-size="48" letter-spacing="10">TRESOR</text>
     <text x="240" y="82" font-size="16" letter-spacing="14">COUTURE</text>
   </g>
   <g stroke="url(#wm-gold)" stroke-width="1" stroke-linecap="round">

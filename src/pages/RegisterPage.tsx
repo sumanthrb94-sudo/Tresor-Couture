@@ -79,7 +79,7 @@ const RegisterPage: React.FC = () => {
   return (
     <main className="pt-[100px] pb-12 md:pb-16 bg-[color:var(--color-myntra-bg-soft)] min-h-screen">
       <div className="max-w-[480px] mx-auto px-4 md:px-0">
-        <p className="section-eyebrow mb-2">Join Trésor</p>
+        <p className="section-eyebrow mb-2">Join Tresor</p>
         <h1 className="text-xl md:text-2xl font-extrabold mb-4 text-[color:var(--color-myntra-navy)]">
           Create your atelier account
         </h1>
@@ -298,7 +298,7 @@ const RegisterPage: React.FC = () => {
             <GoogleSignInButton onDone={() => navigate({ name: 'home' })} label="Sign up with Google" />
 
             <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] leading-relaxed">
-              By creating an account, you agree to Trésor Couture&apos;s{' '}
+              By creating an account, you agree to Tresor Couture&apos;s{' '}
               <span className="font-semibold text-[color:var(--color-myntra-ink-soft)]">Terms of Use</span> and{' '}
               <span className="font-semibold text-[color:var(--color-myntra-ink-soft)]">Privacy Policy</span>.
             </p>

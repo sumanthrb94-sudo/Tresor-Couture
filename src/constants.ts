@@ -15,7 +15,7 @@ const swatch = (
 
 const p = (src: string, w = 1000, h = 1250) => photoUrl(src, { w, h });
 
-const BRAND = 'TRÉSOR';
+const BRAND = 'TRESOR';
 
 export const FABRICS: Fabric[] = [
   {
@@ -956,7 +956,7 @@ export const TESTIMONIALS: Testimonial[] = [
     name: 'Ananya Sharma',
     role: 'Fashion Designer',
     content:
-      'The quality of silk from Trésor Couture is unparalleled. My bridal collection owes its success to these exquisite fabrics.',
+      'The quality of silk from Tresor Couture is unparalleled. My bridal collection owes its success to these exquisite fabrics.',
     avatar: 'https://i.pravatar.cc/150?u=ananya'
   },
   {

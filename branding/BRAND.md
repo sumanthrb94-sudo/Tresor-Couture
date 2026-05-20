@@ -1,6 +1,6 @@
-# Trésor Couture — Brand Kit
+# Tresor Couture — Brand Kit
 
-Single source of truth for the Trésor Couture identity. Drop new assets here; the website reads them via `/public/branding/*` and `palette.json`.
+Single source of truth for the Tresor Couture identity. Drop new assets here; the website reads them via `/public/branding/*` and `palette.json`.
 
 ## Logo
 

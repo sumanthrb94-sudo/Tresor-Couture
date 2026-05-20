@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 120" role="img" aria-label="Trésor Couture horizontal lockup">
-  <title>Trésor Couture</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 120" role="img" aria-label="Tresor Couture horizontal lockup">
+  <title>Tresor Couture</title>
   <defs>
     <linearGradient id="hz-gold" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#D8B97A"/>
@@ -20,7 +20,7 @@
 
   <!-- Wordmark -->
   <g fill="url(#hz-gold)" font-family="'Cormorant Garamond', 'Times New Roman', serif">
-    <text x="140" y="60" font-size="42" letter-spacing="6">TRÉSOR</text>
+    <text x="140" y="60" font-size="42" letter-spacing="6">TRESOR</text>
     <text x="140" y="88" font-size="14" letter-spacing="10">COUTURE</text>
   </g>
 
