@@ -36,6 +36,13 @@ const STATUS_STYLE: Record<OrderStatus, { bg: string; text: string; border: stri
 
 const statusOf = (o: Order): OrderStatus => o.status ?? 'placed';
 
+// Cancelled / refunded orders are excluded from revenue — the goods went
+// back to inventory and no money was collected (or it was refunded).
+const isRealised = (o: Order): boolean => {
+  const s = statusOf(o);
+  return s !== 'cancelled' && s !== 'refunded';
+};
+
 const timeAgo = (iso: string): string => {
   const then = new Date(iso).getTime();
   if (Number.isNaN(then)) return '—';
@@ -149,10 +156,13 @@ const AdminDashboard: React.FC = () => {
     [orders]
   );
 
-  /* KPI metrics. */
+  /* KPI metrics. Revenue figures only count orders that were not
+     cancelled or refunded — those go back to inventory. */
+  const realisedOrders = useMemo(() => orders.filter(isRealised), [orders]);
+
   const totalRevenue = useMemo(
-    () => orders.reduce((sum, o) => sum + (o.total ?? 0), 0),
-    [orders]
+    () => realisedOrders.reduce((sum, o) => sum + (o.total ?? 0), 0),
+    [realisedOrders]
   );
 
   const ordersThisMonth = useMemo(() => {
@@ -172,7 +182,7 @@ const AdminDashboard: React.FC = () => {
 
     let curr = 0;
     let prev = 0;
-    for (const o of orders) {
+    for (const o of realisedOrders) {
       const d = new Date(o.placedAt);
       const m = d.getMonth();
       const y = d.getFullYear();
@@ -184,11 +194,11 @@ const AdminDashboard: React.FC = () => {
     }
     const delta = ((curr - prev) / prev) * 100;
     return { delta, positive: delta >= 0, hasPrev: true };
-  }, [orders]);
+  }, [realisedOrders]);
 
   const aov = useMemo(
-    () => (orders.length === 0 ? 0 : Math.round(totalRevenue / orders.length)),
-    [orders, totalRevenue]
+    () => (realisedOrders.length === 0 ? 0 : Math.round(totalRevenue / realisedOrders.length)),
+    [realisedOrders, totalRevenue]
   );
 
   const lowStockCount = useMemo(
@@ -225,7 +235,7 @@ const AdminDashboard: React.FC = () => {
   }
   const topProducts: TopProduct[] = useMemo(() => {
     const map = new Map<string, TopProduct>();
-    for (const o of orders) {
+    for (const o of realisedOrders) {
       for (const it of o.items) {
         const existing = map.get(it.fabricId);
         const lineRev = it.meters * it.fabricSnapshot.pricePerMeter;
@@ -246,7 +256,7 @@ const AdminDashboard: React.FC = () => {
       }
     }
     return [...map.values()].sort((a, b) => b.revenue - a.revenue).slice(0, 5);
-  }, [orders]);
+  }, [realisedOrders]);
 
   const recentOrders = ordersSorted.slice(0, 8);
 
@@ -338,7 +348,7 @@ const AdminDashboard: React.FC = () => {
         <KpiTile
           label="Avg. Order Value"
           value={formatINR(aov)}
-          subtitle={<span>across {orders.length} order{orders.length === 1 ? '' : 's'}</span>}
+          subtitle={<span>across {realisedOrders.length} realised order{realisedOrders.length === 1 ? '' : 's'}</span>}
           Icon={TrendingUp}
           iconBg="#E5EFDB"
           iconColor="var(--color-myntra-green)"
