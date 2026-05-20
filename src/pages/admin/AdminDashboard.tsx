@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ShoppingBag,
   Package,
@@ -16,10 +16,11 @@ import {
   Palette,
   Database
 } from 'lucide-react';
-import { ordersStore, fabricsStore } from '../../data/storage';
+import { collection, getDocs, orderBy, query as fsQuery, limit as qLimit } from 'firebase/firestore';
+import { fabricsStore } from '../../data/storage';
 import { useStore } from '../../data/useStore';
 import { FABRICS, formatINR } from '../../constants';
-import { seedCatalog } from '../../lib/firebase';
+import { db, seedCatalog } from '../../lib/firebase';
 import { useRouter } from '../../context/RouterContext';
 import type { Order, OrderStatus, Route } from '../../types';
 
@@ -132,9 +133,32 @@ const StatusPill: React.FC<{ status: OrderStatus }> = ({ status }) => {
 /* ───────────── component ───────────── */
 
 const AdminDashboard: React.FC = () => {
-  const { rows: orders } = useStore(ordersStore);
+  // Orders come from Firestore directly — AdminOrders mutates orders via
+  // ordersApi (Firestore writes) without touching the local ordersStore,
+  // so reading from the store would show stale data: status changes,
+  // soft-deletes (returns to supplier), even brand-new orders would never
+  // appear. We re-read from Firestore on mount and whenever the router
+  // brings us back here.
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
   const { rows: fabrics } = useStore(fabricsStore);
   const { navigate } = useRouter();
+
+  const fetchOrders = useCallback(async () => {
+    try {
+      const snap = await getDocs(
+        fsQuery(collection(db, 'orders'), orderBy('placedAt', 'desc'), qLimit(500))
+      );
+      setOrders(snap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<Order, 'id'>) })));
+      setOrdersError(null);
+    } catch (err) {
+      setOrdersError(err instanceof Error ? err.message : 'Could not load orders.');
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchOrders();
+  }, [fetchOrders]);
 
   const [seeding, setSeeding] = useState(false);
   const [seedMessage, setSeedMessage] = useState<string | null>(null);
@@ -327,6 +351,11 @@ const AdminDashboard: React.FC = () => {
       {seedMessage && (
         <div className="bg-white border border-[color:var(--color-myntra-border-soft)] rounded-md px-4 py-3 text-[13px] text-[color:var(--color-myntra-ink)]">
           {seedMessage}
+        </div>
+      )}
+      {ordersError && (
+        <div className="rounded-md px-4 py-3 text-[13px]" style={{ background: '#FBE6E6', color: '#A12626', border: '1px solid #F0C7C7' }}>
+          Couldn't load orders — KPIs and the Sales Report may be empty. ({ordersError})
         </div>
       )}
 
