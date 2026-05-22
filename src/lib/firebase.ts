@@ -52,6 +52,8 @@ import {
   type QueryConstraint
 } from 'firebase/firestore';
 
+import { BRAND_CONTACTS, TRESOR_SITE_DOMAIN } from './brand-contacts';
+
 const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
 
 const firebaseConfig = {
@@ -472,7 +474,7 @@ function buildOrderConfirmationEmail(args: {
           <p style="font-size:14px;line-height:1.6;margin:16px 0 0 0;font-style:italic">— The Tresor Couture team</p>
         </td></tr>
         <tr><td style="padding:20px 36px;border-top:1px solid #EAD9BA;font-size:11px;color:#8E6520;font-family:Helvetica,Arial,sans-serif;text-align:center">
-          A reply to this email reaches us directly. tresor-couture.vercel.app
+          Questions? Write to ${BRAND_CONTACTS.care} &middot; ${TRESOR_SITE_DOMAIN}
         </td></tr>
       </table>
     </td></tr>
@@ -497,6 +499,8 @@ function buildOrderConfirmationEmail(args: {
     'You will receive another note the moment the parcel leaves the atelier.',
     '',
     '— The Tresor Couture team',
+    '',
+    `Questions? Write to ${BRAND_CONTACTS.care}`,
   ].join('\n');
 
   return { subject, html, text };
@@ -547,6 +551,9 @@ function buildOrderStatusEmail(args: { customerName: string; orderId: string; st
           <p style="font-size:13px;color:#6B6358;margin:0">Order reference: <strong>${orderId.slice(0, 8).toUpperCase()}</strong></p>
           <p style="font-size:14px;line-height:1.6;margin:24px 0 0 0;font-style:italic">— The Tresor Couture team</p>
         </td></tr>
+        <tr><td style="padding:20px 36px;border-top:1px solid #EAD9BA;font-size:11px;color:#8E6520;font-family:Helvetica,Arial,sans-serif;text-align:center">
+          Questions? Write to ${BRAND_CONTACTS.care} &middot; ${TRESOR_SITE_DOMAIN}
+        </td></tr>
       </table>
     </td></tr>
   </table></body></html>`;
@@ -557,6 +564,8 @@ function buildOrderStatusEmail(args: { customerName: string; orderId: string; st
     body, '',
     `Order reference: ${orderId.slice(0, 8).toUpperCase()}`, '',
     '— The Tresor Couture team',
+    '',
+    `Questions? Write to ${BRAND_CONTACTS.care}`,
   ].join('\n');
   return { subject, html, text };
 }

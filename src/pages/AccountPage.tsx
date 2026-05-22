@@ -365,7 +365,7 @@ const ProfileTab: React.FC = () => {
             />
           </div>
           <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] mt-1">
-            Email cannot be changed. Reach out to care@tresor.test if you need help.
+            Email cannot be changed. Reach out to care@tresorcouture.in if you need help.
           </p>
         </div>
 

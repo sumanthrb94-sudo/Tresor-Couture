@@ -40,7 +40,7 @@ Still in the same edit screen for each template:
 | --- | --- | --- |
 | **Subject** | `Reset your password for project-102541847727` | `Tresor Couture — reset your password` (or "confirm your email" / "confirm your new email address") |
 | **Sender name** | _(blank or "project-102541847727")_ | `Tresor Couture` |
-| **Reply-to** | `noreply@tresor-couture.firebaseapp.com` | `care@tresor.couture` (or any inbox you actually monitor) |
+| **Reply-to** | `noreply@tresor-couture.firebaseapp.com` | `care@tresorcouture.in` |
 
 Subjects for the other two templates are in `branding/email-templates/auth/subject-lines.txt`.
 
@@ -94,8 +94,8 @@ After this step:
 
 Steps 1-3 customise everything **inside** the email and the visible
 URL, but the **From** address is still `noreply@tresor-couture.firebaseapp.com`.
-To replace that with `noreply@tresor-couture.com` (or whichever domain
-you own), you need to configure **custom SMTP** for Auth emails:
+To replace that with `hello@tresorcouture.in` (the brand-owned mailbox),
+configure **custom SMTP** for Auth emails:
 
 1. In **Firebase Console → Authentication → Templates**, click **SMTP settings** (top right of the templates screen).
 2. Toggle on **Customize SMTP server**.
@@ -103,11 +103,11 @@ you own), you need to configure **custom SMTP** for Auth emails:
    - **SendGrid**: Host `smtp.sendgrid.net` &middot; Port `465` &middot; SSL &middot; Username `apikey` &middot; Password = your SendGrid API key
    - **Brevo**: Host `smtp-relay.brevo.com` &middot; Port `587` &middot; STARTTLS &middot; Username + password from Brevo dashboard
    - **Amazon SES**: Host `email-smtp.<region>.amazonaws.com` &middot; Port `465` &middot; SSL &middot; SMTP credentials from SES console
-4. Set **Sender email** to your verified domain address (you must verify the domain with the SMTP provider first — SPF + DKIM DNS records).
+4. Set **Sender email** to `hello@tresorcouture.in` (you must first verify ownership of `tresorcouture.in` with the SMTP provider — SPF + DKIM DNS records).
 5. Click **Save**.
 
 After this, every Auth email comes **from** your verified domain and
-the inbox shows `Tresor Couture <noreply@tresor-couture.com>` — no
+the inbox shows `Tresor Couture <hello@tresorcouture.in>` — no
 Firebase reference anywhere.
 
 > **Same SMTP works for the Trigger Email extension**, so configuring this
@@ -125,7 +125,7 @@ Firebase reference anywhere.
 | Body: *"Hello, Follow this link to reset your project-102541847727 password..."* | 1 | Branded HTML with a Reset button on cream background |
 | URL: `https://tresor-couture.firebaseapp.com/__/auth/action?...` | 3 | `https://tresor-couture.vercel.app/__/auth/action?...` |
 | Signature: *"Your project-102541847727 team"* | 1 | *"— The Tresor Couture team"* |
-| From-address domain: `noreply@<project>.firebaseapp.com` | 4 (opt) | `noreply@tresor-couture.com` |
+| From-address: `noreply@<project>.firebaseapp.com` | 4 (opt) | `hello@tresorcouture.in` |
 
 Steps 1-3 take 10 minutes and remove every visible mention of Firebase
 from the recipient's perspective. Step 4 is the final mile to make it
