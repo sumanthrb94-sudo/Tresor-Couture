@@ -164,53 +164,65 @@ export async function resumeGoogleRedirect(): Promise<FbUser | null> {
 /* ---------- Phone OTP ---------- */
 
 let recaptcha: RecaptchaVerifier | null = null;
-let recaptchaContainerId: string | null = null;
+let recaptchaHostId: string | null = null;
 let pendingConfirmation: ConfirmationResult | null = null;
 
 /**
- * Discard any cached verifier AND scrub the container DOM.
+ * Phone OTP lifecycle is a minefield. Two distinct grecaptcha failures
+ * recur unless every attempt is given a virgin host element:
  *
- * Firebase's RecaptchaVerifier binds to a specific DOM node; once that node
- * is gone (modal close, route change, React remount) the verifier is
- * unusable and the next `signInWithPhoneNumber` throws
- * "reCAPTCHA client element has been removed: 0".
+ *  1. "reCAPTCHA client element has been removed: 0"
+ *     — verifier outlived its host DOM node (modal close, route change,
+ *       React remount).
  *
- * RecaptchaVerifier.clear() only deregisters the widget from grecaptcha's
- * internal registry — it does NOT guarantee removal of the iframe/div
- * children it injected. If those children survive (StrictMode double-mount,
- * a prior failed sendPhoneCode that errored after grecaptcha rendered, or
- * clear() throwing after the iframe was already detached), the next
- * `new RecaptchaVerifier(...)` against the same container throws
- * "reCAPTCHA has already been rendered in this element". So we also wipe
- * the container's children here.
+ *  2. "reCAPTCHA has already been rendered in this element"
+ *     — grecaptcha tracks rendered-state on the host element itself, not
+ *       just on its child iframe. `RecaptchaVerifier.clear()` deregisters
+ *       the widget but does NOT reliably scrub that state; subsequent
+ *       `innerHTML = ''` removes the iframe but the element is still
+ *       "tainted" in grecaptcha's view.
+ *
+ * The only deterministic remedy is: never reuse the same host element.
+ * The caller's `#recaptcha-container` is treated as a *slot*; on every
+ * verifier rebuild we create a fresh child `<div>` with a unique id inside
+ * that slot, and bind grecaptcha to the fresh child. Each attempt sees an
+ * element grecaptcha has provably never touched.
  */
 export function clearRecaptcha() {
   if (recaptcha) {
     try { recaptcha.clear(); } catch { /* widget may already be gone */ }
     recaptcha = null;
   }
-  if (recaptchaContainerId) {
-    const el = document.getElementById(recaptchaContainerId);
-    if (el) el.innerHTML = '';
-    recaptchaContainerId = null;
+  if (recaptchaHostId) {
+    const host = document.getElementById(recaptchaHostId);
+    host?.parentElement?.removeChild(host);
+    recaptchaHostId = null;
   }
 }
 
-function ensureRecaptcha(containerId: string) {
-  // Stale singleton whose host node was unmounted since the last render —
-  // drop it so we don't re-enter Firebase with a verifier pointing at a
-  // dead DOM node.
-  if (recaptcha && !document.getElementById(containerId)) {
-    clearRecaptcha();
+function ensureRecaptcha(slotId: string): RecaptchaVerifier {
+  // Reuse only if the previously-built host element is still in the DOM.
+  // If React unmounted the parent slot since the last attempt, the host is
+  // gone and the cached verifier would throw "client element has been
+  // removed" on next verify.
+  if (recaptcha && recaptchaHostId && document.getElementById(recaptchaHostId)) {
+    return recaptcha;
   }
-  if (recaptcha) return recaptcha;
-  const el = document.getElementById(containerId);
-  // Belt and braces: if a previous render left iframe/widget DOM behind
-  // (verifier was nulled but children survived), grecaptcha refuses to
-  // attach a new widget. Scrub before recreating.
-  if (el && el.firstChild) el.innerHTML = '';
-  recaptcha = new RecaptchaVerifier(auth, containerId, { size: 'invisible' });
-  recaptchaContainerId = containerId;
+  clearRecaptcha();
+
+  const slot = document.getElementById(slotId);
+  if (!slot) {
+    throw new Error(`reCAPTCHA container "#${slotId}" not found in DOM`);
+  }
+  // Drop whatever previous attempts left behind (iframes, tainted elements)
+  // so the slot is empty before we attach the fresh host.
+  slot.innerHTML = '';
+  const host = document.createElement('div');
+  host.id = `${slotId}-${Date.now().toString(36)}`;
+  slot.appendChild(host);
+
+  recaptcha = new RecaptchaVerifier(auth, host.id, { size: 'invisible' });
+  recaptchaHostId = host.id;
   return recaptcha;
 }
 
@@ -218,13 +230,14 @@ function ensureRecaptcha(containerId: string) {
  * Step 1 of phone login. Triggers Firebase to send an SMS to the number.
  * Returns nothing; call confirmPhoneCode() after the user enters the OTP.
  */
-export async function sendPhoneCode(e164PhoneNumber: string, recaptchaContainerId: string) {
+export async function sendPhoneCode(e164PhoneNumber: string, recaptchaSlotId: string) {
   try {
-    const verifier = ensureRecaptcha(recaptchaContainerId);
+    const verifier = ensureRecaptcha(recaptchaSlotId);
     pendingConfirmation = await signInWithPhoneNumber(auth, e164PhoneNumber, verifier);
   } catch (err) {
-    // A failed attempt leaves the verifier in a state Firebase refuses to
-    // reuse. Drop it so the next attempt rebuilds from scratch.
+    // Any failure past this point (invalid number, quota, network) leaves
+    // the verifier in a state Firebase refuses to reuse. Drop it so the
+    // next attempt rebuilds from a fresh host.
     clearRecaptcha();
     throw err;
   }
@@ -238,6 +251,10 @@ export async function confirmPhoneCode(code: string) {
   if (!pendingConfirmation) throw new Error('No pending OTP. Call sendPhoneCode() first.');
   const cred = await pendingConfirmation.confirm(code);
   pendingConfirmation = null;
+  // Single-use: once the OTP is verified, the verifier has done its job.
+  // Drop it so a later sign-in (e.g. sign-out → sign-in again in the same
+  // tab) starts with a clean grecaptcha slate.
+  clearRecaptcha();
   const profileDoc = doc(db, 'users', cred.user.uid);
   const existing = await getDoc(profileDoc);
   if (!existing.exists()) {
