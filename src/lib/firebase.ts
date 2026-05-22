@@ -94,16 +94,30 @@ export async function login(email: string, password: string) {
 /**
  * Trigger Firebase's built-in password-reset flow. The email itself is sent
  * by Firebase Auth from noreply@<project>.firebaseapp.com (template editable
- * in Firebase Console → Authentication → Templates). The continueUrl is the
- * page the user lands on AFTER they've clicked the reset link and chosen a
- * new password — point it at the login screen.
+ * in Firebase Console → Authentication → Templates).
+ *
+ * `continueUrl` is the page the user lands on AFTER they've clicked the
+ * reset link and chosen a new password. It MUST be hosted on a domain that
+ * appears in Firebase Console → Authentication → Settings → Authorized
+ * domains, otherwise Firebase rejects the call with
+ * auth/unauthorized-continue-uri.
+ *
+ * We deliberately do NOT use window.location.origin here — Vercel preview
+ * deployments live on ephemeral subdomains (e.g. *-3803s-projects.vercel.app)
+ * that are never on the authorized list, so password reset would fail on
+ * every preview build. Instead we anchor on the configured Firebase auth
+ * domain (already authorized by construction). Override with
+ * VITE_PUBLIC_APP_URL if you want reset links to land on a custom domain.
  *
  * Returns void on success; the caller should show a generic "if an account
  * exists, we've sent a link" message — never leak whether the address was
  * actually registered (account-enumeration hygiene).
  */
 export async function sendPasswordReset(email: string) {
-  const continueUrl = `${window.location.origin}/login`;
+  const explicitBase = env.VITE_PUBLIC_APP_URL?.replace(/\/$/, '');
+  const authDomain = auth.app.options.authDomain;
+  const fallbackBase = authDomain ? `https://${authDomain}` : window.location.origin;
+  const continueUrl = `${explicitBase ?? fallbackBase}/login`;
   await sendPasswordResetEmail(auth, email.trim(), {
     url: continueUrl,
     handleCodeInApp: false,
