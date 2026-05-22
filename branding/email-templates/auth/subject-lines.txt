@@ -1,0 +1,15 @@
+Tresor Couture — Firebase Auth subject lines
+=============================================
+
+Password reset
+  Tresor Couture — reset your password
+
+Email verification
+  Tresor Couture — confirm your email
+
+Email address change
+  Tresor Couture — confirm your new email address
+
+SMS (phone OTP) — Firebase sends this automatically; the SMS body is
+configured in the same Templates screen. Recommended copy:
+  Your Tresor Couture verification code is %LOGIN_CODE%. It expires in 10 minutes.

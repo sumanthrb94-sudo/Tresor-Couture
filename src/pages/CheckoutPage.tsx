@@ -32,6 +32,63 @@ const FIELD_ORDER: (keyof ShippingAddress)[] = [
   'fullName', 'email', 'phone', 'line1', 'city', 'state', 'postalCode', 'country'
 ];
 
+// IMPORTANT: keep StepBlock and Field at module scope, not inside
+// CheckoutPage. When defined inside the parent, each render creates a
+// fresh function identity, React treats them as a new component type and
+// unmounts/remounts the whole subtree on every keystroke. That destroys
+// the underlying <input>, drops focus, and orphans the mobile cursor
+// handle below the row — visible as the blue droplet drifting out of the
+// input on every backspace.
+
+const StepBlock: React.FC<{
+  id: Step;
+  index: number;
+  title: string;
+  doneTitle?: string;
+  currentStep: Step;
+  setStep: (s: Step) => void;
+  children: React.ReactNode;
+}> = ({ id, index, title, doneTitle, currentStep, setStep, children }) => {
+  const active = currentStep === id;
+  const done =
+    (id === 'login' && (currentStep === 'address' || currentStep === 'payment')) ||
+    (id === 'address' && currentStep === 'payment');
+
+  return (
+    <div className={`bg-white border ${active ? 'border-[color:var(--color-myntra-pink)]' : 'border-[color:var(--color-myntra-border-soft)]'} mb-3`}>
+      <div className="px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold ${done ? 'bg-[color:var(--color-myntra-green)] text-white' : active ? 'bg-[color:var(--color-myntra-pink)] text-white' : 'bg-[color:var(--color-myntra-bg-soft)] text-[color:var(--color-myntra-ink-soft)]'}`}>
+            {done ? <CheckCircle2 className="w-4 h-4" /> : index}
+          </span>
+          <span className="text-[14px] font-extrabold uppercase tracking-wider">
+            {done && doneTitle ? doneTitle : title}
+          </span>
+        </div>
+        {done && (
+          <button onClick={() => setStep(id)} className="text-[12px] font-bold text-[color:var(--color-myntra-pink)]">CHANGE</button>
+        )}
+      </div>
+      {active && <div className="px-4 pb-5 pt-2">{children}</div>}
+    </div>
+  );
+};
+
+const Field: React.FC<{
+  label: string;
+  field: keyof ShippingAddress;
+  errors: Record<string, string>;
+  fieldRefs: React.MutableRefObject<Record<string, HTMLInputElement | null>>;
+  children: (ref: (el: HTMLInputElement | null) => void) => React.ReactNode;
+  cols?: number;
+}> = ({ label, field, errors, fieldRefs, children, cols = 1 }) => (
+  <div className={cols === 2 ? 'sm:col-span-2' : ''}>
+    <label className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">{label}</label>
+    {children(el => { fieldRefs.current[field] = el; })}
+    {errors[field] && <p className="text-[12px] text-[color:var(--color-myntra-pink)] mt-1 font-semibold">{errors[field]}</p>}
+  </div>
+);
+
 const CheckoutPage: React.FC = () => {
   const { resolved, subtotal, shipping, tax, total, clearCart } = useCart();
   const { navigate } = useRouter();
@@ -218,45 +275,6 @@ const CheckoutPage: React.FC = () => {
     navigate({ name: 'confirmation', orderId });
   };
 
-  const StepBlock: React.FC<{ id: Step; index: number; title: string; doneTitle?: string; children: React.ReactNode }> = ({ id, index, title, doneTitle, children }) => {
-    const active = step === id;
-    const done =
-      (id === 'login' && (step === 'address' || step === 'payment')) ||
-      (id === 'address' && step === 'payment');
-
-    return (
-      <div className={`bg-white border ${active ? 'border-[color:var(--color-myntra-pink)]' : 'border-[color:var(--color-myntra-border-soft)]'} mb-3`}>
-        <div className="px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold ${done ? 'bg-[color:var(--color-myntra-green)] text-white' : active ? 'bg-[color:var(--color-myntra-pink)] text-white' : 'bg-[color:var(--color-myntra-bg-soft)] text-[color:var(--color-myntra-ink-soft)]'}`}>
-              {done ? <CheckCircle2 className="w-4 h-4" /> : index}
-            </span>
-            <span className="text-[14px] font-extrabold uppercase tracking-wider">
-              {done && doneTitle ? doneTitle : title}
-            </span>
-          </div>
-          {done && (
-            <button onClick={() => setStep(id)} className="text-[12px] font-bold text-[color:var(--color-myntra-pink)]">CHANGE</button>
-          )}
-        </div>
-        {active && <div className="px-4 pb-5 pt-2">{children}</div>}
-      </div>
-    );
-  };
-
-  const Field: React.FC<{
-    label: string;
-    field: keyof ShippingAddress;
-    children: (ref: (el: HTMLInputElement | null) => void) => React.ReactNode;
-    cols?: number;
-  }> = ({ label, field, children, cols = 1 }) => (
-    <div className={cols === 2 ? 'sm:col-span-2' : ''}>
-      <label className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">{label}</label>
-      {children(el => { fieldRefs.current[field] = el; })}
-      {errors[field] && <p className="text-[12px] text-[color:var(--color-myntra-pink)] mt-1 font-semibold">{errors[field]}</p>}
-    </div>
-  );
-
   return (
     <main className="pt-[100px] pb-12 md:pb-16 bg-[color:var(--color-myntra-bg-soft)] min-h-screen">
       <div className="max-w-[1200px] mx-auto px-4 md:px-8 lg:px-10">
@@ -264,7 +282,7 @@ const CheckoutPage: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4 lg:gap-6">
           <div>
-            <StepBlock id="login" index={1} title="Login or Sign Up" doneTitle={user ? `Signed in: ${user.fullName}` : `Login: ${phone || 'Guest checkout'}`}>
+            <StepBlock id="login" index={1} title="Login or Sign Up" doneTitle={user ? `Signed in: ${user.fullName}` : `Login: ${phone || 'Guest checkout'}`} currentStep={step} setStep={setStep}>
               <div className="flex items-center gap-3 mb-3 text-[color:var(--color-myntra-ink-soft)]">
                 <User className="w-4 h-4" />
                 <p className="text-[13px]">
@@ -289,6 +307,8 @@ const CheckoutPage: React.FC = () => {
               index={2}
               title="Delivery Address"
               doneTitle={address.fullName ? `Delivery to: ${address.fullName}, ${address.city}` : 'Delivery Address'}
+              currentStep={step}
+              setStep={setStep}
             >
               {/* Saved-address banner — shown only when we're using the user's stored default. */}
               {useSavedAddress && user?.defaultAddress && (
@@ -320,32 +340,32 @@ const CheckoutPage: React.FC = () => {
                 <p className="text-[13px]">Where would you like your weaves delivered?</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Full Name" field="fullName" cols={2}>
+                <Field label="Full Name" field="fullName" cols={2} errors={errors} fieldRefs={fieldRefs}>
                   {ref => <input ref={ref} className="input-box" value={address.fullName} onChange={e => setAddress(a => ({ ...a, fullName: e.target.value }))} />}
                 </Field>
-                <Field label="Email" field="email">
+                <Field label="Email" field="email" errors={errors} fieldRefs={fieldRefs}>
                   {ref => <input ref={ref} className="input-box" type="email" value={address.email} onChange={e => setAddress(a => ({ ...a, email: e.target.value }))} />}
                 </Field>
-                <Field label="Phone" field="phone">
+                <Field label="Phone" field="phone" errors={errors} fieldRefs={fieldRefs}>
                   {ref => <input ref={ref} className="input-box" type="tel" inputMode="tel" placeholder="10-digit mobile" value={address.phone} onChange={e => setAddress(a => ({ ...a, phone: e.target.value }))} />}
                 </Field>
-                <Field label="Address Line 1" field="line1" cols={2}>
+                <Field label="Address Line 1" field="line1" cols={2} errors={errors} fieldRefs={fieldRefs}>
                   {ref => <input ref={ref} className="input-box" value={address.line1} onChange={e => setAddress(a => ({ ...a, line1: e.target.value }))} />}
                 </Field>
                 <div className="sm:col-span-2">
                   <label className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">Address Line 2 (optional)</label>
                   <input className="input-box" value={address.line2 ?? ''} onChange={e => setAddress(a => ({ ...a, line2: e.target.value }))} />
                 </div>
-                <Field label="City" field="city">
+                <Field label="City" field="city" errors={errors} fieldRefs={fieldRefs}>
                   {ref => <input ref={ref} className="input-box" value={address.city} onChange={e => setAddress(a => ({ ...a, city: e.target.value }))} />}
                 </Field>
-                <Field label="State" field="state">
+                <Field label="State" field="state" errors={errors} fieldRefs={fieldRefs}>
                   {ref => <input ref={ref} className="input-box" value={address.state} onChange={e => setAddress(a => ({ ...a, state: e.target.value }))} />}
                 </Field>
-                <Field label="PIN Code" field="postalCode">
+                <Field label="PIN Code" field="postalCode" errors={errors} fieldRefs={fieldRefs}>
                   {ref => <input ref={ref} className="input-box" inputMode="numeric" maxLength={6} placeholder="6-digit PIN" value={address.postalCode} onChange={e => setAddress(a => ({ ...a, postalCode: e.target.value.replace(/\D/g, '').slice(0, 6) }))} />}
                 </Field>
-                <Field label="Country" field="country">
+                <Field label="Country" field="country" errors={errors} fieldRefs={fieldRefs}>
                   {ref => <input ref={ref} className="input-box" value={address.country} onChange={e => setAddress(a => ({ ...a, country: e.target.value }))} />}
                 </Field>
               </div>
@@ -372,7 +392,7 @@ const CheckoutPage: React.FC = () => {
               </button>
             </StepBlock>
 
-            <StepBlock id="payment" index={3} title="Payment Options">
+            <StepBlock id="payment" index={3} title="Payment Options" currentStep={step} setStep={setStep}>
               <div className="flex items-center gap-3 mb-4 text-[color:var(--color-myntra-ink-soft)]">
                 <Lock className="w-4 h-4" />
                 <p className="text-[13px]">All payments are encrypted. Demo checkout — no real charges.</p>

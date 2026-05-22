@@ -181,4 +181,5 @@ export type Route =
   | { name: 'account'; tab?: 'profile' | 'orders' | 'wishlist' | 'addresses' }
   | { name: 'admin'; section?: 'dashboard' | 'products' | 'orders' | 'coupons' | 'reviews' }
   | { name: 'admin-brand-kit'; section?: string }
+  | { name: 'auth-action'; mode: string; oobCode: string; apiKey?: string; continueUrl?: string }
   | { name: 'not-found'; path?: string };

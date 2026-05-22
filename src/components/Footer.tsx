@@ -26,7 +26,7 @@ const Footer: React.FC = () => {
     <footer className="bg-[color:var(--color-myntra-bg-soft)] mt-10 md:mt-16">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 pt-10 md:pt-14 pb-6 flex flex-col items-center text-center border-b border-[color:var(--color-myntra-border-soft)]">
         <img
-          src="/branding/master-logo-trim.png"
+          src="/branding/tc-master-mark.svg"
           alt="Tresor Couture"
           className="h-24 md:h-32 w-auto object-contain mb-3 select-none"
           draggable={false}

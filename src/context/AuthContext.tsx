@@ -10,6 +10,7 @@ import {
   isAdminUser,
   sendPhoneCode,
   confirmPhoneCode,
+  sendPasswordReset,
   usersApi
 } from '../lib/firebase';
 
@@ -22,6 +23,7 @@ interface AuthContextValue {
   register: (input: { email: string; password: string; fullName: string; phone?: string }) => Promise<void>;
   loginWithPhone: (e164Number: string) => Promise<void>;
   confirmPhoneOtp: (code: string) => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (patch: Partial<User>) => Promise<void>;
 }
@@ -125,6 +127,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await confirmPhoneCode(code);
   }, []);
 
+  const requestPasswordReset = useCallback(async (email: string) => {
+    const normalised = email.trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(normalised)) {
+      throw new Error('Enter a valid email address.');
+    }
+    // Account-enumeration hygiene: swallow auth/user-not-found and pretend
+    // the email was sent. The caller always shows the same "if an account
+    // exists" message, so an attacker can't probe registered addresses.
+    try {
+      await sendPasswordReset(normalised);
+    } catch (err) {
+      const code = (err as { code?: string }).code;
+      if (code === 'auth/user-not-found' || code === 'auth/invalid-email') return;
+      throw err;
+    }
+  }, []);
+
   const logout = useCallback(async () => {
     await fbSignOut();
     setUser(null);
@@ -155,6 +174,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         register,
         loginWithPhone,
         confirmPhoneOtp,
+        requestPasswordReset,
         logout,
         updateProfile
       }}

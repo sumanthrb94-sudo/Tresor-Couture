@@ -8,7 +8,7 @@ import PhoneOtpForm from '../components/PhoneOtpForm';
 type Mode = 'email' | 'phone';
 
 const LoginPage: React.FC = () => {
-  const { login, user, loading } = useAuth();
+  const { login, requestPasswordReset, user, loading } = useAuth();
   const { navigate, hrefFor } = useRouter();
   const [mode, setMode] = useState<Mode>('email');
   const [email, setEmail] = useState('');
@@ -16,6 +16,10 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotBusy, setForgotBusy] = useState(false);
+  const [forgotMsg, setForgotMsg] = useState<string | null>(null);
 
   // If the user signs in via Google redirect (mobile), they bounce back to
   // this page already authed — route them to /account so they don't stare
@@ -50,10 +54,27 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  const handleForgot = () => {
-    window.alert(
-      'Password reset is not enabled in this demo. Please reach out to care@tresor.test to recover your account.'
-    );
+  const openForgot = () => {
+    setForgotEmail(email.trim());
+    setForgotMsg(null);
+    setForgotOpen(true);
+  };
+
+  const handleForgotSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setForgotMsg(null);
+    setForgotBusy(true);
+    try {
+      await requestPasswordReset(forgotEmail);
+      // Generic copy — never reveals whether the email is registered.
+      setForgotMsg(
+        `If an account exists for ${forgotEmail.trim()}, a reset link is on its way. Please also check your spam folder.`
+      );
+    } catch (err) {
+      setForgotMsg((err as Error).message ?? 'Could not send reset link. Please try again.');
+    } finally {
+      setForgotBusy(false);
+    }
   };
 
   return (
@@ -145,7 +166,7 @@ const LoginPage: React.FC = () => {
                   </label>
                   <button
                     type="button"
-                    onClick={handleForgot}
+                    onClick={openForgot}
                     className="text-[12px] font-bold text-[color:var(--color-myntra-pink)] hover:underline"
                   >
                     Forgot password?
@@ -241,6 +262,62 @@ const LoginPage: React.FC = () => {
             </a>
           </aside>
         </div>
+
+        {forgotOpen && (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="forgot-title"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+            onClick={e => { if (e.target === e.currentTarget) setForgotOpen(false); }}
+          >
+            <div className="bg-white border border-[color:var(--color-myntra-border-soft)] w-full max-w-[440px] p-6 md:p-7">
+              <h3 id="forgot-title" className="text-[16px] font-extrabold uppercase tracking-wider mb-1 text-[color:var(--color-myntra-navy)]">
+                Reset your password
+              </h3>
+              <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)] mb-4">
+                Enter the email on your account. If it is registered, we will send a link to choose a new password.
+              </p>
+
+              <form onSubmit={handleForgotSubmit} noValidate className="space-y-3">
+                <div className="relative">
+                  <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--color-myntra-ink-mute)] pointer-events-none" />
+                  <input
+                    type="email"
+                    autoComplete="email"
+                    autoFocus
+                    value={forgotEmail}
+                    onChange={e => setForgotEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="input-box pl-9"
+                  />
+                </div>
+
+                {forgotMsg && (
+                  <p
+                    role="status"
+                    className="text-[13px] font-semibold text-[color:var(--color-myntra-navy)] bg-[color:var(--color-myntra-bg-sale)] border border-[color:var(--color-myntra-border)] px-3 py-2 rounded"
+                  >
+                    {forgotMsg}
+                  </p>
+                )}
+
+                <div className="flex gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setForgotOpen(false)}
+                    className="btn-outline flex-1"
+                  >
+                    Close
+                  </button>
+                  <button type="submit" disabled={forgotBusy} className="btn-primary flex-1">
+                    {forgotBusy ? 'Sending…' : 'Send reset link'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Demo creds tip */}
         <div className="bg-white border border-[color:var(--color-myntra-border-soft)] mt-4 px-4 py-3 flex items-start gap-3">
