@@ -164,31 +164,53 @@ export async function resumeGoogleRedirect(): Promise<FbUser | null> {
 /* ---------- Phone OTP ---------- */
 
 let recaptcha: RecaptchaVerifier | null = null;
+let recaptchaContainerId: string | null = null;
 let pendingConfirmation: ConfirmationResult | null = null;
 
 /**
- * Discard any cached verifier. Call from the OTP form's unmount handler —
- * Firebase's RecaptchaVerifier binds to a specific DOM node, and once that
- * node is removed (modal close, route change, React remount), the verifier
- * is unusable and any later `signInWithPhoneNumber` throws
+ * Discard any cached verifier AND scrub the container DOM.
+ *
+ * Firebase's RecaptchaVerifier binds to a specific DOM node; once that node
+ * is gone (modal close, route change, React remount) the verifier is
+ * unusable and the next `signInWithPhoneNumber` throws
  * "reCAPTCHA client element has been removed: 0".
+ *
+ * RecaptchaVerifier.clear() only deregisters the widget from grecaptcha's
+ * internal registry — it does NOT guarantee removal of the iframe/div
+ * children it injected. If those children survive (StrictMode double-mount,
+ * a prior failed sendPhoneCode that errored after grecaptcha rendered, or
+ * clear() throwing after the iframe was already detached), the next
+ * `new RecaptchaVerifier(...)` against the same container throws
+ * "reCAPTCHA has already been rendered in this element". So we also wipe
+ * the container's children here.
  */
 export function clearRecaptcha() {
-  if (!recaptcha) return;
-  try { recaptcha.clear(); } catch { /* widget may already be gone */ }
-  recaptcha = null;
+  if (recaptcha) {
+    try { recaptcha.clear(); } catch { /* widget may already be gone */ }
+    recaptcha = null;
+  }
+  if (recaptchaContainerId) {
+    const el = document.getElementById(recaptchaContainerId);
+    if (el) el.innerHTML = '';
+    recaptchaContainerId = null;
+  }
 }
 
 function ensureRecaptcha(containerId: string) {
-  // Guard against a stale singleton whose host node was removed from the DOM
-  // since the previous render. Without this, the next sendPhoneCode call
-  // re-enters Firebase with a verifier pointing at a node that no longer
-  // exists and fails before the SMS is ever requested.
+  // Stale singleton whose host node was unmounted since the last render —
+  // drop it so we don't re-enter Firebase with a verifier pointing at a
+  // dead DOM node.
   if (recaptcha && !document.getElementById(containerId)) {
     clearRecaptcha();
   }
   if (recaptcha) return recaptcha;
+  const el = document.getElementById(containerId);
+  // Belt and braces: if a previous render left iframe/widget DOM behind
+  // (verifier was nulled but children survived), grecaptcha refuses to
+  // attach a new widget. Scrub before recreating.
+  if (el && el.firstChild) el.innerHTML = '';
   recaptcha = new RecaptchaVerifier(auth, containerId, { size: 'invisible' });
+  recaptchaContainerId = containerId;
   return recaptcha;
 }
 
