@@ -100,6 +100,37 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
     }
 
+    /* ---------- mail (Firebase Trigger Email extension) ---------- */
+    // Outbound email queue. The `firestore-send-email` extension watches
+    // this collection and POSTs each new doc to the configured SMTP
+    // provider. Security model:
+    //   - Customers may enqueue mail addressed ONLY to their own email
+    //     (prevents using the queue to spam arbitrary recipients).
+    //   - Admin may enqueue, read, update, delete anything (status-change
+    //     emails, manual replies, queue clean-up).
+    //   - No public read — the queue can contain customer order details.
+    match /mail/{mailId} {
+      allow create: if (isSignedIn()
+                        && request.resource.data.uid == request.auth.uid
+                        && request.resource.data.to is string
+                        && request.resource.data.to == request.auth.token.email)
+                     || isAdmin();
+      allow read, update, delete: if isAdmin();
+    }
+
+    /* ---------- admin_notifications ---------- */
+    // In-app notifications surfaced in the admin dashboard. Today this is
+    // the channel for "new order" alerts (Cloud Functions can later
+    // promote these to outbound email so the admin doesn't need to poll
+    // the console). Any signed-in user can append (i.e. an order created
+    // by a customer can drop a notification), but only for whitelisted
+    // kinds — no arbitrary writes.
+    match /admin_notifications/{notifId} {
+      allow create: if isSignedIn()
+        && request.resource.data.kind in ['new_order'];
+      allow read, update, delete: if isAdmin();
+    }
+
     /* ---------- deny everything else ---------- */
     match /{document=**} {
       allow read, write: if false;

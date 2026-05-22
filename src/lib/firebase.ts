@@ -19,6 +19,7 @@ import {
   GoogleAuthProvider,
   RecaptchaVerifier,
   signInWithPhoneNumber,
+  sendPasswordResetEmail,
   type ConfirmationResult,
   signOut as fbSignOut,
   onAuthStateChanged,
@@ -88,6 +89,25 @@ export async function register(input: { email: string; password: string; fullNam
 export async function login(email: string, password: string) {
   const cred = await signInWithEmailAndPassword(auth, email, password);
   return cred.user;
+}
+
+/**
+ * Trigger Firebase's built-in password-reset flow. The email itself is sent
+ * by Firebase Auth from noreply@<project>.firebaseapp.com (template editable
+ * in Firebase Console → Authentication → Templates). The continueUrl is the
+ * page the user lands on AFTER they've clicked the reset link and chosen a
+ * new password — point it at the login screen.
+ *
+ * Returns void on success; the caller should show a generic "if an account
+ * exists, we've sent a link" message — never leak whether the address was
+ * actually registered (account-enumeration hygiene).
+ */
+export async function sendPasswordReset(email: string) {
+  const continueUrl = `${window.location.origin}/login`;
+  await sendPasswordResetEmail(auth, email.trim(), {
+    url: continueUrl,
+    handleCodeInApp: false,
+  });
 }
 
 /**
@@ -299,6 +319,205 @@ async function getOne<T>(name: string, id: string): Promise<(T & { id: string })
 }
 
 /* ------------------------------------------------------------------ */
+/*  Email queue — Firebase "Trigger Email" extension wiring           */
+/* ------------------------------------------------------------------ */
+/**
+ * The Firebase Extensions catalog ships `firestore-send-email` (a.k.a.
+ * "Trigger Email from Firestore") which watches a collection and POSTs
+ * each new doc through an SMTP provider (SendGrid / Mailgun / Brevo /
+ * raw SMTP). Once the extension is installed and SMTP credentials are
+ * configured in the Firebase Console, ANY doc added to `mail/` gets
+ * delivered automatically — there's no client-side SMTP call.
+ *
+ *   addDoc(mail) ──► extension trigger ──► SMTP provider ──► inbox
+ *
+ * Setup checklist (one-time, in Firebase Console):
+ *   1. Extensions → Browse Marketplace → "Trigger Email from Firestore"
+ *   2. Configure: collection = "mail", SMTP connection URI, default FROM
+ *   3. Wait ~2 min for deployment.
+ *
+ * Document shape (see extension docs for full reference):
+ *   {
+ *     to:      string | string[],
+ *     uid?:    string,                  // owner uid; gated by firestore.rules
+ *     message: { subject, html, text }
+ *   }
+ *
+ * Security model: customers may enqueue mail addressed only to their own
+ * verified email (rule lives in firestore.rules). Admin alerts go through
+ * `adminNotificationsApi` instead and stay in-app until a Cloud Function
+ * promotes them to email — that keeps admin contact details out of any
+ * customer-writable collection.
+ */
+const emailApi = {
+  enqueue: async (input: {
+    to: string;
+    subject: string;
+    html: string;
+    text: string;
+  }) => {
+    if (!auth.currentUser) throw new Error('not_signed_in');
+    return addDoc(collection(db, 'mail'), {
+      uid: auth.currentUser.uid,
+      to: input.to,
+      message: {
+        subject: input.subject,
+        html: input.html,
+        text: input.text,
+      },
+      createdAt: serverTimestamp(),
+    });
+  },
+};
+
+/** Plain-text + HTML body builders. Voice follows branding/BRAND.md:
+ *  curated, restrained, archival; no exclamation marks. */
+function rupee(n: number) {
+  return `₹${n.toLocaleString('en-IN')}`;
+}
+
+function buildOrderConfirmationEmail(args: {
+  customerName: string;
+  orderId: string;
+  items: { fabricSnapshot: { name: string; brand?: string; pricePerMeter: number }; meters: number; color?: string }[];
+  subtotal: number;
+  shipping: number;
+  tax: number;
+  total: number;
+  shippingAddressLine: string;
+}) {
+  const { customerName, orderId, items, subtotal, shipping, tax, total, shippingAddressLine } = args;
+  const lineRows = items.map(it => `
+    <tr>
+      <td style="padding:10px 0;border-bottom:1px solid #EAD9BA;color:#2A1F12;font-family:Georgia,serif">
+        ${it.fabricSnapshot.name}${it.color ? ` &middot; ${it.color}` : ''}<br/>
+        <span style="font-size:12px;color:#8E6520">${it.meters} m &middot; ${rupee(it.fabricSnapshot.pricePerMeter)}/m</span>
+      </td>
+      <td style="padding:10px 0;border-bottom:1px solid #EAD9BA;color:#2A1F12;font-family:Georgia,serif;text-align:right">
+        ${rupee(it.fabricSnapshot.pricePerMeter * it.meters)}
+      </td>
+    </tr>`).join('');
+
+  const subject = `Tresor Couture — your order ${orderId.slice(0, 8)} is placed`;
+  const html = `<!DOCTYPE html><html><body style="margin:0;background:#F5ECDC;font-family:Georgia,serif;color:#2A1F12">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F5ECDC;padding:40px 0">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#FBF5EA;border:1px solid #EAD9BA">
+        <tr><td style="padding:32px 36px 8px 36px;text-align:center">
+          <div style="font-size:13px;letter-spacing:0.24em;color:#B8893A;font-family:Helvetica,Arial,sans-serif">TRESOR &middot; COUTURE</div>
+          <div style="height:1px;background:#B8893A;width:80px;margin:14px auto"></div>
+        </td></tr>
+        <tr><td style="padding:8px 36px 24px 36px">
+          <p style="font-size:22px;font-style:italic;margin:0 0 16px 0;color:#2A1F12">Dear ${customerName},</p>
+          <p style="font-size:15px;line-height:1.6;margin:0 0 16px 0">Thank you for your order. We have begun the careful business of preparing it.</p>
+          <p style="font-size:15px;line-height:1.6;margin:0 0 24px 0">Your order reference is <strong>${orderId.slice(0, 8).toUpperCase()}</strong>.</p>
+
+          <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #B8893A;margin:8px 0 20px 0">
+            <tr><td style="padding:12px 0 8px 0;font-size:11px;letter-spacing:0.2em;color:#8E6520;font-family:Helvetica,Arial,sans-serif">YOUR ORDER</td></tr>
+            ${lineRows}
+            <tr><td colspan="2" style="padding:14px 0 4px 0;text-align:right;font-size:13px;color:#6B6358">Subtotal &nbsp;&nbsp; ${rupee(subtotal)}</td></tr>
+            <tr><td colspan="2" style="padding:4px 0;text-align:right;font-size:13px;color:#6B6358">Shipping &nbsp;&nbsp; ${shipping === 0 ? 'Complimentary' : rupee(shipping)}</td></tr>
+            <tr><td colspan="2" style="padding:4px 0;text-align:right;font-size:13px;color:#6B6358">GST (5%) &nbsp;&nbsp; ${rupee(tax)}</td></tr>
+            <tr><td colspan="2" style="padding:8px 0 0 0;text-align:right;font-size:16px;font-weight:bold;color:#2A1F12">Total &nbsp;&nbsp; ${rupee(total)}</td></tr>
+          </table>
+
+          <p style="font-size:12px;letter-spacing:0.2em;color:#8E6520;font-family:Helvetica,Arial,sans-serif;margin:24px 0 6px 0">SHIPPING TO</p>
+          <p style="font-size:14px;line-height:1.6;margin:0 0 24px 0">${shippingAddressLine}</p>
+
+          <p style="font-size:14px;line-height:1.6;margin:0">You will receive another note the moment the parcel leaves the atelier.</p>
+          <p style="font-size:14px;line-height:1.6;margin:16px 0 0 0;font-style:italic">— The Tresor Couture team</p>
+        </td></tr>
+        <tr><td style="padding:20px 36px;border-top:1px solid #EAD9BA;font-size:11px;color:#8E6520;font-family:Helvetica,Arial,sans-serif;text-align:center">
+          A reply to this email reaches us directly. tresor-couture.vercel.app
+        </td></tr>
+      </table>
+    </td></tr>
+  </table></body></html>`;
+
+  const text = [
+    `Dear ${customerName},`,
+    '',
+    'Thank you for your order. We have begun the careful business of preparing it.',
+    `Your order reference is ${orderId.slice(0, 8).toUpperCase()}.`,
+    '',
+    'YOUR ORDER',
+    ...items.map(it => `  ${it.fabricSnapshot.name}${it.color ? ` (${it.color})` : ''} — ${it.meters} m @ ${rupee(it.fabricSnapshot.pricePerMeter)}/m = ${rupee(it.fabricSnapshot.pricePerMeter * it.meters)}`),
+    '',
+    `Subtotal:  ${rupee(subtotal)}`,
+    `Shipping:  ${shipping === 0 ? 'Complimentary' : rupee(shipping)}`,
+    `GST (5%):  ${rupee(tax)}`,
+    `Total:     ${rupee(total)}`,
+    '',
+    `Shipping to: ${shippingAddressLine}`,
+    '',
+    'You will receive another note the moment the parcel leaves the atelier.',
+    '',
+    '— The Tresor Couture team',
+  ].join('\n');
+
+  return { subject, html, text };
+}
+
+function buildOrderStatusEmail(args: { customerName: string; orderId: string; status: string }) {
+  const { customerName, orderId, status } = args;
+  const headlines: Record<string, { headline: string; body: string }> = {
+    processing: {
+      headline: 'Your order is being prepared.',
+      body: 'The pieces are being checked, folded, and made ready for despatch.',
+    },
+    shipped: {
+      headline: 'Your order has left the atelier.',
+      body: 'The parcel is now with the courier. We will share tracking shortly.',
+    },
+    delivered: {
+      headline: 'Your order has been delivered.',
+      body: 'We hope it arrived as carefully as it was packed. A note back would be welcome.',
+    },
+    cancelled: {
+      headline: 'Your order has been cancelled.',
+      body: 'A refund, where applicable, has been initiated and will reach you within 5 working days.',
+    },
+    refunded: {
+      headline: 'Your refund has been processed.',
+      body: 'It should reflect on the original payment method within 3 working days.',
+    },
+  };
+  const { headline, body } = headlines[status] ?? {
+    headline: `Your order status: ${status}`,
+    body: 'A small change to your order has been recorded.',
+  };
+
+  const subject = `Tresor Couture — ${headline.toLowerCase().replace(/\.$/, '')}`;
+  const html = `<!DOCTYPE html><html><body style="margin:0;background:#F5ECDC;font-family:Georgia,serif;color:#2A1F12">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F5ECDC;padding:40px 0">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#FBF5EA;border:1px solid #EAD9BA">
+        <tr><td style="padding:32px 36px 8px 36px;text-align:center">
+          <div style="font-size:13px;letter-spacing:0.24em;color:#B8893A;font-family:Helvetica,Arial,sans-serif">TRESOR &middot; COUTURE</div>
+          <div style="height:1px;background:#B8893A;width:80px;margin:14px auto"></div>
+        </td></tr>
+        <tr><td style="padding:8px 36px 28px 36px">
+          <p style="font-size:22px;font-style:italic;margin:0 0 16px 0">Dear ${customerName},</p>
+          <p style="font-size:18px;font-style:italic;color:#8E6520;margin:0 0 16px 0">${headline}</p>
+          <p style="font-size:15px;line-height:1.6;margin:0 0 16px 0">${body}</p>
+          <p style="font-size:13px;color:#6B6358;margin:0">Order reference: <strong>${orderId.slice(0, 8).toUpperCase()}</strong></p>
+          <p style="font-size:14px;line-height:1.6;margin:24px 0 0 0;font-style:italic">— The Tresor Couture team</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table></body></html>`;
+
+  const text = [
+    `Dear ${customerName},`, '',
+    headline, '',
+    body, '',
+    `Order reference: ${orderId.slice(0, 8).toUpperCase()}`, '',
+    '— The Tresor Couture team',
+  ].join('\n');
+  return { subject, html, text };
+}
+
+/* ------------------------------------------------------------------ */
 /*  Resource APIs                                                     */
 /* ------------------------------------------------------------------ */
 
@@ -409,10 +628,62 @@ export const ordersApi = {
       ...(input.couponCode ? { couponCode: input.couponCode.toUpperCase(), couponDiscount } : {})
     };
     const ref = await addDoc(collection(db, 'orders'), order);
+
+    // Customer-side notifications. Both are best-effort — a failure to
+    // enqueue the email or admin alert should not lose the order itself,
+    // so we swallow errors here and rely on Firestore-side observability
+    // (the order doc IS the source of truth).
+    try {
+      const email = auth.currentUser.email;
+      const name  = auth.currentUser.displayName ?? email?.split('@')[0] ?? 'Tresor Member';
+      const addr  = input.shippingAddress as { fullName?: string; line1?: string; line2?: string; city?: string; state?: string; pincode?: string; phone?: string };
+      const addrLine = [addr.fullName, addr.line1, addr.line2, addr.city, addr.state, addr.pincode].filter(Boolean).join(', ');
+      if (email) {
+        const { subject, html, text } = buildOrderConfirmationEmail({
+          customerName: name,
+          orderId: ref.id,
+          items: items as never,
+          subtotal, shipping, tax, total,
+          shippingAddressLine: addrLine,
+        });
+        await emailApi.enqueue({ to: email, subject, html, text });
+      }
+      // In-app admin alert. A future Cloud Function can promote these to
+      // outbound email; for now they surface in the admin dashboard.
+      await addDoc(collection(db, 'admin_notifications'), {
+        kind: 'new_order',
+        orderId: ref.id,
+        userId: auth.currentUser.uid,
+        customerEmail: email ?? null,
+        total,
+        itemCount: items.length,
+        createdAt: serverTimestamp(),
+        read: false,
+      });
+    } catch (err) {
+      console.warn('[orders] post-place notifications failed', (err as Error).message);
+    }
+
     return { id: ref.id, ...order };
   },
-  setStatus: (id: string, status: 'placed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded') =>
-    updateDoc(doc(db, 'orders', id), { status, updatedAt: serverTimestamp() })
+  setStatus: async (id: string, status: 'placed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded') => {
+    await updateDoc(doc(db, 'orders', id), { status, updatedAt: serverTimestamp() });
+    // Email the customer about the status change. Admin-only writes to
+    // mail/ are allowed by the rules, so this works from the admin console.
+    try {
+      const ord = await getOne<DocumentData>('orders', id);
+      const userId = (ord as { userId?: string } | null)?.userId;
+      if (!userId) return;
+      const profile = await getOne<DocumentData>('users', userId);
+      const email = (profile as { email?: string } | null)?.email;
+      const fullName = (profile as { fullName?: string } | null)?.fullName ?? 'Tresor Member';
+      if (!email) return;
+      const { subject, html, text } = buildOrderStatusEmail({ customerName: fullName, orderId: id, status });
+      await emailApi.enqueue({ to: email, subject, html, text });
+    } catch (err) {
+      console.warn('[orders] status-change email failed', (err as Error).message);
+    }
+  }
 };
 
 export const couponsApi = {
