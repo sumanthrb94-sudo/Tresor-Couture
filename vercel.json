@@ -11,6 +11,10 @@
     {
       "source": "/__/firebase/:path*",
       "destination": "https://tresor-couture.firebaseapp.com/__/firebase/:path*"
+    },
+    {
+      "source": "/auth/action",
+      "destination": "/index.html"
     }
   ],
   "headers": [

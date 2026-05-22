@@ -52,28 +52,41 @@ instead of:
 
 ---
 
-## Step 3 — Hide the `firebaseapp.com` URL in the email body
+## Step 3 — Send users to YOUR branded handler page, not Firebase's
 
-By default, the reset link points at
-`https://tresor-couture.firebaseapp.com/__/auth/action?...`. To replace
-the visible domain with your own:
+By default the reset link points at
+`https://tresor-couture.firebaseapp.com/__/auth/action?...` — that's
+the unbranded Firebase-hosted page (white background, system fonts,
+*"Try resetting your password again"* error). The repo now ships a
+**custom branded handler** at `/auth/action` that runs on your own
+domain and matches the rest of the site (cream BG, Tresor typography,
+brand error states).
+
+To use it:
 
 1. Still in **Firebase Console → Authentication → Templates**, scroll to the bottom of any template editor.
 2. Click **Customize action URL** (small link, easy to miss).
-3. A modal appears with an "Action URL" field. Replace the default
-   `https://tresor-couture.firebaseapp.com/__/auth/action`
-   with:
-   `https://tresor-couture.vercel.app/__/auth/action`
+3. A modal appears with an "Action URL" field. Replace the default with:
+
+   `https://tresor-couture.vercel.app/auth/action`
+
 4. Click **Save**.
 
-This works because your repo already proxies `/__/auth/*` from Vercel to
-Firebase (see `vercel.json:7-10`). Firebase will verify the domain
-serves the action handler correctly before allowing the change. If it
-complains, redeploy `vercel.json` and try again.
+`vercel.json` already includes a rewrite of `/auth/action → /index.html`
+so the SPA serves your handler. The handler component
+(`src/pages/AuthActionPage.tsx`) reads `mode` + `oobCode` from the URL
+query, calls the matching Firebase API
+(`verifyPasswordResetCode`, `confirmPasswordReset`, `applyActionCode`),
+and renders branded forms for:
 
-After this step, the link in the email reads
-`https://tresor-couture.vercel.app/__/auth/action?...` — your own
-domain, no Firebase branding visible.
+- `mode=resetPassword` — verifies the link, shows a "choose new password" form on your domain, redirects to `/login` on success
+- `mode=verifyEmail` — applies the verification code, shows "Email confirmed"
+- `mode=recoverEmail` — reverts an email change, shows "Email restored"
+
+After this step:
+- The URL in the email reads `https://tresor-couture.vercel.app/auth/action?...` — your own domain
+- Clicking the link lands on a fully branded page, not the unbranded firebaseapp.com one
+- Expired/used links show your custom error UI ("This reset link is no longer valid → Request a new reset link") instead of Firebase's "Try resetting your password again"
 
 ---
 

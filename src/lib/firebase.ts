@@ -20,6 +20,11 @@ import {
   RecaptchaVerifier,
   signInWithPhoneNumber,
   sendPasswordResetEmail,
+  verifyPasswordResetCode as fbVerifyPasswordResetCode,
+  confirmPasswordReset as fbConfirmPasswordReset,
+  applyActionCode as fbApplyActionCode,
+  checkActionCode as fbCheckActionCode,
+  type ActionCodeInfo,
   type ConfirmationResult,
   signOut as fbSignOut,
   onAuthStateChanged,
@@ -122,6 +127,31 @@ export async function sendPasswordReset(email: string) {
     url: continueUrl,
     handleCodeInApp: false,
   });
+}
+
+/* ---------- Custom email-action handler helpers ---------- */
+// Used by AuthActionPage to consume the oobCode that Firebase puts in
+// the email link, so we can run the reset/verify/recover flow inside
+// our own branded UI instead of the unbranded firebaseapp.com page.
+
+/** Validate a password-reset code and return the email it targets. */
+export async function verifyResetCode(oobCode: string): Promise<string> {
+  return fbVerifyPasswordResetCode(auth, oobCode);
+}
+
+/** Complete the password reset with the new password. */
+export async function completePasswordReset(oobCode: string, newPassword: string): Promise<void> {
+  await fbConfirmPasswordReset(auth, oobCode, newPassword);
+}
+
+/** Apply an email-verification or email-recovery code. */
+export async function applyAuthActionCode(oobCode: string): Promise<void> {
+  await fbApplyActionCode(auth, oobCode);
+}
+
+/** Inspect a code's intent (e.g. for emailRecovery, learn what address it would revert to). */
+export async function inspectActionCode(oobCode: string): Promise<ActionCodeInfo> {
+  return fbCheckActionCode(auth, oobCode);
 }
 
 /**
