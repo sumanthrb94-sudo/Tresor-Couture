@@ -167,10 +167,26 @@ let recaptcha: RecaptchaVerifier | null = null;
 let pendingConfirmation: ConfirmationResult | null = null;
 
 /**
- * Render an invisible reCAPTCHA into the given DOM element id, ONCE.
- * The element is required by Firebase before any phone-auth call.
+ * Discard any cached verifier. Call from the OTP form's unmount handler —
+ * Firebase's RecaptchaVerifier binds to a specific DOM node, and once that
+ * node is removed (modal close, route change, React remount), the verifier
+ * is unusable and any later `signInWithPhoneNumber` throws
+ * "reCAPTCHA client element has been removed: 0".
  */
+export function clearRecaptcha() {
+  if (!recaptcha) return;
+  try { recaptcha.clear(); } catch { /* widget may already be gone */ }
+  recaptcha = null;
+}
+
 function ensureRecaptcha(containerId: string) {
+  // Guard against a stale singleton whose host node was removed from the DOM
+  // since the previous render. Without this, the next sendPhoneCode call
+  // re-enters Firebase with a verifier pointing at a node that no longer
+  // exists and fails before the SMS is ever requested.
+  if (recaptcha && !document.getElementById(containerId)) {
+    clearRecaptcha();
+  }
   if (recaptcha) return recaptcha;
   recaptcha = new RecaptchaVerifier(auth, containerId, { size: 'invisible' });
   return recaptcha;
@@ -181,8 +197,15 @@ function ensureRecaptcha(containerId: string) {
  * Returns nothing; call confirmPhoneCode() after the user enters the OTP.
  */
 export async function sendPhoneCode(e164PhoneNumber: string, recaptchaContainerId: string) {
-  const verifier = ensureRecaptcha(recaptchaContainerId);
-  pendingConfirmation = await signInWithPhoneNumber(auth, e164PhoneNumber, verifier);
+  try {
+    const verifier = ensureRecaptcha(recaptchaContainerId);
+    pendingConfirmation = await signInWithPhoneNumber(auth, e164PhoneNumber, verifier);
+  } catch (err) {
+    // A failed attempt leaves the verifier in a state Firebase refuses to
+    // reuse. Drop it so the next attempt rebuilds from scratch.
+    clearRecaptcha();
+    throw err;
+  }
 }
 
 /**

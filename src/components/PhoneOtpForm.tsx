@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { KeyRound, Phone } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { clearRecaptcha } from '../lib/firebase';
 
 interface Props {
   onDone?: () => void;
@@ -33,6 +34,12 @@ const PhoneOtpForm: React.FC<Props> = ({ onDone, verifyLabel = 'Verify & Continu
     const id = window.setTimeout(() => setError(null), 5000);
     return () => window.clearTimeout(id);
   }, [error]);
+
+  // The reCAPTCHA widget binds to the #recaptcha-container DOM node below.
+  // Tear it down on unmount so the next mount of this form starts with a
+  // fresh widget — otherwise Firebase reuses a verifier whose host node is
+  // gone and throws "reCAPTCHA client element has been removed: 0".
+  useEffect(() => () => clearRecaptcha(), []);
 
   const handleSend = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
