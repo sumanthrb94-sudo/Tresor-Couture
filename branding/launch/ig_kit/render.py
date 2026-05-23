@@ -271,36 +271,90 @@ def build_video_body_frame(spec: dict) -> Image.Image:
 
 
 def build_video_end_frame(spec: dict) -> Image.Image:
-    """Final 2.5s: brand end card with CTA overlay."""
-    base = Image.open(ENDCARD).convert("RGB").resize((VIDEO_W, VIDEO_H), Image.LANCZOS)
+    """The outro / sign-off frame.
 
-    overlay = Image.new("RGBA", (VIDEO_W, VIDEO_H), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(overlay)
+    Cream sister-frame to the hook, using the SAME mark-master.png the
+    homepage navbar uses (painted figure on the TC letters, no wordmark
+    in the artwork). The wordmark is type-set in Cormorant beneath the
+    mark for brand recognition. CTA pill + tagline + handle drive the
+    follow conversion.
 
-    # tiny gold rule above CTA
-    cy_rule = VIDEO_H - 360
-    draw.line([(VIDEO_W // 2 - 90, cy_rule), (VIDEO_W // 2 + 90, cy_rule)],
-              fill=(216, 185, 122, 255), width=2)
+    Replaces the earlier painted-glow `endcard_image_1080x1920.png`
+    artwork, which clashed with the bolder mark-master used elsewhere
+    in the kit.
+    """
+    img = gradient_bg((VIDEO_W, VIDEO_H))
+    draw = ImageDraw.Draw(img)
 
-    # CTA, sans, tracked uppercase, soft gold on dark
-    cta_fnt = font("sans-bold", 38)
+    # Mark — larger here than on the hook frame because this IS the
+    # focal element of the outro.
+    paste_monogram(img, top_y=320, target_h=520)
+
+    # Wordmark — serif caps, tracked
+    wm_fnt = font("serif-semi", 84)
+    wm_text = "TRESOR  ·  COUTURE"
+    wm_w = draw.textlength(wm_text, font=wm_fnt)
+    draw.text(((VIDEO_W - wm_w) / 2, 900), wm_text, font=wm_fnt, fill=BRAND_INK)
+
+    # Gold rule
+    gold_rule(img, VIDEO_W // 2, 1030, width=240)
+
+    # Tagline
+    tg_fnt = font("sans-medium", 26)
+    tg_text = "HAND-CUT IN INDIA  ·  SHIPPED WORLDWIDE"
+    chars = list(tg_text)
+    widths = [draw.textlength(c, font=tg_fnt) for c in chars]
+    track = 5
+    total = sum(widths) + track * (len(chars) - 1)
+    x = (VIDEO_W - total) / 2
+    cy = 1100
+    for c, w in zip(chars, widths):
+        draw.text((x, cy), c, font=tg_fnt, fill=BRAND_GOLD)
+        x += w + track
+
+    # CTA — ink-on-cream pill, prominent
+    cta_fnt = font("sans-bold", 42)
     cta_text = spec["cta"]
     chars = list(cta_text)
     widths = [draw.textlength(c, font=cta_fnt) for c in chars]
-    track = 8
+    track = 7
+    total = sum(widths) + track * (len(chars) - 1)
+    pad_x, pad_y = 56, 28
+    pill_w = int(total + pad_x * 2)
+    pill_h = 42 + pad_y * 2
+    pill_x = (VIDEO_W - pill_w) // 2
+    pill_y = 1320
+    draw.rounded_rectangle(
+        [pill_x, pill_y, pill_x + pill_w, pill_y + pill_h],
+        radius=pill_h // 2, fill=BRAND_INK,
+    )
+    cx_in = pill_x + pad_x
+    cy_in = pill_y + pad_y - 6
+    for c, w in zip(chars, widths):
+        draw.text((cx_in, cy_in), c, font=cta_fnt, fill=(250, 235, 197))
+        cx_in += w + track
+
+    # Handle — large, sans-bold, anchors the bottom
+    h_fnt = font("sans-bold", 40)
+    handle_text = "@TRESOR.COUTURE"
+    chars = list(handle_text)
+    widths = [draw.textlength(c, font=h_fnt) for c in chars]
+    track = 6
     total = sum(widths) + track * (len(chars) - 1)
     x = (VIDEO_W - total) / 2
-    cy = VIDEO_H - 310
+    cy = VIDEO_H - 220
     for c, w in zip(chars, widths):
-        draw.text((x, cy), c, font=cta_fnt, fill=(250, 235, 197, 255))
+        draw.text((x, cy), c, font=h_fnt, fill=BRAND_INK)
         x += w + track
 
-    # handle, sans medium, warm gold
-    h_fnt = font("sans-medium", 32)
-    hw = draw.textlength(HANDLE, font=h_fnt)
-    draw.text(((VIDEO_W - hw) / 2, VIDEO_H - 230), HANDLE, font=h_fnt, fill=(217, 176, 112, 255))
+    # Site domain, smaller, beneath handle
+    site_fnt = font("sans-medium", 22)
+    site_text = "tresorcouture.in"
+    sw = draw.textlength(site_text, font=site_fnt)
+    draw.text(((VIDEO_W - sw) / 2, VIDEO_H - 145),
+              site_text, font=site_fnt, fill=BRAND_GOLD_DEEP)
 
-    return Image.alpha_composite(base.convert("RGBA"), overlay).convert("RGB")
+    return img
 
 
 def build_post(spec: dict) -> Image.Image:

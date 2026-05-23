@@ -46,31 +46,51 @@ OUT.mkdir(exist_ok=True)
 # ---------------------------------------------------------------------------
 
 PRESETS = {
-    # Style A — Cream background, ink headline. The "editorial poster"
-    # look. Calm, premium, lots of negative space. Best when the
-    # follower base is the right audience already.
+    # ─────────────────────────────────────────────────────────────────
+    # STARTING covers (kind="start") — the scroll-stop thumbnail. This
+    # is what IG uses as the Reel cover in the feed / grid / explore.
+    # Optimised for thumb-stop conversion: bold serif hook in the
+    # central 1080×1080 crop-safe zone.
+    # ─────────────────────────────────────────────────────────────────
     "A-cream-editorial": dict(
-        bg="cream",
+        kind="start", bg="cream",
         eyebrow="A SINGLE PIECE",
         hook="The dress\nthat earns\nthe question.",
         sub="Hand-cut · Limited · Tresor Couture",
     ),
-    # Style B — Ink background, cream headline. Dramatic, high-contrast,
-    # designed to win the IG explore tab where cream covers blend into
-    # the feed. The pattern-interrupt option.
     "B-ink-dramatic": dict(
-        bg="ink",
+        kind="start", bg="ink",
         eyebrow="THE ARCHIVE",
         hook="A new piece,\nquietly\narrived.",
         sub="Handpicked. Unrepeatable.",
     ),
-    # Style C — Gold-deep washed cream, italic question hook. Designed
-    # to spark curiosity → tap. The clickbait-but-tasteful option.
     "C-question-curiosity": dict(
-        bg="cream-warm",
+        kind="start", bg="cream-warm",
         eyebrow="STYLING NOTE",
         hook="What makes\na boutique\npiece worth it?",
         sub="The four-point test, inside.",
+    ),
+
+    # ─────────────────────────────────────────────────────────────────
+    # ENDING covers (kind="end") — the static "after the Reel loops"
+    # frame. Drives the follow conversion. Three CTA flavours so the
+    # account can rotate them as last-frame stickers in the IG
+    # composer.
+    # ─────────────────────────────────────────────────────────────────
+    "End-A-follow-cream": dict(
+        kind="end", bg="cream",
+        cta="FOLLOW @TRESOR.COUTURE",
+        sub="ONE PIECE A DAY  ·  HAND-CUT IN INDIA",
+    ),
+    "End-B-follow-ink": dict(
+        kind="end", bg="ink",
+        cta="FOLLOW @TRESOR.COUTURE",
+        sub="ONE PIECE A DAY  ·  HAND-CUT IN INDIA",
+    ),
+    "End-C-tomorrow": dict(
+        kind="end", bg="cream-warm",
+        cta="MORE TOMORROW",
+        sub="FOLLOW @TRESOR.COUTURE FOR FIRST LOOKS",
     ),
 }
 
@@ -110,34 +130,28 @@ def draw_tracked(draw: ImageDraw.ImageDraw, text: str, fnt, fill, cy: int,
     return cy + fnt.size
 
 
-def build_cover(slug: str) -> Image.Image:
-    spec = PRESETS[slug]
+def _make_bg(kind_bg: str) -> Image.Image:
+    if kind_bg == "cream":      return gradient_bg((VIDEO_W, VIDEO_H))
+    if kind_bg == "cream-warm": return warm_cream_bg((VIDEO_W, VIDEO_H))
+    return ink_bg((VIDEO_W, VIDEO_H))
+
+
+def build_starting_cover(spec: dict) -> Image.Image:
     is_ink = spec["bg"] == "ink"
-
-    # Background
-    if spec["bg"] == "cream":
-        img = gradient_bg((VIDEO_W, VIDEO_H))
-    elif spec["bg"] == "cream-warm":
-        img = warm_cream_bg((VIDEO_W, VIDEO_H))
-    else:
-        img = ink_bg((VIDEO_W, VIDEO_H))
-
+    img = _make_bg(spec["bg"])
     draw = ImageDraw.Draw(img)
+
     ink_color  = (250, 235, 197) if is_ink else BRAND_INK
     gold_color = BRAND_GOLD_SOFT if is_ink else BRAND_GOLD
 
-    # Brand mark — top, sized so the headline owns the centre 1080x1080
     paste_monogram(img, top_y=170, target_h=300)
 
-    # Eyebrow label
     cat_fnt = font("sans-semi", 28)
     draw_tracked(draw, spec["eyebrow"], cat_fnt, gold_color, cy=580,
                  canvas_w=VIDEO_W, track=8)
 
-    # Gold accent rule
     rule_y = 680
     if is_ink:
-        # white-gold rule on dark
         draw.line([(VIDEO_W // 2 - 130, rule_y), (VIDEO_W // 2 + 130, rule_y)],
                   fill=BRAND_GOLD_SOFT, width=2)
         s = 7
@@ -147,19 +161,16 @@ def build_cover(slug: str) -> Image.Image:
     else:
         gold_rule(img, VIDEO_W // 2, rule_y, width=260)
 
-    # THE HOOK — bold serif, large
     hook_fnt = font("serif-bold", 124)
     lines = spec["hook"].split("\n")
     draw_text_block(img, lines, hook_fnt, ink_color, top=760, line_gap=1.04)
 
-    # Sub-line — sans-medium, smaller, sat under the headline
     sub_fnt = font("sans-medium", 28)
     sub_w = draw.textlength(spec["sub"], font=sub_fnt)
     draw.text(((VIDEO_W - sub_w) / 2, VIDEO_H - 320),
               spec["sub"], font=sub_fnt,
               fill=(217, 176, 112) if is_ink else (107, 99, 88))
 
-    # Handle, bottom
     h_fnt = font("sans-semi", 30)
     handle = "@tresor.couture"
     hw = draw.textlength(handle, font=h_fnt)
@@ -168,6 +179,98 @@ def build_cover(slug: str) -> Image.Image:
               fill=(250, 235, 197) if is_ink else BRAND_INK)
 
     return img
+
+
+def build_ending_cover(spec: dict) -> Image.Image:
+    """Sister-frame to the video outro. Mark + wordmark + CTA pill +
+    tagline + handle. Static JPG for "what stays after the Reel loops"
+    placement OR as a profile-grid sign-off post."""
+    is_ink = spec["bg"] == "ink"
+    img = _make_bg(spec["bg"])
+    draw = ImageDraw.Draw(img)
+
+    ink_color  = (250, 235, 197) if is_ink else BRAND_INK
+    gold_color = BRAND_GOLD_SOFT if is_ink else BRAND_GOLD
+    pill_bg    = (250, 235, 197) if is_ink else BRAND_INK
+    pill_text  = BRAND_INK if is_ink else (250, 235, 197)
+
+    # Mark — large, central
+    paste_monogram(img, top_y=320, target_h=520)
+
+    # Wordmark
+    wm_fnt = font("serif-semi", 84)
+    wm_text = "TRESOR  ·  COUTURE"
+    wm_w = draw.textlength(wm_text, font=wm_fnt)
+    draw.text(((VIDEO_W - wm_w) / 2, 900), wm_text, font=wm_fnt, fill=ink_color)
+
+    # Gold rule
+    rule_y = 1030
+    if is_ink:
+        draw.line([(VIDEO_W // 2 - 120, rule_y), (VIDEO_W // 2 + 120, rule_y)],
+                  fill=BRAND_GOLD_SOFT, width=2)
+        s = 7
+        draw.polygon([(VIDEO_W // 2, rule_y - s), (VIDEO_W // 2 + s, rule_y),
+                      (VIDEO_W // 2, rule_y + s), (VIDEO_W // 2 - s, rule_y)],
+                     fill=BRAND_GOLD_SOFT)
+    else:
+        gold_rule(img, VIDEO_W // 2, rule_y, width=240)
+
+    # Sub / tagline
+    sub_fnt = font("sans-medium", 26)
+    draw_tracked(draw, spec["sub"], sub_fnt, gold_color, cy=1100,
+                 canvas_w=VIDEO_W, track=5)
+
+    # CTA pill
+    cta_fnt = font("sans-bold", 44)
+    cta_text = spec["cta"]
+    chars = list(cta_text)
+    widths = [draw.textlength(c, font=cta_fnt) for c in chars]
+    track = 7
+    total = sum(widths) + track * (len(chars) - 1)
+    pad_x, pad_y = 60, 30
+    pill_w = int(total + pad_x * 2)
+    pill_h = 44 + pad_y * 2
+    pill_x = (VIDEO_W - pill_w) // 2
+    pill_y = 1320
+    draw.rounded_rectangle(
+        [pill_x, pill_y, pill_x + pill_w, pill_y + pill_h],
+        radius=pill_h // 2, fill=pill_bg,
+    )
+    cx_in = pill_x + pad_x
+    cy_in = pill_y + pad_y - 6
+    for c, w in zip(chars, widths):
+        draw.text((cx_in, cy_in), c, font=cta_fnt, fill=pill_text)
+        cx_in += w + track
+
+    # Handle
+    h_fnt = font("sans-bold", 40)
+    handle = "@TRESOR.COUTURE"
+    chars = list(handle)
+    widths = [draw.textlength(c, font=h_fnt) for c in chars]
+    track = 6
+    total = sum(widths) + track * (len(chars) - 1)
+    x = (VIDEO_W - total) / 2
+    cy = VIDEO_H - 220
+    for c, w in zip(chars, widths):
+        draw.text((x, cy), c, font=h_fnt, fill=ink_color)
+        x += w + track
+
+    # Site domain
+    site_fnt = font("sans-medium", 24)
+    site_text = "tresorcouture.in"
+    sw = draw.textlength(site_text, font=site_fnt)
+    draw.text(((VIDEO_W - sw) / 2, VIDEO_H - 145),
+              site_text, font=site_fnt,
+              fill=BRAND_GOLD_SOFT if is_ink else BRAND_GOLD_DEEP)
+
+    return img
+
+
+def build_cover(slug: str) -> Image.Image:
+    spec = PRESETS[slug]
+    if spec.get("kind") == "end":
+        return build_ending_cover(spec)
+    return build_starting_cover(spec)
 
 
 def main():
