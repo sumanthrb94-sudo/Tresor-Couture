@@ -33,7 +33,7 @@ VIDEOS = [
         hook="A new piece, quietly arrived.",
         body=["Handpicked from a maker we trust.",
               "Limited. Unrepeatable. Yours, or someone else's."],
-        cta="SHOP THE EDIT",
+        cta="FOLLOW @TRESOR.COUTURE",
     ),
     dict(
         id="02-the-dress",
@@ -41,7 +41,7 @@ VIDEOS = [
         hook="The dress that earns the question.",
         body=["The one strangers ask about.",
               "Cut to flatter. Priced to keep."],
-        cta="DISCOVER THE PIECE",
+        cta="+ FOLLOW FOR MORE",
     ),
     dict(
         id="03-capsule",
@@ -49,7 +49,7 @@ VIDEOS = [
         hook="Three pieces. Nine ways to wear them.",
         body=["The foundation. The statement. The wildcard.",
               "Built to dress a week without repeating."],
-        cta="EXPLORE THE CAPSULE",
+        cta="FOLLOW FOR THE EDIT",
     ),
     dict(
         id="04-pov-aesthetic",
@@ -57,7 +57,7 @@ VIDEOS = [
         hook="Finally, a boutique that reads your taste.",
         body=["No endless scroll. No reluctant purchases.",
               "Pieces that read like you, only sharper."],
-        cta="OPEN THE LOOKBOOK",
+        cta="FOLLOW @TRESOR.COUTURE",
     ),
     dict(
         id="05-detail-shot",
@@ -65,7 +65,7 @@ VIDEOS = [
         hook="It is in the detailing that quality declares itself.",
         body=["Hand-finished edges. Considered buttons.",
               "Fabric that holds its weight."],
-        cta="STUDY THE PIECE",
+        cta="FOLLOW FOR DAILY NOTES",
     ),
     dict(
         id="06-restock",
@@ -73,7 +73,7 @@ VIDEOS = [
         hook="Restocked by demand. Briefly.",
         body=["The piece that sold through in forty-eight hours.",
               "Back. In smaller numbers."],
-        cta="CLAIM YOURS",
+        cta="FOLLOW @TRESOR.COUTURE",
     ),
     dict(
         id="07-add-to-cart",
@@ -81,7 +81,7 @@ VIDEOS = [
         hook="One drop. Three silhouettes.",
         body=["A single arrival, styled three distinct ways.",
               "Pick the one that argues with your wardrobe."],
-        cta="SHOP ALL THREE",
+        cta="SHOP @TRESOR.COUTURE",
     ),
     dict(
         id="08-luxury-for-less",
@@ -89,7 +89,7 @@ VIDEOS = [
         hook="The look that reads costlier than it is.",
         body=["A full outfit, considered piece by piece.",
               "Quietly luxurious. Honestly priced."],
-        cta="BUILD THE LOOK",
+        cta="FOLLOW FOR THE EDIT",
     ),
     dict(
         id="09-desk-to-dinner",
@@ -97,7 +97,7 @@ VIDEOS = [
         hook="One piece. Morning meeting to late dinner.",
         body=["Pair it with a blazer for the desk.",
               "Lose the blazer. Add earrings. The night begins."],
-        cta="SHOP THE PIECE",
+        cta="SHOP @TRESOR.COUTURE",
     ),
     dict(
         id="10-unboxing",
@@ -105,7 +105,7 @@ VIDEOS = [
         hook="A package that opens like a small ceremony.",
         body=["Tissue. Hand-folded. A note.",
               "The way a piece should arrive."],
-        cta="ORDER FROM THE EDIT",
+        cta="FOLLOW FOR FIRST LOOKS",
     ),
     dict(
         id="22-expensive-formula",
@@ -113,7 +113,7 @@ VIDEOS = [
         hook="The formula for looking quietly expensive.",
         body=["Tuck the shirt. Add a structured layer.",
               "One considered accessory. Never five."],
-        cta="READ THE FULL NOTE",
+        cta="FOLLOW FOR DAILY NOTES",
     ),
     dict(
         id="24-outfit-repeater",
@@ -121,7 +121,7 @@ VIDEOS = [
         hook="The same dress, four different occasions.",
         body=["Wedding. Office. Brunch. Night.",
               "One piece, learning new languages."],
-        cta="SEE EACH WAY",
+        cta="FOLLOW FOR THE EDIT",
     ),
     dict(
         id="26-layering",
@@ -129,7 +129,7 @@ VIDEOS = [
         hook="Thin layers, never bulk.",
         body=["A fitted base. A light knit. A structured outer.",
               "Keep the bottom fitted when the top is layered."],
-        cta="BROWSE THE LAYERS",
+        cta="FOLLOW @TRESOR.COUTURE",
     ),
     dict(
         id="28-styling-fix",
@@ -137,7 +137,7 @@ VIDEOS = [
         hook="The wrong way, and the considered way.",
         body=["One small adjustment changes the entire piece.",
               "Tailoring is cheaper than you think."],
-        cta="LET US STYLE IT",
+        cta="FOLLOW @TRESOR.COUTURE",
     ),
     dict(
         id="30-thirty-seconds",
@@ -145,7 +145,7 @@ VIDEOS = [
         hook="Thirty seconds, and you are dressed.",
         body=["A flattering base. A single layer.",
               "Shoes for the occasion. One accessory. Done."],
-        cta="SHOP THE BASES",
+        cta="SHOP @TRESOR.COUTURE",
     ),
     dict(
         id="62-main-character",
@@ -153,7 +153,7 @@ VIDEOS = [
         hook="It is only coffee. Still, you wear the piece.",
         body=["The morning becomes cinematic.",
               "Confidence arrives before the espresso."],
-        cta="DRESS FOR YOURSELF",
+        cta="FOLLOW @TRESOR.COUTURE",
     ),
     dict(
         id="66-airport-fit",
@@ -161,7 +161,7 @@ VIDEOS = [
         hook="An airport outfit that reads composed.",
         body=["Coordinated. Considered. Comfortable.",
               "Sneakers acceptable. Sloppy never."],
-        cta="SHOP THE TRAVEL EDIT",
+        cta="SHOP @TRESOR.COUTURE",
     ),
     dict(
         id="68-date-night",
@@ -169,7 +169,7 @@ VIDEOS = [
         hook="The piece that makes them forget the sentence.",
         body=["Not about them.",
               "About the way the piece carries you."],
-        cta="FIND YOUR PIECE",
+        cta="FOLLOW @TRESOR.COUTURE",
     ),
     dict(
         id="92-outfit-check",
@@ -177,7 +177,7 @@ VIDEOS = [
         hook="Mirror. Street. Coffee. Office. Dinner.",
         body=["One outfit. Five places. No changes.",
               "The reward of a well-curated piece."],
-        cta="SHOP THE PIECE",
+        cta="SHOP @TRESOR.COUTURE",
     ),
     dict(
         id="99-confidence",
@@ -185,7 +185,7 @@ VIDEOS = [
         hook="It is not the clothes. It is how they make you stand.",
         body=["You speak differently.",
               "You take up the room differently."],
-        cta="FIND YOUR CONFIDENCE PIECE",
+        cta="FOLLOW @TRESOR.COUTURE",
     ),
 ]
 
@@ -201,7 +201,7 @@ POSTS = [
         body=["Not a warehouse. Not mass-production.",
               "A room where each piece is chosen, checked, styled.",
               "Quality is a process, not a claim."],
-        cta="VISIT THE STUDIO",
+        cta="FOLLOW @TRESOR.COUTURE",
     ),
     dict(
         id="12-why-we-started",
@@ -210,7 +210,7 @@ POSTS = [
         body=["Tresor was built for the piece you do not see elsewhere.",
               "Quality that survives the third wash.",
               "Cuts that fit real bodies."],
-        cta="READ OUR STORY",
+        cta="FOLLOW THE JOURNEY",
     ),
     dict(
         id="14-meet-the-maker",
@@ -219,7 +219,7 @@ POSTS = [
         body=["I source every piece personally.",
               "I write every thank-you note.",
               "This is a love letter to slow fashion, not a business plan."],
-        cta="FOLLOW ALONG",
+        cta="FOLLOW @TRESOR.COUTURE",
     ),
     dict(
         id="16-our-standards",
@@ -227,7 +227,7 @@ POSTS = [
         hook="Every piece in this archive passes four tests.",
         body=["Quality. Fit. Vibe. Value.",
               "If any one is missing, you will not see it here."],
-        cta="LEARN MORE",
+        cta="+ FOLLOW FOR MORE",
     ),
     dict(
         id="18-the-journey",
@@ -236,7 +236,7 @@ POSTS = [
         body=["Year one: fifty orders, one spare room.",
               "Now: a community that built this dream with us.",
               "Every order, a thank-you we still mean."],
-        cta="JOIN US",
+        cta="FOLLOW THE JOURNEY",
     ),
     dict(
         id="20-no-sales",
@@ -245,7 +245,7 @@ POSTS = [
         body=["Because the prices are already fair.",
               "Because the pieces are already worth it.",
               "When we do mark down, it is real, and it is rare."],
-        cta="SUBSCRIBE FOR FIRST LOOKS",
+        cta="FOLLOW FOR FIRST LOOKS",
     ),
     dict(
         id="21-five-ways-shirt",
@@ -253,7 +253,7 @@ POSTS = [
         hook="One white shirt. Five different silhouettes.",
         body=["Tucked. Knotted. Layered. Oversized. Half-tucked.",
               "The shirt that quietly rebuilds a wardrobe."],
-        cta="SHOP THE SHIRT",
+        cta="SHOP @TRESOR.COUTURE",
     ),
     dict(
         id="23-three-accessories",
@@ -262,7 +262,7 @@ POSTS = [
         body=["Something that shines.",
               "Something that structures.",
               "Something that ties it together. Never more."],
-        cta="BROWSE ACCESSORIES",
+        cta="FOLLOW FOR DAILY NOTES",
     ),
     dict(
         id="25-color-combos",
@@ -271,7 +271,7 @@ POSTS = [
         body=["Sage and cream. Navy and mustard.",
               "Blush and chocolate. Black and cobalt.",
               "Terracotta and ivory. Quiet, lasting choices."],
-        cta="EXPLORE THE PALETTE",
+        cta="FOLLOW FOR THE EDIT",
     ),
     dict(
         id="27-universal-shoes",
@@ -280,7 +280,7 @@ POSTS = [
         body=["White sneakers. Nude heels. Black ankle boots.",
               "Strappy sandals. A pair of loafers.",
               "The universals."],
-        cta="SHOP FOOTWEAR",
+        cta="SHOP @TRESOR.COUTURE",
     ),
     dict(
         id="29-dress-code",
@@ -289,7 +289,7 @@ POSTS = [
         body=["Tailored pieces, relaxed elements.",
               "One statement, maximum.",
               "Quality fabrics. Polished footwear. No logos."],
-        cta="READ THE GUIDE",
+        cta="FOLLOW FOR DAILY NOTES",
     ),
     dict(
         id="31-first-piece",
@@ -298,7 +298,7 @@ POSTS = [
         body=["“I bought a dress to test the quality.”",
               "“Now I have seven, and my wardrobe finally agrees with me.”",
               "— A reader in Bombay."],
-        cta="START WITH ONE",
+        cta="FOLLOW @TRESOR.COUTURE",
     ),
     dict(
         id="33-the-review",
@@ -307,7 +307,7 @@ POSTS = [
         body=["“For the first time, the clothes were made for me,",
               "not just in my size.”",
               "This is the reason for the work."],
-        cta="READ MORE REVIEWS",
+        cta="FOLLOW @TRESOR.COUTURE",
     ),
     dict(
         id="35-transformation",
@@ -315,7 +315,7 @@ POSTS = [
         hook="Before: nothing to wear. After: too much to choose from.",
         body=["A wardrobe is not a closet.",
               "It is a set of options. We build the options."],
-        cta="BUILD YOURS",
+        cta="FOLLOW FOR THE EDIT",
     ),
     dict(
         id="37-repeat-customers",
@@ -324,7 +324,7 @@ POSTS = [
         body=["First order: testing.",
               "Second: trusting.",
               "Fourth: family."],
-        cta="JOIN THE FAMILY",
+        cta="FOLLOW THE JOURNEY",
     ),
     dict(
         id="39-compliments",
@@ -333,7 +333,7 @@ POSTS = [
         body=["Worn to a wedding.",
               "Strangers asked. Friends asked.",
               "The same question, all evening."],
-        cta="FIND YOUR PIECE",
+        cta="FOLLOW @TRESOR.COUTURE",
     ),
     dict(
         id="41-seasonal-essentials",
@@ -342,7 +342,7 @@ POSTS = [
         body=["A transitional layer. A statement knit.",
               "A versatile boot. An elevated basic.",
               "One occasion piece, for everything that arrives."],
-        cta="SHOP THE EDIT",
+        cta="FOLLOW @TRESOR.COUTURE",
     ),
     dict(
         id="43-event-outfit",
@@ -351,7 +351,7 @@ POSTS = [
         body=["Modern traditional. Minimalist statement.",
               "Bold colour. Textured mix. Unexpected silhouette.",
               "Five ways to be remembered."],
-        cta="DRESS THE EVENING",
+        cta="FOLLOW FOR THE EDIT",
     ),
     dict(
         id="45-color-story",
@@ -359,7 +359,7 @@ POSTS = [
         hook="The shades this season returns to.",
         body=["Soft. Earthy. Sunlit. Neutral. Bold.",
               "Five tones that hold across moods and months."],
-        cta="EXPLORE BY COLOUR",
+        cta="FOLLOW FOR THE EDIT",
     ),
     dict(
         id="49-capsule-twelve",
@@ -368,7 +368,7 @@ POSTS = [
         body=["Tops, bottoms, layers, dresses, shoes.",
               "Curated to talk to each other.",
               "Designed to outlast the trend cycle."],
-        cta="BUILD THE CAPSULE",
+        cta="FOLLOW FOR THE EDIT",
     ),
     dict(
         id="61-sunday-reset",
@@ -377,7 +377,7 @@ POSTS = [
         body=["Sleep. Coffee. Audit the wardrobe.",
               "Choose intentionally. Plan the week.",
               "Confidence is a routine, not an accident."],
-        cta="JOIN THE RITUAL",
+        cta="FOLLOW @TRESOR.COUTURE",
     ),
     dict(
         id="65-weekend-planner",
@@ -386,7 +386,7 @@ POSTS = [
         body=["Friday evening. Saturday brunch.",
               "Saturday night. Sunday slow.",
               "Four outfits, considered, ready."],
-        cta="PLAN WITH US",
+        cta="FOLLOW @TRESOR.COUTURE",
     ),
     dict(
         id="67-that-girl",
@@ -395,7 +395,7 @@ POSTS = [
         body=["Pieces that fit. Quality you can feel.",
               "Colours that talk. Items that spark something.",
               "Dress for the life you want."],
-        cta="START WITH ONE PIECE",
+        cta="FOLLOW @TRESOR.COUTURE",
     ),
     dict(
         id="69-self-care-wardrobe",
@@ -404,7 +404,7 @@ POSTS = [
         body=["Declutter. Organise. Identify the gaps.",
               "Browse with intent. Plan five outfits.",
               "Five stress-free mornings."],
-        cta="REFRESH WITH US",
+        cta="FOLLOW @TRESOR.COUTURE",
     ),
     dict(
         id="81-fabric-guide",
@@ -413,7 +413,7 @@ POSTS = [
         body=["Linen breathes and wrinkles.",
               "Silk drapes and asks for care.",
               "Cotton lives in any wardrobe. Crepe forgives."],
-        cta="READ THE FULL GUIDE",
+        cta="FOLLOW FOR DAILY NOTES",
     ),
     dict(
         id="83-cheap-mistakes",
@@ -422,7 +422,7 @@ POSTS = [
         body=["Wrong undergarments. Ill-fitting cut.",
               "Too many trends. Wrong shoes.",
               "Over-accessorising. The fix is small. Always."],
-        cta="READ THE NOTE",
+        cta="FOLLOW FOR DAILY NOTES",
     ),
     dict(
         id="85-seventy-twenty-ten",
@@ -431,7 +431,7 @@ POSTS = [
         body=["Seventy per cent basics. The workhorses.",
               "Twenty per cent statements. The compliments.",
               "Ten per cent trends. The fun. The replaceable."],
-        cta="BUILD YOURS",
+        cta="FOLLOW FOR THE EDIT",
     ),
     dict(
         id="87-care-labels",
@@ -440,7 +440,7 @@ POSTS = [
         body=["Wash cold means cold.",
               "Dry flat means flat.",
               "These pieces are investments. Treat them that way."],
-        cta="SAVE THE GUIDE",
+        cta="FOLLOW FOR DAILY NOTES",
     ),
     dict(
         id="89-color-theory",
@@ -449,7 +449,7 @@ POSTS = [
         body=["Monochrome elongates.",
               "Complementary commands.",
               "Analogous calms. Neutral plus pop, almost always works."],
-        cta="STUDY THE PALETTE",
+        cta="FOLLOW FOR THE EDIT",
     ),
     dict(
         id="90-invest-vs-save",
@@ -458,7 +458,7 @@ POSTS = [
         body=["Invest in outerwear, shoes, bags, tailoring.",
               "Save on trends and occasion pieces.",
               "A wardrobe is a budget, allocated."],
-        cta="READ THE STRATEGY",
+        cta="FOLLOW FOR DAILY NOTES",
     ),
 ]
 
