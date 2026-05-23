@@ -34,7 +34,12 @@ BRAND_GOLD_DEEP = (142, 101, 32)    # #8E6520
 BRAND_ACCENT    = (234, 217, 186)   # #EAD9BA
 
 FONT_DIR  = Path("/home/user/Tresor-Couture/branding/_fonts")
-LOGO_PATH = Path("/home/user/Tresor-Couture/branding/launch/master-logo-filled.png")
+# The master mark — painted TC monogram with figure + floral flourish, NO
+# wordmark. Same asset the navbar uses on the homepage. Earlier renders
+# wrongly used master-logo-filled.png, which has the TRESOR COUTURE
+# wordmark baked in and read as a duplicate when the kit's own
+# typography sat below it.
+LOGO_PATH = Path("/home/user/Tresor-Couture/branding/mark-master.png")
 ENDCARD   = Path("/home/user/Tresor-Couture/branding/launch/endcard_image_1080x1920.png")
 
 HANDLE = "@tresor.couture"
@@ -180,33 +185,41 @@ def draw_wordmark(canvas: Image.Image, y: int, sub: str | None = None):
 # ---------------------------------------------------------------------------
 
 def build_video_hook_frame(spec: dict) -> Image.Image:
-    """First 0-2s: cream bg + brand mark + serif headline (the hook)."""
+    """The thumb-stop frame.
+
+    Optimised for IG Reels hook conversion: brand mark small and high so
+    the hook copy occupies the central 1080×1080 zone (the part that
+    survives every IG crop — feed, profile grid, explore tab). Hook
+    text is BOLD italic (was light italic, which read weakly at
+    phone-scroll size). Mark uses mark-master.png — the painted figure
+    on the TC letters with no wordmark — same asset the homepage uses.
+    """
     img = gradient_bg((VIDEO_W, VIDEO_H))
     draw = ImageDraw.Draw(img)
 
-    # brand mark, small, top
-    paste_monogram(img, top_y=170, target_h=240)
+    # Mark sized down and pushed up so the headline owns the centre.
+    paste_monogram(img, top_y=210, target_h=300)
 
-    # tiny eyebrow category label
-    cat_fnt = font("sans-semi", 24)
-    cat_w = draw.textlength(spec["category"], font=cat_fnt)
-    # tracked letter-spacing via manual draw
+    # tiny eyebrow category label, sat between mark and headline
+    cat_fnt = font("sans-semi", 26)
     chars = list(spec["category"])
     widths = [draw.textlength(c, font=cat_fnt) for c in chars]
-    track = 6
+    track = 7
     total = sum(widths) + track * (len(chars) - 1)
     x = (VIDEO_W - total) / 2
-    cy = 470
+    cy = 600
     for c, w in zip(chars, widths):
         draw.text((x, cy), c, font=cat_fnt, fill=BRAND_GOLD)
         x += w + track
 
-    gold_rule(img, VIDEO_W // 2, 540, width=200)
+    gold_rule(img, VIDEO_W // 2, 670, width=220)
 
-    # The hook — serif italic, large, generously wrapped
-    hook_fnt = font("serif-italic", 92)
-    lines = wrap_centered(draw, spec["hook"], hook_fnt, int(VIDEO_W * 0.82))
-    draw_text_block(img, lines, hook_fnt, BRAND_INK, top=720, line_gap=1.08)
+    # THE HOOK — bold italic serif at a size meant to stop the thumb.
+    # Cormorant-SemiBold renders thicker than -Italic at the same px
+    # size and reads cleanly even on a 5" phone scrolled fast.
+    hook_fnt = font("serif-bold", 110)
+    lines = wrap_centered(draw, spec["hook"], hook_fnt, int(VIDEO_W * 0.86))
+    draw_text_block(img, lines, hook_fnt, BRAND_INK, top=820, line_gap=1.05)
 
     # bottom handle
     h_fnt = font("sans-medium", 28)
