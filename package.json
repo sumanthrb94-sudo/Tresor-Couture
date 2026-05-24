@@ -10,7 +10,9 @@
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
     "seed": "tsx scripts/seed-firestore.ts",
-    "seed:force": "tsx scripts/seed-firestore.ts --force"
+    "seed:force": "tsx scripts/seed-firestore.ts --force",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",
@@ -30,6 +32,7 @@
     "firebase-admin": "^13.10.0",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.22.0",
-    "typescript": "~5.8.2"
+    "typescript": "~5.8.2",
+    "vitest": "^4.1.7"
   }
 }
