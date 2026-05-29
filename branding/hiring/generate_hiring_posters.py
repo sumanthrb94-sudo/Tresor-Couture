@@ -120,6 +120,44 @@ def centred_spaced(canvas, y, text, font, fill, tracking_em=0.4):
     return y, y + (ref[3] - ref[1])
 
 
+def small_wordmark(canvas, y, font, ink_fill, dot_fill):
+    """Render TRESOR · COUTURE as two letter-spaced words separated by a
+    small gold pip — instead of one tracked string, where tracking_em was
+    inflating the gap between the words to several em-widths."""
+    d = ImageDraw.Draw(canvas)
+    gap = int(font.size * 0.32)                     # letter tracking inside each word
+    word_gap = int(font.size * 0.55)                # tight gap on each side of the pip
+    pip_r = max(3, font.size // 18)
+
+    def word_widths(s):
+        return [d.textbbox((0, 0), c, font=font)[2] - d.textbbox((0, 0), c, font=font)[0]
+                for c in s]
+
+    tres, cout = "TRESOR", "COUTURE"
+    tw = word_widths(tres); cw = word_widths(cout)
+    tres_total = sum(tw) + gap * (len(tres) - 1)
+    cout_total = sum(cw) + gap * (len(cout) - 1)
+    total = tres_total + word_gap + pip_r * 2 + word_gap + cout_total
+
+    ref = d.textbbox((0, 0), "A", font=font)
+    y_draw = y - ref[1]
+    pip_cy = y + (ref[3] - ref[1]) // 2
+
+    x = (W - total) // 2
+    for c, w in zip(tres, tw):
+        d.text((x, y_draw), c, font=font, fill=ink_fill)
+        x += w + gap
+    x -= gap
+    x += word_gap
+    d.ellipse([x, pip_cy - pip_r, x + pip_r * 2, pip_cy + pip_r], fill=dot_fill)
+    x += pip_r * 2 + word_gap
+    for c, w in zip(cout, cw):
+        d.text((x, y_draw), c, font=font, fill=ink_fill)
+        x += w + gap
+
+    return y, y + (ref[3] - ref[1])
+
+
 def autofit_size(d: ImageDraw.ImageDraw, text: str, font_factory,
                  start_size: int, min_size: int, max_width: int,
                  tracking_em: float | None = None) -> int:
@@ -157,10 +195,9 @@ def build_poster(headline: str, roles: list[str], contact: str,
     mark_bottom = paste_mark(canvas, target_height=1100, top_y=mark_top)
 
     # 2. Small TRESOR · COUTURE wordmark immediately under the mark.
-    small_wm_font = cormorant(86, "Medium")
-    _, small_wm_bottom = centred_spaced(
-        canvas, mark_bottom + 60, "TRESOR   ·   COUTURE",
-        small_wm_font, INK, tracking_em=0.4,
+    small_wm_font = cormorant(96, "Medium")
+    _, small_wm_bottom = small_wordmark(
+        canvas, mark_bottom + 60, small_wm_font, INK, GOLD,
     )
 
     # 3. Gold ornament.
@@ -201,11 +238,19 @@ def build_poster(headline: str, roles: list[str], contact: str,
     # 8. CONTACT line — Inter Bold, ink, big enough to read at distance.
     contact_size = autofit_size(
         d_probe, contact, lambda s: inter(s, "Bold"),
-        start_size=160, min_size=90, max_width=max_w,
+        start_size=150, min_size=90, max_width=max_w,
     )
     contact_font = inter(contact_size, "Bold")
-    contact_y = H - 360
-    centred_text(canvas, contact_y, contact, contact_font, INK)
+    contact_y = H - 430
+    _, contact_bottom = centred_text(canvas, contact_y, contact, contact_font, INK)
+
+    # 9. WEBSITE sub-line under the contact — gold deep, spaced caps so it
+    #    reads as a quiet companion to the bold contact line above it.
+    site_font = inter(64, "SemiBold")
+    centred_spaced(
+        canvas, contact_bottom + 50, "TRESORCOUTURE.IN",
+        site_font, GOLD_DEEP, tracking_em=0.28,
+    )
 
     if orn2_bottom > contact_y - 40:
         raise RuntimeError(
