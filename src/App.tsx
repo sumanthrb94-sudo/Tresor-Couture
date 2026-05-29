@@ -12,6 +12,7 @@ import SignupCallout from './components/SignupCallout';
 import ProductRail from './components/ProductRail';
 import LookbookRail from './components/LookbookRail';
 import WhatsAppButton from './components/WhatsAppButton';
+import NavigateToStoreTab from './components/NavigateToStoreTab';
 import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
 import ShopPage from './pages/ShopPage';
@@ -146,6 +147,8 @@ const Home: React.FC = () => {
       />
       {/* Floating "Contact Us" via WhatsApp — flagged as under development for now. */}
       <WhatsAppButton />
+      {/* Left-edge strap linking to the physical store on Google Maps. */}
+      <NavigateToStoreTab />
     </main>
   );
 };
