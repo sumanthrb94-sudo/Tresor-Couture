@@ -186,16 +186,16 @@ def build_poster(eyebrow: str, headline: str, url: str, out_name: str) -> Path:
     canvas = reel_canvas()
     hairline_frame(canvas)
 
-    # ---- TOP: TC mark ----
-    mark_top = 320
-    mark_bottom = paste_mark(canvas, target_height=900, top_y=mark_top)
+    # ---- TOP: TC mark (bigger — focal alongside the headline) ----
+    mark_top = 280
+    mark_bottom = paste_mark(canvas, target_height=1300, top_y=mark_top)
 
-    # ---- ornament under mark ----
-    orn1_bottom = gold_ornament(canvas, y=mark_bottom + 90, span=620)
+    # ---- ornament under mark (tightened so the bigger mark fits) ----
+    orn1_bottom = gold_ornament(canvas, y=mark_bottom + 55, span=620)
 
     # ---- eyebrow ----
     eb_font = inter(50, "Medium")
-    eb_top = orn1_bottom + 110
+    eb_top = orn1_bottom + 75
     _, eb_bottom = centred_spaced(canvas, eb_top, eyebrow, eb_font, GOLD_DEEP, tracking_em=0.45)
 
     # ---- HEADLINE (focal point) ----
@@ -208,11 +208,11 @@ def build_poster(eyebrow: str, headline: str, url: str, out_name: str) -> Path:
             break
         head_font = cormorant(head_font.size - 20, "Italic")
 
-    headline_top = eb_bottom + 140
+    headline_top = eb_bottom + 95
     _, headline_bottom = centred_text(canvas, headline_top, headline, head_font, INK)
 
     # ---- second ornament under headline ----
-    orn2_top = headline_bottom + 140
+    orn2_top = headline_bottom + 95
     orn2_bottom = gold_ornament(canvas, y=orn2_top, span=620)
 
     # ---- BOTTOM: wordmark + URL anchored upward from canvas bottom ----
