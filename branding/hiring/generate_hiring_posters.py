@@ -304,13 +304,16 @@ def build_poster(headline: str, roles: list[str], contact_left: str, contact_rig
     orn2_bottom = gold_ornament(canvas, y=role_bottom + 65, span=540)
 
     # 8. CONTACT line — colon separator (no dot), centred as a single block.
+    # Anchored relative to the closing ornament so it sits tight against the
+    # content block instead of floating near the canvas bottom — removes the
+    # dead white space between role list and contact.
     contact_text = f"{contact_left}: {contact_right}"
     contact_size = autofit_size(
         d_probe, contact_text, lambda s: inter(s, "Bold"),
         start_size=150, min_size=90, max_width=max_w,
     )
     contact_font = inter(contact_size, "Bold")
-    contact_y = H - 430
+    contact_y = orn2_bottom + 240
     _, contact_bottom = centred_text(canvas, contact_y, contact_text, contact_font, INK)
 
     # 9. WEBSITE sub-line under the contact — gold deep, spaced caps so it
