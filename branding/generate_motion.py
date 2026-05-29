@@ -126,17 +126,15 @@ _bg_cache: Image.Image | None = None
 
 
 def background() -> Image.Image:
-    """Cream gradient + soft paper grain. Cached — same for every frame."""
+    """Solid cream — flat colour matched EXACTLY to the master logo's baked
+    BG so the chroma-keyed logo composites with zero visible patch around
+    it. Gradient + grain are tempting but they produced a visible 'pasted'
+    halo because the logo's own BG noise didn't match the canvas's noise.
+    Flat solid is the seamless answer."""
     global _bg_cache
     if _bg_cache is not None:
         return _bg_cache.copy()
-    y_coords = (np.arange(H, dtype=np.float32) / (H - 1)).reshape(H, 1)
-    base = np.zeros((H, W, 3), dtype=np.float32)
-    for ch, (a, b) in enumerate(zip(CREAM_SOFT, CREAM)):
-        base[:, :, ch] = a * (1 - y_coords) + b * y_coords
-    rng = np.random.default_rng(13)
-    noise = rng.integers(-3, 4, size=base.shape, dtype=np.int16)
-    arr = np.clip(base.astype(np.int16) + noise, 0, 255).astype(np.uint8)
+    arr = np.full((H, W, 3), CREAM, dtype=np.uint8)
     _bg_cache = Image.fromarray(arr, "RGB").convert("RGBA")
     return _bg_cache.copy()
 
@@ -147,21 +145,38 @@ _logo_cache: Image.Image | None = None
 
 
 def master_logo() -> Image.Image:
-    """High-res master-logo-reference.png with cream BG chroma-keyed out."""
+    """High-res master logo with its baked cream BG REPLACED by the exact
+    canvas CREAM colour. This is stronger than chroma-keying because near-BG
+    pixels (slight tonal noise from the source image) also get neutralised
+    to the canvas colour instead of becoming faintly visible 'halo' pixels.
+
+    The result: paste-onto-solid-cream produces a perfect colour match with
+    no detectable rectangle around the logo. Figure / gold strokes /
+    embroidery stay 100% original."""
     global _logo_cache
     if _logo_cache is not None:
         return _logo_cache.copy()
-    rgb = np.array(Image.open(ROOT / "master-logo-reference.png").convert("RGB"))
+    rgb = np.array(Image.open(ROOT / "master-logo-reference.png").convert("RGB"),
+                    dtype=np.float32)
     border = np.concatenate([
         rgb[:8, :, :].reshape(-1, 3),
         rgb[-8:, :, :].reshape(-1, 3),
         rgb[:, :8, :].reshape(-1, 3),
         rgb[:, -8:, :].reshape(-1, 3),
     ])
-    bg = np.median(border, axis=0).astype(np.float32)
-    dist = np.linalg.norm(rgb.astype(np.float32) - bg, axis=2)
-    alpha = (np.clip((dist - 6) / 22, 0, 1) * 255).astype(np.uint8)
-    rgba = np.dstack([rgb, alpha])
+    src_bg = np.median(border, axis=0)
+    dist = np.linalg.norm(rgb - src_bg, axis=2)
+    # Soft mask: 0 = pure BG → replace with canvas colour; 1 = pure figure → keep.
+    SOFT_LO, SOFT_HI = 4.0, 22.0
+    is_fig = np.clip((dist - SOFT_LO) / (SOFT_HI - SOFT_LO), 0.0, 1.0)[..., None]
+    canvas_bg = np.array(CREAM, dtype=np.float32)
+    # BG pixels blended toward canvas; figure pixels unchanged.
+    out_rgb = is_fig * rgb + (1.0 - is_fig) * canvas_bg
+    out_rgb = out_rgb.clip(0, 255).astype(np.uint8)
+    # Alpha: 255 everywhere — the colour-match handles the 'transparency'
+    # by making BG identical to the canvas, so a normal paste works.
+    alpha = np.full(out_rgb.shape[:2], 255, dtype=np.uint8)
+    rgba = np.dstack([out_rgb, alpha])
     _logo_cache = Image.fromarray(rgba, "RGBA")
     return _logo_cache.copy()
 

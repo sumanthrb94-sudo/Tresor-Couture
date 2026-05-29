@@ -59,13 +59,9 @@ def sc(v):
 
 
 def reel_canvas():
-    y_coords = (np.arange(H, dtype=np.float32) / (H - 1)).reshape(H, 1)
-    base = np.zeros((H, W, 3), dtype=np.float32)
-    for ch, (a, b) in enumerate(zip(CREAM_SOFT, CREAM)):
-        base[:, :, ch] = a * (1 - y_coords) + b * y_coords
-    rng = np.random.default_rng(13)
-    noise = rng.integers(-3, 4, size=base.shape, dtype=np.int16)
-    arr = np.clip(base.astype(np.int16) + noise, 0, 255).astype(np.uint8)
+    """Solid cream — flat colour matched to the logo's BG. No gradient,
+    no grain, so the chroma-keyed logo composites with zero visible seam."""
+    arr = np.full((H, W, 3), CREAM, dtype=np.uint8)
     return Image.fromarray(arr, "RGB").convert("RGBA")
 
 
@@ -96,24 +92,27 @@ _logo_rgba_cache: Image.Image | None = None
 
 
 def _load_master_logo_with_alpha() -> Image.Image:
-    """Chroma-key the cream BG of master-logo-reference.png so it composites
-    cleanly onto the canvas with no rectangular seam."""
+    """Replace the master logo's baked BG pixels with the EXACT canvas
+    CREAM colour. Combined with a solid canvas, zero visible seam."""
     global _logo_rgba_cache
     if _logo_rgba_cache is not None:
         return _logo_rgba_cache.copy()
-    rgb = np.array(Image.open(ROOT / "master-logo-reference.png").convert("RGB"))
+    rgb = np.array(Image.open(ROOT / "master-logo-reference.png").convert("RGB"),
+                    dtype=np.float32)
     border = np.concatenate([
         rgb[:8, :, :].reshape(-1, 3),
         rgb[-8:, :, :].reshape(-1, 3),
         rgb[:, :8, :].reshape(-1, 3),
         rgb[:, -8:, :].reshape(-1, 3),
     ])
-    bg = np.median(border, axis=0).astype(np.float32)
-    dist = np.linalg.norm(rgb.astype(np.float32) - bg, axis=2)
-    SOFT_LO, SOFT_HI = 6.0, 28.0
-    alpha = np.clip((dist - SOFT_LO) / (SOFT_HI - SOFT_LO), 0.0, 1.0)
-    alpha = (alpha * 255).astype(np.uint8)
-    rgba = np.dstack([rgb, alpha])
+    src_bg = np.median(border, axis=0)
+    dist = np.linalg.norm(rgb - src_bg, axis=2)
+    SOFT_LO, SOFT_HI = 4.0, 22.0
+    is_fig = np.clip((dist - SOFT_LO) / (SOFT_HI - SOFT_LO), 0.0, 1.0)[..., None]
+    canvas_bg = np.array(CREAM, dtype=np.float32)
+    out_rgb = (is_fig * rgb + (1.0 - is_fig) * canvas_bg).clip(0, 255).astype(np.uint8)
+    alpha = np.full(out_rgb.shape[:2], 255, dtype=np.uint8)
+    rgba = np.dstack([out_rgb, alpha])
     _logo_rgba_cache = Image.fromarray(rgba, "RGBA")
     return _logo_rgba_cache.copy()
 
