@@ -16,3 +16,7 @@ functions/node_modules/
 
 # Newman / Postman run artefacts — regenerated locally, not part of source.
 postman/run-report.json
+
+# Print-resolution PNGs are ~95 MB each (24×36 in @ 300 DPI). Regenerated
+# from generate_print_masters.py whenever needed. PDFs ARE tracked.
+branding/print/**/*.png
