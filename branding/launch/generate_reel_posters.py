@@ -223,9 +223,28 @@ def build_poster(eyebrow: str, headline: str, url: str, out_name: str) -> Path:
     _, wm_bottom = draw_wordmark_block(canvas, y=wordmark_top)
 
     # ---- TAGLINE in the breathing space between ornament and wordmark ----
-    tag_font = inter(52, "Medium")
-    tag_y = (orn2_bottom + wordmark_top) // 2 - 30
-    centred_spaced(canvas, tag_y, "DESIGNER BOUTIQUE", tag_font, GOLD_DEEP, tracking_em=0.55)
+    # Sized for visibility-at-distance (~10 m+ viewing). Starts at 160 pt
+    # Inter Bold and auto-shrinks until the laid-out caps (with tracking)
+    # fit inside SAFE_X margins on both sides — same auto-fit logic the
+    # headline uses, so the tagline can never bleed past the cream frame.
+    tag_text = "DESIGNER BOUTIQUE"
+    tag_tracking = 0.35
+    tag_size = 160
+    d_probe = ImageDraw.Draw(canvas)
+    while tag_size > 80:
+        f = inter(tag_size, "Bold")
+        widths = [d_probe.textbbox((0, 0), c, font=f)[2] - d_probe.textbbox((0, 0), c, font=f)[0]
+                  for c in tag_text]
+        gap = int(f.size * tag_tracking)
+        total = sum(widths) + gap * (len(tag_text) - 1)
+        if total <= W - 2 * SAFE_X:
+            break
+        tag_size -= 8
+    tag_font = inter(tag_size, "Bold")
+    ref = d_probe.textbbox((0, 0), "A", font=tag_font)
+    cap_h = ref[3] - ref[1]
+    tag_y = (orn2_bottom + wordmark_top) // 2 - cap_h // 2
+    centred_spaced(canvas, tag_y, tag_text, tag_font, GOLD_DEEP, tracking_em=tag_tracking)
 
     # ---- assert no overlap (defensive) ----
     if orn2_bottom > wordmark_top - 40:
