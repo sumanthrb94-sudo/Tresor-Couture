@@ -100,7 +100,10 @@ def paste_mark(canvas: Image.Image, target_height: int, top_y: int) -> int:
     No halo — the source PNG is fully alpha-transparent (corners 255,255,255,0),
     so the mark blends straight into the cream canvas with no visible patch.
     Returns the bottom y of the mark so subsequent elements can stack."""
-    src = Image.open(ROOT / "mark-master.png").convert("RGBA")
+    # Uses tc-master-mark-4k.png (3579x3840) — the same transparent TC mark
+    # the website ships in the navbar/footer, just at 6x the raster resolution
+    # of mark-master.png so downscaling to ~900px stays razor-sharp at 4K.
+    src = Image.open(ROOT / "tc-master-mark-4k.png").convert("RGBA")
     ratio = target_height / src.height
     new_w = int(src.width * ratio)
     mark = src.resize((new_w, target_height), Image.LANCZOS)
