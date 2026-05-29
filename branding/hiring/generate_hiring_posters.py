@@ -121,13 +121,15 @@ def centred_spaced(canvas, y, text, font, fill, tracking_em=0.4):
 
 
 def small_wordmark(canvas, y, font, ink_fill, dot_fill):
-    """Render TRESOR · COUTURE as two letter-spaced words separated by a
-    small gold pip — instead of one tracked string, where tracking_em was
-    inflating the gap between the words to several em-widths."""
+    """TRESOR · COUTURE with the gold pip at exact canvas center (W/2),
+    so this dot stacks vertically with the eyebrow dot, the contact dot,
+    and the ornament diamond. Words extend outward from the pip rather
+    than the composition being centered as a whole."""
     d = ImageDraw.Draw(canvas)
-    gap = int(font.size * 0.32)                     # letter tracking inside each word
-    word_gap = int(font.size * 0.55)                # tight gap on each side of the pip
+    gap = int(font.size * 0.32)
+    word_gap = int(font.size * 0.55)
     pip_r = max(3, font.size // 18)
+    cx = W // 2
 
     def word_widths(s):
         return [d.textbbox((0, 0), c, font=font)[2] - d.textbbox((0, 0), c, font=font)[0]
@@ -136,24 +138,87 @@ def small_wordmark(canvas, y, font, ink_fill, dot_fill):
     tres, cout = "TRESOR", "COUTURE"
     tw = word_widths(tres); cw = word_widths(cout)
     tres_total = sum(tw) + gap * (len(tres) - 1)
-    cout_total = sum(cw) + gap * (len(cout) - 1)
-    total = tres_total + word_gap + pip_r * 2 + word_gap + cout_total
 
     ref = d.textbbox((0, 0), "A", font=font)
     y_draw = y - ref[1]
     pip_cy = y + (ref[3] - ref[1]) // 2
 
-    x = (W - total) // 2
+    # Pip anchored at canvas center
+    pip_left_x = cx - pip_r
+    pip_right_x = cx + pip_r
+
+    # TRESOR ends at pip_left_x - word_gap
+    x = pip_left_x - word_gap - tres_total
     for c, w in zip(tres, tw):
         d.text((x, y_draw), c, font=font, fill=ink_fill)
         x += w + gap
-    x -= gap
-    x += word_gap
-    d.ellipse([x, pip_cy - pip_r, x + pip_r * 2, pip_cy + pip_r], fill=dot_fill)
-    x += pip_r * 2 + word_gap
+
+    d.ellipse([pip_left_x, pip_cy - pip_r, pip_right_x, pip_cy + pip_r], fill=dot_fill)
+
+    # COUTURE starts at pip_right_x + word_gap
+    x = pip_right_x + word_gap
     for c, w in zip(cout, cw):
         d.text((x, y_draw), c, font=font, fill=ink_fill)
         x += w + gap
+
+    return y, y + (ref[3] - ref[1])
+
+
+def centred_pivoted(canvas, y, left_text, right_text, font, text_fill,
+                    pip_fill, tracking_em=0.0, sep_pad_factor=0.6,
+                    pip_radius_factor=8):
+    """Render 'left  ⋅  right' with a gold pip at exact canvas center.
+    Use tracking_em>0 for letter-spaced caps (eyebrow style), 0 for
+    natural typesetting (contact line style). Pip radius defaults to
+    font.size / pip_radius_factor so it scales with the line."""
+    d = ImageDraw.Draw(canvas)
+    cx = W // 2
+    pip_r = max(3, font.size // pip_radius_factor)
+    sep_pad = int(font.size * sep_pad_factor)
+
+    if tracking_em > 0:
+        gap = int(font.size * tracking_em)
+
+        def measure(s):
+            return [d.textbbox((0, 0), c, font=font)[2] - d.textbbox((0, 0), c, font=font)[0]
+                    for c in s]
+        lw = measure(left_text)
+        rw = measure(right_text)
+        left_total = sum(lw) + gap * (len(left_text) - 1)
+    else:
+        lb = d.textbbox((0, 0), left_text, font=font)
+        rb = d.textbbox((0, 0), right_text, font=font)
+        left_total = lb[2] - lb[0]
+
+    ref = d.textbbox((0, 0), "A", font=font)
+    y_draw = y - ref[1]
+    pip_cy = y + (ref[3] - ref[1]) // 2
+
+    pip_left_x = cx - pip_r
+    pip_right_x = cx + pip_r
+
+    # left text — ends sep_pad px before the pip
+    left_start_x = pip_left_x - sep_pad - left_total
+    if tracking_em > 0:
+        x = left_start_x
+        for c, w in zip(left_text, lw):
+            d.text((x, y_draw), c, font=font, fill=text_fill)
+            x += w + gap
+    else:
+        d.text((left_start_x - lb[0], y_draw), left_text, font=font, fill=text_fill)
+
+    # pip at exact W/2
+    d.ellipse([pip_left_x, pip_cy - pip_r, pip_right_x, pip_cy + pip_r], fill=pip_fill)
+
+    # right text — starts sep_pad px after the pip
+    right_start_x = pip_right_x + sep_pad
+    if tracking_em > 0:
+        x = right_start_x
+        for c, w in zip(right_text, rw):
+            d.text((x, y_draw), c, font=font, fill=text_fill)
+            x += w + gap
+    else:
+        d.text((right_start_x - rb[0], y_draw), right_text, font=font, fill=text_fill)
 
     return y, y + (ref[3] - ref[1])
 
@@ -182,8 +247,8 @@ def autofit_size(d: ImageDraw.ImageDraw, text: str, font_factory,
     return size
 
 
-def build_poster(headline: str, roles: list[str], contact: str,
-                 eyebrow: str, out_name: str) -> Path:
+def build_poster(headline: str, roles: list[str], contact_left: str, contact_right: str,
+                 eyebrow_left: str, eyebrow_right: str, out_name: str) -> Path:
     canvas = reel_canvas()
     hairline_frame(canvas)
     d_probe = ImageDraw.Draw(canvas)
@@ -203,11 +268,14 @@ def build_poster(headline: str, roles: list[str], contact: str,
     # 3. Gold ornament.
     orn1_bottom = gold_ornament(canvas, y=small_wm_bottom + 55, span=540)
 
-    # 4. Eyebrow — fixed wording across all hiring variants.
+    # 4. Eyebrow — split on the pivot dot, drawn through centred_pivoted so
+    #    its dot sits at W/2 — same X as the wordmark pip + contact dot.
     eb_font = inter(50, "Medium")
     eb_top = orn1_bottom + 70
-    _, eb_bottom = centred_spaced(
-        canvas, eb_top, eyebrow, eb_font, GOLD_DEEP, tracking_em=0.45,
+    _, eb_bottom = centred_pivoted(
+        canvas, eb_top, eyebrow_left, eyebrow_right, eb_font,
+        text_fill=GOLD_DEEP, pip_fill=GOLD, tracking_em=0.45,
+        sep_pad_factor=1.6, pip_radius_factor=8,
     )
 
     # 5. HEADLINE — italic Cormorant, auto-fit so any phrase fits.
@@ -235,14 +303,20 @@ def build_poster(headline: str, roles: list[str], contact: str,
     # 7. Closing ornament under the role list.
     orn2_bottom = gold_ornament(canvas, y=role_bottom + 65, span=540)
 
-    # 8. CONTACT line — Inter Bold, ink, big enough to read at distance.
+    # 8. CONTACT line — split on the pivot dot so the dot sits at W/2
+    #    and aligns vertically with the wordmark pip and the eyebrow pip.
+    contact_probe_text = f"{contact_left}  {contact_right}"
     contact_size = autofit_size(
-        d_probe, contact, lambda s: inter(s, "Bold"),
+        d_probe, contact_probe_text, lambda s: inter(s, "Bold"),
         start_size=150, min_size=90, max_width=max_w,
     )
     contact_font = inter(contact_size, "Bold")
     contact_y = H - 430
-    _, contact_bottom = centred_text(canvas, contact_y, contact, contact_font, INK)
+    _, contact_bottom = centred_pivoted(
+        canvas, contact_y, contact_left, contact_right, contact_font,
+        text_fill=INK, pip_fill=INK, tracking_em=0.0,
+        sep_pad_factor=0.55, pip_radius_factor=12,
+    )
 
     # 9. WEBSITE sub-line under the contact — gold deep, spaced caps so it
     #    reads as a quiet companion to the bold contact line above it.
@@ -263,9 +337,9 @@ def build_poster(headline: str, roles: list[str], contact: str,
 
 
 def main() -> None:
-    EYEBROW = "3 POSITIONS OPEN   ·   AT THE ATELIER"
+    EYEBROW_L, EYEBROW_R = "3 POSITIONS OPEN", "AT THE ATELIER"
     ROLES   = ["Master Tailor", "Sales Person"]
-    CONTACT = "Contact  ·  6304211922"
+    CONTACT_L, CONTACT_R = "Contact", "6304211922"
 
     variants = [
         ("Staff Wanted",     "TresorCouture_Hiring_StaffWanted_2160x3840.png"),
@@ -273,7 +347,8 @@ def main() -> None:
         ("We Are Hiring",    "TresorCouture_Hiring_WeAreHiring_2160x3840.png"),
     ]
     for headline, name in variants:
-        path = build_poster(headline, ROLES, CONTACT, EYEBROW, name)
+        path = build_poster(headline, ROLES, CONTACT_L, CONTACT_R,
+                            EYEBROW_L, EYEBROW_R, name)
         print(f"  wrote {path.relative_to(ROOT.parent)}  ({path.stat().st_size // 1024} KB)")
 
 
