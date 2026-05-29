@@ -145,39 +145,12 @@ _logo_cache: Image.Image | None = None
 
 
 def master_logo() -> Image.Image:
-    """High-res master logo with its baked cream BG REPLACED by the exact
-    canvas CREAM colour. This is stronger than chroma-keying because near-BG
-    pixels (slight tonal noise from the source image) also get neutralised
-    to the canvas colour instead of becoming faintly visible 'halo' pixels.
-
-    The result: paste-onto-solid-cream produces a perfect colour match with
-    no detectable rectangle around the logo. Figure / gold strokes /
-    embroidery stay 100% original."""
+    """User-supplied transparent master logo (3107×4096 RGBA with proper
+    alpha at corners). No chroma-key needed — load and use directly."""
     global _logo_cache
     if _logo_cache is not None:
         return _logo_cache.copy()
-    rgb = np.array(Image.open(ROOT / "master-logo-reference.png").convert("RGB"),
-                    dtype=np.float32)
-    border = np.concatenate([
-        rgb[:8, :, :].reshape(-1, 3),
-        rgb[-8:, :, :].reshape(-1, 3),
-        rgb[:, :8, :].reshape(-1, 3),
-        rgb[:, -8:, :].reshape(-1, 3),
-    ])
-    src_bg = np.median(border, axis=0)
-    dist = np.linalg.norm(rgb - src_bg, axis=2)
-    # Soft mask: 0 = pure BG → replace with canvas colour; 1 = pure figure → keep.
-    SOFT_LO, SOFT_HI = 4.0, 22.0
-    is_fig = np.clip((dist - SOFT_LO) / (SOFT_HI - SOFT_LO), 0.0, 1.0)[..., None]
-    canvas_bg = np.array(CREAM, dtype=np.float32)
-    # BG pixels blended toward canvas; figure pixels unchanged.
-    out_rgb = is_fig * rgb + (1.0 - is_fig) * canvas_bg
-    out_rgb = out_rgb.clip(0, 255).astype(np.uint8)
-    # Alpha: 255 everywhere — the colour-match handles the 'transparency'
-    # by making BG identical to the canvas, so a normal paste works.
-    alpha = np.full(out_rgb.shape[:2], 255, dtype=np.uint8)
-    rgba = np.dstack([out_rgb, alpha])
-    _logo_cache = Image.fromarray(rgba, "RGBA")
+    _logo_cache = Image.open(ROOT / "master-logo-transparent.png").convert("RGBA")
     return _logo_cache.copy()
 
 

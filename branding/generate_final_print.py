@@ -92,28 +92,12 @@ _logo_rgba_cache: Image.Image | None = None
 
 
 def _load_master_logo_with_alpha() -> Image.Image:
-    """Replace the master logo's baked BG pixels with the EXACT canvas
-    CREAM colour. Combined with a solid canvas, zero visible seam."""
+    """User-supplied transparent master logo. Direct load — proper alpha
+    at corners, no chroma-keying needed."""
     global _logo_rgba_cache
     if _logo_rgba_cache is not None:
         return _logo_rgba_cache.copy()
-    rgb = np.array(Image.open(ROOT / "master-logo-reference.png").convert("RGB"),
-                    dtype=np.float32)
-    border = np.concatenate([
-        rgb[:8, :, :].reshape(-1, 3),
-        rgb[-8:, :, :].reshape(-1, 3),
-        rgb[:, :8, :].reshape(-1, 3),
-        rgb[:, -8:, :].reshape(-1, 3),
-    ])
-    src_bg = np.median(border, axis=0)
-    dist = np.linalg.norm(rgb - src_bg, axis=2)
-    SOFT_LO, SOFT_HI = 4.0, 22.0
-    is_fig = np.clip((dist - SOFT_LO) / (SOFT_HI - SOFT_LO), 0.0, 1.0)[..., None]
-    canvas_bg = np.array(CREAM, dtype=np.float32)
-    out_rgb = (is_fig * rgb + (1.0 - is_fig) * canvas_bg).clip(0, 255).astype(np.uint8)
-    alpha = np.full(out_rgb.shape[:2], 255, dtype=np.uint8)
-    rgba = np.dstack([out_rgb, alpha])
-    _logo_rgba_cache = Image.fromarray(rgba, "RGBA")
+    _logo_rgba_cache = Image.open(ROOT / "master-logo-transparent.png").convert("RGBA")
     return _logo_rgba_cache.copy()
 
 
