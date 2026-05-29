@@ -53,21 +53,14 @@ def inter(size: int, weight: str = "Regular") -> ImageFont.FreeTypeFont:
 
 
 def reel_canvas() -> Image.Image:
-    """Cream canvas with a soft vertical lift (cream-soft top → cream bottom)
-    + a very low-amplitude paper grain so it doesn't band at 4K."""
+    """Pure cream canvas with a soft vertical lift (cream-soft top → cream
+    bottom) + a very low-amplitude paper grain. No radial glow — the mark
+    sits flush against the website-flow cream."""
     base = np.zeros((H, W, 3), dtype=np.float32)
     for y in range(H):
         t = y / (H - 1)
         for ch, (a, b) in enumerate(zip(CREAM_SOFT, CREAM)):
             base[y, :, ch] = a * (1 - t) + b * t
-
-    # subtle warm radial behind the mark zone (top third)
-    yy, xx = np.indices((H, W))
-    cy_warm, cx_warm = H * 0.30, W / 2
-    r = np.hypot(xx - cx_warm, yy - cy_warm)
-    glow = np.clip(1 - r / (W * 0.55), 0, 1) ** 2
-    for ch, c in enumerate(ACCENT):
-        base[..., ch] = base[..., ch] * (1 - glow * 0.35) + c * (glow * 0.35)
 
     rng = np.random.default_rng(13)
     noise = rng.integers(-3, 4, size=base.shape, dtype=np.int16)
@@ -104,21 +97,13 @@ def gold_ornament(canvas: Image.Image, y: int, span: int = 520) -> int:
 
 def paste_mark(canvas: Image.Image, target_height: int, top_y: int) -> int:
     """Drop the bare TC mark (no wordmark) at top_y, centred horizontally.
+    No halo — the source PNG is fully alpha-transparent (corners 255,255,255,0),
+    so the mark blends straight into the cream canvas with no visible patch.
     Returns the bottom y of the mark so subsequent elements can stack."""
     src = Image.open(ROOT / "mark-master.png").convert("RGBA")
     ratio = target_height / src.height
     new_w = int(src.width * ratio)
     mark = src.resize((new_w, target_height), Image.LANCZOS)
-
-    # warm cream-gold soft halo behind the mark — feels luminous on cream
-    halo = Image.new("RGBA", (new_w + 600, target_height + 600), (0, 0, 0, 0))
-    hd = ImageDraw.Draw(halo)
-    hd.ellipse([0, 0, halo.width, halo.height], fill=GOLD_SOFT + (40,))
-    halo = halo.filter(ImageFilter.GaussianBlur(160))
-    hx = (W - halo.width) // 2
-    hy = top_y - (halo.height - target_height) // 2
-    canvas.alpha_composite(halo, (hx, hy))
-
     mx = (W - new_w) // 2
     canvas.alpha_composite(mark, (mx, top_y))
     return top_y + target_height
