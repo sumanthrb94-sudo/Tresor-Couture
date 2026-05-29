@@ -20,7 +20,7 @@ const WhatsAppButton: React.FC = () => {
   }, [showNotice]);
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-3">
+    <div className="fixed bottom-[4.75rem] right-5 z-50 flex flex-col items-end gap-3">
       {showNotice && (
         <div
           role="status"

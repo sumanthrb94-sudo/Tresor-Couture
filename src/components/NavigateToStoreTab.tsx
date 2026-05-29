@@ -9,7 +9,7 @@ const NavigateToStoreTab: React.FC = () => (
     target="_blank"
     rel="noopener noreferrer"
     aria-label="Navigate to our store on Google Maps"
-    className="fixed bottom-[5.5rem] right-5 z-50 flex items-center gap-2
+    className="fixed bottom-5 right-5 z-50 flex items-center gap-2
                bg-[color:var(--color-myntra-pink)] hover:bg-[color:var(--color-myntra-pink-dark)]
                text-white shadow-lg pl-3 pr-4 py-2.5 rounded-full
                transition-colors active:scale-[0.98]"
