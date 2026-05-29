@@ -220,7 +220,7 @@ def build_poster(eyebrow: str, headline: str, url: str, out_name: str) -> Path:
 
 def main() -> None:
     variants = [
-        ("POSITIONS OPEN AT THE ATELIER",     "Staff Wanted",       "walk in  ·  tresorcouture.in",
+        ("3 POSITIONS OPEN  ·  AT THE ATELIER", "Staff Wanted",       "walk in  ·  tresorcouture.in",
          "TresorCouture_Hiring_StaffWanted_2160x3840.png"),
         ("TAILORS  ·  STYLISTS  ·  DESIGNERS", "Now Hiring",         "careers  ·  tresorcouture.in",
          "TresorCouture_Hiring_NowHiring_2160x3840.png"),
