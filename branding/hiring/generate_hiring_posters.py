@@ -303,20 +303,15 @@ def build_poster(headline: str, roles: list[str], contact_left: str, contact_rig
     # 7. Closing ornament under the role list.
     orn2_bottom = gold_ornament(canvas, y=role_bottom + 65, span=540)
 
-    # 8. CONTACT line — split on the pivot dot so the dot sits at W/2
-    #    and aligns vertically with the wordmark pip and the eyebrow pip.
-    contact_probe_text = f"{contact_left}  {contact_right}"
+    # 8. CONTACT line — colon separator (no dot), centred as a single block.
+    contact_text = f"{contact_left}: {contact_right}"
     contact_size = autofit_size(
-        d_probe, contact_probe_text, lambda s: inter(s, "Bold"),
+        d_probe, contact_text, lambda s: inter(s, "Bold"),
         start_size=150, min_size=90, max_width=max_w,
     )
     contact_font = inter(contact_size, "Bold")
     contact_y = H - 430
-    _, contact_bottom = centred_pivoted(
-        canvas, contact_y, contact_left, contact_right, contact_font,
-        text_fill=INK, pip_fill=INK, tracking_em=0.0,
-        sep_pad_factor=0.55, pip_radius_factor=12,
-    )
+    _, contact_bottom = centred_text(canvas, contact_y, contact_text, contact_font, INK)
 
     # 9. WEBSITE sub-line under the contact — gold deep, spaced caps so it
     #    reads as a quiet companion to the bold contact line above it.
