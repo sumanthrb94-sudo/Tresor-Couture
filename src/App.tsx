@@ -11,6 +11,7 @@ import OffersBanner from './components/OffersBanner';
 import SignupCallout from './components/SignupCallout';
 import ProductRail from './components/ProductRail';
 import LookbookRail from './components/LookbookRail';
+import WhatsAppButton from './components/WhatsAppButton';
 import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
 import ShopPage from './pages/ShopPage';
@@ -143,6 +144,8 @@ const Home: React.FC = () => {
         ctaCategory="Cotton"
         bg="white"
       />
+      {/* Floating "Contact Us" via WhatsApp — flagged as under development for now. */}
+      <WhatsAppButton />
     </main>
   );
 };
