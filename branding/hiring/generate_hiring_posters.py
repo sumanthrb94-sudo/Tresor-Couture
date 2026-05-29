@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
 """
-Tresor Couture — staff-wanted posters, vertical 4K (2160 x 3840).
+Tresor Couture — hiring posters, vertical 4K (2160 x 3840).
 
-Identical layout language to generate_reel_posters.py — big TC mark at
-the top, gold ornament, eyebrow + italic Cormorant headline, second
-ornament, DESIGNER BOUTIQUE tagline, TRESOR / COUTURE wordmark, URL —
-so a hiring poster reads as a sibling of the launch carousel rather
-than a one-off.
+Layout (matches the user's reference markup):
+    TC mark (large)
+    TRESOR · COUTURE (small wordmark under the mark)
+    gold ornament
+    eyebrow: "3 POSITIONS OPEN  ·  AT THE ATELIER"
+    HEADLINE (italic Cormorant — varies per variant)
+    Master Tailor       ← role line 1
+    Sales Person        ← role line 2
+    gold ornament
+    Contact  ·  6304211922   ← anchored at the bottom for visibility
 
-Three samples:
-    Staff Wanted   ·  "POSITIONS OPEN AT THE ATELIER"
-    Now Hiring     ·  "TAILORS · STYLISTS · DESIGNERS"
-    Join the Atelier · "WE ARE HIRING"
+Three samples, identical except for the headline word choice:
+    Staff Wanted    /    Now Hiring    /    We Are Hiring
 
 Run from repo root:
     python3 branding/hiring/generate_hiring_posters.py
-
 Outputs land in branding/hiring/.
 """
 
@@ -29,7 +31,6 @@ FONTS = ROOT / "_fonts"
 OUT = ROOT / "hiring"
 OUT.mkdir(parents=True, exist_ok=True)
 
-# Palette (sampled from palette.json — same as launch posters)
 CREAM       = (245, 236, 220)
 CREAM_SOFT  = (251, 245, 234)
 INK         = (42, 31, 18)
@@ -50,8 +51,6 @@ def inter(size: int, weight: str = "Regular") -> ImageFont.FreeTypeFont:
 
 
 def reel_canvas() -> Image.Image:
-    """Cream gradient + paper grain. Identical to the launch posters so the
-    two surfaces (launch + hiring) share an unmistakable family resemblance."""
     base = np.zeros((H, W, 3), dtype=np.float32)
     for y in range(H):
         t = y / (H - 1)
@@ -69,7 +68,7 @@ def hairline_frame(canvas: Image.Image) -> None:
     d.rectangle([inset, inset, W - inset, H - inset], outline=GOLD_SOFT, width=3)
 
 
-def gold_ornament(canvas: Image.Image, y: int, span: int = 620) -> int:
+def gold_ornament(canvas: Image.Image, y: int, span: int = 540) -> int:
     d = ImageDraw.Draw(canvas)
     cx = W // 2
     half = span // 2
@@ -121,96 +120,96 @@ def centred_spaced(canvas, y, text, font, fill, tracking_em=0.4):
     return y, y + (ref[3] - ref[1])
 
 
-def draw_wordmark_block(canvas, y):
-    d = ImageDraw.Draw(canvas)
-    tres_font = cormorant(140, "Medium")
-    cout_font = inter(46, "SemiBold")
-
-    _, tres_bottom = centred_spaced(canvas, y, "TRESOR", tres_font, INK, tracking_em=0.42)
-    cy = tres_bottom + 60
-
-    cout = "COUTURE"
-    gap_letters = int(cout_font.size * 0.55)
-    chws = [d.textbbox((0, 0), c, font=cout_font) for c in cout]
-    char_widths = [(bb[2] - bb[0]) for bb in chws]
-    cout_total = sum(char_widths) + gap_letters * (len(cout) - 1)
-
-    rule_len = 220
-    side_gap = 60
-    cx = W // 2
-    rule_y = cy + int(cout_font.size * 0.5)
-    d.line([(cx - cout_total / 2 - side_gap - rule_len, rule_y),
-            (cx - cout_total / 2 - side_gap, rule_y)], fill=GOLD, width=4)
-    d.line([(cx + cout_total / 2 + side_gap, rule_y),
-            (cx + cout_total / 2 + side_gap + rule_len, rule_y)], fill=GOLD, width=4)
-
-    _, cout_bottom = centred_spaced(canvas, cy, cout, cout_font, GOLD_DEEP, tracking_em=0.55)
-    return y, cout_bottom
+def autofit_size(d: ImageDraw.ImageDraw, text: str, font_factory,
+                 start_size: int, min_size: int, max_width: int,
+                 tracking_em: float | None = None) -> int:
+    """Step down from start_size until text fits inside max_width.
+    If tracking_em is None, measure as a single block (centred_text).
+    Otherwise measure as letter-spaced caps (centred_spaced)."""
+    size = start_size
+    while size > min_size:
+        f = font_factory(size)
+        if tracking_em is None:
+            bbox = d.textbbox((0, 0), text, font=f)
+            if bbox[2] - bbox[0] <= max_width:
+                return size
+        else:
+            widths = [d.textbbox((0, 0), c, font=f) for c in text]
+            cw = [(bb[2] - bb[0]) for bb in widths]
+            gap = int(f.size * tracking_em)
+            total = sum(cw) + gap * (len(text) - 1)
+            if total <= max_width:
+                return size
+        size -= 8
+    return size
 
 
-def draw_url(canvas, y, text):
-    f = inter(48, "Regular")
-    return centred_spaced(canvas, y, text, f, GOLD_DEEP, tracking_em=0.18)
-
-
-def build_poster(eyebrow: str, headline: str, url: str, out_name: str) -> Path:
+def build_poster(headline: str, roles: list[str], contact: str,
+                 eyebrow: str, out_name: str) -> Path:
     canvas = reel_canvas()
     hairline_frame(canvas)
-
-    # ---- TOP: TC mark (same big size as launch posters) ----
-    mark_top = 280
-    mark_bottom = paste_mark(canvas, target_height=1300, top_y=mark_top)
-
-    orn1_bottom = gold_ornament(canvas, y=mark_bottom + 55, span=620)
-
-    # ---- eyebrow ----
-    eb_font = inter(50, "Medium")
-    eb_top = orn1_bottom + 75
-    _, eb_bottom = centred_spaced(canvas, eb_top, eyebrow, eb_font, GOLD_DEEP, tracking_em=0.45)
-
-    # ---- HEADLINE (auto-fit so longer phrases like "Join the Atelier" never bleed) ----
-    head_font = cormorant(440, "Italic")
     d_probe = ImageDraw.Draw(canvas)
-    while head_font.size > 200:
-        bbox = d_probe.textbbox((0, 0), headline, font=head_font)
-        if bbox[2] - bbox[0] <= W - 2 * SAFE_X:
-            break
-        head_font = cormorant(head_font.size - 20, "Italic")
+    max_w = W - 2 * SAFE_X
 
-    headline_top = eb_bottom + 95
-    _, headline_bottom = centred_text(canvas, headline_top, headline, head_font, INK)
+    # 1. TC mark — slightly shorter than the launch posters to make room
+    #    for the small wordmark + role list + contact below.
+    mark_top = 220
+    mark_bottom = paste_mark(canvas, target_height=1100, top_y=mark_top)
 
-    orn2_top = headline_bottom + 95
-    orn2_bottom = gold_ornament(canvas, y=orn2_top, span=620)
+    # 2. Small TRESOR · COUTURE wordmark immediately under the mark.
+    small_wm_font = cormorant(86, "Medium")
+    _, small_wm_bottom = centred_spaced(
+        canvas, mark_bottom + 60, "TRESOR   ·   COUTURE",
+        small_wm_font, INK, tracking_em=0.4,
+    )
 
-    # ---- BOTTOM block ----
-    url_baseline = H - 320
-    _, url_bottom = draw_url(canvas, y=url_baseline, text=url)
-    wordmark_top = url_baseline - 360
-    _, wm_bottom = draw_wordmark_block(canvas, y=wordmark_top)
+    # 3. Gold ornament.
+    orn1_bottom = gold_ornament(canvas, y=small_wm_bottom + 55, span=540)
 
-    # ---- TAGLINE — auto-fit Inter Bold (~120 pt) ----
-    tag_text = "DESIGNER PRET"
-    tag_tracking = 0.35
-    tag_size = 160
-    while tag_size > 80:
-        f = inter(tag_size, "Bold")
-        widths = [d_probe.textbbox((0, 0), c, font=f)[2] - d_probe.textbbox((0, 0), c, font=f)[0]
-                  for c in tag_text]
-        gap = int(f.size * tag_tracking)
-        total = sum(widths) + gap * (len(tag_text) - 1)
-        if total <= W - 2 * SAFE_X:
-            break
-        tag_size -= 8
-    tag_font = inter(tag_size, "Bold")
-    ref = d_probe.textbbox((0, 0), "A", font=tag_font)
-    cap_h = ref[3] - ref[1]
-    tag_y = (orn2_bottom + wordmark_top) // 2 - cap_h // 2
-    centred_spaced(canvas, tag_y, tag_text, tag_font, GOLD_DEEP, tracking_em=tag_tracking)
+    # 4. Eyebrow — fixed wording across all hiring variants.
+    eb_font = inter(50, "Medium")
+    eb_top = orn1_bottom + 70
+    _, eb_bottom = centred_spaced(
+        canvas, eb_top, eyebrow, eb_font, GOLD_DEEP, tracking_em=0.45,
+    )
 
-    if orn2_bottom > wordmark_top - 40:
+    # 5. HEADLINE — italic Cormorant, auto-fit so any phrase fits.
+    head_size = autofit_size(
+        d_probe, headline, lambda s: cormorant(s, "Italic"),
+        start_size=420, min_size=200, max_width=max_w,
+    )
+    head_font = cormorant(head_size, "Italic")
+    _, headline_bottom = centred_text(canvas, eb_bottom + 90, headline, head_font, INK)
+
+    # 6. ROLE LIST — Cormorant Regular (upright, not italic) in deep gold
+    #    so it's secondary to the italic headline but still substantial.
+    role_size = autofit_size(
+        d_probe, max(roles, key=len),
+        lambda s: cormorant(s, "Regular"),
+        start_size=240, min_size=140, max_width=max_w,
+    )
+    role_font = cormorant(role_size, "Regular")
+    role_y = headline_bottom + 90
+    role_bottom = role_y
+    for role in roles:
+        _, role_bottom = centred_text(canvas, role_y, role, role_font, GOLD_DEEP)
+        role_y = role_bottom + 18  # tight stack — they read as a list
+
+    # 7. Closing ornament under the role list.
+    orn2_bottom = gold_ornament(canvas, y=role_bottom + 65, span=540)
+
+    # 8. CONTACT line — Inter Bold, ink, big enough to read at distance.
+    contact_size = autofit_size(
+        d_probe, contact, lambda s: inter(s, "Bold"),
+        start_size=160, min_size=90, max_width=max_w,
+    )
+    contact_font = inter(contact_size, "Bold")
+    contact_y = H - 360
+    centred_text(canvas, contact_y, contact, contact_font, INK)
+
+    if orn2_bottom > contact_y - 40:
         raise RuntimeError(
-            f"layout collision in {out_name}: orn2_bottom={orn2_bottom} wordmark_top={wordmark_top}"
+            f"layout collision in {out_name}: orn2_bottom={orn2_bottom} contact_y={contact_y}"
         )
 
     out_path = OUT / out_name
@@ -219,16 +218,17 @@ def build_poster(eyebrow: str, headline: str, url: str, out_name: str) -> Path:
 
 
 def main() -> None:
+    EYEBROW = "3 POSITIONS OPEN   ·   AT THE ATELIER"
+    ROLES   = ["Master Tailor", "Sales Person"]
+    CONTACT = "Contact  ·  6304211922"
+
     variants = [
-        ("3 POSITIONS  ·  MASTER TAILOR & MORE", "Staff Wanted",       "walk in  ·  tresorcouture.in",
-         "TresorCouture_Hiring_StaffWanted_2160x3840.png"),
-        ("TAILORS  ·  STYLISTS  ·  DESIGNERS", "Now Hiring",         "careers  ·  tresorcouture.in",
-         "TresorCouture_Hiring_NowHiring_2160x3840.png"),
-        ("JOIN THE ATELIER",                   "We Are Hiring",      "walk in  ·  tresorcouture.in",
-         "TresorCouture_Hiring_WeAreHiring_2160x3840.png"),
+        ("Staff Wanted",     "TresorCouture_Hiring_StaffWanted_2160x3840.png"),
+        ("Now Hiring",       "TresorCouture_Hiring_NowHiring_2160x3840.png"),
+        ("We Are Hiring",    "TresorCouture_Hiring_WeAreHiring_2160x3840.png"),
     ]
-    for eyebrow, headline, footer, name in variants:
-        path = build_poster(eyebrow, headline, footer, name)
+    for headline, name in variants:
+        path = build_poster(headline, ROLES, CONTACT, EYEBROW, name)
         print(f"  wrote {path.relative_to(ROOT.parent)}  ({path.stat().st_size // 1024} KB)")
 
 
