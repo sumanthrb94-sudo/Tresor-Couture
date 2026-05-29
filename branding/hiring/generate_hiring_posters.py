@@ -320,7 +320,7 @@ def build_poster(headline: str, roles: list[str], contact_left: str, contact_rig
     #    reads as a quiet companion to the bold contact line above it.
     site_font = inter(64, "SemiBold")
     centred_spaced(
-        canvas, contact_bottom + 50, "TRESORCOUTURE.IN",
+        canvas, contact_bottom + 140, "TRESORCOUTURE.IN",
         site_font, GOLD_DEEP, tracking_em=0.28,
     )
 
