@@ -222,6 +222,11 @@ def build_poster(eyebrow: str, headline: str, url: str, out_name: str) -> Path:
     wordmark_top = url_baseline - 360   # reserve ~360 px for the lockup
     _, wm_bottom = draw_wordmark_block(canvas, y=wordmark_top)
 
+    # ---- TAGLINE in the breathing space between ornament and wordmark ----
+    tag_font = inter(52, "Medium")
+    tag_y = (orn2_bottom + wordmark_top) // 2 - 30
+    centred_spaced(canvas, tag_y, "DESIGNER BOUTIQUE", tag_font, GOLD_DEEP, tracking_em=0.55)
+
     # ---- assert no overlap (defensive) ----
     if orn2_bottom > wordmark_top - 40:
         raise RuntimeError(
