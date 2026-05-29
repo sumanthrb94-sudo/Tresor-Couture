@@ -190,7 +190,7 @@ def build_poster(eyebrow: str, headline: str, url: str, out_name: str) -> Path:
     _, wm_bottom = draw_wordmark_block(canvas, y=wordmark_top)
 
     # ---- TAGLINE — auto-fit Inter Bold (~120 pt) ----
-    tag_text = "DESIGNER BOUTIQUE"
+    tag_text = "DESIGNER PRET"
     tag_tracking = 0.35
     tag_size = 160
     while tag_size > 80:
@@ -224,8 +224,8 @@ def main() -> None:
          "TresorCouture_Hiring_StaffWanted_2160x3840.png"),
         ("TAILORS  ·  STYLISTS  ·  DESIGNERS", "Now Hiring",         "careers  ·  tresorcouture.in",
          "TresorCouture_Hiring_NowHiring_2160x3840.png"),
-        ("WE ARE HIRING",                      "Join the Atelier",   "walk in  ·  tresorcouture.in",
-         "TresorCouture_Hiring_JoinTheAtelier_2160x3840.png"),
+        ("JOIN THE ATELIER",                   "We Are Hiring",      "walk in  ·  tresorcouture.in",
+         "TresorCouture_Hiring_WeAreHiring_2160x3840.png"),
     ]
     for eyebrow, headline, footer, name in variants:
         path = build_poster(eyebrow, headline, footer, name)

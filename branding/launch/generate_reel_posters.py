@@ -227,7 +227,7 @@ def build_poster(eyebrow: str, headline: str, url: str, out_name: str) -> Path:
     # Inter Bold and auto-shrinks until the laid-out caps (with tracking)
     # fit inside SAFE_X margins on both sides — same auto-fit logic the
     # headline uses, so the tagline can never bleed past the cream frame.
-    tag_text = "DESIGNER BOUTIQUE"
+    tag_text = "DESIGNER PRET"
     tag_tracking = 0.35
     tag_size = 160
     d_probe = ImageDraw.Draw(canvas)
