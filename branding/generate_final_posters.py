@@ -29,9 +29,9 @@ FONTS = ROOT / "_fonts"
 OUT = ROOT / "final_preview"
 OUT.mkdir(parents=True, exist_ok=True)
 
-CREAM       = (245, 236, 220)
-CREAM_SOFT  = (251, 245, 234)
-INK         = (42, 31, 18)
+CREAM       = (245, 231, 219)   # matches the reference PNG's baked BG; the
+CREAM_SOFT  = (250, 237, 224)   # logo BG is chroma-keyed out so any leftover
+INK         = (42, 31, 18)      # edge pixels blend with the same warm cream.
 GOLD        = (184, 137, 58)
 GOLD_SOFT   = (216, 185, 122)
 GOLD_DEEP   = (142, 101, 32)
@@ -82,12 +82,43 @@ def gold_ornament(canvas, y, span=540):
     return line_y + pip + 8
 
 
+_logo_rgba_cache: Image.Image | None = None
+
+
+def _load_master_logo_with_alpha() -> Image.Image:
+    """Take the user's high-res master-logo-reference.png (which ships with a
+    baked cream BG, no alpha channel) and chroma-key the cream out so the
+    cream canvas behind the poster shows through with no visible rectangular
+    patch around the logo. Distance from the border-sampled BG colour drives
+    a soft alpha so anti-aliased edges of the gold strokes stay smooth."""
+    global _logo_rgba_cache
+    if _logo_rgba_cache is not None:
+        return _logo_rgba_cache.copy()
+    rgb = np.array(Image.open(ROOT / "master-logo-reference.png").convert("RGB"))
+    # Sample BG from the outer 8-pixel border.
+    border = np.concatenate([
+        rgb[:8, :, :].reshape(-1, 3),
+        rgb[-8:, :, :].reshape(-1, 3),
+        rgb[:, :8, :].reshape(-1, 3),
+        rgb[:, -8:, :].reshape(-1, 3),
+    ])
+    bg = np.median(border, axis=0).astype(np.float32)
+    dist = np.linalg.norm(rgb.astype(np.float32) - bg, axis=2)
+    # dist 0..SOFT_LO → alpha 0;  SOFT_LO..SOFT_HI → linear 0→255;  > SOFT_HI → 255.
+    SOFT_LO, SOFT_HI = 6.0, 28.0
+    alpha = np.clip((dist - SOFT_LO) / (SOFT_HI - SOFT_LO), 0.0, 1.0)
+    alpha = (alpha * 255).astype(np.uint8)
+    rgba = np.dstack([rgb, alpha])
+    _logo_rgba_cache = Image.fromarray(rgba, "RGBA")
+    return _logo_rgba_cache.copy()
+
+
 def paste_master_logo(canvas, target_height, top_y):
-    """Place the integrated master logo (mark + TRESOR · COUTURE wordmark
-    together) — the reference the user wants the posters built around.
-    Uses monogram-master.png (the 658 × 771 lockup) scaled up; corners are
-    fully alpha-transparent so it blends into the cream BG with no patch."""
-    src = Image.open(ROOT / "monogram-master.png").convert("RGBA")
+    """Place the integrated master logo at top_y. Uses the user's high-res
+    master-logo-reference.png (5737 × 7680) with the cream BG chroma-keyed
+    out via _load_master_logo_with_alpha() so the logo composites onto the
+    cream gradient with no visible rectangular seam."""
+    src = _load_master_logo_with_alpha()
     ratio = target_height / src.height
     new_w = int(src.width * ratio)
     logo = src.resize((new_w, target_height), Image.LANCZOS)
