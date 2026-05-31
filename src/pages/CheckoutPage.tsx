@@ -8,7 +8,7 @@ import { formatINR } from '../constants';
 import { PaymentMethod, ShippingAddress } from '../types';
 import { couponsApi } from '../lib/firebase';
 import { analytics } from '../lib/analytics';
-import { sendOrderEmail } from '../lib/notify';
+import { sendOrderEmail, sendOrderWhatsApp } from '../lib/notify';
 import FabricImage from '../components/FabricImage';
 
 type Step = 'login' | 'address' | 'payment';
@@ -276,6 +276,7 @@ const CheckoutPage: React.FC = () => {
         couponCode: couponCode ?? undefined,
       });
       void sendOrderEmail(placed); // Brevo confirmation — fire-and-forget
+      void sendOrderWhatsApp(placed, address.fullName); // store alert (dormant until WA env set)
       finishOrder(placed.id, address);
     } catch (err) {
       setPlacing(false);

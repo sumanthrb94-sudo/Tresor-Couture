@@ -37,22 +37,28 @@ function brevoHeaders() {
   return { 'api-key': key, 'content-type': 'application/json', accept: 'application/json' };
 }
 
-/** Send a transactional email via Brevo. */
+/**
+ * Send a transactional email via Brevo. If `templateId` is given, Brevo's own
+ * template is used (design it in Brevo, pass `params` for {{ params.x }}); else
+ * the inline subject/htmlContent is sent. This lets you swap to Brevo-designed
+ * templates later by setting the *_TEMPLATE_ID env vars — no code change.
+ */
 export async function brevoSendEmail(args: {
   to: { email: string; name?: string };
-  subject: string;
-  htmlContent: string;
+  subject?: string;
+  htmlContent?: string;
   textContent?: string;
+  templateId?: number;
+  params?: Record<string, unknown>;
 }): Promise<void> {
   const sender = {
     email: process.env.BREVO_SENDER_EMAIL || 'no-reply@tresorcouture.in',
     name: process.env.BREVO_SENDER_NAME || 'Tresor Couture',
   };
-  const r = await fetch(`${BREVO}/smtp/email`, {
-    method: 'POST',
-    headers: brevoHeaders(),
-    body: JSON.stringify({ sender, to: [args.to], subject: args.subject, htmlContent: args.htmlContent, textContent: args.textContent }),
-  });
+  const body = args.templateId
+    ? { sender, to: [args.to], templateId: args.templateId, params: args.params ?? {} }
+    : { sender, to: [args.to], subject: args.subject, htmlContent: args.htmlContent, textContent: args.textContent };
+  const r = await fetch(`${BREVO}/smtp/email`, { method: 'POST', headers: brevoHeaders(), body: JSON.stringify(body) });
   if (!r.ok) throw new Error(`brevo email ${r.status}: ${await r.text()}`);
 }
 
@@ -67,6 +73,43 @@ export async function brevoAddContact(email: string, attributes: Record<string, 
   // 201 created, 204 updated. Brevo returns 400 "Contact already exist" only
   // when updateEnabled is false — we set it true, so treat <300 as success.
   if (!r.ok && r.status !== 204) throw new Error(`brevo contact ${r.status}: ${await r.text()}`);
+}
+
+/**
+ * Send a WhatsApp template message via the Meta Cloud API.
+ * No-ops (returns false) unless WHATSAPP_TOKEN, WHATSAPP_PHONE_ID and a
+ * template name are configured — so it stays dormant until the WhatsApp
+ * Business number + approved template are live.
+ * The named template must have a BODY with one {{n}} variable per `params`.
+ */
+export async function whatsappSendTemplate(args: {
+  to: string;
+  templateName?: string;
+  params: string[];
+  languageCode?: string;
+}): Promise<boolean> {
+  const token = process.env.WHATSAPP_TOKEN;
+  const phoneId = process.env.WHATSAPP_PHONE_ID;
+  const template = args.templateName || process.env.WHATSAPP_TEMPLATE;
+  const to = (args.to || '').replace(/[^\d]/g, '');
+  if (!token || !phoneId || !template || !to) return false;
+
+  const r = await fetch(`https://graph.facebook.com/v21.0/${phoneId}/messages`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      to,
+      type: 'template',
+      template: {
+        name: template,
+        language: { code: args.languageCode || process.env.WHATSAPP_LANG || 'en' },
+        components: [{ type: 'body', parameters: args.params.map(text => ({ type: 'text', text: String(text) })) }],
+      },
+    }),
+  });
+  if (!r.ok) throw new Error(`whatsapp ${r.status}: ${await r.text()}`);
+  return true;
 }
 
 export const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;

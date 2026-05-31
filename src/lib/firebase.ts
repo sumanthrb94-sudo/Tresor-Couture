@@ -78,6 +78,35 @@ export const db = getFirestore(app);
 /*  Auth                                                              */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Fire-and-forget capture of a brand-new user into Brevo (marketing list +
+ * welcome email). Only runs for users WITH an email (phone-only users are
+ * skipped — Brevo lists are email-keyed). No-ops on localhost where the
+ * Vercel /api functions don't exist. Never throws into the auth flow.
+ */
+function captureNewUser(user: FbUser, fullName?: string): void {
+  void (async () => {
+    try {
+      const email = user.email;
+      if (!email) return;
+      const name = fullName ?? user.displayName ?? email.split('@')[0];
+      fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, name, source: 'signup' }),
+      }).catch(() => {});
+      const token = await user.getIdToken().catch(() => null);
+      if (token) {
+        fetch('/api/email/welcome', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+          body: JSON.stringify({ name }),
+        }).catch(() => {});
+      }
+    } catch { /* best-effort */ }
+  })();
+}
+
 export async function register(input: { email: string; password: string; fullName: string; phone?: string }) {
   const cred = await createUserWithEmailAndPassword(auth, input.email, input.password);
   await updateProfile(cred.user, { displayName: input.fullName });
@@ -90,6 +119,7 @@ export async function register(input: { email: string; password: string; fullNam
     createdAt: new Date().toISOString()
   };
   await setDoc(doc(db, 'users', cred.user.uid), profile);
+  captureNewUser(cred.user, input.fullName);
   return { user: cred.user, profile };
 }
 
@@ -182,6 +212,7 @@ async function materialiseGoogleProfile(user: FbUser) {
     photoURL:  user.photoURL ?? null,
     createdAt: new Date().toISOString()
   });
+  captureNewUser(user);
 }
 
 /**
@@ -332,6 +363,7 @@ export async function confirmPhoneCode(code: string) {
       role:      'customer' as const,
       createdAt: new Date().toISOString()
     });
+    captureNewUser(cred.user); // no-ops unless the phone account also has an email
   }
   return cred.user;
 }

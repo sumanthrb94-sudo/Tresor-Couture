@@ -18,6 +18,23 @@ export async function subscribeContact(email: string, source = 'site', name?: st
   }
 }
 
+/** Notify the store of a new order via WhatsApp (Meta Cloud API). Dormant
+ *  until WhatsApp env is configured server-side. */
+export async function sendOrderWhatsApp(order: Order, customerName?: string): Promise<void> {
+  try {
+    const u = auth.currentUser;
+    if (!u) return;
+    const token = await u.getIdToken();
+    await fetch('/api/whatsapp/notify', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+      body: JSON.stringify({ order: { id: order.id, total: order.total, customerName } }),
+    });
+  } catch {
+    /* best-effort */
+  }
+}
+
 /** Send the order-confirmation email to the signed-in buyer via Brevo. */
 export async function sendOrderEmail(order: Order): Promise<void> {
   try {
