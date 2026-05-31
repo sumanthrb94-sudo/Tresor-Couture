@@ -45,8 +45,12 @@ export default async function handler(req: any, res: any) {
     await brevoAddContact(email, attributes);
     return res.status(200).json({ ok: true });
   } catch (err) {
-    console.error('[api/contact]', (err as Error).message);
-    // Don't leak config errors to the client; capture is best-effort.
-    return res.status(200).json({ ok: false });
+    const message = (err as Error).message;
+    console.error('[api/contact]', message);
+    // TEMPORARY: with ?debug=1 surface the underlying Brevo/config error so we
+    // can diagnose ok:false in production. Remove once Brevo is confirmed live.
+    const debug = /[?&]debug=1(?:&|$)/.test(req.url || '') || (req.query && req.query.debug === '1');
+    // Don't leak config errors to the client by default; capture is best-effort.
+    return res.status(200).json({ ok: false, ...(debug ? { detail: message.slice(0, 300) } : {}) });
   }
 }
