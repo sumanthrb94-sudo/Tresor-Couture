@@ -55,27 +55,24 @@ import {
 const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
 
 /**
- * The OAuth handler MUST live on the same origin as the running app, or the
- * `signInWithRedirect` session (stored in the authDomain's storage) is lost
- * when the browser lands back on the app origin — mobile browsers partition
- * cross-origin storage, so this breaks redirect sign-in hard on phones.
+ * Use the Firebase-hosted handler domain (*.firebaseapp.com) as authDomain.
+ * It is the ONLY domain pre-registered with the Google OAuth client, so Google
+ * sign-in works with zero extra Cloud Console config.
  *
- * `vercel.json` rewrites `/__/auth/*` → firebaseapp.com on EVERY domain the
- * deployment serves, so we can safely use the current hostname as authDomain
- * (tresorcouture.in, *.vercel.app, …) — the handler is then first-party.
- * On localhost there's no rewrite, so fall back to the real Firebase handler
- * (localhost is an auto-authorized domain, popup sign-in works there).
+ * Tempting alternative — point authDomain at the custom domain (tresorcouture.in)
+ * via the vercel.json /__/auth proxy so the redirect session is first-party on
+ * mobile — REQUIRES adding that domain to the OAuth 2.0 client's Authorized
+ * redirect URIs in Google Cloud Console, or Google rejects the request as
+ * "invalid" (Access blocked). Until that Cloud config is done, firebaseapp.com
+ * is the reliable choice. Override with VITE_FIREBASE_AUTH_DOMAIN only after
+ * registering the domain with the OAuth client.
  *
- * Every host used here must be listed under Firebase Console → Authentication
- * → Settings → Authorized domains, or sign-in throws auth/unauthorized-domain.
+ * NOTE: the app's own origin (tresorcouture.in) must still be listed under
+ * Firebase Console → Authentication → Settings → Authorized domains, or
+ * sign-in throws auth/unauthorized-domain regardless of authDomain.
  */
 function resolveAuthDomain(): string {
-  if (env.VITE_FIREBASE_AUTH_DOMAIN) return env.VITE_FIREBASE_AUTH_DOMAIN;
-  if (typeof window !== 'undefined') {
-    const host = window.location.hostname;
-    if (host && host !== 'localhost' && host !== '127.0.0.1') return host;
-  }
-  return 'tresor-couture.firebaseapp.com';
+  return env.VITE_FIREBASE_AUTH_DOMAIN || 'tresor-couture.firebaseapp.com';
 }
 
 const firebaseConfig = {
