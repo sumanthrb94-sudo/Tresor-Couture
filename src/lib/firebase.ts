@@ -54,14 +54,36 @@ import {
 
 const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
 
+/**
+ * The OAuth handler MUST live on the same origin as the running app, or the
+ * `signInWithRedirect` session (stored in the authDomain's storage) is lost
+ * when the browser lands back on the app origin — mobile browsers partition
+ * cross-origin storage, so this breaks redirect sign-in hard on phones.
+ *
+ * `vercel.json` rewrites `/__/auth/*` → firebaseapp.com on EVERY domain the
+ * deployment serves, so we can safely use the current hostname as authDomain
+ * (tresorcouture.in, *.vercel.app, …) — the handler is then first-party.
+ * On localhost there's no rewrite, so fall back to the real Firebase handler
+ * (localhost is an auto-authorized domain, popup sign-in works there).
+ *
+ * Every host used here must be listed under Firebase Console → Authentication
+ * → Settings → Authorized domains, or sign-in throws auth/unauthorized-domain.
+ */
+function resolveAuthDomain(): string {
+  if (env.VITE_FIREBASE_AUTH_DOMAIN) return env.VITE_FIREBASE_AUTH_DOMAIN;
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host && host !== 'localhost' && host !== '127.0.0.1') return host;
+  }
+  return 'tresor-couture.firebaseapp.com';
+}
+
 const firebaseConfig = {
   apiKey:            env.VITE_FIREBASE_API_KEY            ?? 'AIzaSyAIct4PdHbOYaNCYpLdGxh1kDlukwwc_3M',
-  // Default authDomain points at the Vercel deployment so the OAuth
-  // redirect flow's session lives on the same origin as the app
-  // (vercel.json rewrites /__/auth/* to firebaseapp.com under the hood).
-  // Override via VITE_FIREBASE_AUTH_DOMAIN when deploying to a custom
-  // domain or to Firebase Hosting directly.
-  authDomain:        env.VITE_FIREBASE_AUTH_DOMAIN        ?? 'tresor-couture.vercel.app',
+  // Use the current origin as authDomain so the OAuth handler is same-origin
+  // (see resolveAuthDomain). This is what makes redirect sign-in work on
+  // mobile when the app is served from the custom domain tresorcouture.in.
+  authDomain:        resolveAuthDomain(),
   projectId:         env.VITE_FIREBASE_PROJECT_ID         ?? 'tresor-couture',
   storageBucket:     env.VITE_FIREBASE_STORAGE_BUCKET     ?? 'tresor-couture.firebasestorage.app',
   messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID ?? '102541847727',
@@ -224,6 +246,21 @@ export async function loginWithGoogle() {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
 
+  // Mobile browsers block/auto-close auth popups (and the close arrives as
+  // error codes we can't reliably distinguish), so go straight to the
+  // redirect flow on mobile — it's the supported path there. authDomain is
+  // now same-origin (see resolveAuthDomain), so the redirect session survives.
+  const isMobile =
+    typeof navigator !== 'undefined' &&
+    (/Android|iPhone|iPad|iPod|Mobile|Silk/i.test(navigator.userAgent) ||
+      (typeof window !== 'undefined' && 'ontouchstart' in window && window.innerWidth < 1024));
+
+  if (isMobile) {
+    try { window.sessionStorage.setItem('tresor.google.redirect', '1'); } catch { /* ignore */ }
+    await signInWithRedirect(auth, provider);
+    return null;
+  }
+
   try {
     const cred: UserCredential = await signInWithPopup(auth, provider);
     await materialiseGoogleProfile(cred.user);
@@ -231,7 +268,12 @@ export async function loginWithGoogle() {
   } catch (err) {
     const code = (err as { code?: string }).code;
     // Popup blocked or aborted by environment → fall back to redirect.
-    if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment' || code === 'auth/cancelled-popup-request') {
+    if (
+      code === 'auth/popup-blocked' ||
+      code === 'auth/operation-not-supported-in-this-environment' ||
+      code === 'auth/cancelled-popup-request' ||
+      code === 'auth/popup-closed-by-user'
+    ) {
       try { window.sessionStorage.setItem('tresor.google.redirect', '1'); } catch { /* ignore */ }
       await signInWithRedirect(auth, provider);
       return null;
