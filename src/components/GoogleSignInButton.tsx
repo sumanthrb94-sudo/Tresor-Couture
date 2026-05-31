@@ -5,6 +5,9 @@ interface Props {
   onDone?: () => void;
   /** Label override — defaults to "Continue with Google". */
   label?: string;
+  /** Notified when sign-in starts/stops so the page can show a loading overlay
+   *  over the form during the popup + profile-hydrate window. */
+  onBusyChange?: (busy: boolean) => void;
 }
 
 /**
@@ -12,7 +15,7 @@ interface Props {
  * the AuthContext mirrors the Google user into the local store and the
  * caller can navigate (e.g. → /account or → /).
  */
-const GoogleSignInButton: React.FC<Props> = ({ onDone, label = 'Continue with Google' }) => {
+const GoogleSignInButton: React.FC<Props> = ({ onDone, label = 'Continue with Google', onBusyChange }) => {
   const { loginWithGoogle } = useAuth();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -20,20 +23,23 @@ const GoogleSignInButton: React.FC<Props> = ({ onDone, label = 'Continue with Go
   const handle = async () => {
     setErr(null);
     setBusy(true);
+    onBusyChange?.(true);
     try {
       await loginWithGoogle();
       onDone?.();
+      // Leave busy ON through navigation — the overlay should persist until the
+      // page unmounts, not flicker off between profile-hydrate and redirect.
     } catch (e) {
+      setBusy(false);
+      onBusyChange?.(false);
       const code = (e as { code?: string }).code;
-      if (code === 'auth/popup-closed-by-user') {
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
         // User cancelled the popup — silent.
       } else if (code === 'auth/popup-blocked') {
         setErr('Browser blocked the popup. Allow popups for this site and retry.');
       } else {
         setErr((e as Error).message ?? 'Google sign-in failed.');
       }
-    } finally {
-      setBusy(false);
     }
   };
 

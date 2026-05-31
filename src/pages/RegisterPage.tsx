@@ -33,6 +33,10 @@ const RegisterPage: React.FC = () => {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
+
+  // Loader instead of flashing the form while auth resolves / sign-up is in flight.
+  const authInFlight = loading || !!user || submitting || googleBusy;
 
   useEffect(() => {
     if (!loading && user) navigate({ name: 'home' });
@@ -78,6 +82,18 @@ const RegisterPage: React.FC = () => {
 
   return (
     <main className="pt-[100px] md:pt-[112px] pb-12 md:pb-16 bg-[color:var(--color-myntra-bg-soft)] min-h-screen">
+      {authInFlight && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed inset-0 z-[70] flex flex-col items-center justify-center gap-4 bg-[color:var(--color-myntra-bg-soft)]/95 backdrop-blur-sm"
+        >
+          <div className="w-9 h-9 border-2 border-[color:var(--color-myntra-pink)] border-t-transparent rounded-full animate-spin" />
+          <p className="text-[13px] font-bold uppercase tracking-[0.18em] text-[color:var(--color-myntra-navy)]">
+            {user ? 'Setting up your account…' : 'One moment…'}
+          </p>
+        </div>
+      )}
       <div className="max-w-[480px] mx-auto px-4 md:px-0">
         <p className="section-eyebrow mb-2">Join Tresor</p>
         <h1 className="text-xl md:text-2xl font-extrabold mb-4 text-[color:var(--color-myntra-navy)]">
@@ -126,7 +142,7 @@ const RegisterPage: React.FC = () => {
                 <span className="flex-1 h-px bg-[color:var(--color-myntra-border-soft)]" />
               </div>
 
-              <GoogleSignInButton onDone={() => navigate({ name: 'home' })} label="Sign up with Google" />
+              <GoogleSignInButton onDone={() => navigate({ name: 'home' })} label="Sign up with Google" onBusyChange={setGoogleBusy} />
             </div>
           ) : (
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
@@ -295,7 +311,7 @@ const RegisterPage: React.FC = () => {
               <span className="flex-1 h-px bg-[color:var(--color-myntra-border-soft)]" />
             </div>
 
-            <GoogleSignInButton onDone={() => navigate({ name: 'home' })} label="Sign up with Google" />
+            <GoogleSignInButton onDone={() => navigate({ name: 'home' })} label="Sign up with Google" onBusyChange={setGoogleBusy} />
 
             <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] leading-relaxed">
               By creating an account, you agree to Tresor Couture&apos;s{' '}

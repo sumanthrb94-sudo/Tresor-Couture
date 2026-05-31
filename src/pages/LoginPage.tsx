@@ -20,6 +20,13 @@ const LoginPage: React.FC = () => {
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotBusy, setForgotBusy] = useState(false);
   const [forgotMsg, setForgotMsg] = useState<string | null>(null);
+  // Google popup + profile-hydrate is in flight (set by GoogleSignInButton).
+  const [googleBusy, setGoogleBusy] = useState(false);
+
+  // Show a full-screen loader instead of flashing the login form when: auth
+  // state is still resolving on first paint, a sign-in is in flight, or we're
+  // already signed in and about to be routed away.
+  const authInFlight = loading || !!user || submitting || googleBusy;
 
   // If the user signs in via Google redirect (mobile), they bounce back to
   // this page already authed — route them to /account so they don't stare
@@ -79,6 +86,18 @@ const LoginPage: React.FC = () => {
 
   return (
     <main className="pt-[100px] md:pt-[112px] pb-12 md:pb-16 bg-[color:var(--color-myntra-bg-soft)] min-h-screen">
+      {authInFlight && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed inset-0 z-[70] flex flex-col items-center justify-center gap-4 bg-[color:var(--color-myntra-bg-soft)]/95 backdrop-blur-sm"
+        >
+          <div className="w-9 h-9 border-2 border-[color:var(--color-myntra-pink)] border-t-transparent rounded-full animate-spin" />
+          <p className="text-[13px] font-bold uppercase tracking-[0.18em] text-[color:var(--color-myntra-navy)]">
+            {user ? 'Signing you in…' : googleBusy || submitting ? 'Signing you in…' : 'Loading…'}
+          </p>
+        </div>
+      )}
       <div className="max-w-[960px] mx-auto px-4 md:px-8 lg:px-10">
         <p className="section-eyebrow mb-2">Members of Tresor</p>
         <h1 className="text-xl md:text-2xl font-extrabold mb-4 text-[color:var(--color-myntra-navy)]">
@@ -125,7 +144,7 @@ const LoginPage: React.FC = () => {
                   <span className="flex-1 h-px bg-[color:var(--color-myntra-border-soft)]" />
                 </div>
 
-                <GoogleSignInButton onDone={() => navigate({ name: 'home' })} />
+                <GoogleSignInButton onDone={() => navigate({ name: 'home' })} onBusyChange={setGoogleBusy} />
 
                 <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] leading-relaxed">
                   By continuing, you agree to Tresor Couture&apos;s{' '}
@@ -213,7 +232,7 @@ const LoginPage: React.FC = () => {
                 <span className="flex-1 h-px bg-[color:var(--color-myntra-border-soft)]" />
               </div>
 
-              <GoogleSignInButton onDone={() => navigate({ name: 'home' })} />
+              <GoogleSignInButton onDone={() => navigate({ name: 'home' })} onBusyChange={setGoogleBusy} />
 
               <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] leading-relaxed">
                 By continuing, you agree to Tresor Couture&apos;s{' '}
