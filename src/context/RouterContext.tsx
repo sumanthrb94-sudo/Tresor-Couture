@@ -136,6 +136,13 @@ export const RouterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [route, setRoute] = useState<Route>(() => parseLocation());
 
   useEffect(() => {
+    // Own the scroll position ourselves. Without this the browser tries to
+    // restore the previous page's scroll on hash/back navigation, so a new
+    // page (e.g. the order confirmation after checkout) opens scrolled
+    // half-way down on mobile instead of at the top.
+    if ('scrollRestoration' in window.history) {
+      try { window.history.scrollRestoration = 'manual'; } catch { /* ignore */ }
+    }
     const handler = () => setRoute(parseLocation());
     window.addEventListener('hashchange', handler);
     window.addEventListener('popstate', handler);
@@ -144,6 +151,18 @@ export const RouterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       window.removeEventListener('popstate', handler);
     };
   }, []);
+
+  // Scroll to the top on EVERY route change — whether triggered by navigate(),
+  // an <a href="#/…"> link (hashchange), or back/forward (popstate). Instant,
+  // not smooth: a new screen should appear at the top immediately, and smooth
+  // scrolling is unreliable mid-transition on mobile. Runs after paint so it
+  // wins against any layout the freshly-mounted (lazy) page performs.
+  useEffect(() => {
+    const toTop = () => window.scrollTo(0, 0);
+    toTop();
+    const raf = window.requestAnimationFrame(toTop);
+    return () => window.cancelAnimationFrame(raf);
+  }, [route]);
 
   // SPA page_view on every route change (incl. initial). No-ops without GA4 id.
   useEffect(() => {
@@ -164,7 +183,8 @@ export const RouterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     }
     setRoute(next);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Scroll reset is handled centrally by the route-change effect above, so
+    // it also covers anchor-link and back/forward navigation.
   }, []);
 
   const hrefFor = useCallback((r: Route) => buildHash(r), []);
