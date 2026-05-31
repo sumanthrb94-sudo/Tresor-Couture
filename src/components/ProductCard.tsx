@@ -58,7 +58,7 @@ const ProductCard: React.FC<Props> = ({ fabric, compact = false }) => {
           )}
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className="text-[14px] font-bold text-[color:var(--color-myntra-navy)]">
-              {formatINR(fabric.pricePerMeter)}
+              {formatINR(fabric.price)}
             </span>
           </div>
         </div>

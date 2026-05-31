@@ -365,7 +365,7 @@ const ProfileTab: React.FC = () => {
             />
           </div>
           <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] mt-1">
-            Email cannot be changed. Reach out to care@tresor.test if you need help.
+            Email cannot be changed. Reach out to hello@tresorcouture.in if you need help.
           </p>
         </div>
 
@@ -487,7 +487,7 @@ const OrdersTab: React.FC = () => {
   }
 
   const reorder = (order: Order) => {
-    order.items.forEach(it => addItem({ fabricId: it.fabricId, meters: it.meters, color: it.color }));
+    order.items.forEach(it => addItem({ fabricId: it.fabricId, quantity: it.quantity, color: it.color }));
     setReordered(order.id);
     // Slight delay so the user sees the "added" toast before we whisk them away.
     window.setTimeout(() => navigate({ name: 'cart' }), 350);
@@ -521,7 +521,7 @@ const OrdersTab: React.FC = () => {
         const status: OrderStatus = order.status ?? 'placed';
         const isCancelled = status === 'cancelled' || status === 'refunded';
         const isDelivered = status === 'delivered';
-        const meterCount = order.items.reduce((s, it) => s + it.meters, 0);
+        const unitCount = order.items.reduce((s, it) => s + it.quantity, 0);
         const firstItem = order.items[0]?.fabricSnapshot;
         const isOpen = expanded === order.id;
         const eta = !isCancelled && !isDelivered ? computeEta(order) : null;
@@ -566,7 +566,7 @@ const OrdersTab: React.FC = () => {
 
                 <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mt-1">
                   Placed {formatDate(order.placedAt)} · {order.items.length} item
-                  {order.items.length === 1 ? '' : 's'} · {meterCount} m
+                  {order.items.length === 1 ? '' : 's'} · {unitCount} m
                 </p>
 
                 {eta && (
@@ -675,12 +675,12 @@ const OrdersTab: React.FC = () => {
                               {it.fabricSnapshot.brand}
                             </p>
                             <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] truncate">
-                              {it.fabricSnapshot.name} · {it.meters} m
+                              {it.fabricSnapshot.name} · Qty {it.quantity}
                               {it.color ? ` · ${it.color}` : ''}
                             </p>
                           </div>
                           <p className="text-[12px] font-bold shrink-0">
-                            {formatINR(it.meters * it.fabricSnapshot.pricePerMeter)}
+                            {formatINR(it.quantity * it.fabricSnapshot.price)}
                           </p>
                         </li>
                       ))}
@@ -770,7 +770,7 @@ const WishlistTab: React.FC = () => {
   }
 
   const moveToBag = (fabricId: string) => {
-    addItem({ fabricId, meters: 1 });
+    addItem({ fabricId, quantity: 1 });
     wishlist.remove(fabricId);
   };
 
@@ -805,7 +805,7 @@ const WishlistTab: React.FC = () => {
               <p className="text-[12px] font-extrabold uppercase truncate">{fabric.brand}</p>
               <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] truncate">{fabric.name}</p>
               <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-[13px] font-bold">{formatINR(fabric.pricePerMeter)}</span>
+                <span className="text-[13px] font-bold">{formatINR(fabric.price)}</span>
               </div>
               <div className="mt-3 grid grid-cols-2 gap-1.5">
                 <button

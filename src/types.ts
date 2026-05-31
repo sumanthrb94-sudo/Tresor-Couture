@@ -18,10 +18,10 @@ export interface Fabric {
   brand: string;
   name: string;
   description: string;
-  /** Current selling price per meter. */
-  pricePerMeter: number;
-  /** Original "MRP" per meter (always >= pricePerMeter). */
-  mrpPerMeter: number;
+  /** Current selling price per piece (per unit). */
+  price: number;
+  /** Original "MRP" per piece (always >= price). */
+  mrp: number;
   /** Real photograph URL. */
   photo: string;
   /** Additional photographs for the gallery. */
@@ -40,10 +40,9 @@ export interface Fabric {
   /** Optional sticker (e.g. "Trending", "Bestseller", "New In"). */
   sticker?: 'Trending' | 'Bestseller' | 'New In' | 'Limited';
   colors?: { name: string; hex: string }[];
-  /** Pre-cut length presets shown as "size" pills. */
-  lengthOptions?: number[];
-  widthInches?: number;
-  inStockMeters?: number;
+  /** Units available to sell. Drives the quantity stepper + out-of-stock. */
+  stock?: number;
+  /** Fabric/weave descriptor shown in product details (e.g. "Banarasi brocade"). */
   weaveType?: string;
   rating?: number;
   reviewCount?: number;
@@ -69,7 +68,7 @@ export interface Testimonial {
 
 export interface CartItem {
   fabricId: string;
-  meters: number;
+  quantity: number;
   color?: string;
 }
 
@@ -178,7 +177,6 @@ export type Route =
   | { name: 'cart' }
   | { name: 'checkout' }
   | { name: 'confirmation'; orderId: string }
-  | { name: 'customise'; productId?: string }
   | { name: 'login' }
   | { name: 'register' }
   | { name: 'account'; tab?: 'profile' | 'orders' | 'wishlist' | 'addresses' }

@@ -47,9 +47,9 @@ export async function sendOrderEmail(order: Order): Promise<void> {
         items: order.items.map(it => ({
           name: it.fabricSnapshot?.name,
           brand: it.fabricSnapshot?.brand,
-          meters: it.meters,
+          quantity: it.quantity,
           color: it.color,
-          pricePerMeter: it.fabricSnapshot?.pricePerMeter,
+          price: it.fabricSnapshot?.price,
         })),
         subtotal: order.subtotal,
         shipping: order.shipping,

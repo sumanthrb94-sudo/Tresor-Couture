@@ -48,7 +48,7 @@ const Footer: React.FC = () => {
           decoding="async"
         />
         <p className="text-[13px] md:text-[14px] text-[color:var(--color-myntra-ink-soft)] max-w-md">
-          Heritage Indian weaves, hand-cut to the meter — and across Hyderabad, designer pieces at your door inside 40 minutes.
+          Heritage Indian designer wear — and across Hyderabad, pieces at your door inside 40 minutes.
         </p>
       </div>
       <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 py-10 md:py-12 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 md:gap-10">

@@ -51,7 +51,7 @@ const isRealised = (o: Order): boolean => {
 };
 
 const sumMeters = (o: Order): number =>
-  o.items.reduce((n, it) => n + (it.meters ?? 0), 0);
+  o.items.reduce((n, it) => n + (it.quantity ?? 0), 0);
 
 const timeAgo = (iso: string): string => {
   const then = new Date(iso).getTime();
@@ -235,7 +235,7 @@ const AdminDashboard: React.FC = () => {
   );
 
   const lowStockCount = useMemo(
-    () => fabrics.filter(f => (f.inStockMeters ?? 0) < 10).length,
+    () => fabrics.filter(f => (f.stock ?? 0) < 10).length,
     [fabrics]
   );
 
@@ -245,7 +245,7 @@ const AdminDashboard: React.FC = () => {
     const rows = orders.filter(isRts);
     return {
       orderCount: rows.length,
-      meters:     rows.reduce((n, o) => n + sumMeters(o), 0),
+      quantity:     rows.reduce((n, o) => n + sumMeters(o), 0),
       value:      rows.reduce((n, o) => n + (o.total ?? 0), 0)
     };
   }, [orders]);
@@ -274,7 +274,7 @@ const AdminDashboard: React.FC = () => {
     brand: string;
     photo: string;
     image: string;
-    meters: number;
+    quantity: number;
     revenue: number;
   }
   const topProducts: TopProduct[] = useMemo(() => {
@@ -282,9 +282,9 @@ const AdminDashboard: React.FC = () => {
     for (const o of realisedOrders) {
       for (const it of o.items) {
         const existing = map.get(it.fabricId);
-        const lineRev = it.meters * it.fabricSnapshot.pricePerMeter;
+        const lineRev = it.quantity * it.fabricSnapshot.price;
         if (existing) {
-          existing.meters += it.meters;
+          existing.quantity += it.quantity;
           existing.revenue += lineRev;
         } else {
           map.set(it.fabricId, {
@@ -293,7 +293,7 @@ const AdminDashboard: React.FC = () => {
             brand: it.fabricSnapshot.brand,
             photo: it.fabricSnapshot.photo,
             image: it.fabricSnapshot.image,
-            meters: it.meters,
+            quantity: it.quantity,
             revenue: lineRev
           });
         }
@@ -443,7 +443,7 @@ const AdminDashboard: React.FC = () => {
               <tr className="border-t border-[color:var(--color-myntra-border-soft)]" style={{ color: '#A12626', backgroundColor: '#FBE6E6' }}>
                 <td className="px-5 py-3 font-bold">Returned to supplier</td>
                 <td className="px-5 py-3 text-right">{rts.orderCount.toLocaleString('en-IN')}</td>
-                <td className="px-5 py-3 text-right">{rts.meters.toLocaleString('en-IN')}</td>
+                <td className="px-5 py-3 text-right">{rts.quantity.toLocaleString('en-IN')}</td>
                 <td className="px-5 py-3 text-right font-bold">{formatINR(rts.value)}</td>
               </tr>
             )}
@@ -553,7 +553,7 @@ const AdminDashboard: React.FC = () => {
                       {p.name}
                     </p>
                     <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] truncate">
-                      {p.meters.toLocaleString('en-IN')} m sold
+                      {p.quantity.toLocaleString('en-IN')} m sold
                     </p>
                   </div>
                   <p className="text-[13px] font-extrabold text-[color:var(--color-myntra-navy)] shrink-0">

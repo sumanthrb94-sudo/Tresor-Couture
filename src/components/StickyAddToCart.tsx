@@ -71,7 +71,7 @@ const StickyAddToCart: React.FC<Props> = ({
         <div className="flex-1 min-w-0">
           <p className="text-[12px] font-extrabold text-[color:var(--color-myntra-navy)] truncate leading-tight">{product.brand}</p>
           <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] truncate leading-tight">{product.name}</p>
-          <p className="text-[13px] font-bold text-[color:var(--color-myntra-navy)] leading-tight mt-0.5">{formatINR(product.pricePerMeter)}</p>
+          <p className="text-[13px] font-bold text-[color:var(--color-myntra-navy)] leading-tight mt-0.5">{formatINR(product.price)}</p>
         </div>
         <button
           type="button"

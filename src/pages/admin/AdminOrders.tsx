@@ -130,7 +130,7 @@ const buildCsv = (orders: Order[]): string => {
       o.placedAt,
       o.shippingAddress.fullName,
       o.shippingAddress.email,
-      o.items.reduce((acc, it) => acc + it.meters, 0),
+      o.items.reduce((acc, it) => acc + it.quantity, 0),
       o.subtotal,
       o.shipping,
       o.tax,
@@ -247,13 +247,13 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
                   {it.fabricSnapshot.name}
                 </p>
                 <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)]">
-                  {it.meters.toLocaleString('en-IN')} m
+                  {it.quantity.toLocaleString('en-IN')} m
                   {it.color ? ` · ${it.color}` : ''} ·{' '}
-                  {formatINR(it.fabricSnapshot.pricePerMeter)}
+                  {formatINR(it.fabricSnapshot.price)}
                 </p>
               </div>
               <p className="text-[13px] font-extrabold text-[color:var(--color-myntra-navy)] tabular-nums shrink-0">
-                {formatINR(Math.round(it.meters * it.fabricSnapshot.pricePerMeter))}
+                {formatINR(Math.round(it.quantity * it.fabricSnapshot.price))}
               </p>
             </li>
           ))}
@@ -632,7 +632,7 @@ const AdminOrders: React.FC = () => {
                     const status = statusOf(o);
                     const expanded = expandedId === o.id;
                     const nextStatus = advanceStatus(status);
-                    const itemMeters = o.items.reduce((acc, it) => acc + it.meters, 0);
+                    const itemMeters = o.items.reduce((acc, it) => acc + it.quantity, 0);
                     return (
                       <React.Fragment key={o.id}>
                         <tr
@@ -729,7 +729,7 @@ const AdminOrders: React.FC = () => {
               const status = statusOf(o);
               const expanded = expandedId === o.id;
               const nextStatus = advanceStatus(status);
-              const itemMeters = o.items.reduce((acc, it) => acc + it.meters, 0);
+              const itemMeters = o.items.reduce((acc, it) => acc + it.quantity, 0);
               return (
                 <div
                   key={o.id}

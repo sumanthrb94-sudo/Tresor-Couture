@@ -507,7 +507,7 @@ function rupee(n: number) {
 function buildOrderConfirmationEmail(args: {
   customerName: string;
   orderId: string;
-  items: { fabricSnapshot: { name: string; brand?: string; pricePerMeter: number }; meters: number; color?: string }[];
+  items: { fabricSnapshot: { name: string; brand?: string; price: number }; quantity: number; color?: string }[];
   subtotal: number;
   shipping: number;
   tax: number;
@@ -519,10 +519,10 @@ function buildOrderConfirmationEmail(args: {
     <tr>
       <td style="padding:10px 0;border-bottom:1px solid #EAD9BA;color:#2A1F12;font-family:Georgia,serif">
         ${it.fabricSnapshot.name}${it.color ? ` &middot; ${it.color}` : ''}<br/>
-        <span style="font-size:12px;color:#8E6520">${it.meters} m &middot; ${rupee(it.fabricSnapshot.pricePerMeter)}/m</span>
+        <span style="font-size:12px;color:#8E6520">Qty ${it.quantity} &middot; ${rupee(it.fabricSnapshot.price)}</span>
       </td>
       <td style="padding:10px 0;border-bottom:1px solid #EAD9BA;color:#2A1F12;font-family:Georgia,serif;text-align:right">
-        ${rupee(it.fabricSnapshot.pricePerMeter * it.meters)}
+        ${rupee(it.fabricSnapshot.price * it.quantity)}
       </td>
     </tr>`).join('');
 
@@ -569,7 +569,7 @@ function buildOrderConfirmationEmail(args: {
     `Your order reference is ${orderId.slice(0, 8).toUpperCase()}.`,
     '',
     'YOUR ORDER',
-    ...items.map(it => `  ${it.fabricSnapshot.name}${it.color ? ` (${it.color})` : ''} — ${it.meters} m @ ${rupee(it.fabricSnapshot.pricePerMeter)}/m = ${rupee(it.fabricSnapshot.pricePerMeter * it.meters)}`),
+    ...items.map(it => `  ${it.fabricSnapshot.name}${it.color ? ` (${it.color})` : ''} — Qty ${it.quantity} @ ${rupee(it.fabricSnapshot.price)} = ${rupee(it.fabricSnapshot.price * it.quantity)}`),
     '',
     `Subtotal:  ${rupee(subtotal)}`,
     `Shipping:  ${shipping === 0 ? 'Complimentary' : rupee(shipping)}`,
@@ -711,7 +711,7 @@ export const ordersApi = {
   all:  () => listAll<DocumentData>('orders', [orderBy('placedAt', 'desc'), qLimit(200)]),
   get:  (id: string) => getOne<DocumentData>('orders', id),
   place: async (input: {
-    items: { fabricId: string; meters: number; color?: string }[];
+    items: { fabricId: string; quantity: number; color?: string }[];
     shippingAddress: DocumentData;
     paymentMethod: 'card' | 'upi' | 'cod';
     couponCode?: string;
@@ -724,8 +724,8 @@ export const ordersApi = {
       return { ...it, fabricSnapshot: p };
     }));
     const subtotal = items.reduce((s, it) => {
-      const p = (it.fabricSnapshot as unknown as { pricePerMeter: number }).pricePerMeter;
-      return s + p * it.meters;
+      const p = (it.fabricSnapshot as unknown as { price: number }).price;
+      return s + p * it.quantity;
     }, 0);
     // Coupon lookup (public-read rule)
     let couponDiscount = 0;

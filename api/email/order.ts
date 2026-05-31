@@ -4,7 +4,7 @@
 // The recipient is forced to the authenticated user's own verified email, so
 // this endpoint can't be used to send mail to arbitrary addresses.
 //
-// Body: { order: { id, items:[{name, brand?, meters, color?, pricePerMeter}],
+// Body: { order: { id, items:[{name, brand?, meters, color?, price}],
 //                  subtotal, shipping, tax, total, couponCode?, couponDiscount?,
 //                  shippingAddress:{fullName,line1,line2?,city,state,postalCode} },
 //         name? }
@@ -69,8 +69,8 @@ function renderEmail(order: any, customerName: string): { subject: string; html:
   const items = Array.isArray(order.items) ? order.items : [];
   const rows = items.map((it: any) => {
     const name = escapeHtml(it.name || it.brand || 'Fabric');
-    const meta = [it.meters ? `${it.meters} m` : '', it.color ? escapeHtml(it.color) : ''].filter(Boolean).join(' · ');
-    const line = (Number(it.pricePerMeter) || 0) * (Number(it.meters) || 0);
+    const meta = [it.quantity ? `Qty ${it.quantity}` : '', it.color ? escapeHtml(it.color) : ''].filter(Boolean).join(' · ');
+    const line = (Number(it.price) || 0) * (Number(it.quantity) || 0);
     return `<tr>
       <td style="padding:8px 0;border-bottom:1px solid #EEE6D6;">${name}<br><span style="color:#8A7656;font-size:12px;">${meta}</span></td>
       <td style="padding:8px 0;border-bottom:1px solid #EEE6D6;text-align:right;white-space:nowrap;">${rupee(line)}</td>
@@ -97,7 +97,7 @@ function renderEmail(order: any, customerName: string): { subject: string; html:
     </table>
     <p style="font-size:13px;color:#5D4E36;">Delivering to: ${addr}</p>
     <p style="font-size:13px;color:#5D4E36;">Payment: Cash on Delivery.</p>
-    <p style="font-size:12px;color:#8A7656;margin-top:24px;">Hand-cut to the metre · shipped within 48 hours · 40-minute delivery across Hyderabad.</p>
+    <p style="font-size:12px;color:#8A7656;margin-top:24px;">Shipped within 48 hours · 40-minute delivery across Hyderabad.</p>
   </div></body></html>`;
 
   const text = `TRESOR COUTURE — Order confirmed\nOrder ${order.id}\nTotal: ${rupee(order.total)}\nDelivering to: ${addr}\nPayment: Cash on Delivery.\nThank you for your order.`;

@@ -28,7 +28,7 @@ const OffersBanner: React.FC = () => (
           </h3>
           <p className="text-[12px] md:text-[13px] text-white/75 leading-snug flex items-center gap-1.5">
             <MapPin className="w-3.5 h-3.5 text-[#E5C97A] shrink-0" />
-            Studios Prêt + Couture Customisations · curated stock at the city studio.
+            Studios Prêt · curated designer pieces at the city studio.
           </p>
         </div>
       </div>
@@ -41,7 +41,7 @@ const OffersBanner: React.FC = () => (
         <div className="min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--color-myntra-pink)] mb-1">Pan-India</p>
           <h3 className="font-serif text-[20px] md:text-[24px] leading-tight text-[#2A1F12] mb-0.5">Free shipping over ₹1,999.</h3>
-          <p className="text-[12px] md:text-[13px] text-[#5D4E36] leading-snug">Hand-cut to the metre · dispatched in 48 hours.</p>
+          <p className="text-[12px] md:text-[13px] text-[#5D4E36] leading-snug">Dispatched within 48 hours · easy returns.</p>
         </div>
       </div>
     </div>

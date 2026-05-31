@@ -23,7 +23,7 @@ interface Props {
   amount: number;
   initialMethod?: Tab;
   shippingAddress: ShippingAddress;
-  items: { fabricId: string; meters: number; color?: string }[];
+  items: { fabricId: string; quantity: number; color?: string }[];
   couponCode?: string;
   onClose: () => void;
   onSuccess: (order: Order) => void;

@@ -52,10 +52,6 @@ const parseHash = (hash: string): Route => {
     case 'confirmation':
       if (segments[1]) return { name: 'confirmation', orderId: segments[1] };
       return { name: 'home' };
-    case 'customise':
-    case 'couture':
-    case 'studio':
-      return { name: 'customise', productId: segments[1] || params.get('product') || undefined };
     case 'login':
       return { name: 'login' };
     case 'register':
@@ -102,8 +98,6 @@ const buildHash = (route: Route): string => {
       return '#/checkout';
     case 'confirmation':
       return `#/confirmation/${route.orderId}`;
-    case 'customise':
-      return route.productId ? `#/customise/${route.productId}` : '#/customise';
     case 'login':
       return '#/login';
     case 'register':

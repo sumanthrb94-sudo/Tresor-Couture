@@ -10,7 +10,7 @@ import FabricImage from '../components/FabricImage';
 import ProductCard from '../components/ProductCard';
 
 const CartPage: React.FC = () => {
-  const { items, resolved, resolving, updateMeters, removeItem, subtotal, shipping, tax, total } = useCart();
+  const { items, resolved, resolving, updateQuantity, removeItem, subtotal, shipping, tax, total } = useCart();
   const { add: addWish } = useWishlist();
   const { user } = useAuth();
   const { navigate } = useRouter();
@@ -169,9 +169,14 @@ const CartPage: React.FC = () => {
 
             {/* Items */}
             {resolved.map(({ item, fabric }) => {
-              const linePrice = item.meters * fabric.pricePerMeter;
-              const stock = fabric.inStockMeters ?? 999;
-              const options = fabric.lengthOptions?.filter(l => l <= stock) ?? [1, 2, 3, 5];
+              const linePrice = item.quantity * fabric.price;
+              const stock = fabric.stock ?? 999;
+              // Quantity choices: 1…min(stock, 10). Always include the current
+              // value so a line that somehow exceeds the cap still renders.
+              const cap = Math.max(1, Math.min(stock, 10));
+              const options = Array.from(new Set([...Array.from({ length: cap }, (_, i) => i + 1), item.quantity]))
+                .filter(o => o >= 1 && o <= stock)
+                .sort((a, b) => a - b);
 
               return (
                 <div key={`${fabric.id}-${item.color ?? ''}`} className="bg-white border border-[color:var(--color-myntra-border-soft)] p-3 md:p-4 flex gap-3 md:gap-4">
@@ -193,11 +198,11 @@ const CartPage: React.FC = () => {
                     <div className="flex gap-3 mt-2 items-center text-[12px]">
                       <div className="relative">
                         <select
-                          value={item.meters}
-                          onChange={e => updateMeters(fabric.id, item.color, Number(e.target.value))}
+                          value={item.quantity}
+                          onChange={e => updateQuantity(fabric.id, item.color, Number(e.target.value))}
                           className="appearance-none border border-[color:var(--color-myntra-border)] rounded px-2.5 py-1.5 pr-7 text-[12px] font-semibold bg-white"
                         >
-                          {options.map(o => <option key={o} value={o}>Length: {o} m</option>)}
+                          {options.map(o => <option key={o} value={o}>Qty: {o}</option>)}
                         </select>
                         <ChevronDown className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
                       </div>

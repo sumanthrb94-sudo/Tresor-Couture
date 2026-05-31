@@ -4,7 +4,7 @@ import { ordersApi } from '../lib/firebase';
 import { useAuth } from './AuthContext';
 
 export interface PlaceOrderInput {
-  items: { fabricId: string; meters: number; color?: string }[];
+  items: { fabricId: string; quantity: number; color?: string }[];
   shippingAddress: ShippingAddress;
   paymentMethod: PaymentMethod;
   couponCode?: string;

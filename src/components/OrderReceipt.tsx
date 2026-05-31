@@ -102,14 +102,14 @@ const OrderReceipt: React.FC<Props> = ({ order }) => {
               <tr>
                 <th className="px-3 py-2 font-bold">Item</th>
                 <th className="px-3 py-2 font-bold">Colour</th>
-                <th className="px-3 py-2 font-bold text-right">Metres</th>
-                <th className="px-3 py-2 font-bold text-right">Rate / m</th>
+                <th className="px-3 py-2 font-bold text-right">Qty</th>
+                <th className="px-3 py-2 font-bold text-right">Rate</th>
                 <th className="px-3 py-2 font-bold text-right">Line total</th>
               </tr>
             </thead>
             <tbody>
               {order.items.map((it, idx) => {
-                const rate = it.fabricSnapshot.pricePerMeter;
+                const rate = it.fabricSnapshot.price;
                 return (
                   <tr key={`${it.fabricId}-${idx}`} className="border-t border-[color:var(--color-myntra-border-soft)] align-top">
                     <td className="px-3 py-2">
@@ -127,9 +127,9 @@ const OrderReceipt: React.FC<Props> = ({ order }) => {
                       </div>
                     </td>
                     <td className="px-3 py-2">{it.color ?? '—'}</td>
-                    <td className="px-3 py-2 text-right">{it.meters}</td>
+                    <td className="px-3 py-2 text-right">{it.quantity}</td>
                     <td className="px-3 py-2 text-right">{formatINR(rate)}</td>
-                    <td className="px-3 py-2 text-right font-bold">{formatINR(rate * it.meters)}</td>
+                    <td className="px-3 py-2 text-right font-bold">{formatINR(rate * it.quantity)}</td>
                   </tr>
                 );
               })}

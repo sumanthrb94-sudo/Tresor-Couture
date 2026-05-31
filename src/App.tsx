@@ -23,7 +23,6 @@ import type { Fabric } from './types';
 // don't bloat the initial bundle. React.lazy splits each into its own chunk.
 const CheckoutPage      = lazy(() => import('./pages/CheckoutPage'));
 const ConfirmationPage  = lazy(() => import('./pages/ConfirmationPage'));
-const CustomisePage     = lazy(() => import('./pages/CustomisePage'));
 const LoginPage         = lazy(() => import('./pages/LoginPage'));
 const RegisterPage      = lazy(() => import('./pages/RegisterPage'));
 const AccountPage       = lazy(() => import('./pages/AccountPage'));
@@ -165,8 +164,6 @@ const RoutedView: React.FC = () => {
       return <CheckoutPage />;
     case 'confirmation':
       return <ConfirmationPage orderId={route.orderId} />;
-    case 'customise':
-      return <CustomisePage productId={route.productId} />;
     case 'login':
       return <LoginPage />;
     case 'register':

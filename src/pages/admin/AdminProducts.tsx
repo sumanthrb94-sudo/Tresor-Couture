@@ -58,12 +58,6 @@ const discountPercent = (price: number, mrp: number): number => {
   return Math.round(((mrp - price) / mrp) * 100);
 };
 
-const parseCsvNumbers = (raw: string): number[] =>
-  raw
-    .split(',')
-    .map(s => Number(s.trim()))
-    .filter(n => Number.isFinite(n) && n > 0);
-
 const parseCsvStrings = (raw: string): string[] =>
   raw
     .split(',')
@@ -79,8 +73,8 @@ interface Draft {
   brand: string;
   name: string;
   description: string;
-  pricePerMeter: string;
-  mrpPerMeter: string;
+  price: string;
+  mrp: string;
   photo: string;
   gallery1: string;
   gallery2: string;
@@ -90,9 +84,7 @@ interface Draft {
   tagsCsv: string;
   sticker: Fabric['sticker'] | '';
   colors: ColorRow[];
-  lengthOptionsCsv: string;
-  widthInches: string;
-  inStockMeters: string;
+  stock: string;
   weaveType: string;
   rating: string;
   reviewCount: string;
@@ -103,8 +95,8 @@ const emptyDraft = (): Draft => ({
   brand: 'TRESOR',
   name: '',
   description: '',
-  pricePerMeter: '',
-  mrpPerMeter: '',
+  price: '',
+  mrp: '',
   photo: AVAILABLE_PHOTOS[0],
   gallery1: '',
   gallery2: '',
@@ -114,9 +106,7 @@ const emptyDraft = (): Draft => ({
   tagsCsv: '',
   sticker: '',
   colors: [],
-  lengthOptionsCsv: '',
-  widthInches: '',
-  inStockMeters: '',
+  stock: '',
   weaveType: '',
   rating: '',
   reviewCount: ''
@@ -127,8 +117,8 @@ const fabricToDraft = (f: Fabric): Draft => ({
   brand: f.brand,
   name: f.name,
   description: f.description,
-  pricePerMeter: String(f.pricePerMeter),
-  mrpPerMeter: String(f.mrpPerMeter),
+  price: String(f.price),
+  mrp: String(f.mrp),
   photo: f.photo,
   gallery1: f.photoGallery?.[0] ?? '',
   gallery2: f.photoGallery?.[1] ?? '',
@@ -138,9 +128,7 @@ const fabricToDraft = (f: Fabric): Draft => ({
   tagsCsv: (f.tags ?? []).join(', '),
   sticker: f.sticker ?? '',
   colors: (f.colors ?? []).map(c => ({ name: c.name, hex: c.hex })),
-  lengthOptionsCsv: (f.lengthOptions ?? []).join(', '),
-  widthInches: f.widthInches != null ? String(f.widthInches) : '',
-  inStockMeters: f.inStockMeters != null ? String(f.inStockMeters) : '',
+  stock: f.stock != null ? String(f.stock) : '',
   weaveType: f.weaveType ?? '',
   rating: f.rating != null ? String(f.rating) : '',
   reviewCount: f.reviewCount != null ? String(f.reviewCount) : ''
@@ -152,9 +140,9 @@ interface DraftErrors {
   description?: string;
   category?: string;
   origin?: string;
-  pricePerMeter?: string;
-  mrpPerMeter?: string;
-  inStockMeters?: string;
+  price?: string;
+  mrp?: string;
+  stock?: string;
   photo?: string;
 }
 
@@ -167,16 +155,16 @@ const validateDraft = (d: Draft): DraftErrors => {
   if (!d.origin.trim()) errs.origin = 'Origin is required';
   if (!d.photo.trim()) errs.photo = 'Photo path is required';
 
-  const price = Number(d.pricePerMeter);
-  if (!Number.isFinite(price) || price <= 0) errs.pricePerMeter = 'Price must be > 0';
-  const mrp = Number(d.mrpPerMeter);
-  if (!Number.isFinite(mrp) || mrp <= 0) errs.mrpPerMeter = 'MRP must be > 0';
+  const price = Number(d.price);
+  if (!Number.isFinite(price) || price <= 0) errs.price = 'Price must be > 0';
+  const mrp = Number(d.mrp);
+  if (!Number.isFinite(mrp) || mrp <= 0) errs.mrp = 'MRP must be > 0';
   else if (Number.isFinite(price) && mrp < price)
-    errs.mrpPerMeter = 'MRP should be ≥ selling price';
+    errs.mrp = 'MRP should be ≥ selling price';
 
-  if (d.inStockMeters !== '') {
-    const stock = Number(d.inStockMeters);
-    if (!Number.isFinite(stock) || stock < 0) errs.inStockMeters = 'Stock must be ≥ 0';
+  if (d.stock !== '') {
+    const stock = Number(d.stock);
+    if (!Number.isFinite(stock) || stock < 0) errs.stock = 'Stock must be ≥ 0';
   }
   return errs;
 };
@@ -186,7 +174,6 @@ const draftToFabric = (d: Draft, existing?: Fabric): Fabric => {
   const colors = d.colors
     .map(c => ({ name: c.name.trim(), hex: c.hex.trim() }))
     .filter(c => c.name && c.hex);
-  const lengthOptions = parseCsvNumbers(d.lengthOptionsCsv);
   const tags = parseCsvStrings(d.tagsCsv);
   const photo = d.photo.trim();
 
@@ -195,8 +182,8 @@ const draftToFabric = (d: Draft, existing?: Fabric): Fabric => {
     brand: d.brand.trim(),
     name: d.name.trim(),
     description: d.description.trim(),
-    pricePerMeter: Number(d.pricePerMeter),
-    mrpPerMeter: Number(d.mrpPerMeter),
+    price: Number(d.price),
+    mrp: Number(d.mrp),
     photo,
     photoGallery: gallery.length ? gallery : undefined,
     image: existing?.image ?? photo,
@@ -208,9 +195,7 @@ const draftToFabric = (d: Draft, existing?: Fabric): Fabric => {
     tags,
     sticker: d.sticker || undefined,
     colors: colors.length ? colors : undefined,
-    lengthOptions: lengthOptions.length ? lengthOptions : undefined,
-    widthInches: d.widthInches !== '' ? Number(d.widthInches) : undefined,
-    inStockMeters: d.inStockMeters !== '' ? Number(d.inStockMeters) : undefined,
+    stock: d.stock !== '' ? Number(d.stock) : undefined,
     weaveType: d.weaveType.trim() || undefined,
     rating:
       d.rating !== '' && Number.isFinite(Number(d.rating)) ? Number(d.rating) : existing?.rating,
@@ -300,8 +285,8 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     onChange({ ...draft, [key]: value });
 
-  const priceNum = Number(draft.pricePerMeter);
-  const mrpNum = Number(draft.mrpPerMeter);
+  const priceNum = Number(draft.price);
+  const mrpNum = Number(draft.mrp);
   const disc = discountPercent(priceNum, mrpNum);
   const mrpWarn = Number.isFinite(priceNum) && Number.isFinite(mrpNum) && mrpNum < priceNum;
 
@@ -412,41 +397,32 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
           <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--color-myntra-ink-mute)] mb-3">
             Pricing &amp; Stock
           </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <Field label="Price / m (₹)" error={errors.pricePerMeter}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <Field label="Price (₹)" error={errors.price}>
               <input
                 type="number"
                 min={0}
                 className="input-box"
-                value={draft.pricePerMeter}
-                onChange={e => set('pricePerMeter', e.target.value)}
+                value={draft.price}
+                onChange={e => set('price', e.target.value)}
               />
             </Field>
-            <Field label="MRP / m (₹)" error={errors.mrpPerMeter}>
+            <Field label="MRP (₹)" error={errors.mrp}>
               <input
                 type="number"
                 min={0}
                 className="input-box"
-                value={draft.mrpPerMeter}
-                onChange={e => set('mrpPerMeter', e.target.value)}
+                value={draft.mrp}
+                onChange={e => set('mrp', e.target.value)}
               />
             </Field>
-            <Field label="Stock (m)" error={errors.inStockMeters}>
+            <Field label="Stock (units)" error={errors.stock}>
               <input
                 type="number"
                 min={0}
                 className="input-box"
-                value={draft.inStockMeters}
-                onChange={e => set('inStockMeters', e.target.value)}
-              />
-            </Field>
-            <Field label="Width (in)">
-              <input
-                type="number"
-                min={0}
-                className="input-box"
-                value={draft.widthInches}
-                onChange={e => set('widthInches', e.target.value)}
+                value={draft.stock}
+                onChange={e => set('stock', e.target.value)}
               />
             </Field>
           </div>
@@ -613,16 +589,6 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
             </button>
           </div>
 
-          <div className="mt-4">
-            <Field label="Length options (comma-separated meters)">
-              <input
-                className="input-box"
-                value={draft.lengthOptionsCsv}
-                onChange={e => set('lengthOptionsCsv', e.target.value)}
-                placeholder="1, 2, 3, 5"
-              />
-            </Field>
-          </div>
         </section>
 
         {/* Tags */}
@@ -942,7 +908,7 @@ const AdminProducts: React.FC = () => {
                 </thead>
                 <tbody>
                   {filtered.map(f => {
-                    const stock = f.inStockMeters ?? 0;
+                    const stock = f.stock ?? 0;
                     const lowStock = stock < 10;
                     return (
                       <tr
@@ -981,13 +947,13 @@ const AdminProducts: React.FC = () => {
                         </Td>
                         <Td>
                           <div className="font-bold text-[color:var(--color-myntra-navy)]">
-                            {formatINR(f.pricePerMeter)}
+                            {formatINR(f.price)}
                           </div>
-                          {f.mrpPerMeter > f.pricePerMeter && (
+                          {f.mrp > f.price && (
                             <div className="text-[11px] text-[color:var(--color-myntra-ink-mute)]">
-                              <span className="line-through">{formatINR(f.mrpPerMeter)}</span>
+                              <span className="line-through">{formatINR(f.mrp)}</span>
                               <span className="ml-1.5 text-[color:var(--color-myntra-green)] font-bold">
-                                {discountPercent(f.pricePerMeter, f.mrpPerMeter)}% off
+                                {discountPercent(f.price, f.mrp)}% off
                               </span>
                             </div>
                           )}
@@ -1042,7 +1008,7 @@ const AdminProducts: React.FC = () => {
             {/* mobile cards */}
             <ul className="md:hidden divide-y divide-[color:var(--color-myntra-border-soft)]">
               {filtered.map(f => {
-                const stock = f.inStockMeters ?? 0;
+                const stock = f.stock ?? 0;
                 const lowStock = stock < 10;
                 return (
                   <li key={f.id} className="p-3 flex gap-3">
@@ -1073,11 +1039,11 @@ const AdminProducts: React.FC = () => {
                           {f.category}
                         </span>
                         <span className="text-[13px] font-bold text-[color:var(--color-myntra-navy)]">
-                          {formatINR(f.pricePerMeter)}
+                          {formatINR(f.price)}
                         </span>
-                        {f.mrpPerMeter > f.pricePerMeter && (
+                        {f.mrp > f.price && (
                           <span className="text-[11px] text-[color:var(--color-myntra-ink-mute)] line-through">
-                            {formatINR(f.mrpPerMeter)}
+                            {formatINR(f.mrp)}
                           </span>
                         )}
                         <span
@@ -1085,7 +1051,7 @@ const AdminProducts: React.FC = () => {
                             lowStock ? 'text-[#A12626]' : 'text-[color:var(--color-myntra-ink-soft)]'
                           }`}
                         >
-                          {stock} m in stock
+                          {stock} in stock
                         </span>
                       </div>
                       <div className="mt-2 flex gap-1.5">

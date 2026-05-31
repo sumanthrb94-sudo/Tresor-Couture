@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { Check, ChevronDown, ChevronUp, Heart, MapPin, ShieldCheck, ShoppingBag, Star, Truck, Zap } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Heart, MapPin, Minus, Plus, ShieldCheck, ShoppingBag, Star, Truck, Zap } from 'lucide-react';
 import { formatINR } from '../constants';
 import { useRouter } from '../context/RouterContext';
 import { useCart } from '../context/CartContext';
@@ -61,7 +61,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
   }, [productId, reloadKey]);
 
   const [selectedColor, setSelectedColor] = useState<string | undefined>(fabric?.colors?.[0]?.name);
-  const [meters, setMeters] = useState<number>(fabric?.lengthOptions?.[0] ?? 1);
+  const [quantity, setQuantity] = useState<number>(1);
   const [activeImage, setActiveImage] = useState<number>(0);
   const [pin, setPin] = useState('');
   const [pinChecked, setPinChecked] = useState<null | boolean>(null);
@@ -74,11 +74,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
   useEffect(() => {
     if (fabric) {
       setSelectedColor(fabric.colors?.[0]?.name);
-      // Default to the first length that's actually in stock so partial-stock
-      // products (stock below the default option) still have a valid selection.
-      const opts = fabric.lengthOptions ?? [1, 2, 3, 5];
-      const st = fabric.inStockMeters ?? 0;
-      setMeters(opts.find(l => l <= st) ?? opts[0] ?? 1);
+      setQuantity(1);
       setActiveImage(0);
     }
   }, [fabric]);
@@ -158,19 +154,18 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
     );
   }
 
-  const stock = fabric.inStockMeters ?? 0;
-  const lengthOptions = fabric.lengthOptions ?? [1, 2, 3, 5];
-  const availableLengths = lengthOptions.filter(l => l <= stock);
-  const soldOut = stock <= 0 || availableLengths.length === 0;
+  const stock = fabric.stock ?? 0;
+  const soldOut = stock <= 0;
   const wished = hasWish(fabric.id);
+  const clampQty = (q: number) => Math.max(1, Math.min(q, Math.max(1, stock)));
 
   const handleAdd = () => {
     if (!fabric) return;
     // Idempotency guard: a fast second tap (either the in-card or the mobile
     // sticky CTA) within the 650ms pre-navigate window must not add twice.
     if (justAdded) return;
-    addItem({ fabricId: fabric.id, meters, color: selectedColor });
-    analytics.addToCart(fabric.id, fabric.name, fabric.pricePerMeter, meters);
+    addItem({ fabricId: fabric.id, quantity, color: selectedColor });
+    analytics.addToCart(fabric.id, fabric.name, fabric.price, quantity);
     setJustAdded(true);
     if (addTimerRef.current) clearTimeout(addTimerRef.current);
     addTimerRef.current = setTimeout(() => {
@@ -269,7 +264,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
             <hr className="border-[color:var(--color-myntra-border-soft)] mb-4" />
 
             <div className="flex items-baseline gap-2 flex-wrap mb-1">
-              <span className="text-[24px] font-extrabold text-[color:var(--color-myntra-navy)]">{formatINR(fabric.pricePerMeter)}</span>
+              <span className="text-[24px] font-extrabold text-[color:var(--color-myntra-navy)]">{formatINR(fabric.price)}</span>
             </div>
             <p className="text-[13px] font-bold text-[color:var(--color-myntra-green)] mb-1">inclusive of all taxes</p>
 
@@ -295,32 +290,39 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
               </div>
             )}
 
-            {/* Length pills */}
+            {/* Quantity stepper */}
             <div className="mb-6">
               <div className="flex items-baseline justify-between mb-3">
-                <p className="text-[13px] font-extrabold uppercase tracking-wider text-[color:var(--color-myntra-navy)]">Select Length</p>
-                <span className="text-[12px] text-[color:var(--color-myntra-pink)] font-semibold">Size Chart</span>
+                <p className="text-[13px] font-extrabold uppercase tracking-wider text-[color:var(--color-myntra-navy)]">Quantity</p>
               </div>
               {soldOut ? (
                 <p className="text-[13px] font-bold text-[color:var(--color-myntra-pink)] bg-[color:var(--color-myntra-bg-sale)] border border-[color:var(--color-myntra-border)] rounded px-3 py-2">
-                  Out of stock — this weave is currently off the loom.
+                  Out of stock — currently unavailable.
                 </p>
               ) : (
                 <>
-                  <div className="flex gap-2 flex-wrap">
-                    {availableLengths.map(l => (
-                      <button
-                        key={l}
-                        onClick={() => setMeters(l)}
-                        className={`min-w-[56px] h-11 rounded-full border-2 text-[13px] font-bold transition-colors ${meters === l ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)] bg-[#F5E8C8]' : 'border-[color:var(--color-myntra-border)] text-[color:var(--color-myntra-navy)] hover:border-[color:var(--color-myntra-navy)]'}`}
-                      >
-                        {l} m
-                      </button>
-                    ))}
+                  <div className="inline-flex items-center border-2 border-[color:var(--color-myntra-border)] rounded-full overflow-hidden">
+                    <button
+                      onClick={() => setQuantity(q => clampQty(q - 1))}
+                      disabled={quantity <= 1}
+                      aria-label="Decrease quantity"
+                      className="w-11 h-11 flex items-center justify-center text-[color:var(--color-myntra-navy)] disabled:opacity-40 hover:bg-[color:var(--color-myntra-bg-soft)] transition-colors"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span className="min-w-[48px] text-center text-[15px] font-bold text-[color:var(--color-myntra-navy)]" aria-live="polite">{quantity}</span>
+                    <button
+                      onClick={() => setQuantity(q => clampQty(q + 1))}
+                      disabled={quantity >= stock}
+                      aria-label="Increase quantity"
+                      className="w-11 h-11 flex items-center justify-center text-[color:var(--color-myntra-navy)] disabled:opacity-40 hover:bg-[color:var(--color-myntra-bg-soft)] transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
                   </div>
                   {stock < 10 && (
                     <p className="text-[12px] text-[color:var(--color-myntra-pink)] font-semibold mt-2">
-                      Only {stock}m left — order soon
+                      Only {stock} left in stock — order soon
                     </p>
                   )}
                 </>
@@ -332,7 +334,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
               <button
                 id="pdp-add-to-bag"
                 onClick={handleAdd}
-                disabled={soldOut || meters <= 0 || meters > stock || justAdded}
+                disabled={soldOut || quantity < 1 || quantity > stock || justAdded}
                 className="btn-primary flex-1 inline-flex justify-center items-center gap-2"
               >
                 {soldOut ? (
@@ -420,11 +422,10 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
                     <div className="pb-4 text-[13px] text-[color:var(--color-myntra-ink)] leading-relaxed">
                       {key === 'specs' && (
                         <dl className="grid grid-cols-2 gap-x-6 gap-y-2">
-                          <dt className="text-[color:var(--color-myntra-ink-soft)]">Width</dt><dd className="font-semibold">{fabric.widthInches ? `${fabric.widthInches}"` : '—'}</dd>
-                          <dt className="text-[color:var(--color-myntra-ink-soft)]">Weave Type</dt><dd className="font-semibold">{fabric.weaveType ?? '—'}</dd>
+                          <dt className="text-[color:var(--color-myntra-ink-soft)]">Fabric</dt><dd className="font-semibold">{fabric.weaveType ?? fabric.category}</dd>
                           <dt className="text-[color:var(--color-myntra-ink-soft)]">Origin</dt><dd className="font-semibold">{fabric.origin}</dd>
                           <dt className="text-[color:var(--color-myntra-ink-soft)]">Category</dt><dd className="font-semibold">{fabric.category}</dd>
-                          <dt className="text-[color:var(--color-myntra-ink-soft)]">In Stock</dt><dd className="font-semibold">{stock} m</dd>
+                          <dt className="text-[color:var(--color-myntra-ink-soft)]">In Stock</dt><dd className="font-semibold">{stock} {stock === 1 ? 'piece' : 'pieces'}</dd>
                           <dt className="text-[color:var(--color-myntra-ink-soft)]">Tags</dt><dd className="font-semibold">{fabric.tags.join(', ')}</dd>
                         </dl>
                       )}
@@ -476,7 +477,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
         onAdd={handleAdd}
         onWishlist={handleWish}
         wished={wished}
-        disabled={soldOut || meters <= 0 || meters > stock || justAdded}
+        disabled={soldOut || quantity < 1 || quantity > stock || justAdded}
         triggerId="pdp-add-to-bag"
       />
     </main>

@@ -48,8 +48,8 @@ export function trackPageView(path: string, title?: string): void {
 export const analytics = {
   viewItem: (id: string, name: string, price: number) =>
     track('view_item', { currency: 'INR', value: price, items: [{ item_id: id, item_name: name, price }] }),
-  addToCart: (id: string, name: string, price: number, meters: number) =>
-    track('add_to_cart', { currency: 'INR', value: price * meters, items: [{ item_id: id, item_name: name, price, quantity: meters }] }),
+  addToCart: (id: string, name: string, price: number, quantity: number) =>
+    track('add_to_cart', { currency: 'INR', value: price * quantity, items: [{ item_id: id, item_name: name, price, quantity }] }),
   beginCheckout: (value: number, count: number) =>
     track('begin_checkout', { currency: 'INR', value, item_count: count }),
   addPaymentInfo: (value: number, method: string) =>

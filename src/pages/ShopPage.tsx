@@ -138,15 +138,15 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
       if (colors.size > 0 && !(f.colors ?? []).some(c => colors.has(c.name))) return false;
       if (origins.size > 0 && !origins.has(f.origin.split(',')[0].trim())) return false;
       if (priceBrackets.size > 0) {
-        const ok = PRICE_BRACKETS.some(b => priceBrackets.has(b.id) && f.pricePerMeter >= b.min && f.pricePerMeter < b.max);
+        const ok = PRICE_BRACKETS.some(b => priceBrackets.has(b.id) && f.price >= b.min && f.price < b.max);
         if (!ok) return false;
       }
       return true;
     });
 
     switch (sort) {
-      case 'price-asc': list = [...list].sort((a, b) => a.pricePerMeter - b.pricePerMeter); break;
-      case 'price-desc': list = [...list].sort((a, b) => b.pricePerMeter - a.pricePerMeter); break;
+      case 'price-asc': list = [...list].sort((a, b) => a.price - b.price); break;
+      case 'price-desc': list = [...list].sort((a, b) => b.price - a.price); break;
       case 'rating': list = [...list].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0)); break;
       case 'popularity': list = [...list].sort((a, b) => (b.reviewCount ?? 0) - (a.reviewCount ?? 0)); break;
       case 'newest': list = [...list].reverse(); break;

@@ -18,13 +18,13 @@ const FIRESTORE_WRITE_DEBOUNCE_MS = 600;
 interface CartContextValue {
   items: CartItem[];
   addItem: (item: CartItem) => void;
-  updateMeters: (fabricId: string, color: string | undefined, meters: number) => void;
+  updateQuantity: (fabricId: string, color: string | undefined, quantity: number) => void;
   removeItem: (fabricId: string, color: string | undefined) => void;
   clear: () => void;
   /** Alias of clear() — semantic name used by checkout/payment flow. */
   clearCart: () => void;
   itemCount: number;
-  meterCount: number;
+  unitCount: number;
   subtotal: number;
   shipping: number;
   tax: number;
@@ -57,9 +57,9 @@ const mergeLines = (a: CartItem[], b: CartItem[]): CartItem[] => {
   for (const inc of b) {
     const idx = out.findIndex(x => sameLine(x, inc));
     if (idx === -1) out.push(inc);
-    else out[idx] = { ...out[idx], meters: out[idx].meters + inc.meters };
+    else out[idx] = { ...out[idx], quantity: out[idx].quantity + inc.quantity };
   }
-  return out.filter(x => x.meters > 0);
+  return out.filter(x => x.quantity > 0);
 };
 
 const sanitiseItems = (raw: unknown): CartItem[] => {
@@ -68,9 +68,9 @@ const sanitiseItems = (raw: unknown): CartItem[] => {
     .filter((x): x is CartItem =>
       !!x && typeof x === 'object'
       && typeof (x as CartItem).fabricId === 'string'
-      && typeof (x as CartItem).meters === 'number'
+      && typeof (x as CartItem).quantity === 'number'
     )
-    .map(x => ({ fabricId: x.fabricId, meters: x.meters, color: x.color }));
+    .map(x => ({ fabricId: x.fabricId, quantity: x.quantity, color: x.color }));
 };
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -249,21 +249,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const idx = prev.findIndex(i => sameLine(i, incoming));
       if (idx === -1) return [...prev, incoming];
       const next = [...prev];
-      next[idx] = { ...next[idx], meters: next[idx].meters + incoming.meters };
+      next[idx] = { ...next[idx], quantity: next[idx].quantity + incoming.quantity };
       return next;
     });
   };
 
-  const updateMeters = (fabricId: string, color: string | undefined, meters: number) => {
+  const updateQuantity = (fabricId: string, color: string | undefined, quantity: number) => {
     setItems(prev =>
       prev
-        .map(i => (sameLine(i, { fabricId, color, meters }) ? { ...i, meters } : i))
-        .filter(i => i.meters > 0)
+        .map(i => (sameLine(i, { fabricId, color, quantity }) ? { ...i, quantity } : i))
+        .filter(i => i.quantity > 0)
     );
   };
 
   const removeItem = (fabricId: string, color: string | undefined) => {
-    setItems(prev => prev.filter(i => !sameLine(i, { fabricId, color, meters: 0 })));
+    setItems(prev => prev.filter(i => !sameLine(i, { fabricId, color, quantity: 0 })));
   };
 
   const clear = () => {
@@ -298,22 +298,22 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       })
       .filter((x): x is { item: CartItem; fabric: Fabric } => x !== null);
 
-    const subtotal = resolved.reduce((sum, { item, fabric }) => sum + item.meters * fabric.pricePerMeter, 0);
+    const subtotal = resolved.reduce((sum, { item, fabric }) => sum + item.quantity * fabric.price, 0);
     const shipping = subtotal === 0 || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FLAT_RATE;
     const tax = Math.round(subtotal * TAX_RATE);
     const total = subtotal + shipping + tax;
     const itemCount = resolved.length;
-    const meterCount = resolved.reduce((sum, { item }) => sum + item.meters, 0);
+    const unitCount = resolved.reduce((sum, { item }) => sum + item.quantity, 0);
 
     return {
       items,
       addItem,
-      updateMeters,
+      updateQuantity,
       removeItem,
       clear,
       clearCart,
       itemCount,
-      meterCount,
+      unitCount,
       subtotal,
       shipping,
       tax,

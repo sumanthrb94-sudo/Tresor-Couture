@@ -20,7 +20,6 @@ const NAV: NavEntry[] = [
   ...MASTER_CATEGORIES
     .filter(m => m !== 'Studios Prêt')
     .map<NavEntry>(m => ({ kind: 'master', label: m })),
-  { kind: 'static', label: 'Couture Customisations', tone: 'premium' },
   { kind: 'master', label: 'Studios Prêt', tone: 'premium' }
 ];
 
@@ -229,14 +228,7 @@ const Navbar: React.FC = () => {
             </button>
             {NAV.map(n => {
               if (n.kind === 'static') {
-                const click = () => {
-                  if (n.label === 'Couture Customisations') {
-                    setMobileOpen(false);
-                    navigate({ name: 'customise' });
-                  } else {
-                    goShop();
-                  }
-                };
+                const click = () => { goShop(); };
                 const premium = n.tone === 'premium';
                 return (
                   <button
@@ -339,11 +331,6 @@ const Navbar: React.FC = () => {
                 (n.kind === 'static' && n.label === 'Sale' && route.name === 'shop' && !activeCat);
               const onClick = () => {
                 if (n.kind === 'master') goShop(n.label);
-                else if (n.label === 'Couture Customisations') {
-                  setMobileOpen(false);
-                  setHoverCat(null);
-                  navigate({ name: 'customise' });
-                }
                 else goShop();
               };
               const isPremium = n.tone === 'premium';

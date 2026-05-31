@@ -152,7 +152,7 @@ const CheckoutPage: React.FC = () => {
   }, []);
 
   const mrpTotal = useMemo(
-    () => resolved.reduce((s, { item, fabric }) => s + fabric.mrpPerMeter * item.meters, 0),
+    () => resolved.reduce((s, { item, fabric }) => s + fabric.mrp * item.quantity, 0),
     [resolved]
   );
 
@@ -270,7 +270,7 @@ const CheckoutPage: React.FC = () => {
     try {
       analytics.addPaymentInfo(payable, 'cod');
       const placed = await placeOrder({
-        items: resolved.map(({ item }) => ({ fabricId: item.fabricId, meters: item.meters, color: item.color })),
+        items: resolved.map(({ item }) => ({ fabricId: item.fabricId, quantity: item.quantity, color: item.color })),
         shippingAddress: address,
         paymentMethod: 'cod',
         couponCode: couponCode ?? undefined,
@@ -502,9 +502,9 @@ const CheckoutPage: React.FC = () => {
                       <div className="flex-1 min-w-0">
                         <p className="text-[12px] font-bold truncate">{fabric.brand}</p>
                         <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] truncate">{fabric.name}</p>
-                        <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)]">{item.meters} m{item.color ? ` · ${item.color}` : ''}</p>
+                        <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)]">Qty {item.quantity}{item.color ? ` · ${item.color}` : ''}</p>
                       </div>
-                      <p className="text-[13px] font-bold whitespace-nowrap">{formatINR(item.meters * fabric.pricePerMeter)}</p>
+                      <p className="text-[13px] font-bold whitespace-nowrap">{formatINR(item.quantity * fabric.price)}</p>
                     </li>
                   ))}
                 </ul>
