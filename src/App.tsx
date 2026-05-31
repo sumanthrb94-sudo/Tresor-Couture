@@ -13,6 +13,8 @@ import ProductRail from './components/ProductRail';
 import LookbookRail from './components/LookbookRail';
 import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
+import ConsentBanner from './components/ConsentBanner';
+import { initAnalytics } from './lib/analytics';
 import ShopPage from './pages/ShopPage';
 import ProductPage from './pages/ProductPage';
 import CartPage from './pages/CartPage';
@@ -209,6 +211,12 @@ const Chrome: React.FC = () => {
 };
 
 function App() {
+  // If the visitor accepted on a previous visit, load the trackers right away.
+  // No-op when no analytics IDs are configured or consent wasn't granted.
+  useEffect(() => {
+    initAnalytics();
+  }, []);
+
   return (
     <RouterProvider>
       <AuthProvider>
@@ -217,6 +225,7 @@ function App() {
             <CartProvider>
               <OrderProvider>
                 <Chrome />
+                <ConsentBanner />
               </OrderProvider>
             </CartProvider>
           </WishlistProvider>

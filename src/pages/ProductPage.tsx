@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { Check, ChevronDown, ChevronUp, Heart, MapPin, ShieldCheck, ShoppingBag, Star, Truck, Zap } from 'lucide-react';
-import { formatINR } from '../constants';
+import { formatINR, isPerUnit } from '../constants';
 import { useRouter } from '../context/RouterContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';

@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { Route } from '../types';
+import { trackPageView } from '../lib/analytics';
 
 const parseLocation = (): Route => {
   // Firebase's email-action handler redirects to a path-based URL with the
@@ -143,6 +144,15 @@ export const RouterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       window.removeEventListener('popstate', handler);
     };
   }, []);
+
+  // Fire an analytics pageview after every successful route change (including
+  // the initial load). trackPageView is a no-op until trackers are configured
+  // AND consent is granted, so this is always safe. We report a clean path
+  // (the hash without its leading '#') so analytics dashboards stay readable.
+  useEffect(() => {
+    const path = buildHash(route).replace(/^#/, '') || '/';
+    trackPageView(path);
+  }, [route]);
 
   const navigate = useCallback((next: Route) => {
     // If the current URL is a path-based route (e.g. /auth/action after a

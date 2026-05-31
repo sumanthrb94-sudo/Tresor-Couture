@@ -5,7 +5,6 @@
 export type MasterCategory =
   | 'Fabrics'
   | 'Dyeable Fabrics'
-  | 'Lace'
   | 'Sarees'
   | 'Lehenga Cholis'
   | 'Anarkalis'
@@ -18,10 +17,20 @@ export interface Fabric {
   brand: string;
   name: string;
   description: string;
-  /** Current selling price per meter. */
+  /** Current selling price per meter. For per-unit items (finished garments)
+   *  this field carries the per-piece selling price. */
   pricePerMeter: number;
-  /** Original "MRP" per meter (always >= pricePerMeter). */
+  /** Original "MRP" per meter (always >= pricePerMeter). For per-unit items
+   *  this is the per-piece MRP. */
   mrpPerMeter: number;
+  /** Pricing model. 'per-meter' (default when absent) is for fabric sold by
+   *  length; 'per-unit' is for finished garments sold as whole pieces — the
+   *  price fields are then interpreted as per-piece and quantity replaces
+   *  length. */
+  priceMode?: 'per-meter' | 'per-unit';
+  /** Optional noun for a single unit (e.g. "piece", "set"). Defaults to
+   *  "piece" for per-unit items; unused for per-meter items. */
+  unitLabel?: string;
   /** Real photograph URL. */
   photo: string;
   /** Additional photographs for the gallery. */

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Heart, Star } from 'lucide-react';
 import { Fabric } from '../types';
-import { formatINR } from '../constants';
+import { formatINR, isPerUnit } from '../constants';
 import { useRouter } from '../context/RouterContext';
 import { useWishlist } from '../context/WishlistContext';
 import FabricImage from './FabricImage';
@@ -58,6 +58,9 @@ const ProductCard: React.FC<Props> = ({ fabric, compact = false }) => {
             <span className="text-[14px] font-bold text-[color:var(--color-myntra-navy)]">
               {formatINR(fabric.pricePerMeter)}
             </span>
+            {!isPerUnit(fabric) && (
+              <span className="text-[11px] font-semibold text-[color:var(--color-myntra-ink-mute)]">/m</span>
+            )}
           </div>
         </div>
       </button>

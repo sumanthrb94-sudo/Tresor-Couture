@@ -1,9 +1,17 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-IN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#F5ECDC" />
+    <link rel="canonical" href="https://tresor-couture.vercel.app/" />
+
+    <!--
+      Analytics & marketing trackers (GA4 / Meta Pixel) are intentionally NOT
+      hardcoded here. They are injected at runtime by src/lib/analytics.ts, but
+      only after the visitor grants consent and only if the corresponding
+      VITE_GA4_MEASUREMENT_ID / VITE_META_PIXEL_ID env vars are configured.
+    -->
 
     <title>Tresor Couture · Heritage Indian Fabrics</title>
     <meta
@@ -43,6 +51,16 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <div style="max-width: 640px; margin: 4rem auto; padding: 0 1.5rem; font-family: system-ui, sans-serif; text-align: center; color: #2A2520;">
+        <h1 style="font-size: 1.5rem; margin-bottom: 0.75rem;">Tresor Couture · Heritage Indian Fabrics</h1>
+        <p style="line-height: 1.6;">
+          Tresor Couture rescues India's dying weaves — Banarasi, Patola, Jamdani,
+          Kanjivaram, Pashmina and more. Hand-woven luxury fabrics, sold by the meter
+          and shipped worldwide. This shop needs JavaScript enabled to browse the catalogue.
+        </p>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

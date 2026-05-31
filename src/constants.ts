@@ -17,7 +17,28 @@ const p = (src: string, w = 1000, h = 1250) => photoUrl(src, { w, h });
 
 const BRAND = 'TRESOR';
 
-export const FABRICS: Fabric[] = [
+/**
+ * Master categories whose products are finished garments sold as whole
+ * pieces (sarees, lehengas, anarkalis, gowns, sherwanis) rather than fabric
+ * cut to length. These default to a per-unit pricing model.
+ */
+export const PER_UNIT_MASTER_CATEGORIES: MasterCategory[] = [
+  'Sarees',
+  'Lehenga Cholis',
+  'Anarkalis',
+  'Western Wear',
+  'Studios Prêt'
+];
+
+/** Resolve the effective pricing mode for a product (default per-meter). */
+export const priceModeOf = (f: Pick<Fabric, 'priceMode' | 'masterCategory'>): 'per-meter' | 'per-unit' =>
+  f.priceMode ?? (PER_UNIT_MASTER_CATEGORIES.includes(f.masterCategory) ? 'per-unit' : 'per-meter');
+
+/** True when the product is sold as whole pieces rather than cut to length. */
+export const isPerUnit = (f: Pick<Fabric, 'priceMode' | 'masterCategory'>): boolean =>
+  priceModeOf(f) === 'per-unit';
+
+const RAW_FABRICS: Fabric[] = [
   {
     id: '1',
     brand: BRAND,
@@ -916,6 +937,17 @@ export const FABRICS: Fabric[] = [
   }
 ];
 
+/**
+ * Public catalogue. Finished garments are stamped with `priceMode: 'per-unit'`
+ * so the price fields are read as per-piece and a quantity selector replaces
+ * the meter-length pills. Fabrics + Dyeable Fabrics stay per-meter.
+ */
+export const FABRICS: Fabric[] = RAW_FABRICS.map(f =>
+  PER_UNIT_MASTER_CATEGORIES.includes(f.masterCategory)
+    ? { ...f, priceMode: 'per-unit' as const, unitLabel: f.unitLabel ?? 'piece' }
+    : { ...f, priceMode: 'per-meter' as const }
+);
+
 export const COLLECTIONS: Collection[] = [
   {
     id: 'heritage',
@@ -981,7 +1013,6 @@ export const CATEGORIES: Fabric['category'][] = ['Silk', 'Cotton', 'Wool', 'Line
  */
 export const MASTER_CATEGORIES: MasterCategory[] = [
   'Dyeable Fabrics',
-  'Lace',
   'Sarees',
   'Lehenga Cholis',
   'Anarkalis',
@@ -997,7 +1028,6 @@ export const MASTER_CATEGORIES: MasterCategory[] = [
 export const MASTER_CATEGORY_TREE: Record<MasterCategory, string[]> = {
   Fabrics: ['Silk', 'Cotton', 'Wool', 'Linen', 'Satin', 'Mixed'],
   'Dyeable Fabrics': ['Cotton', 'Silk', 'Linen', 'Mixed'],
-  Lace: ['Chantilly', 'French', 'Embroidered', 'Cotton', 'Trim & Edging'],
   Sarees: ['Half Sarees', 'Banarasi', 'Kanjivaram', 'Patola', 'Bandhani', 'Jamdani', 'Mashru'],
   'Lehenga Cholis': ['Bridal', 'Festive', 'Contemporary'],
   Anarkalis: ['Floor-length', 'Knee-length', 'Embroidered'],
@@ -1008,7 +1038,6 @@ export const MASTER_CATEGORY_TREE: Record<MasterCategory, string[]> = {
 /** Tile metadata for the home-page CategoryStrip and navbar mega-menu. */
 export const MASTER_CATEGORY_TILES: { name: MasterCategory; color: string; tagline: string }[] = [
   { name: 'Dyeable Fabrics',  color: '#F2E4C4', tagline: 'Ready for your palette' },
-  { name: 'Lace',             color: '#EDE4D2', tagline: 'Hand-knotted trims & edging' },
   { name: 'Sarees',           color: '#C9A267', tagline: 'Six yards of heritage' },
   { name: 'Lehenga Cholis',   color: '#D9B26B', tagline: 'For the aisle and after' },
   { name: 'Anarkalis',        color: '#E0BFA0', tagline: 'Royal silhouettes, modern cuts' },
@@ -1097,7 +1126,7 @@ export const CATEGORY_TILES: { name: string; category: string; color: string }[]
 
 /* Offer ticker — looks like Myntra's sticky deals strip. */
 export const OFFER_TICKER: string[] = [
-  '⚡ 40-MINUTE DELIVERY IN HYDERABAD ON DESIGNER WEAR',
+  '⚡ FAST DELIVERY ACROSS HYDERABAD ON DESIGNER WEAR',
   'FREE SHIPPING ON ORDERS ABOVE ₹1,999',
   'HAND-CUT IN INDIA · SHIPPED WORLDWIDE'
 ];
