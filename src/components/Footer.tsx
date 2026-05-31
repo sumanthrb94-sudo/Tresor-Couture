@@ -1,7 +1,10 @@
-import React from 'react';
-import { Facebook, Instagram, Twitter, Youtube, Phone, Mail, ShieldCheck, Truck, Zap } from 'lucide-react';
+import React, { useState } from 'react';
+import { Facebook, Instagram, Twitter, Youtube, Phone, Mail, ShieldCheck, Truck, Zap, Check } from 'lucide-react';
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../context/AuthContext';
+import { subscribeContact } from '../lib/notify';
+
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 const cols = [
   {
@@ -21,6 +24,17 @@ const cols = [
 const Footer: React.FC = () => {
   const { navigate } = useRouter();
   const { user } = useAuth();
+  const [email, setEmail] = useState('');
+  const [subState, setSubState] = useState<'idle' | 'busy' | 'done' | 'error'>('idle');
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!EMAIL_RE.test(email.trim())) { setSubState('error'); return; }
+    setSubState('busy');
+    await subscribeContact(email.trim().toLowerCase(), 'footer');
+    setSubState('done');
+    setEmail('');
+  };
 
   return (
     <footer className="bg-[color:var(--color-myntra-bg-soft)] mt-10 md:mt-16">
@@ -68,6 +82,32 @@ const Footer: React.FC = () => {
               Download on iOS
             </div>
           </div>
+
+          <h4 className="text-[12px] font-extrabold uppercase tracking-[0.15em] text-[color:var(--color-myntra-navy)] mb-2">
+            Get 10% off your first order
+          </h4>
+          {subState === 'done' ? (
+            <p className="text-[13px] text-[color:var(--color-myntra-green)] font-semibold mb-6 inline-flex items-center gap-1.5">
+              <Check className="w-4 h-4" /> You're on the list — check your inbox.
+            </p>
+          ) : (
+            <form onSubmit={handleSubscribe} className="flex gap-2 mb-6 max-w-sm" noValidate>
+              <input
+                type="email"
+                value={email}
+                onChange={e => { setEmail(e.target.value); if (subState === 'error') setSubState('idle'); }}
+                placeholder="Your email"
+                aria-label="Email for newsletter"
+                className="input-box flex-1"
+              />
+              <button type="submit" disabled={subState === 'busy'} className="btn-primary whitespace-nowrap disabled:opacity-60">
+                {subState === 'busy' ? '…' : 'Subscribe'}
+              </button>
+            </form>
+          )}
+          {subState === 'error' && (
+            <p className="text-[12px] text-[color:var(--color-myntra-pink)] font-semibold -mt-4 mb-4">Please enter a valid email.</p>
+          )}
 
           <h4 className="text-[12px] font-extrabold uppercase tracking-[0.15em] text-[color:var(--color-myntra-navy)] mb-3">
             Keep in Touch

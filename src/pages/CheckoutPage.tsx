@@ -8,6 +8,7 @@ import { formatINR } from '../constants';
 import { PaymentMethod, ShippingAddress } from '../types';
 import { couponsApi } from '../lib/firebase';
 import { analytics } from '../lib/analytics';
+import { sendOrderEmail } from '../lib/notify';
 import FabricImage from '../components/FabricImage';
 
 type Step = 'login' | 'address' | 'payment';
@@ -274,6 +275,7 @@ const CheckoutPage: React.FC = () => {
         paymentMethod: 'cod',
         couponCode: couponCode ?? undefined,
       });
+      void sendOrderEmail(placed); // Brevo confirmation — fire-and-forget
       finishOrder(placed.id, address);
     } catch (err) {
       setPlacing(false);
