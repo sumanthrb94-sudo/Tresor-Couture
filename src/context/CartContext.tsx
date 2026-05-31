@@ -266,7 +266,28 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setItems(prev => prev.filter(i => !sameLine(i, { fabricId, color, meters: 0 })));
   };
 
-  const clear = () => setItems([]);
+  const clear = () => {
+    setItems([]);
+    // Authoritatively clear the REMOTE bag immediately. We can't rely on the
+    // debounced writer here: placing an order also saves the default address,
+    // which re-hydrates the user → the Firestore-subscription effect re-runs
+    // and its cleanup cancels the pending clear-write. The next snapshot then
+    // reads the still-populated cart and the order's items reappear. Writing []
+    // now (optimistically updating Firestore's local cache) means the
+    // re-subscribe reads an empty bag. No-op for guests (no uid).
+    const uid = currentUidRef.current;
+    if (uid) {
+      if (writeTimerRef.current) { clearTimeout(writeTimerRef.current); writeTimerRef.current = null; }
+      pendingWriteRef.current = [];
+      // Suppress the echo write the items-effect would otherwise queue.
+      skipNextSyncRef.current = true;
+      void setDoc(
+        doc(db, 'carts', uid),
+        { uid, items: [], updatedAt: new Date().toISOString() },
+        { merge: true }
+      ).catch(() => { /* offline — localStorage mirror already cleared */ });
+    }
+  };
   const clearCart = clear;
 
   const value = useMemo<CartContextValue>(() => {
