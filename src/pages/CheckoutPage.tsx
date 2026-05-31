@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { formatINR } from '../constants';
 import { PaymentMethod, ShippingAddress } from '../types';
 import { couponsApi } from '../lib/firebase';
+import { analytics } from '../lib/analytics';
 import FabricImage from '../components/FabricImage';
 import PaymentModal from '../components/PaymentModal';
 
@@ -143,6 +144,12 @@ const CheckoutPage: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, user?.defaultAddress]);
 
+  // Fire begin_checkout once on mount (GA4 funnel).
+  useEffect(() => {
+    if (resolved.length > 0) analytics.beginCheckout(total, resolved.length);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const mrpTotal = useMemo(
     () => resolved.reduce((s, { item, fabric }) => s + fabric.mrpPerMeter * item.meters, 0),
     [resolved]
@@ -257,6 +264,7 @@ const CheckoutPage: React.FC = () => {
       return;
     }
     setPlaceError(null);
+    analytics.addPaymentInfo(payable, payment);
     setShowPayment(true);
   };
 
@@ -270,6 +278,7 @@ const CheckoutPage: React.FC = () => {
     }
     // Cart MUST be emptied before navigation so the user can't accidentally
     // re-place the same order by hitting back.
+    analytics.purchase(orderId, payable);
     clearCart();
     setShowPayment(false);
     navigate({ name: 'confirmation', orderId });

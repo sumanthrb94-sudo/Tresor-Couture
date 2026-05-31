@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { Route } from '../types';
+import { trackPageView } from '../lib/analytics';
 
 const parseLocation = (): Route => {
   // Firebase's email-action handler redirects to a path-based URL with the
@@ -143,6 +144,11 @@ export const RouterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       window.removeEventListener('popstate', handler);
     };
   }, []);
+
+  // SPA page_view on every route change (incl. initial). No-ops without GA4 id.
+  useEffect(() => {
+    trackPageView(window.location.pathname + window.location.hash);
+  }, [route]);
 
   const navigate = useCallback((next: Route) => {
     // If the current URL is a path-based route (e.g. /auth/action after a

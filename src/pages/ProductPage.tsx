@@ -10,6 +10,7 @@ import ProductCard from '../components/ProductCard';
 import ReviewsSection from '../components/ReviewsSection';
 import StickyAddToCart from '../components/StickyAddToCart';
 import { productsApi } from '../lib/firebase';
+import { analytics } from '../lib/analytics';
 import type { Fabric } from '../types';
 
 interface Props {
@@ -169,6 +170,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
     // sticky CTA) within the 650ms pre-navigate window must not add twice.
     if (justAdded) return;
     addItem({ fabricId: fabric.id, meters, color: selectedColor });
+    analytics.addToCart(fabric.id, fabric.name, fabric.pricePerMeter, meters);
     setJustAdded(true);
     if (addTimerRef.current) clearTimeout(addTimerRef.current);
     addTimerRef.current = setTimeout(() => {
