@@ -4,6 +4,7 @@ import { ordersApi } from '../lib/firebase';
 import { useRouter } from '../context/RouterContext';
 import OrderReceipt from '../components/OrderReceipt';
 import type { Order } from '../types';
+import { trackPurchase } from '../lib/analytics';
 
 interface Props {
   orderId: string;
@@ -48,7 +49,22 @@ const ConfirmationPage: React.FC<Props> = ({ orderId }) => {
       .get(orderId)
       .then(res => {
         if (cancelled) return;
-        setOrder((res as Order | null) ?? null);
+        const ord = (res as Order | null) ?? null;
+        setOrder(ord);
+        if (ord) {
+          trackPurchase({
+            orderId: ord.id,
+            value: ord.total,
+            currency: 'INR',
+            items: ord.items.map(it => ({
+              id: it.fabricId,
+              name: it.fabricSnapshot?.name,
+              price: it.fabricSnapshot?.pricePerMeter,
+              quantity: it.meters,
+              category: it.fabricSnapshot?.masterCategory,
+            })),
+          });
+        }
       })
       .catch(err => {
         if (cancelled) return;

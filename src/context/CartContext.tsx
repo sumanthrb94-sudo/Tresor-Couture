@@ -4,6 +4,7 @@ import { db, productsApi } from '../lib/firebase';
 import { useAuth } from './AuthContext';
 import { CartItem, Fabric } from '../types';
 import { FABRICS, FREE_SHIPPING_THRESHOLD, SHIPPING_FLAT_RATE, TAX_RATE } from '../constants';
+import { trackAddToCart } from '../lib/analytics';
 
 const STORAGE_KEY = 'tresor-cart-v1';
 // Tracks the uid we've already performed the one-time guest-merge for, so a
@@ -234,6 +235,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const next = [...prev];
       next[idx] = { ...next[idx], meters: next[idx].meters + incoming.meters };
       return next;
+    });
+    // Best-effort analytics; never block the cart on a tracking no-op.
+    const fab = FABRICS.find(f => f.id === incoming.fabricId);
+    trackAddToCart({
+      id: incoming.fabricId,
+      name: fab?.name,
+      price: fab?.pricePerMeter,
+      quantity: incoming.meters,
+      category: fab?.masterCategory,
     });
   };
 

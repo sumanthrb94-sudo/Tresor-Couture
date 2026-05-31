@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Check } from 'lucide-react';
 import { subscribersApi } from '../lib/firebase';
+import { trackLead } from '../lib/analytics';
 
 // Same shape used across the app's address/checkout validation.
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -43,6 +44,7 @@ const NewsletterForm: React.FC<Props> = ({ source = 'web', className = '', compa
     } catch {
       // Best-effort: never block the visitor on a Firestore hiccup.
     }
+    trackLead({ source });
     setState('done');
     setEmail('');
     setPhone('');

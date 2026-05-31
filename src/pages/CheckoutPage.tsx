@@ -464,7 +464,7 @@ const CheckoutPage: React.FC = () => {
                 </div>
               )}
 
-              {payment === 'upi' && (
+              {!paymentsConfigured && payment === 'upi' && (
                 <div>
                   <label className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">UPI ID</label>
                   <input className="input-box max-w-md" placeholder="yourname@bank" value={upi} onChange={e => setUpi(e.target.value)} />

@@ -65,14 +65,31 @@ service cloud.firestore {
     // An order belongs to the signed-in user; admin sees everything.
     // Creation must include the authenticated uid, an initial 'placed'
     // status, and at least one item. Updates are admin-only (fulfilment).
+    //
+    // Two creation paths exist:
+    //   1. CLIENT (Web SDK) — COD and the demo checkout create the order here,
+    //      subject to these rules. These orders carry no online payment, so a
+    //      `paymentStatus` field, if present, must be 'cod' or 'unpaid'. A
+    //      client may NEVER self-assert 'paid'.
+    //   2. SERVER (Admin SDK, /api/payments/verify) — real Razorpay orders are
+    //      written by the verify function, which BYPASSES these rules entirely.
+    //      That is the only path that may set paymentStatus:'paid', record
+    //      payment ids, and decrement stock — all after server-side signature
+    //      and amount verification.
+    function validPaymentStatus() {
+      return !('paymentStatus' in request.resource.data)
+        || request.resource.data.paymentStatus in ['cod', 'unpaid'];
+    }
     match /orders/{orderId} {
       allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow create: if isSignedIn()
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.status == 'placed'
+        && request.resource.data.items is list
         && request.resource.data.items.size() > 0
         && request.resource.data.total is number
-        && request.resource.data.total >= 0;
+        && request.resource.data.total >= 0
+        && validPaymentStatus();
       allow update, delete: if isAdmin();
     }
 
