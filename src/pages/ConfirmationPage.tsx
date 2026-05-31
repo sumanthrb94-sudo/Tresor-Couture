@@ -103,7 +103,7 @@ const ConfirmationPage: React.FC<Props> = ({ orderId }) => {
   const shortHash = `TC-${order.id.replace(/[^a-zA-Z0-9]/g, '').slice(-6) || order.id.slice(0, 6)}`;
 
   return (
-    <main className="pt-[100px] pb-12 md:pb-16 bg-[color:var(--color-myntra-bg-soft)] min-h-screen">
+    <main className="pt-[100px] md:pt-[112px] pb-12 md:pb-16 bg-[color:var(--color-myntra-bg-soft)] min-h-screen">
       <div className="max-w-[920px] mx-auto px-4 md:px-8 lg:px-10">
         {/* Hero */}
         <section className="no-print bg-white border border-[color:var(--color-myntra-border-soft)] p-8 md:p-12 text-center mb-5 relative overflow-hidden">

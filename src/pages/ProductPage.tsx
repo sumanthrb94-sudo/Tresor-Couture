@@ -73,7 +73,11 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
   useEffect(() => {
     if (fabric) {
       setSelectedColor(fabric.colors?.[0]?.name);
-      setMeters(fabric.lengthOptions?.[0] ?? 1);
+      // Default to the first length that's actually in stock so partial-stock
+      // products (stock below the default option) still have a valid selection.
+      const opts = fabric.lengthOptions ?? [1, 2, 3, 5];
+      const st = fabric.inStockMeters ?? 0;
+      setMeters(opts.find(l => l <= st) ?? opts[0] ?? 1);
       setActiveImage(0);
     }
   }, [fabric]);
@@ -99,7 +103,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
 
   if (fabric === undefined) {
     return (
-      <main className="pt-[100px] pb-20 min-h-screen bg-white">
+      <main className="pt-[100px] md:pt-[112px] pb-20 min-h-screen bg-white">
         <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10">
           <div className="h-3 w-64 bg-[color:var(--color-myntra-bg-soft)] rounded animate-pulse mb-4" />
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_460px] gap-8 lg:gap-12">
@@ -155,10 +159,15 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
 
   const stock = fabric.inStockMeters ?? 0;
   const lengthOptions = fabric.lengthOptions ?? [1, 2, 3, 5];
+  const availableLengths = lengthOptions.filter(l => l <= stock);
+  const soldOut = stock <= 0 || availableLengths.length === 0;
   const wished = hasWish(fabric.id);
 
   const handleAdd = () => {
     if (!fabric) return;
+    // Idempotency guard: a fast second tap (either the in-card or the mobile
+    // sticky CTA) within the 650ms pre-navigate window must not add twice.
+    if (justAdded) return;
     addItem({ fabricId: fabric.id, meters, color: selectedColor });
     setJustAdded(true);
     if (addTimerRef.current) clearTimeout(addTimerRef.current);
@@ -178,7 +187,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
   };
 
   return (
-    <main className="pt-[100px] pb-12 md:pb-16 bg-white min-h-screen">
+    <main className="pt-[100px] md:pt-[112px] pb-12 md:pb-16 bg-white min-h-screen">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10">
         {/* Breadcrumb */}
         {(() => {
@@ -246,8 +255,12 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
               <div className="inline-flex items-center gap-2 border border-[color:var(--color-myntra-border-soft)] rounded px-2.5 py-1 mb-5">
                 <span className="text-[13px] font-bold text-[color:var(--color-myntra-navy)]">{fabric.rating.toFixed(1)}</span>
                 <Star className="w-3.5 h-3.5 fill-[color:var(--color-myntra-green)] text-[color:var(--color-myntra-green)]" />
-                <span className="w-px h-3.5 bg-[color:var(--color-myntra-border)]" />
-                <span className="text-[12px] text-[color:var(--color-myntra-ink-soft)] font-semibold">{fabric.reviewCount} Ratings</span>
+                {fabric.reviewCount != null && fabric.reviewCount > 0 && (
+                  <>
+                    <span className="w-px h-3.5 bg-[color:var(--color-myntra-border)]" />
+                    <span className="text-[12px] text-[color:var(--color-myntra-ink-soft)] font-semibold">{fabric.reviewCount.toLocaleString('en-IN')} Ratings</span>
+                  </>
+                )}
               </div>
             )}
 
@@ -286,21 +299,29 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
                 <p className="text-[13px] font-extrabold uppercase tracking-wider text-[color:var(--color-myntra-navy)]">Select Length</p>
                 <span className="text-[12px] text-[color:var(--color-myntra-pink)] font-semibold">Size Chart</span>
               </div>
-              <div className="flex gap-2 flex-wrap">
-                {lengthOptions.filter(l => l <= stock).map(l => (
-                  <button
-                    key={l}
-                    onClick={() => setMeters(l)}
-                    className={`min-w-[56px] h-11 rounded-full border-2 text-[13px] font-bold transition-colors ${meters === l ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)] bg-[#F5E8C8]' : 'border-[color:var(--color-myntra-border)] text-[color:var(--color-myntra-navy)] hover:border-[color:var(--color-myntra-navy)]'}`}
-                  >
-                    {l} m
-                  </button>
-                ))}
-              </div>
-              {stock < 10 && (
-                <p className="text-[12px] text-[color:var(--color-myntra-pink)] font-semibold mt-2">
-                  Only {stock}m left — order soon
+              {soldOut ? (
+                <p className="text-[13px] font-bold text-[color:var(--color-myntra-pink)] bg-[color:var(--color-myntra-bg-sale)] border border-[color:var(--color-myntra-border)] rounded px-3 py-2">
+                  Out of stock — this weave is currently off the loom.
                 </p>
+              ) : (
+                <>
+                  <div className="flex gap-2 flex-wrap">
+                    {availableLengths.map(l => (
+                      <button
+                        key={l}
+                        onClick={() => setMeters(l)}
+                        className={`min-w-[56px] h-11 rounded-full border-2 text-[13px] font-bold transition-colors ${meters === l ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)] bg-[#F5E8C8]' : 'border-[color:var(--color-myntra-border)] text-[color:var(--color-myntra-navy)] hover:border-[color:var(--color-myntra-navy)]'}`}
+                      >
+                        {l} m
+                      </button>
+                    ))}
+                  </div>
+                  {stock < 10 && (
+                    <p className="text-[12px] text-[color:var(--color-myntra-pink)] font-semibold mt-2">
+                      Only {stock}m left — order soon
+                    </p>
+                  )}
+                </>
               )}
             </div>
 
@@ -309,10 +330,12 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
               <button
                 id="pdp-add-to-bag"
                 onClick={handleAdd}
-                disabled={meters <= 0 || meters > stock || justAdded}
+                disabled={soldOut || meters <= 0 || meters > stock || justAdded}
                 className="btn-primary flex-1 inline-flex justify-center items-center gap-2"
               >
-                {justAdded ? (
+                {soldOut ? (
+                  'Out of Stock'
+                ) : justAdded ? (
                   <>
                     <Check className="w-5 h-5" /> Added to Bag
                   </>
@@ -451,7 +474,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
         onAdd={handleAdd}
         onWishlist={handleWish}
         wished={wished}
-        disabled={meters <= 0 || meters > stock}
+        disabled={soldOut || meters <= 0 || meters > stock || justAdded}
         triggerId="pdp-add-to-bag"
       />
     </main>

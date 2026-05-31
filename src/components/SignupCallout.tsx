@@ -23,7 +23,7 @@ const Bullet: React.FC<{ icon: React.ReactNode; text: string }> = ({ icon, text 
 );
 
 const SignupCallout: React.FC = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const { navigate } = useRouter();
 
   const initiallyDismissed = (() => {
@@ -36,7 +36,9 @@ const SignupCallout: React.FC = () => {
 
   const [dismissed, setDismissed] = useState(initiallyDismissed);
 
-  if (user || dismissed) return null;
+  // Wait for auth to resolve before showing — otherwise returning members see
+  // the "Become a member" callout flash on every reload until auth settles.
+  if (loading || user || dismissed) return null;
 
   const dismiss = () => {
     try { window.sessionStorage.setItem(DISMISS_KEY, '1'); } catch { /* private mode */ }

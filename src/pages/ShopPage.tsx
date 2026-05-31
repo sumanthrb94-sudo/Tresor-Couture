@@ -69,9 +69,23 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
   const [sort, setSort] = useState<SortKey>('recommended');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
+  // Reset ALL facets when the category/subcategory changes. Previously only
+  // weaveTypes reset, so a colour/origin/price chip that exists only in the
+  // old category stayed selected after navigating elsewhere — leaving an active
+  // chip the new category can't satisfy, hence a wrongly-empty grid.
   useEffect(() => {
     setWeaveTypes(new Set(initialCategory && !isMasterCategory(initialCategory) && initialCategory !== 'All' ? [initialCategory] : []));
-  }, [initialCategory]);
+    setColors(new Set());
+    setOrigins(new Set());
+    setPriceBrackets(new Set());
+  }, [initialCategory, initialSubCategory]);
+
+  // Lock body scroll while the mobile filter drawer is open (matches Navbar /
+  // PaymentModal), so the product grid behind the overlay can't scroll away.
+  useEffect(() => {
+    document.body.style.overflow = mobileFiltersOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileFiltersOpen]);
 
   const [products, setProducts] = useState<Fabric[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -436,9 +450,10 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
         </div>
       </div>
 
-      {/* Mobile filter drawer */}
+      {/* Mobile filter drawer. lg:hidden so a resize to desktop while open can't
+          leave the full-screen overlay blocking the now-visible sidebar/grid. */}
       {mobileFiltersOpen && (
-        <div className="fixed inset-0 z-[120] flex">
+        <div className="fixed inset-0 z-[120] flex lg:hidden">
           <div className="flex-1 bg-black/40" onClick={() => setMobileFiltersOpen(false)} />
           <div className="w-[86%] max-w-[360px] bg-white overflow-y-auto p-5">
             <div className="flex items-center justify-between mb-3">

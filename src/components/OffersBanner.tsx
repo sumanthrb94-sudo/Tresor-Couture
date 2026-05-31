@@ -10,7 +10,7 @@ const OffersBanner: React.FC = () => (
   <section className="py-6 md:py-9 bg-white">
     <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 grid grid-cols-1 md:grid-cols-[1.4fr_1fr] gap-4 md:gap-5">
       {/* HEADLINE — Hyderabad 40-min */}
-      <div className="relative overflow-hidden rounded-md bg-gradient-to-br from-[#2A1F12] via-[#46382A] to-[#1A1209] text-white p-5 md:p-7 flex items-center gap-5">
+      <div className="relative overflow-hidden rounded-md bg-gradient-to-br from-[#2A1F12] via-[#46382A] to-[#1A1209] text-white px-5 pb-5 pt-12 md:p-7 flex items-center gap-5">
         <span className="absolute top-4 right-4 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-[#E0BFA0]">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E5C97A] opacity-75" />

@@ -37,7 +37,9 @@ const ProductCard: React.FC<Props> = ({ fabric, compact = false }) => {
           {fabric.rating !== undefined && (
             <span className="absolute bottom-2 left-2 badge-rating">
               {fabric.rating.toFixed(1)} <Star className="w-3 h-3 fill-current star" />
-              <span className="text-[color:var(--color-myntra-ink-mute)] font-medium ml-1">| {fabric.reviewCount}</span>
+              {fabric.reviewCount !== undefined && (
+                <span className="text-[color:var(--color-myntra-ink-mute)] font-medium ml-1">| {fabric.reviewCount}</span>
+              )}
             </span>
           )}
         </div>

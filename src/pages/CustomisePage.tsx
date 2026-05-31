@@ -260,14 +260,24 @@ const CustomisePage: React.FC<{ productId?: string }> = ({ productId }) => {
   const [notes, setNotes] = useState('');
   const [callBack, setCallBack] = useState(true);
 
-  // Deep-link: ?productId=X jumps into a flow seeded with that fabric
+  // Deep-link: /customise/:id (or ?product=id) jumps into a flow seeded with
+  // that fabric. Pick the silhouette that actually relates to the fabric —
+  // never a hardcoded capsule, which made the header/price/eligible-fabrics
+  // all reflect the wrong (Mughal Garden lehenga) piece regardless of the link.
   useEffect(() => {
-    if (productId) {
-      const piece = CAPSULES.flatMap(c => c.signaturePieces)[0];
-      setSelectedCapsule(CAPSULES[0]);
-      setSelectedPiece(piece);
-      setView('flow');
-    }
+    if (!productId) return;
+    const f = findFabric(productId);
+    if (!f) { setView('atelier'); return; } // unknown id — don't strand on a bogus piece
+    const all = CAPSULES.flatMap(c => c.signaturePieces.map(p => ({ c, p })));
+    const match =
+      all.find(({ p }) => p.photoFabricId === productId || p.fabricHint.includes(productId)) ??
+      all.find(({ p }) => p.fabricCategory && p.fabricCategory === f.masterCategory) ??
+      { c: CAPSULES[0], p: CAPSULES[0].signaturePieces[0] };
+    setSelectedCapsule(match.c);
+    setSelectedPiece(match.p);
+    setFabricId(productId); // keep the deep-linked fabric as the active selection
+    setStep('fabric');
+    setView('flow');
   }, [productId]);
 
   const fabric = fabricId ? findFabric(fabricId) : undefined;

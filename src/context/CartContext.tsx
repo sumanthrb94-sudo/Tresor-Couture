@@ -97,9 +97,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return m;
   });
   const [resolving, setResolving] = useState(false);
+  // Ids that failed to resolve (deleted product, rules/network error). Held in
+  // a ref — NOT state — so they're excluded from refetch without re-triggering
+  // the resolve effect, which previously looped forever: the effect always
+  // built a brand-new Map (new reference) even when nothing resolved, which
+  // re-ran the effect, which refetched the still-missing id, ad infinitum.
+  const failedIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    const missingIds = Array.from(new Set(items.map(i => i.fabricId))).filter(id => !productCache.has(id));
+    const missingIds = Array.from(new Set(items.map(i => i.fabricId)))
+      .filter(id => !productCache.has(id) && !failedIdsRef.current.has(id));
     if (missingIds.length === 0) {
       setResolving(false);
       return;
@@ -109,13 +116,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     (async () => {
       const fetched = await Promise.all(missingIds.map(id => productsApi.get(id).catch(() => null)));
       if (cancelled) return;
-      setProductCache(prev => {
-        const next = new Map(prev);
-        fetched.forEach((p, i) => {
-          if (p) next.set(missingIds[i], p as unknown as Fabric);
+      // Tombstone ids that came back empty so we never refetch them this session.
+      missingIds.forEach((id, i) => { if (!fetched[i]) failedIdsRef.current.add(id); });
+      // Only commit a new Map (which re-runs this effect) when something actually
+      // resolved — otherwise the all-failed case would loop.
+      if (fetched.some(Boolean)) {
+        setProductCache(prev => {
+          const next = new Map(prev);
+          fetched.forEach((p, i) => { if (p) next.set(missingIds[i], p as unknown as Fabric); });
+          return next;
         });
-        return next;
-      });
+      }
       setResolving(false);
     })();
     return () => { cancelled = true; };
@@ -137,11 +148,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) {
       currentUidRef.current = null;
       remoteReadyRef.current = false;
+      skipNextSyncRef.current = false;
       if (writeTimerRef.current) {
         clearTimeout(writeTimerRef.current);
         writeTimerRef.current = null;
       }
       pendingWriteRef.current = null;
+      // Clear the previous user's bag from state so it doesn't leak to the
+      // next person on a shared device. Safe re: Firestore — remoteReadyRef is
+      // false so the debounced writer early-returns and won't echo this reset.
+      // The localStorage mirror then overwrites the guest bag with [].
+      setItems([]);
       // Drop the merge marker so a future sign-in merges from a clean slate.
       try { localStorage.removeItem(MERGE_FLAG_KEY); } catch { /* ignore */ }
       return;

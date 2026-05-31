@@ -16,3 +16,13 @@ functions/node_modules/
 
 # Newman / Postman run artefacts — regenerated locally, not part of source.
 postman/run-report.json
+
+# E2E test artifacts (screenshots, reports, OTP scratch) — regenerated locally.
+e2e/live/
+e2e/live-auth/
+e2e/live-func/
+e2e/navbar/
+e2e/artifacts/
+e2e/artifacts-signedin/
+e2e/artifacts-phone/
+e2e/otp.txt

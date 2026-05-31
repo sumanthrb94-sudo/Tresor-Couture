@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ChevronDown, MapPin, RefreshCw, ShieldCheck, ShoppingBag, Tag, Trash2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -20,6 +20,21 @@ const CartPage: React.FC = () => {
   const [couponBusy, setCouponBusy] = useState(false);
   const [pin, setPin] = useState('');
 
+  // A coupon is validated against the subtotal at apply time and its discount
+  // frozen into state. If the shopper then changes quantities, that frozen
+  // figure goes stale (wrong total, possibly below the coupon's minimum). Clear
+  // it on any basket change so Total, the discount line, and the free-shipping
+  // nudge can never contradict each other — and avoid per-keystroke re-validation.
+  useEffect(() => {
+    if (couponDiscount > 0) {
+      setCouponDiscount(0);
+      setCouponMsg({ ok: false, text: 'Bag updated — please re-apply your coupon.' });
+    }
+    // Intentionally keyed only on subtotal; couponDiscount guard prevents the
+    // initial-mount run from showing a spurious message.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subtotal]);
+
   // Items are in the cart but their product details haven't been fetched yet
   // (first visit after Firestore sync). Show a spinner instead of an "empty"
   // false-positive.
@@ -31,9 +46,32 @@ const CartPage: React.FC = () => {
     );
   }
 
+  // Items exist but none could be resolved to a product (deleted/unavailable
+  // stock, or a transient fetch failure). Distinct from a truly empty bag —
+  // showing "empty" here would contradict the non-zero bag badge in the navbar.
+  if (resolved.length === 0 && items.length > 0 && !resolving) {
+    return (
+      <main className="pt-[100px] md:pt-[112px] pb-20 min-h-screen bg-[color:var(--color-myntra-bg-soft)]">
+        <div className="max-w-md mx-auto bg-white text-center px-6 py-12 border border-[color:var(--color-myntra-border-soft)]">
+          <ShoppingBag className="w-14 h-14 mx-auto text-[color:var(--color-myntra-ink-mute)] mb-5" />
+          <h1 className="text-2xl font-extrabold mb-2">Some items are no longer available</h1>
+          <p className="text-[14px] text-[color:var(--color-myntra-ink-soft)] mb-6">
+            The pieces in your bag could not be loaded — they may have sold out or moved to the archive.
+          </p>
+          <div className="flex gap-3 justify-center flex-wrap">
+            <button onClick={() => { items.forEach(i => removeItem(i.fabricId, i.color)); }} className="btn-outline">
+              Clear bag
+            </button>
+            <button onClick={() => navigate({ name: 'shop' })} className="btn-primary">Continue Shopping</button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   if (resolved.length === 0) {
     return (
-      <main className="pt-[140px] pb-20 min-h-screen bg-[color:var(--color-myntra-bg-soft)]">
+      <main className="pt-[100px] md:pt-[112px] pb-20 min-h-screen bg-[color:var(--color-myntra-bg-soft)]">
         <div className="max-w-md mx-auto bg-white text-center px-6 py-12 border border-[color:var(--color-myntra-border-soft)]">
           <ShoppingBag className="w-14 h-14 mx-auto text-[color:var(--color-myntra-ink-mute)] mb-5" />
           <h1 className="text-2xl font-extrabold mb-2">Your bag is empty</h1>
@@ -86,7 +124,7 @@ const CartPage: React.FC = () => {
   const youMightLike = FABRICS.filter(f => !resolved.some(r => r.fabric.id === f.id)).slice(0, 5);
 
   return (
-    <main className="pt-[100px] pb-12 md:pb-16 bg-[color:var(--color-myntra-bg-soft)] min-h-screen">
+    <main className="pt-[100px] md:pt-[112px] pb-12 md:pb-16 bg-[color:var(--color-myntra-bg-soft)] min-h-screen">
       <div className="max-w-[1200px] mx-auto px-4 md:px-8 lg:px-10">
         <h1 className="text-xl md:text-2xl font-extrabold mb-2 text-[color:var(--color-myntra-navy)]">
           My Bag <span className="text-[14px] font-medium text-[color:var(--color-myntra-ink-mute)] ml-2">{resolved.length} item{resolved.length === 1 ? '' : 's'}</span>

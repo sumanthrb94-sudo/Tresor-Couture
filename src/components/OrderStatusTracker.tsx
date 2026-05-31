@@ -112,7 +112,7 @@ const OrderStatusTracker: React.FC<Props> = ({ currentStatus, placedAt }) => {
               </div>
               <p
                 className={[
-                  'mt-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wide leading-tight truncate',
+                  'mt-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wide leading-tight whitespace-normal break-words',
                   isComplete ? 'text-[color:var(--color-myntra-green)]' : '',
                   isActive ? 'text-[color:var(--color-myntra-pink)]' : '',
                   isFuture ? 'text-[color:var(--color-myntra-ink-mute)]' : ''

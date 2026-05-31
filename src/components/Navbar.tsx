@@ -42,6 +42,9 @@ const Navbar: React.FC = () => {
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : '';
+    // Collapse any expanded category accordion whenever the drawer closes
+    // (via X, logo, or an auth button) so it doesn't reopen stale next time.
+    if (!mobileOpen) setMobileExpanded(null);
     return () => { document.body.style.overflow = ''; };
   }, [mobileOpen]);
 
@@ -357,12 +360,12 @@ const Navbar: React.FC = () => {
                     aria-expanded={n.kind === 'master' ? hoverCat === n.label : undefined}
                     className={
                       isPremium
-                        ? `h-full px-2 xl:px-3 flex items-center gap-1.5 whitespace-nowrap font-serif italic text-[12px] xl:text-[14px] tracking-[0.02em] transition-colors no-tap-highlight border-b-[3px] ${
+                        ? `h-full px-2 flex items-center gap-1.5 whitespace-nowrap font-serif italic text-[12px] tracking-[0.02em] transition-colors no-tap-highlight border-b-[3px] ${
                             isActive
                               ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)]'
                               : 'border-transparent text-[#8E6520] hover:text-[color:var(--color-myntra-pink)]'
                           }`
-                        : `h-full px-2 xl:px-3 flex items-center whitespace-nowrap text-[11px] xl:text-[13px] font-bold uppercase tracking-[0.04em] transition-colors no-tap-highlight border-b-[3px] ${
+                        : `h-full px-2 flex items-center whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.04em] transition-colors no-tap-highlight border-b-[3px] ${
                             isActive
                               ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)]'
                               : 'border-transparent text-[color:var(--color-myntra-navy)] hover:text-[color:var(--color-myntra-pink)]'
@@ -381,7 +384,7 @@ const Navbar: React.FC = () => {
           </nav>
 
           {/* Search */}
-          <form onSubmit={onSearchSubmit} className="hidden md:block lg:hidden xl:block flex-1 min-w-0 max-w-[560px] relative">
+          <form onSubmit={onSearchSubmit} className="hidden md:block lg:hidden 2xl:block flex-1 min-w-[180px] max-w-[560px] relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[color:var(--color-myntra-ink-mute)] pointer-events-none" />
             <input
               value={search}
@@ -413,27 +416,10 @@ const Navbar: React.FC = () => {
             )}
           </form>
 
-          {/* Right icons */}
+          {/* Right icons. Guests are routed to sign-in/up via the Profile
+              dropdown (pink-dot indicator) — no separate text links, which
+              previously crowded and overlapped the search box on laptops. */}
           <div className="flex items-center gap-1 md:gap-2 ml-auto md:ml-0 shrink-0">
-            {/* xl+ signed-out auth cluster — explicit text links so guests can see the
-                sign-up path without first opening the Profile dropdown. */}
-            {!user && (
-              <div className="hidden xl:flex items-center gap-1 mr-1">
-                <button
-                  onClick={() => navigate({ name: 'login' })}
-                  className="text-[12px] font-bold uppercase tracking-[0.08em] text-[color:var(--color-myntra-navy)] hover:text-[color:var(--color-myntra-pink)] px-2 py-1"
-                >
-                  Sign in
-                </button>
-                <span aria-hidden className="text-[color:var(--color-myntra-border)]">·</span>
-                <button
-                  onClick={() => navigate({ name: 'register' })}
-                  className="text-[12px] font-bold uppercase tracking-[0.08em] text-[color:var(--color-myntra-pink)] hover:underline px-2 py-1"
-                >
-                  Sign up
-                </button>
-              </div>
-            )}
             <div className="relative">
               <button
                 onClick={() => setProfileOpen(v => !v)}
@@ -444,7 +430,6 @@ const Navbar: React.FC = () => {
                 aria-haspopup="true"
               >
                 <User className="w-5 h-5 text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]" />
-                <span className="hidden xl:block text-[10px] font-bold mt-0.5">Profile</span>
                 {!user && (
                   <span
                     aria-hidden
@@ -526,7 +511,6 @@ const Navbar: React.FC = () => {
               aria-label="Wishlist"
             >
               <Heart className="w-5 h-5 text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]" />
-              <span className="hidden xl:block text-[10px] font-bold mt-0.5">Wishlist</span>
               {wishBadge > 0 && (
                 <span className="absolute top-0 right-1 bg-[color:var(--color-myntra-pink)] text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
                   {wishBadge}
@@ -539,7 +523,6 @@ const Navbar: React.FC = () => {
               aria-label="Bag"
             >
               <ShoppingBag className="w-5 h-5 text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]" />
-              <span className="hidden xl:block text-[10px] font-bold mt-0.5">Bag</span>
               {cartBadge > 0 && (
                 <span className="absolute top-0 right-1 bg-[color:var(--color-myntra-pink)] text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
                   {cartBadge}

@@ -114,12 +114,14 @@ const SearchResultsPage: React.FC<Props> = ({ q }) => {
           )}
         </header>
 
-        {recent.length > 0 && (
+        {/* Exclude the active query — showing it as a "Recent" chip is a dead
+            control (clicking re-navigates to the page you're already on). */}
+        {recent.filter(t => t.toLowerCase() !== q.toLowerCase()).length > 0 && (
           <div className="mb-6 flex items-center gap-2 flex-wrap">
             <span className="text-[11px] uppercase tracking-[0.1em] text-[color:var(--color-myntra-ink-mute)] font-semibold">
               Recent
             </span>
-            {recent.map(term => (
+            {recent.filter(t => t.toLowerCase() !== q.toLowerCase()).map(term => (
               <SuggestionChip
                 key={term}
                 label={term}
@@ -136,7 +138,7 @@ const SearchResultsPage: React.FC<Props> = ({ q }) => {
         ) : results.length === 0 ? (
           <div className="py-16 text-center">
             <p className="text-[16px] text-[color:var(--color-myntra-ink)] mb-4">
-              No fabrics match {q}
+              No fabrics match "{q}"
             </p>
             <div className="flex items-center justify-center gap-2 flex-wrap">
               <SuggestionChip label="Sarees" onClick={() => navigate({ name: 'shop', category: 'Sarees' })} />

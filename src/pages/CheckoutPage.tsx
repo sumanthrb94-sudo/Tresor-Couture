@@ -276,7 +276,7 @@ const CheckoutPage: React.FC = () => {
   };
 
   return (
-    <main className="pt-[100px] pb-12 md:pb-16 bg-[color:var(--color-myntra-bg-soft)] min-h-screen">
+    <main className="pt-[100px] md:pt-[112px] pb-12 md:pb-16 bg-[color:var(--color-myntra-bg-soft)] min-h-screen">
       <div className="max-w-[1200px] mx-auto px-4 md:px-8 lg:px-10">
         <h1 className="text-xl md:text-2xl font-extrabold mb-4 text-[color:var(--color-myntra-navy)]">Checkout</h1>
 
