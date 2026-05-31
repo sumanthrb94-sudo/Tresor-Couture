@@ -12,6 +12,8 @@ import {
 import { formatINR } from '../constants';
 import type { Order, PaymentMethod, ShippingAddress } from '../types';
 import { useOrders } from '../context/OrderContext';
+import { useAuth } from '../context/AuthContext';
+import { paymentsConfigured, runRazorpayPayment, PaymentsNotConfiguredError } from '../lib/payments';
 
 type Tab = Extract<PaymentMethod, 'card' | 'upi' | 'cod'>;
 type Stage = 'form' | 'processing' | 'success' | 'error';
@@ -66,6 +68,7 @@ const PaymentModal: React.FC<Props> = ({
   onSuccess
 }) => {
   const { placeOrder } = useOrders();
+  const { user } = useAuth();
 
   const [tab, setTab] = useState<Tab>(initialMethod);
   const [stage, setStage] = useState<Stage>('form');

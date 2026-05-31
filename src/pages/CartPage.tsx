@@ -4,7 +4,7 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
-import { FABRICS, FREE_SHIPPING_THRESHOLD, formatINR } from '../constants';
+import { FABRICS, FREE_SHIPPING_THRESHOLD, formatINR, isPerUnit } from '../constants';
 import { couponsApi } from '../lib/firebase';
 import FabricImage from '../components/FabricImage';
 import ProductCard from '../components/ProductCard';
@@ -133,7 +133,12 @@ const CartPage: React.FC = () => {
             {resolved.map(({ item, fabric }) => {
               const linePrice = item.meters * fabric.pricePerMeter;
               const stock = fabric.inStockMeters ?? 999;
-              const options = fabric.lengthOptions?.filter(l => l <= stock) ?? [1, 2, 3, 5];
+              const perUnit = isPerUnit(fabric);
+              // Per-unit garments use whole-piece quantities; per-meter fabric
+              // uses its preset length options.
+              const options = perUnit
+                ? Array.from({ length: Math.max(1, Math.min(stock, 10)) }, (_, i) => i + 1)
+                : fabric.lengthOptions?.filter(l => l <= stock) ?? [1, 2, 3, 5];
 
               return (
                 <div key={`${fabric.id}-${item.color ?? ''}`} className="bg-white border border-[color:var(--color-myntra-border-soft)] p-3 md:p-4 flex gap-3 md:gap-4">
@@ -159,7 +164,11 @@ const CartPage: React.FC = () => {
                           onChange={e => updateMeters(fabric.id, item.color, Number(e.target.value))}
                           className="appearance-none border border-[color:var(--color-myntra-border)] rounded px-2.5 py-1.5 pr-7 text-[12px] font-semibold bg-white"
                         >
-                          {options.map(o => <option key={o} value={o}>Length: {o} m</option>)}
+                          {options.map(o => (
+                            <option key={o} value={o}>
+                              {perUnit ? `Qty: ${o}` : `Length: ${o} m`}
+                            </option>
+                          ))}
                         </select>
                         <ChevronDown className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
                       </div>
@@ -275,7 +284,7 @@ const CartPage: React.FC = () => {
               <div className="bg-white border border-[color:var(--color-myntra-border-soft)] p-4 flex items-center gap-3">
                 <ShieldCheck className="w-7 h-7 text-[color:var(--color-myntra-ink-soft)]" />
                 <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] leading-snug">
-                  Safe and secure payments. Free shipping over ₹1,999. 40-minute delivery across Hyderabad. 100% authentic hand-woven.
+                  Safe and secure payments. Free shipping over ₹1,999. Fast delivery across Hyderabad. 100% authentic hand-woven.
                 </p>
               </div>
             </div>

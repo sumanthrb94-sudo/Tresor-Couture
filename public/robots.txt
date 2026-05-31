@@ -3,7 +3,12 @@ Allow: /
 Disallow: /admin
 Disallow: /admin/
 Disallow: /account
+Disallow: /account/
 Disallow: /checkout
+Disallow: /confirmation
 Disallow: /confirmation/
+# Hash fragments (e.g. /#/admin) are not sent to the server and cannot be
+# blocked via robots.txt. The path-based rules above cover crawlers that
+# attempt the clean equivalents.
 
 Sitemap: https://tresor-couture.vercel.app/sitemap.xml

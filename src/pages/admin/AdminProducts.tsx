@@ -12,7 +12,7 @@ import {
   Tag
 } from 'lucide-react';
 import { productsApi } from '../../lib/firebase';
-import { CATEGORIES, formatINR } from '../../constants';
+import { CATEGORIES, formatINR, isPerUnit } from '../../constants';
 import type { Fabric } from '../../types';
 
 /* ───────────── domain helpers ───────────── */
@@ -289,6 +289,8 @@ const Overlay: React.FC<{ onClose: () => void; children: React.ReactNode; z?: nu
 interface EditorProps {
   draft: Draft;
   isNew: boolean;
+  /** True when the product being edited is a per-unit finished garment. */
+  perUnit: boolean;
   saving: boolean;
   errors: DraftErrors;
   onChange: (next: Draft) => void;
@@ -296,7 +298,7 @@ interface EditorProps {
   onSave: () => void;
 }
 
-const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange, onCancel, onSave }) => {
+const Editor: React.FC<EditorProps> = ({ draft, isNew, perUnit, saving, errors, onChange, onCancel, onSave }) => {
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     onChange({ ...draft, [key]: value });
 
@@ -412,8 +414,13 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
           <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--color-myntra-ink-mute)] mb-3">
             Pricing &amp; Stock
           </h3>
+          {perUnit && (
+            <p className="mb-3 text-[12px] text-[color:var(--color-myntra-ink-soft)] bg-[color:var(--color-myntra-bg-soft)] border border-[color:var(--color-myntra-border-soft)] rounded px-3 py-2">
+              This is a <b>per-unit</b> product (finished garment). Prices are per piece and stock is a whole-piece count.
+            </p>
+          )}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <Field label="Price / m (₹)" error={errors.pricePerMeter}>
+            <Field label={perUnit ? 'Price / piece (₹)' : 'Price / m (₹)'} error={errors.pricePerMeter}>
               <input
                 type="number"
                 min={0}
@@ -422,7 +429,7 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
                 onChange={e => set('pricePerMeter', e.target.value)}
               />
             </Field>
-            <Field label="MRP / m (₹)" error={errors.mrpPerMeter}>
+            <Field label={perUnit ? 'MRP / piece (₹)' : 'MRP / m (₹)'} error={errors.mrpPerMeter}>
               <input
                 type="number"
                 min={0}
@@ -431,7 +438,7 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
                 onChange={e => set('mrpPerMeter', e.target.value)}
               />
             </Field>
-            <Field label="Stock (m)" error={errors.inStockMeters}>
+            <Field label={perUnit ? 'Stock (pieces)' : 'Stock (m)'} error={errors.inStockMeters}>
               <input
                 type="number"
                 min={0}
@@ -613,16 +620,18 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
             </button>
           </div>
 
-          <div className="mt-4">
-            <Field label="Length options (comma-separated meters)">
-              <input
-                className="input-box"
-                value={draft.lengthOptionsCsv}
-                onChange={e => set('lengthOptionsCsv', e.target.value)}
-                placeholder="1, 2, 3, 5"
-              />
-            </Field>
-          </div>
+          {!perUnit && (
+            <div className="mt-4">
+              <Field label="Length options (comma-separated meters)">
+                <input
+                  className="input-box"
+                  value={draft.lengthOptionsCsv}
+                  onChange={e => set('lengthOptionsCsv', e.target.value)}
+                  placeholder="1, 2, 3, 5"
+                />
+              </Field>
+            </div>
+          )}
         </section>
 
         {/* Tags */}
@@ -943,7 +952,8 @@ const AdminProducts: React.FC = () => {
                 <tbody>
                   {filtered.map(f => {
                     const stock = f.inStockMeters ?? 0;
-                    const lowStock = stock < 10;
+                    const perUnit = isPerUnit(f);
+                    const lowStock = perUnit ? stock < 5 : stock < 10;
                     return (
                       <tr
                         key={f.id}
@@ -1117,6 +1127,7 @@ const AdminProducts: React.FC = () => {
           <Editor
             draft={draft}
             isNew={editingExisting === null}
+            perUnit={editingExisting ? isPerUnit(editingExisting) : false}
             saving={saving}
             errors={errors}
             onChange={setDraft}

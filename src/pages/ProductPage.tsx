@@ -154,7 +154,12 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
   }
 
   const stock = fabric.inStockMeters ?? 0;
+  const perUnit = isPerUnit(fabric);
   const lengthOptions = fabric.lengthOptions ?? [1, 2, 3, 5];
+  // For per-unit garments the user picks a whole-piece quantity (1..min(stock,5)).
+  const maxQty = Math.max(1, Math.min(stock, 5));
+  const quantityOptions = Array.from({ length: maxQty }, (_, i) => i + 1);
+  const unitNoun = fabric.unitLabel ?? 'piece';
   const wished = hasWish(fabric.id);
 
   const handleAdd = () => {
@@ -255,6 +260,9 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
 
             <div className="flex items-baseline gap-2 flex-wrap mb-1">
               <span className="text-[24px] font-extrabold text-[color:var(--color-myntra-navy)]">{formatINR(fabric.pricePerMeter)}</span>
+              {!perUnit && (
+                <span className="text-[14px] font-semibold text-[color:var(--color-myntra-ink-soft)]">/ meter</span>
+              )}
             </div>
             <p className="text-[13px] font-bold text-[color:var(--color-myntra-green)] mb-1">inclusive of all taxes</p>
 
@@ -280,29 +288,54 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
               </div>
             )}
 
-            {/* Length pills */}
-            <div className="mb-6">
-              <div className="flex items-baseline justify-between mb-3">
-                <p className="text-[13px] font-extrabold uppercase tracking-wider text-[color:var(--color-myntra-navy)]">Select Length</p>
-                <span className="text-[12px] text-[color:var(--color-myntra-pink)] font-semibold">Size Chart</span>
+            {/* Quantity (per-unit garments) or Length pills (per-meter fabric) */}
+            {perUnit ? (
+              <div className="mb-6">
+                <div className="flex items-baseline justify-between mb-3">
+                  <p className="text-[13px] font-extrabold uppercase tracking-wider text-[color:var(--color-myntra-navy)]">Quantity</p>
+                  <span className="text-[12px] text-[color:var(--color-myntra-pink)] font-semibold">Size Guide</span>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {quantityOptions.map(q => (
+                    <button
+                      key={q}
+                      onClick={() => setMeters(q)}
+                      className={`min-w-[48px] h-11 rounded-full border-2 text-[13px] font-bold transition-colors ${meters === q ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)] bg-[#F5E8C8]' : 'border-[color:var(--color-myntra-border)] text-[color:var(--color-myntra-navy)] hover:border-[color:var(--color-myntra-navy)]'}`}
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+                {stock <= 5 && (
+                  <p className="text-[12px] text-[color:var(--color-myntra-pink)] font-semibold mt-2">
+                    Only {stock} {stock === 1 ? unitNoun : `${unitNoun}s`} left — order soon
+                  </p>
+                )}
               </div>
-              <div className="flex gap-2 flex-wrap">
-                {lengthOptions.filter(l => l <= stock).map(l => (
-                  <button
-                    key={l}
-                    onClick={() => setMeters(l)}
-                    className={`min-w-[56px] h-11 rounded-full border-2 text-[13px] font-bold transition-colors ${meters === l ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)] bg-[#F5E8C8]' : 'border-[color:var(--color-myntra-border)] text-[color:var(--color-myntra-navy)] hover:border-[color:var(--color-myntra-navy)]'}`}
-                  >
-                    {l} m
-                  </button>
-                ))}
+            ) : (
+              <div className="mb-6">
+                <div className="flex items-baseline justify-between mb-3">
+                  <p className="text-[13px] font-extrabold uppercase tracking-wider text-[color:var(--color-myntra-navy)]">Select Length</p>
+                  <span className="text-[12px] text-[color:var(--color-myntra-pink)] font-semibold">Size Chart</span>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {lengthOptions.filter(l => l <= stock).map(l => (
+                    <button
+                      key={l}
+                      onClick={() => setMeters(l)}
+                      className={`min-w-[56px] h-11 rounded-full border-2 text-[13px] font-bold transition-colors ${meters === l ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)] bg-[#F5E8C8]' : 'border-[color:var(--color-myntra-border)] text-[color:var(--color-myntra-navy)] hover:border-[color:var(--color-myntra-navy)]'}`}
+                    >
+                      {l} m
+                    </button>
+                  ))}
+                </div>
+                {stock < 10 && (
+                  <p className="text-[12px] text-[color:var(--color-myntra-pink)] font-semibold mt-2">
+                    Only {stock}m left — order soon
+                  </p>
+                )}
               </div>
-              {stock < 10 && (
-                <p className="text-[12px] text-[color:var(--color-myntra-pink)] font-semibold mt-2">
-                  Only {stock}m left — order soon
-                </p>
-              )}
-            </div>
+            )}
 
             {/* CTAs */}
             <div className="flex gap-3 mb-7">
@@ -358,7 +391,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
             {/* Trust strip */}
             <div className="grid grid-cols-3 gap-3 mb-6">
               {[
-                { Icon: Zap, label: '40-min · Hyderabad' },
+                { Icon: Zap, label: 'Fast · Hyderabad' },
                 { Icon: Truck, label: 'Free over ₹1,999' },
                 { Icon: ShieldCheck, label: '100% Authentic' }
               ].map(({ Icon, label }) => (
@@ -399,7 +432,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
                           <dt className="text-[color:var(--color-myntra-ink-soft)]">Weave Type</dt><dd className="font-semibold">{fabric.weaveType ?? '—'}</dd>
                           <dt className="text-[color:var(--color-myntra-ink-soft)]">Origin</dt><dd className="font-semibold">{fabric.origin}</dd>
                           <dt className="text-[color:var(--color-myntra-ink-soft)]">Category</dt><dd className="font-semibold">{fabric.category}</dd>
-                          <dt className="text-[color:var(--color-myntra-ink-soft)]">In Stock</dt><dd className="font-semibold">{stock} m</dd>
+                          <dt className="text-[color:var(--color-myntra-ink-soft)]">In Stock</dt><dd className="font-semibold">{perUnit ? `${stock} ${stock === 1 ? unitNoun : `${unitNoun}s`}` : `${stock} m`}</dd>
                           <dt className="text-[color:var(--color-myntra-ink-soft)]">Tags</dt><dd className="font-semibold">{fabric.tags.join(', ')}</dd>
                         </dl>
                       )}
@@ -408,7 +441,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
                       )}
                       {key === 'delivery' && (
                         <div className="space-y-2">
-                          <p className="flex items-start gap-2"><Zap className="w-4 h-4 mt-0.5 text-[color:var(--color-myntra-pink)] shrink-0" /> <span><b>Hyderabad — 40 minutes.</b> Studios Prêt and Couture Customisations stocked at the city studio go out by motorbike inside forty minutes of order placement.</span></p>
+                          <p className="flex items-start gap-2"><Zap className="w-4 h-4 mt-0.5 text-[color:var(--color-myntra-pink)] shrink-0" /> <span><b>Express delivery across Hyderabad.</b> Studios Prêt and Couture Customisations stocked at the city studio go out same-day by courier — express delivery to select Hyderabad pincodes is coming soon.</span></p>
                           <p className="flex items-start gap-2"><Truck className="w-4 h-4 mt-0.5 text-[color:var(--color-myntra-pink)] shrink-0" /> <span>Free shipping pan-India on orders over ₹1,999. Hand-cut to the metre and dispatched within 48 hours.</span></p>
                         </div>
                       )}

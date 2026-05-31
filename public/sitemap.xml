@@ -1,15 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SEO / crawlability note — READ BEFORE EDITING.
+
+  This app is a client-rendered SPA that uses HASH-based routing (e.g.
+  https://tresor-couture.vercel.app/#/shop). Search engines DROP everything
+  after the '#' when crawling and indexing, so every hash URL collapses to the
+  same document: the root "/". Listing "/#/shop", "/#/product/123", etc. in a
+  sitemap therefore does NOT create distinct indexable pages — Google treats
+  them as duplicates of "/". (The old #-fragment AJAX-crawling scheme was
+  deprecated by Google in 2015 and is no longer supported.)
+
+  There is also no server-side rendering or prerender step, and vercel.json
+  only rewrites /auth/action -> /index.html (no SPA catch-all). So clean path
+  URLs like /shop or /product/:id would 404 at the edge and cannot be listed
+  here honestly either.
+
+  As a result this sitemap intentionally lists ONLY the root URL, which is the
+  one URL that returns real HTML and renders the full app.
+
+  RECOMMENDATION to make category / product pages individually crawlable:
+    1. Migrate routing from hash (#/shop) to the History API (clean paths
+       like /shop, /product/:id). The custom RouterContext already inspects
+       window.location, so this is a contained change.
+    2. Add a Vercel SPA catch-all rewrite so deep links resolve:
+         { "source": "/(.*)", "destination": "/index.html" }
+       (placed AFTER the existing /auth/action and /__/ rewrites).
+    3. Add prerendering / SSR for crawlers — e.g. Vercel's prerender, a
+       static prerender of key routes (vite-plugin-ssr / react-snap), or
+       a small Edge/serverless function that injects per-route <title>,
+       meta description, canonical, and Product structured data (JSON-LD).
+    4. Once the above land, regenerate this sitemap with the clean path URLs
+       for the home, shop categories, customise, and each product.
+-->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://tresor-couture.vercel.app/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://tresor-couture.vercel.app/#/shop</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://tresor-couture.vercel.app/#/customise</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://tresor-couture.vercel.app/#/shop?category=Sarees</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tresor-couture.vercel.app/#/shop?category=Lehenga%20Cholis</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tresor-couture.vercel.app/#/shop?category=Anarkalis</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tresor-couture.vercel.app/#/shop?category=Western%20Wear</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tresor-couture.vercel.app/#/shop?category=Studios%20Pr%C3%AAt</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tresor-couture.vercel.app/#/shop?category=Dyeable%20Fabrics</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://tresor-couture.vercel.app/#/shop?category=Lace</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://tresor-couture.vercel.app/#/login</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>https://tresor-couture.vercel.app/#/register</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url>
+    <loc>https://tresor-couture.vercel.app/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
 </urlset>
