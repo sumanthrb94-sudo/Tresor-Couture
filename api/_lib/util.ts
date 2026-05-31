@@ -5,12 +5,20 @@
 // public keys over HTTPS and needs no service-account key (which org policy
 // blocks anyway). Secrets (Brevo) live in Vercel env, never in the client.
 
-import { getApps, initializeApp } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
-import type { DecodedIdToken } from 'firebase-admin/auth';
-
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'tresor-couture';
-const adminApp = getApps()[0] ?? initializeApp({ projectId: PROJECT_ID });
+
+// firebase-admin is imported and initialised LAZILY (inside verifyIdToken),
+// not at module load — so endpoints that don't need auth (e.g. /api/contact)
+// can never be taken down by an admin-SDK load/init issue.
+let _adminAuth: any = null;
+async function getAdminAuth(): Promise<any> {
+  if (_adminAuth) return _adminAuth;
+  const { getApps, initializeApp } = await import('firebase-admin/app');
+  const { getAuth } = await import('firebase-admin/auth');
+  const app = getApps()[0] ?? initializeApp({ projectId: PROJECT_ID });
+  _adminAuth = getAuth(app);
+  return _adminAuth;
+}
 
 export function setCors(res: any): void {
   res.setHeader('Access-Control-Allow-Origin', process.env.ALLOWED_ORIGIN || '*');
@@ -19,11 +27,12 @@ export function setCors(res: any): void {
 }
 
 /** Verify a Firebase ID token (keyless). Returns the decoded token or null. */
-export async function verifyIdToken(authHeader: string | undefined): Promise<DecodedIdToken | null> {
+export async function verifyIdToken(authHeader: string | undefined): Promise<any | null> {
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
   if (!token) return null;
   try {
-    return await getAuth(adminApp).verifyIdToken(token);
+    const adminAuth = await getAdminAuth();
+    return await adminAuth.verifyIdToken(token);
   } catch {
     return null;
   }
