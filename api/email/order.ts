@@ -8,8 +8,62 @@
 //                  subtotal, shipping, tax, total, couponCode?, couponDiscount?,
 //                  shippingAddress:{fullName,line1,line2?,city,state,postalCode} },
 //         name? }
+//
+// SELF-CONTAINED: no relative imports (the project is ESM, which can't resolve
+// extensionless relative imports — that crashes the function at cold start).
 
-import { setCors, verifyIdToken, brevoSendEmail, rupee, escapeHtml } from '../_lib/util';
+const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'tresor-couture';
+
+function setCors(res: any): void {
+  res.setHeader('Access-Control-Allow-Origin', process.env.ALLOWED_ORIGIN || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+}
+
+function rupee(n: number): string {
+  return `₹${Number(n || 0).toLocaleString('en-IN')}`;
+}
+
+function escapeHtml(s: string): string {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+}
+
+let _adminAuth: any = null;
+async function verifyIdToken(authHeader: string | undefined): Promise<any | null> {
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+  if (!token) return null;
+  try {
+    if (!_adminAuth) {
+      const { getApps, initializeApp } = await import('firebase-admin/app');
+      const { getAuth } = await import('firebase-admin/auth');
+      const app = getApps()[0] ?? initializeApp({ projectId: PROJECT_ID });
+      _adminAuth = getAuth(app);
+    }
+    return await _adminAuth.verifyIdToken(token);
+  } catch {
+    return null;
+  }
+}
+
+async function brevoSendEmail(args: {
+  to: { email: string; name?: string };
+  subject: string;
+  htmlContent: string;
+  textContent: string;
+}): Promise<void> {
+  const key = process.env.BREVO_API_KEY;
+  if (!key) throw new Error('BREVO_API_KEY is not configured');
+  const sender = {
+    email: process.env.BREVO_SENDER_EMAIL || 'no-reply@tresorcouture.in',
+    name: process.env.BREVO_SENDER_NAME || 'Tresor Couture',
+  };
+  const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: { 'api-key': key, 'content-type': 'application/json', accept: 'application/json' },
+    body: JSON.stringify({ sender, to: [args.to], subject: args.subject, htmlContent: args.htmlContent, textContent: args.textContent }),
+  });
+  if (!r.ok) throw new Error(`brevo email ${r.status}: ${await r.text()}`);
+}
 
 function renderEmail(order: any, customerName: string): { subject: string; html: string; text: string } {
   const items = Array.isArray(order.items) ? order.items : [];

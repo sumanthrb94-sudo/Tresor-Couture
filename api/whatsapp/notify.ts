@@ -8,8 +8,65 @@
 // Body: { order: { id, total, customerName? } }
 // Dormant (returns ok:false) until WHATSAPP_TOKEN/WHATSAPP_PHONE_ID/template
 // and WHATSAPP_ADMIN_TO are configured in Vercel.
+//
+// SELF-CONTAINED: no relative imports (the project is ESM, which can't resolve
+// extensionless relative imports — that crashes the function at cold start).
 
-import { setCors, verifyIdToken, whatsappSendTemplate, rupee } from '../_lib/util';
+const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'tresor-couture';
+
+function setCors(res: any): void {
+  res.setHeader('Access-Control-Allow-Origin', process.env.ALLOWED_ORIGIN || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+}
+
+function rupee(n: number): string {
+  return `₹${Number(n || 0).toLocaleString('en-IN')}`;
+}
+
+let _adminAuth: any = null;
+async function verifyIdToken(authHeader: string | undefined): Promise<any | null> {
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+  if (!token) return null;
+  try {
+    if (!_adminAuth) {
+      const { getApps, initializeApp } = await import('firebase-admin/app');
+      const { getAuth } = await import('firebase-admin/auth');
+      const app = getApps()[0] ?? initializeApp({ projectId: PROJECT_ID });
+      _adminAuth = getAuth(app);
+    }
+    return await _adminAuth.verifyIdToken(token);
+  } catch {
+    return null;
+  }
+}
+
+/** Send a WhatsApp template message via the Meta Cloud API. No-ops (false)
+ *  until WHATSAPP_TOKEN, WHATSAPP_PHONE_ID and a template name are set. */
+async function whatsappSendTemplate(args: { to: string; params: string[]; languageCode?: string }): Promise<boolean> {
+  const token = process.env.WHATSAPP_TOKEN;
+  const phoneId = process.env.WHATSAPP_PHONE_ID;
+  const template = process.env.WHATSAPP_TEMPLATE;
+  const to = (args.to || '').replace(/[^\d]/g, '');
+  if (!token || !phoneId || !template || !to) return false;
+
+  const r = await fetch(`https://graph.facebook.com/v21.0/${phoneId}/messages`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      to,
+      type: 'template',
+      template: {
+        name: template,
+        language: { code: args.languageCode || process.env.WHATSAPP_LANG || 'en' },
+        components: [{ type: 'body', parameters: args.params.map(text => ({ type: 'text', text: String(text) })) }],
+      },
+    }),
+  });
+  if (!r.ok) throw new Error(`whatsapp ${r.status}: ${await r.text()}`);
+  return true;
+}
 
 export default async function handler(req: any, res: any) {
   setCors(res);

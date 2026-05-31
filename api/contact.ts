@@ -1,8 +1,33 @@
 // POST /api/contact  — add an email to the Brevo marketing list.
 // Body: { email, source?, name? }. Public (newsletter capture); validates the
 // email shape. Used by the footer/home capture and on signup.
+//
+// SELF-CONTAINED: no relative imports. The project is ESM ("type":"module"),
+// and Node ESM does not resolve extensionless relative imports — importing a
+// shared './_lib/util' here throws ERR_MODULE_NOT_FOUND at cold start and the
+// function returns FUNCTION_INVOCATION_FAILED. Inlining the few helpers it
+// needs keeps this endpoint bullet-proof.
 
-import { setCors, brevoAddContact, EMAIL_RE } from './_lib/util';
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+function setCors(res: any): void {
+  res.setHeader('Access-Control-Allow-Origin', process.env.ALLOWED_ORIGIN || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+}
+
+async function brevoAddContact(email: string, attributes: Record<string, unknown>): Promise<void> {
+  const key = process.env.BREVO_API_KEY;
+  if (!key) throw new Error('BREVO_API_KEY is not configured');
+  const listId = process.env.BREVO_LIST_ID ? Number(process.env.BREVO_LIST_ID) : undefined;
+  const r = await fetch('https://api.brevo.com/v3/contacts', {
+    method: 'POST',
+    headers: { 'api-key': key, 'content-type': 'application/json', accept: 'application/json' },
+    body: JSON.stringify({ email, attributes, updateEnabled: true, ...(listId ? { listIds: [listId] } : {}) }),
+  });
+  // 201 created, 204 updated — both success.
+  if (!r.ok && r.status !== 204) throw new Error(`brevo contact ${r.status}: ${await r.text()}`);
+}
 
 export default async function handler(req: any, res: any) {
   setCors(res);
