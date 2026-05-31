@@ -218,3 +218,31 @@ Several of these gaps I can begin closing immediately using integrations already
 - No WhatsApp in code: only `public/branding/social/whatsapp-business-640.png`.
 - Catalog: `src/constants.ts` `FABRICS` (34 items), `MASTER_CATEGORY_TREE` (Lace declared, unpopulated).
 - Admin gate: `.env.example` (`VITE_ADMIN_PASSCODE`, "NOT real security").
+
+---
+
+## Appendix B — Independent audit addendum (refinements)
+
+A second, independent code audit confirmed every blocker above and added these refinements:
+
+- **Catalog is 34 products** (all carry an `inStockMeters` value), but only **~20 real photos** in `public/products/` are reused across the 34 — distinct imagery is thinner than the catalog size.
+- **Guest checkout is half-built → effectively sign-in is mandatory.** `ordersApi.place()` throws `not_signed_in` and the rules require `userId == auth.uid`, so the "continue as guest" path cannot actually place an order. This is real conversion friction to fix.
+- **SEO is undermined by hash routing.** `sitemap.xml` URLs use `/#/shop?...` fragments and the SPA is client-rendered with no SSR/prerender — product/category pages will index poorly on Google. Fine for a paid/social-led launch; weak for organic. (Earlier "SEO 🟢" applies to meta/OG/robots, not crawlability.)
+- **The home "Become a member" callout captured nothing** — it only navigated to register, with no email field. *(Now fixed — see Appendix C.)*
+- **Default admin passcode is literally `tresor-atelier`** (`AdminAuthContext`) — must be overridden via `VITE_ADMIN_PASSCODE` before launch. (Data is still protected by the real `admin` custom claim + rules; the passcode only hides the UI.)
+- **Dead code:** the legacy `localStorage` layer (`src/data/storage.ts`, `useStore.ts`) is superseded by the Firestore APIs but never removed — harmless but confusing; candidate for deletion.
+- **Firestore starts empty** until `npm run seed` (or the in-app seed) is run — a required launch step.
+- **Pincode inputs on Cart/Product pages are decorative** — they regex-validate a 6-digit PIN but perform no serviceability lookup.
+- **"Out for Delivery" in the order tracker is synthetic** — never lights up (no ETA logic).
+- **Firestore rules themselves are well-written** (owner-scoping, admin claim, default-deny). The material gap is **client-trusted order totals**, not the rule structure.
+
+## Appendix C — First build shipped (capture, no credentials needed)
+
+To stop leaking the expected 1–2k/day of traffic while payments/ESP/WhatsApp are still being wired, a **provider-agnostic lead-capture sink** was added:
+
+- New `subscribers` Firestore collection + rules (public create with email-shape validation and a closed field set; admin-only read/list).
+- `subscribersApi.add()` in `src/lib/firebase.ts` (email + optional WhatsApp number + source attribution).
+- New `src/components/NewsletterForm.tsx`, wired into the **home callout** (which previously captured nothing) and the **footer** ("Join the List").
+- Best-effort UX: a write hiccup never blocks the visitor; duplicates are de-duped at sync time.
+
+**Next:** sync this list into MailerLite (connected) + the WhatsApp BSP once those are set up, and add Meta Pixel/GA4 (needs IDs) so captured leads are also retargetable.

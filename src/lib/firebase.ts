@@ -786,4 +786,30 @@ export const usersApi = {
   list: () => listAll<DocumentData>('users', [qLimit(200)])
 };
 
+/* ------------------------------------------------------------------ */
+/*  Subscribers — provider-agnostic marketing-list capture            */
+/* ------------------------------------------------------------------ */
+/**
+ * Lead-capture sink. Newsletter / WhatsApp opt-ins land in the
+ * `subscribers` collection so we own the audience from day one, even
+ * before an ESP (MailerLite) or WhatsApp BSP is wired up. A later sync
+ * job — or the admin CSV export — pushes these into the marketing
+ * platform. Public create is allowed by firestore.rules with email-shape
+ * validation and a closed field set; read/list is admin-only. Create-only
+ * for the public — re-subscribes just append and are de-duped at sync.
+ */
+export const subscribersApi = {
+  add: async (input: { email: string; phone?: string; source?: string; consent?: boolean }) => {
+    const email = input.email.trim().toLowerCase();
+    return addDoc(collection(db, 'subscribers'), {
+      email,
+      ...(input.phone ? { phone: input.phone.trim() } : {}),
+      source: input.source ?? 'web',
+      consent: input.consent ?? true,
+      createdAt: serverTimestamp(),
+    });
+  },
+  list: () => listAll<DocumentData>('subscribers', [orderBy('createdAt', 'desc'), qLimit(1000)]),
+};
+
 export { Timestamp };

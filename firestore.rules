@@ -131,6 +131,18 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    /* ---------- subscribers (marketing-list capture) ---------- */
+    // Newsletter / WhatsApp opt-in sink. Public create so guests can
+    // subscribe before they have an account; validated to an email shape
+    // and a closed field set to limit abuse. The list is a marketing
+    // asset, not public — read/list/update/delete are admin-only.
+    match /subscribers/{subId} {
+      allow create: if request.resource.data.email is string
+        && request.resource.data.email.matches('^[^@ ]+@[^@ ]+[.][^@ ]+$')
+        && request.resource.data.keys().hasOnly(['email', 'phone', 'source', 'consent', 'createdAt']);
+      allow read, update, delete: if isAdmin();
+    }
+
     /* ---------- deny everything else ---------- */
     match /{document=**} {
       allow read, write: if false;

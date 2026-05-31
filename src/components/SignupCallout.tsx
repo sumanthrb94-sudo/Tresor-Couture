@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Sparkles, Heart, ShoppingBag, Crown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
+import NewsletterForm from './NewsletterForm';
 
 // Dismissal is sessionStorage-scoped (not localStorage) so members who ignore
 // the banner today still see it on their next visit — we don't want to lose
@@ -85,6 +86,13 @@ const SignupCallout: React.FC = () => {
               >
                 Already a member? Sign in →
               </button>
+            </div>
+
+            <div className="mt-5 pt-5 border-t border-[#E8DCC4]">
+              <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mb-2">
+                Not ready for an account? Get launch updates and private previews:
+              </p>
+              <NewsletterForm source="home_callout" compact />
             </div>
           </div>
 

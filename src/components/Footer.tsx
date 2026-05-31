@@ -2,6 +2,7 @@ import React from 'react';
 import { Facebook, Instagram, Twitter, Youtube, Phone, Mail, ShieldCheck, Truck, Zap } from 'lucide-react';
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../context/AuthContext';
+import NewsletterForm from './NewsletterForm';
 
 const cols = [
   {
@@ -67,6 +68,13 @@ const Footer: React.FC = () => {
             <div className="px-4 py-2.5 bg-[color:var(--color-myntra-navy)] text-white rounded-md text-[12px] font-semibold">
               Download on iOS
             </div>
+          </div>
+
+          <h4 className="text-[12px] font-extrabold uppercase tracking-[0.15em] text-[color:var(--color-myntra-navy)] mb-3">
+            Join the List
+          </h4>
+          <div className="mb-6 max-w-md">
+            <NewsletterForm source="footer" />
           </div>
 
           <h4 className="text-[12px] font-extrabold uppercase tracking-[0.15em] text-[color:var(--color-myntra-navy)] mb-3">
