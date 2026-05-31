@@ -263,34 +263,25 @@ export async function loginWithGoogle() {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
 
-  // Mobile browsers block/auto-close auth popups (and the close arrives as
-  // error codes we can't reliably distinguish), so go straight to the
-  // redirect flow on mobile — it's the supported path there. authDomain is
-  // now same-origin (see resolveAuthDomain), so the redirect session survives.
-  const isMobile =
-    typeof navigator !== 'undefined' &&
-    (/Android|iPhone|iPad|iPod|Mobile|Silk/i.test(navigator.userAgent) ||
-      (typeof window !== 'undefined' && 'ontouchstart' in window && window.innerWidth < 1024));
-
-  if (isMobile) {
-    try { window.sessionStorage.setItem('tresor.google.redirect', '1'); } catch { /* ignore */ }
-    await signInWithRedirect(auth, provider);
-    return null;
-  }
-
+  // Popup on EVERY platform. The popup returns the credential via postMessage,
+  // so it does NOT depend on cross-origin storage — unlike signInWithRedirect,
+  // which loops back to the login page on mobile because the browser partitions
+  // the firebaseapp.com iframe's storage and Firebase can't read the result
+  // back. Modern mobile browsers allow this popup because it opens directly
+  // from the user's tap on the sign-in button.
   try {
     const cred: UserCredential = await signInWithPopup(auth, provider);
     await materialiseGoogleProfile(cred.user);
     return cred.user;
   } catch (err) {
     const code = (err as { code?: string }).code;
-    // Popup blocked or aborted by environment → fall back to redirect.
-    if (
-      code === 'auth/popup-blocked' ||
-      code === 'auth/operation-not-supported-in-this-environment' ||
-      code === 'auth/cancelled-popup-request' ||
-      code === 'auth/popup-closed-by-user'
-    ) {
+    // The user dismissing the popup isn't an error worth surfacing.
+    if (code === 'auth/cancelled-popup-request' || code === 'auth/popup-closed-by-user') {
+      return null;
+    }
+    // Only when the environment genuinely can't open a popup do we fall back to
+    // redirect (desktop in-app webviews, strict popup blockers).
+    if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
       try { window.sessionStorage.setItem('tresor.google.redirect', '1'); } catch { /* ignore */ }
       await signInWithRedirect(auth, provider);
       return null;
