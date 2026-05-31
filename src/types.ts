@@ -106,6 +106,9 @@ export interface Order {
   total: number;
   shippingAddress: ShippingAddress;
   paymentMethod: PaymentMethod;
+  /** Settlement state. 'pending' until a gateway (Cashfree, later) or COD
+   *  delivery confirms payment. Online gateway is not wired yet. */
+  paymentStatus?: 'pending' | 'paid' | 'failed';
   placedAt: string;
   status?: OrderStatus;
   /** Optional applied coupon code (uppercase). */

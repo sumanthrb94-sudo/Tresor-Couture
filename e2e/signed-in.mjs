@@ -77,21 +77,14 @@ async function step(name, fn) {
       if (await inp.count()) { const c = await inp.inputValue().catch(() => ''); if (!c.trim()) await inp.fill(val); }
     }
     await page.getByRole('button', { name: 'Save & Continue' }).click();
-    await page.getByRole('button', { name: /^UPI/ }).first().click().catch(() => {});
-    const upi = page.locator('input[placeholder="yourname@bank"]').first();
-    await upi.waitFor({ timeout: 10000 });
-    await upi.fill('tresore2e@okhdfc');
-    return 'address + payment ready';
+    // Payment step: COD is the only live method (online gateway = coming soon).
+    await page.getByRole('button', { name: /^Place Order/ }).waitFor({ timeout: 10000 });
+    return 'address saved, COD payment step ready';
   });
 
   let orderId = '';
-  await step('Pay (UPI) → order confirmation', async () => {
+  await step('Place COD order → confirmation', async () => {
     await page.getByRole('button', { name: /^Place Order/ }).click();
-    const dialog = page.locator('[role="dialog"][aria-labelledby="payment-modal-title"]');
-    await dialog.waitFor({ timeout: 10000 });
-    const m = dialog.locator('input[placeholder="yourname@bank"]').first();
-    if (await m.count()) await m.fill('tresore2e@okhdfc');
-    await dialog.getByRole('button', { name: /^Pay /i }).click();
     await page.waitForURL(/#\/confirmation\//, { timeout: 25000 });
     orderId = page.url().split('/confirmation/')[1] ?? '';
     return `confirmed → order ${orderId}`;

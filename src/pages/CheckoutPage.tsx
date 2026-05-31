@@ -3,12 +3,12 @@ import { CheckCircle2, CreditCard, Lock, MapPin, Pencil, Smartphone, Tag, Truck,
 import { useCart } from '../context/CartContext';
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../context/AuthContext';
+import { useOrders } from '../context/OrderContext';
 import { formatINR } from '../constants';
 import { PaymentMethod, ShippingAddress } from '../types';
 import { couponsApi } from '../lib/firebase';
 import { analytics } from '../lib/analytics';
 import FabricImage from '../components/FabricImage';
-import PaymentModal from '../components/PaymentModal';
 
 type Step = 'login' | 'address' | 'payment';
 
@@ -94,6 +94,7 @@ const CheckoutPage: React.FC = () => {
   const { resolved, subtotal, shipping, tax, total, clearCart } = useCart();
   const { navigate } = useRouter();
   const { user, updateProfile } = useAuth();
+  const { placeOrder } = useOrders();
 
   const [step, setStep] = useState<Step>(user ? 'address' : 'login');
   const [phone, setPhone] = useState(user?.phone ?? '');
@@ -109,12 +110,11 @@ const CheckoutPage: React.FC = () => {
   // success. Default ON for signed-in users without a saved address.
   const [saveAddress, setSaveAddress] = useState<boolean>(!!user && !user?.defaultAddress);
 
-  const [payment, setPayment] = useState<PaymentMethod>('upi');
-  const [card, setCard] = useState({ number: '', name: '', expiry: '', cvv: '' });
-  const [upi, setUpi] = useState('');
+  // Cash on Delivery is the only live method until the Cashfree gateway lands.
+  const [payment, setPayment] = useState<PaymentMethod>('cod');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [placeError, setPlaceError] = useState<string | null>(null);
-  const [showPayment, setShowPayment] = useState(false);
+  const [placing, setPlacing] = useState(false);
 
   const [couponInput, setCouponInput] = useState('');
   const [couponCode, setCouponCode] = useState<string | null>(null);
@@ -186,19 +186,6 @@ const CheckoutPage: React.FC = () => {
     return true;
   };
 
-  const validatePayment = (): boolean => {
-    const e: Record<string, string> = {};
-    if (payment === 'card') {
-      if (!/^[0-9\s]{12,19}$/.test(card.number)) e.cardNumber = 'Enter a valid card number';
-      if (!card.name.trim()) e.cardName = 'Required';
-      if (!/^(0[1-9]|1[0-2])\/?([0-9]{2})$/.test(card.expiry)) e.cardExpiry = 'MM/YY';
-      if (!/^[0-9]{3,4}$/.test(card.cvv)) e.cardCvv = '3-4 digits';
-    }
-    if (payment === 'upi' && !/^[\w.\-]+@[\w]+$/.test(upi)) e.upi = 'Enter a valid UPI ID';
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
-
   const applyCoupon = async () => {
     const code = couponInput.trim().toUpperCase();
     if (!code) return;
@@ -250,38 +237,48 @@ const CheckoutPage: React.FC = () => {
     setTimeout(() => fieldRefs.current.fullName?.focus(), 0);
   };
 
-  // Quick lightweight gate before opening the payment modal — the modal
-  // re-validates payment-instrument details itself.
-  const handleStartPayment = () => {
+  // Online gateway (Cashfree) is not wired yet, so checkout completes via Cash
+  // on Delivery: the order is recorded server-side with paymentStatus 'pending'
+  // and settled on delivery. No fake "payment successful" theatre.
+  const finishOrder = (orderId: string, placedAddress: ShippingAddress) => {
+    // Fire-and-forget save of the shipping address as the new default.
+    if (saveAddress && user) {
+      void updateProfile({ defaultAddress: placedAddress }).catch(err => {
+        console.warn('[checkout] could not save default address', err);
+      });
+    }
+    analytics.purchase(orderId, payable);
+    // Cart MUST be emptied before navigation so the user can't re-place by
+    // hitting back.
+    clearCart();
+    navigate({ name: 'confirmation', orderId });
+  };
+
+  const handlePlaceOrder = async () => {
     if (!validateAddress()) {
       setStep('address');
       return;
     }
-    if (!validatePayment()) return;
     if (!user) {
       setPlaceError('Please sign in to place your order.');
       navigate({ name: 'login' });
       return;
     }
     setPlaceError(null);
-    analytics.addPaymentInfo(payable, payment);
-    setShowPayment(true);
-  };
-
-  const handlePaymentSuccess = (orderId: string, placedAddress: ShippingAddress) => {
-    // Fire-and-forget save of the shipping address as the new default. Don't
-    // block confirmation navigation on Firestore latency or failure.
-    if (saveAddress && user) {
-      void updateProfile({ defaultAddress: placedAddress }).catch(err => {
-        console.warn('[checkout] could not save default address', err);
+    setPlacing(true);
+    try {
+      analytics.addPaymentInfo(payable, 'cod');
+      const placed = await placeOrder({
+        items: resolved.map(({ item }) => ({ fabricId: item.fabricId, meters: item.meters, color: item.color })),
+        shippingAddress: address,
+        paymentMethod: 'cod',
+        couponCode: couponCode ?? undefined,
       });
+      finishOrder(placed.id, address);
+    } catch (err) {
+      setPlacing(false);
+      setPlaceError(err instanceof Error ? err.message : 'Could not place your order. Please try again.');
     }
-    // Cart MUST be emptied before navigation so the user can't accidentally
-    // re-place the same order by hitting back.
-    analytics.purchase(orderId, payable);
-    clearCart();
-    setShowPayment(false);
-    navigate({ name: 'confirmation', orderId });
   };
 
   return (
@@ -401,17 +398,17 @@ const CheckoutPage: React.FC = () => {
               </button>
             </StepBlock>
 
-            <StepBlock id="payment" index={3} title="Payment Options" currentStep={step} setStep={setStep}>
+            <StepBlock id="payment" index={3} title="Payment Method" currentStep={step} setStep={setStep}>
               <div className="flex items-center gap-3 mb-4 text-[color:var(--color-myntra-ink-soft)]">
                 <Lock className="w-4 h-4" />
-                <p className="text-[13px]">All payments are encrypted. Demo checkout — no real charges.</p>
+                <p className="text-[13px]">Online payment is launching soon. For now, pay securely on delivery.</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
                 {([
-                  { id: 'upi', label: 'UPI', sub: 'GPay / PhonePe / Paytm', icon: Smartphone },
-                  { id: 'card', label: 'Credit / Debit Card', sub: 'Visa, MC, Rupay', icon: CreditCard },
-                  { id: 'cod', label: 'Cash on Delivery', sub: 'Pay when you receive', icon: Truck }
+                  { id: 'cod',  label: 'Cash on Delivery', sub: 'Pay when you receive', icon: Truck, enabled: true },
+                  { id: 'upi',  label: 'UPI',               sub: 'Coming soon',          icon: Smartphone, enabled: false },
+                  { id: 'card', label: 'Card',              sub: 'Coming soon',          icon: CreditCard, enabled: false },
                 ] as const).map(opt => {
                   const Icon = opt.icon;
                   const active = payment === opt.id;
@@ -419,8 +416,15 @@ const CheckoutPage: React.FC = () => {
                     <button
                       key={opt.id}
                       type="button"
-                      onClick={() => setPayment(opt.id)}
-                      className={`text-left border rounded p-3 transition-colors ${active ? 'border-[color:var(--color-myntra-pink)] bg-[#F5E8C8]' : 'border-[color:var(--color-myntra-border)] hover:border-[color:var(--color-myntra-navy)]'}`}
+                      disabled={!opt.enabled}
+                      onClick={() => opt.enabled && setPayment(opt.id)}
+                      className={`text-left border rounded p-3 transition-colors ${
+                        !opt.enabled
+                          ? 'border-[color:var(--color-myntra-border-soft)] opacity-50 cursor-not-allowed'
+                          : active
+                            ? 'border-[color:var(--color-myntra-pink)] bg-[#F5E8C8]'
+                            : 'border-[color:var(--color-myntra-border)] hover:border-[color:var(--color-myntra-navy)]'
+                      }`}
                     >
                       <Icon className="w-5 h-5 mb-2 text-[color:var(--color-myntra-navy)]" />
                       <p className="text-[13px] font-bold">{opt.label}</p>
@@ -430,44 +434,10 @@ const CheckoutPage: React.FC = () => {
                 })}
               </div>
 
-              {payment === 'card' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="sm:col-span-2">
-                    <label className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">Card Number</label>
-                    <input className="input-box" inputMode="numeric" placeholder="1234 5678 9012 3456" value={card.number} onChange={e => setCard(c => ({ ...c, number: e.target.value }))} />
-                    {errors.cardNumber && <p className="text-[12px] text-[color:var(--color-myntra-pink)] mt-1 font-semibold">{errors.cardNumber}</p>}
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">Name on Card</label>
-                    <input className="input-box" value={card.name} onChange={e => setCard(c => ({ ...c, name: e.target.value }))} />
-                    {errors.cardName && <p className="text-[12px] text-[color:var(--color-myntra-pink)] mt-1 font-semibold">{errors.cardName}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">Expiry (MM/YY)</label>
-                    <input className="input-box" value={card.expiry} onChange={e => setCard(c => ({ ...c, expiry: e.target.value }))} />
-                    {errors.cardExpiry && <p className="text-[12px] text-[color:var(--color-myntra-pink)] mt-1 font-semibold">{errors.cardExpiry}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">CVV</label>
-                    <input className="input-box" type="password" inputMode="numeric" value={card.cvv} onChange={e => setCard(c => ({ ...c, cvv: e.target.value }))} />
-                    {errors.cardCvv && <p className="text-[12px] text-[color:var(--color-myntra-pink)] mt-1 font-semibold">{errors.cardCvv}</p>}
-                  </div>
-                </div>
-              )}
-
-              {payment === 'upi' && (
-                <div>
-                  <label className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">UPI ID</label>
-                  <input className="input-box max-w-md" placeholder="yourname@bank" value={upi} onChange={e => setUpi(e.target.value)} />
-                  {errors.upi && <p className="text-[12px] text-[color:var(--color-myntra-pink)] mt-1 font-semibold">{errors.upi}</p>}
-                </div>
-              )}
-
-              {payment === 'cod' && (
-                <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)]">
-                  Pay in cash when our courier arrives. Available across India for orders below ₹50,000.
-                </p>
-              )}
+              <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)]">
+                Pay in cash when our courier arrives. Available across India for orders below ₹50,000.
+                Online card &amp; UPI payment will be enabled shortly.
+              </p>
 
               {placeError && (
                 <p role="alert" className="mt-4 text-[13px] font-semibold text-[color:var(--color-myntra-pink)] bg-[color:var(--color-myntra-bg-sale)] border border-[color:var(--color-myntra-border)] px-3 py-2 rounded">
@@ -476,11 +446,11 @@ const CheckoutPage: React.FC = () => {
               )}
 
               <button
-                onClick={handleStartPayment}
-                disabled={showPayment}
+                onClick={handlePlaceOrder}
+                disabled={placing}
                 className="btn-primary mt-5 w-full sm:w-auto inline-flex items-center justify-center gap-2"
               >
-                {`Place Order · ${formatINR(payable)}`}
+                {placing ? 'Placing order…' : `Place Order · ${formatINR(payable)}`}
               </button>
             </StepBlock>
           </div>
@@ -564,17 +534,6 @@ const CheckoutPage: React.FC = () => {
           </aside>
         </div>
       </div>
-
-      <PaymentModal
-        open={showPayment}
-        amount={payable}
-        initialMethod={payment}
-        shippingAddress={address}
-        items={resolved.map(({ item }) => ({ fabricId: item.fabricId, meters: item.meters, color: item.color }))}
-        couponCode={couponCode ?? undefined}
-        onClose={() => setShowPayment(false)}
-        onSuccess={placed => handlePaymentSuccess(placed.id, address)}
-      />
     </main>
   );
 };

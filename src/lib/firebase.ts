@@ -65,10 +65,12 @@ const firebaseConfig = {
   projectId:         env.VITE_FIREBASE_PROJECT_ID         ?? 'tresor-couture',
   storageBucket:     env.VITE_FIREBASE_STORAGE_BUCKET     ?? 'tresor-couture.firebasestorage.app',
   messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID ?? '102541847727',
-  appId:             env.VITE_FIREBASE_APP_ID             ?? '1:102541847727:web:40ef34c4ec6d001c20f85a'
+  appId:             env.VITE_FIREBASE_APP_ID             ?? '1:102541847727:web:40ef34c4ec6d001c20f85a',
+  // GA4 (Google Analytics for Firebase). Public id; drives Firebase Analytics.
+  measurementId:     env.VITE_FIREBASE_MEASUREMENT_ID     ?? 'G-RT2P8RC6RN'
 };
 
-const app: FirebaseApp = getApps()[0] ?? initializeApp(firebaseConfig);
+export const app: FirebaseApp = getApps()[0] ?? initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
@@ -667,6 +669,9 @@ export const ordersApi = {
       subtotal, tax, shipping, total,
       shippingAddress: input.shippingAddress,
       paymentMethod: input.paymentMethod,
+      // No online gateway wired yet — every order is unpaid until COD delivery
+      // (or, later, a Cashfree verification flips this to 'paid').
+      paymentStatus: 'pending' as const,
       placedAt: new Date().toISOString(),
       status: 'placed' as const,
       ...(input.couponCode ? { couponCode: input.couponCode.toUpperCase(), couponDiscount } : {})
