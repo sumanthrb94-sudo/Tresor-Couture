@@ -101,29 +101,44 @@ export const db = getFirestore(app);
 /* ------------------------------------------------------------------ */
 
 /**
- * Fire-and-forget capture of a brand-new user into Brevo (marketing list +
- * welcome email). Only runs for users WITH an email (phone-only users are
- * skipped — Brevo lists are email-keyed). No-ops on localhost where the
- * Vercel /api functions don't exist. Never throws into the auth flow.
+ * Fire-and-forget capture of a brand-new user into Brevo, however they signed
+ * up (email/password, Google, or phone OTP). Captures whatever identity we
+ * have — email and/or phone:
+ *   - with an email  → upserts an email contact (phone stored as the SMS
+ *                      attribute) and sends the branded welcome email.
+ *   - phone-only     → upserts an SMS-keyed contact (no welcome email — there's
+ *                      no address to send to; a WhatsApp/SMS welcome can use it
+ *                      later).
+ * No-ops on localhost where the Vercel /api functions don't exist, and never
+ * throws into the auth flow.
  */
-function captureNewUser(user: FbUser, fullName?: string): void {
+function captureNewUser(user: FbUser, fullName?: string, phone?: string): void {
   void (async () => {
     try {
-      const email = user.email;
-      if (!email) return;
-      const name = fullName ?? user.displayName ?? email.split('@')[0];
+      const email = user.email ?? undefined;
+      const phoneNumber = phone ?? user.phoneNumber ?? undefined;
+      // Nothing to capture if we have neither an email nor a phone.
+      if (!email && !phoneNumber) return;
+      const name = fullName ?? user.displayName ?? (email ? email.split('@')[0] : undefined);
+
+      // Marketing-list capture (email contact, or SMS-only contact for a
+      // phone signup). The endpoint decides the identifier; we just pass both.
       fetch('/api/contact', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ email, name, source: 'signup' }),
+        body: JSON.stringify({ email, phone: phoneNumber, name, source: 'signup' }),
       }).catch(() => {});
-      const token = await user.getIdToken().catch(() => null);
-      if (token) {
-        fetch('/api/email/welcome', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
-          body: JSON.stringify({ name }),
-        }).catch(() => {});
+
+      // Welcome email only when we have an address to send it to.
+      if (email) {
+        const token = await user.getIdToken().catch(() => null);
+        if (token) {
+          fetch('/api/email/welcome', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+            body: JSON.stringify({ name }),
+          }).catch(() => {});
+        }
       }
     } catch { /* best-effort */ }
   })();
@@ -141,7 +156,7 @@ export async function register(input: { email: string; password: string; fullNam
     createdAt: new Date().toISOString()
   };
   await setDoc(doc(db, 'users', cred.user.uid), profile);
-  captureNewUser(cred.user, input.fullName);
+  captureNewUser(cred.user, input.fullName, input.phone);
   return { user: cred.user, profile };
 }
 
@@ -173,10 +188,15 @@ export async function login(email: string, password: string) {
  * actually registered (account-enumeration hygiene).
  */
 export async function sendPasswordReset(email: string) {
+  // Anchor the post-reset "continue" link on the origin the user is actually
+  // on (tresorcouture.in), NOT on authDomain — which used to send them to the
+  // *.vercel.app domain after resetting. Use the '#/login' hash route: a bare
+  // '/login' path 404s on Vercel (the SPA has no catch-all rewrite).
   const explicitBase = env.VITE_PUBLIC_APP_URL?.replace(/\/$/, '');
+  const origin = typeof window !== 'undefined' ? window.location.origin : undefined;
   const authDomain = auth.app.options.authDomain;
-  const fallbackBase = authDomain ? `https://${authDomain}` : window.location.origin;
-  const continueUrl = `${explicitBase ?? fallbackBase}/login`;
+  const base = explicitBase ?? origin ?? (authDomain ? `https://${authDomain}` : '');
+  const continueUrl = `${base}/#/login`;
   await sendPasswordResetEmail(auth, email.trim(), {
     url: continueUrl,
     handleCodeInApp: false,
@@ -405,7 +425,7 @@ export async function confirmPhoneCode(code: string) {
       role:      'customer' as const,
       createdAt: new Date().toISOString()
     });
-    captureNewUser(cred.user); // no-ops unless the phone account also has an email
+    captureNewUser(cred.user); // captures the phone number (SMS contact); no email to welcome
   }
   return cred.user;
 }

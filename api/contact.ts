@@ -1,6 +1,8 @@
-// POST /api/contact  — add an email to the Brevo marketing list.
-// Body: { email, source?, name? }. Public (newsletter capture); validates the
-// email shape. Used by the footer/home capture and on signup.
+// POST /api/contact  — upsert a contact into the Brevo marketing list.
+// Body: { email?, phone?, source?, name? }. Public (newsletter capture + signup).
+//   - email present  → email contact; phone (if any) stored as the SMS attribute.
+//   - phone only      → SMS-keyed contact (ext_id), no email.
+// Used by the footer/home capture and by captureNewUser on every signup path.
 //
 // SELF-CONTAINED: no relative imports. The project is ESM ("type":"module"),
 // and Node ESM does not resolve extensionless relative imports — importing a
@@ -16,14 +18,28 @@ function setCors(res: any): void {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
-async function brevoAddContact(email: string, attributes: Record<string, unknown>): Promise<void> {
+/** Best-effort E.164 normalisation. Returns '' when the input can't be made
+ *  into a plausible international number (Brevo rejects bad SMS attributes). */
+function normalizePhone(raw: unknown): string {
+  const s = String(raw || '').replace(/[^\d+]/g, '');
+  if (!s) return '';
+  if (s.startsWith('+')) return /^\+\d{8,15}$/.test(s) ? s : '';
+  const d = s.replace(/\D/g, '');
+  if (d.length === 10) return `+91${d}`;                 // bare 10-digit → assume India
+  if (d.length === 12 && d.startsWith('91')) return `+${d}`;
+  if (d.length >= 8 && d.length <= 15) return `+${d}`;
+  return '';
+}
+
+/** Upsert a contact. Pass either { email } or { ext_id } as the identifier. */
+async function brevoUpsert(body: Record<string, unknown>): Promise<void> {
   const key = process.env.BREVO_API_KEY;
   if (!key) throw new Error('BREVO_API_KEY is not configured');
   const listId = process.env.BREVO_LIST_ID ? Number(process.env.BREVO_LIST_ID) : undefined;
   const r = await fetch('https://api.brevo.com/v3/contacts', {
     method: 'POST',
     headers: { 'api-key': key, 'content-type': 'application/json', accept: 'application/json' },
-    body: JSON.stringify({ email, attributes, updateEnabled: true, ...(listId ? { listIds: [listId] } : {}) }),
+    body: JSON.stringify({ updateEnabled: true, ...(listId ? { listIds: [listId] } : {}), ...body }),
   });
   // 201 created, 204 updated — both success.
   if (!r.ok && r.status !== 204) throw new Error(`brevo contact ${r.status}: ${await r.text()}`);
@@ -37,13 +53,35 @@ export default async function handler(req: any, res: any) {
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
     const email = String(body.email || '').trim().toLowerCase();
-    if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'invalid_email' });
+    const phone = normalizePhone(body.phone);
 
     const attributes: Record<string, unknown> = { SIGNUP_SOURCE: String(body.source || 'site') };
     if (body.name) attributes.FIRSTNAME = String(body.name).split(' ')[0];
+    if (phone) attributes.SMS = phone;
 
-    await brevoAddContact(email, attributes);
-    return res.status(200).json({ ok: true });
+    if (EMAIL_RE.test(email)) {
+      try {
+        await brevoUpsert({ email, attributes });
+      } catch (e) {
+        // A malformed SMS attribute can reject the whole upsert — retry without
+        // it so the email capture still succeeds.
+        if (attributes.SMS) {
+          const { SMS, ...rest } = attributes;
+          await brevoUpsert({ email, attributes: rest });
+        } else {
+          throw e;
+        }
+      }
+      return res.status(200).json({ ok: true });
+    }
+
+    if (phone) {
+      // Phone-only signup: key the contact by ext_id (the number itself).
+      await brevoUpsert({ ext_id: phone, attributes });
+      return res.status(200).json({ ok: true });
+    }
+
+    return res.status(400).json({ error: 'invalid_contact' });
   } catch (err) {
     console.error('[api/contact]', (err as Error).message);
     // Don't leak config errors to the client; capture is best-effort.
