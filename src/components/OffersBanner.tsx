@@ -2,9 +2,9 @@ import React from 'react';
 import { Truck, Zap, MapPin } from 'lucide-react';
 
 /**
- * Two-promise campaign banner. The Hyderabad 40-min card is the headline
- * (gold field, lightning glyph, pulsing radar dot); free shipping is the
- * supporting card so shoppers outside the city still see a clear promise.
+ * Two-promise campaign banner. The Hyderabad fast-delivery card is the
+ * headline (gold field, lightning glyph, pulsing radar dot); free shipping is
+ * the supporting card so shoppers outside the city still see a clear promise.
  */
 const OffersBanner: React.FC = () => (
   <section className="py-6 md:py-9 bg-white">
@@ -22,13 +22,13 @@ const OffersBanner: React.FC = () => (
           <Zap className="w-7 h-7 md:w-8 md:h-8 text-[#2A1F12]" strokeWidth={2.5} />
         </div>
         <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#E5C97A] mb-1.5">Radical delivery</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#E5C97A] mb-1.5">Express delivery</p>
           <h3 className="font-serif text-[22px] md:text-[28px] leading-[1.1] mb-1.5">
-            40-minute delivery <span className="hidden sm:inline">·</span><br className="sm:hidden" /> across Hyderabad.
+            Fast delivery <span className="hidden sm:inline">·</span><br className="sm:hidden" /> across Hyderabad.
           </h3>
           <p className="text-[12px] md:text-[13px] text-white/75 leading-snug flex items-center gap-1.5">
             <MapPin className="w-3.5 h-3.5 text-[#E5C97A] shrink-0" />
-            Studios Prêt + Couture Customisations · curated stock at the city studio.
+            Studios Prêt + Couture Customisations · express delivery to select pincodes coming soon.
           </p>
         </div>
       </div>

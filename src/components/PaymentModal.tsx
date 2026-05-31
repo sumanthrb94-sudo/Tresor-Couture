@@ -57,6 +57,26 @@ const formatExpiry = (raw: string): string => {
   return `${digits.slice(0, 2)}/${digits.slice(2)}`;
 };
 
+// Map server/gateway error codes to shopper-friendly copy.
+const friendlyError = (code: string): string => {
+  switch (code) {
+    case 'amount_mismatch':
+      return 'Your cart changed during checkout. Please review your bag and try again.';
+    case 'insufficient_stock':
+      return 'One of your fabrics just sold out. Your payment will be refunded automatically.';
+    case 'signature_mismatch':
+      return 'We could not verify this payment. If you were charged, it will be refunded.';
+    case 'amount_too_low':
+      return 'Order amount is below the minimum we can charge.';
+    case 'payment_failed':
+      return 'The payment was declined. Please try another method.';
+    default:
+      return code.startsWith('unknown_product')
+        ? 'A fabric in your bag is no longer available.'
+        : 'Payment could not be processed. Please try again.';
+  }
+};
+
 const PaymentModal: React.FC<Props> = ({
   open,
   amount,
@@ -132,7 +152,17 @@ const PaymentModal: React.FC<Props> = ({
 
   const totalDue = useMemo(() => (tab === 'cod' ? amount + COD_SURCHARGE : amount), [amount, tab]);
 
+  // COD never involves an online gateway, so it always uses the demo/client
+  // place-order path. Only card/upi route through Razorpay when configured.
+  const useRealGateway = paymentsConfigured && tab !== 'cod';
+
   const validate = (): boolean => {
+    // With the real gateway, Razorpay's hosted modal collects + validates the
+    // instrument details — our own card/UPI fields are not shown.
+    if (useRealGateway) {
+      setErrors({});
+      return true;
+    }
     const e: Record<string, string> = {};
     if (tab === 'card') {
       const digits = card.number.replace(/\s/g, '');
@@ -154,28 +184,81 @@ const PaymentModal: React.FC<Props> = ({
     return Object.keys(e).length === 0;
   };
 
-  const runPayment = useCallback(async () => {
-    setStage('processing');
-    setErrorMsg(null);
-
-    // 2.5s bank-emblem animation, then attempt the real order.
-    await new Promise(resolve => setTimeout(resolve, 2500));
-
-    try {
-      const placed = await placeOrder({
-        items,
+  // Construct the minimal Order the page needs (it only reads `.id`) when the
+  // server is the one that actually wrote the order document.
+  const orderFromServer = useCallback(
+    (orderId: string): Order =>
+      ({
+        id: orderId,
+        userId: user?.id,
+        items: [],
+        subtotal: amount,
+        shipping: 0,
+        tax: 0,
+        total: totalDue,
         shippingAddress,
         paymentMethod: tab,
-        couponCode
-      });
+        placedAt: new Date().toISOString(),
+        status: 'placed'
+      }) as unknown as Order,
+    [user?.id, amount, totalDue, shippingAddress, tab]
+  );
+
+  // Demo / COD path — client computes + writes the order via OrderContext.
+  const runDemoPayment = useCallback(async () => {
+    setStage('processing');
+    setErrorMsg(null);
+    // 2.5s bank-emblem animation, then attempt the real order.
+    await new Promise(resolve => setTimeout(resolve, 2500));
+    try {
+      const placed = await placeOrder({ items, shippingAddress, paymentMethod: tab, couponCode });
       setStage('success');
-      // Brief tick celebration before handing back to the page.
       setTimeout(() => onSuccess(placed), 800);
     } catch (err) {
       setStage('error');
       setErrorMsg(err instanceof Error ? err.message : 'Payment could not be processed.');
     }
   }, [placeOrder, items, shippingAddress, tab, couponCode, onSuccess]);
+
+  const runPayment = useCallback(async () => {
+    if (!useRealGateway) {
+      await runDemoPayment();
+      return;
+    }
+    setErrorMsg(null);
+    setStage('processing');
+    try {
+      // Razorpay's own hosted modal handles the card/UPI entry. Our processing
+      // screen covers the create-order + post-payment verification round-trips.
+      const { orderId } = await runRazorpayPayment({
+        items,
+        couponCode,
+        paymentMethod: tab,
+        shippingAddress: shippingAddress as unknown as Record<string, unknown>,
+        userId: user?.id,
+        prefill: {
+          name: shippingAddress.fullName,
+          email: shippingAddress.email,
+          contact: shippingAddress.phone
+        }
+      });
+      setStage('success');
+      setTimeout(() => onSuccess(orderFromServer(orderId)), 800);
+    } catch (err) {
+      // If the deployment has no Razorpay keys after all, fall back to demo.
+      if (err instanceof PaymentsNotConfiguredError) {
+        await runDemoPayment();
+        return;
+      }
+      if (err instanceof Error && err.message === 'payment_cancelled') {
+        // User dismissed the Razorpay modal — return to the form quietly.
+        setStage('form');
+        return;
+      }
+      setStage('error');
+      setErrorMsg(err instanceof Error ? friendlyError(err.message) : 'Payment could not be processed.');
+    }
+  }, [useRealGateway, runDemoPayment, items, couponCode, tab, shippingAddress, user?.id, onSuccess, orderFromServer]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -263,7 +346,18 @@ const PaymentModal: React.FC<Props> = ({
               })}
             </div>
 
-            {tab === 'card' && (
+            {useRealGateway && (
+              <div className="bg-[color:var(--color-myntra-bg-soft)] border border-[color:var(--color-myntra-border-soft)] p-4 rounded">
+                <p className="text-[13px] font-bold mb-1">Secure payment via Razorpay</p>
+                <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] leading-relaxed">
+                  You will complete your {tab === 'upi' ? 'UPI' : 'card'} payment in Razorpay's secure
+                  window. The amount is verified on our server before your order is confirmed — your
+                  card details never touch this site.
+                </p>
+              </div>
+            )}
+
+            {!useRealGateway && tab === 'card' && (
               <div className="space-y-3">
                 <div>
                   <label className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">
@@ -325,7 +419,7 @@ const PaymentModal: React.FC<Props> = ({
               </div>
             )}
 
-            {tab === 'upi' && (
+            {!useRealGateway && tab === 'upi' && (
               <div>
                 <label className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">
                   UPI ID
@@ -351,12 +445,17 @@ const PaymentModal: React.FC<Props> = ({
                 <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] leading-relaxed">
                   Cash on Delivery includes a nominal <span className="font-bold text-[color:var(--color-myntra-navy)]">{formatINR(COD_SURCHARGE)}</span> handling surcharge. Available across India for eligible PIN codes.
                 </p>
+                <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] mt-2">
+                  COD eligibility (PIN code and order value) is confirmed once the order is placed; ineligible orders are contacted for a prepaid alternative.
+                </p>
               </div>
             )}
 
             <div className="mt-5 flex items-center gap-2 text-[11px] text-[color:var(--color-myntra-ink-mute)]">
               <Lock className="w-3.5 h-3.5" />
-              256-bit TLS · PCI-DSS demo flow · No real funds move.
+              {useRealGateway
+                ? 'Payments secured by Razorpay · PCI-DSS · amount verified server-side.'
+                : '256-bit TLS · PCI-DSS demo flow · No real funds move.'}
             </div>
 
             <div className="mt-5 flex gap-2">
@@ -364,7 +463,7 @@ const PaymentModal: React.FC<Props> = ({
                 Cancel
               </button>
               <button type="submit" className="btn-primary flex-1">
-                Pay {formatINR(totalDue)}
+                {useRealGateway ? `Pay ${formatINR(totalDue)} securely` : `Pay ${formatINR(totalDue)}`}
               </button>
             </div>
           </form>

@@ -1012,7 +1012,7 @@ const AdminProducts: React.FC = () => {
                           >
                             {stock}
                           </span>
-                          <span className="text-[11px] text-[color:var(--color-myntra-ink-mute)]"> m</span>
+                          <span className="text-[11px] text-[color:var(--color-myntra-ink-mute)]"> {perUnit ? 'pcs' : 'm'}</span>
                         </Td>
                         <Td>
                           {f.rating != null ? (
@@ -1053,7 +1053,8 @@ const AdminProducts: React.FC = () => {
             <ul className="md:hidden divide-y divide-[color:var(--color-myntra-border-soft)]">
               {filtered.map(f => {
                 const stock = f.inStockMeters ?? 0;
-                const lowStock = stock < 10;
+                const perUnit = isPerUnit(f);
+                const lowStock = perUnit ? stock < 5 : stock < 10;
                 return (
                   <li key={f.id} className="p-3 flex gap-3">
                     <div className="w-16 h-20 rounded overflow-hidden border border-[color:var(--color-myntra-border-soft)] bg-[color:var(--color-myntra-bg-soft)] shrink-0">
@@ -1095,7 +1096,7 @@ const AdminProducts: React.FC = () => {
                             lowStock ? 'text-[#A12626]' : 'text-[color:var(--color-myntra-ink-soft)]'
                           }`}
                         >
-                          {stock} m in stock
+                          {stock} {perUnit ? 'pcs' : 'm'} in stock
                         </span>
                       </div>
                       <div className="mt-2 flex gap-1.5">

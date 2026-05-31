@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { formatINR } from '../constants';
 import { PaymentMethod, ShippingAddress } from '../types';
 import { couponsApi } from '../lib/firebase';
+import { paymentsConfigured } from '../lib/payments';
 import FabricImage from '../components/FabricImage';
 import PaymentModal from '../components/PaymentModal';
 
@@ -180,6 +181,12 @@ const CheckoutPage: React.FC = () => {
   };
 
   const validatePayment = (): boolean => {
+    // With real payments configured, card/UPI details are collected inside
+    // Razorpay's secure modal — skip the inline-field validation here.
+    if (paymentsConfigured && payment !== 'cod') {
+      setErrors({});
+      return true;
+    }
     const e: Record<string, string> = {};
     if (payment === 'card') {
       if (!/^[0-9\s]{12,19}$/.test(card.number)) e.cardNumber = 'Enter a valid card number';
@@ -395,7 +402,11 @@ const CheckoutPage: React.FC = () => {
             <StepBlock id="payment" index={3} title="Payment Options" currentStep={step} setStep={setStep}>
               <div className="flex items-center gap-3 mb-4 text-[color:var(--color-myntra-ink-soft)]">
                 <Lock className="w-4 h-4" />
-                <p className="text-[13px]">All payments are encrypted. Demo checkout — no real charges.</p>
+                <p className="text-[13px]">
+                  {paymentsConfigured
+                    ? 'All payments are encrypted and processed securely via Razorpay.'
+                    : 'All payments are encrypted. Demo checkout — no real charges.'}
+                </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
@@ -421,7 +432,14 @@ const CheckoutPage: React.FC = () => {
                 })}
               </div>
 
-              {payment === 'card' && (
+              {paymentsConfigured && payment !== 'cod' && (
+                <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)]">
+                  You will complete your {payment === 'upi' ? 'UPI' : 'card'} payment in Razorpay's
+                  secure window after pressing Place Order.
+                </p>
+              )}
+
+              {!paymentsConfigured && payment === 'card' && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
                     <label className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">Card Number</label>

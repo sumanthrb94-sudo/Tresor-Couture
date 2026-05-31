@@ -35,7 +35,7 @@ const Footer: React.FC = () => {
           decoding="async"
         />
         <p className="text-[13px] md:text-[14px] text-[color:var(--color-myntra-ink-soft)] max-w-md">
-          Heritage Indian weaves, hand-cut to the meter — and across Hyderabad, designer pieces at your door inside 40 minutes.
+          Heritage Indian weaves, hand-cut to the meter — and across Hyderabad, fast delivery on designer pieces.
         </p>
       </div>
       <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 py-10 md:py-12 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 md:gap-10">
@@ -112,7 +112,7 @@ const Footer: React.FC = () => {
       <div className="border-t border-[color:var(--color-myntra-border-soft)] py-5">
         <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 flex flex-col md:flex-row gap-4 items-center justify-between text-[12px] text-[color:var(--color-myntra-ink-soft)]">
           <div className="flex flex-wrap gap-5 md:gap-7">
-            <span className="inline-flex items-center gap-1.5"><Zap className="w-4 h-4 text-[color:var(--color-myntra-pink)]" /> 40-min delivery in Hyderabad</span>
+            <span className="inline-flex items-center gap-1.5"><Zap className="w-4 h-4 text-[color:var(--color-myntra-pink)]" /> Fast delivery in Hyderabad</span>
             <span className="inline-flex items-center gap-1.5"><Truck className="w-4 h-4 text-[color:var(--color-myntra-pink)]" /> Free shipping over ₹1,999</span>
             <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-[color:var(--color-myntra-pink)]" /> 100% authentic weaves</span>
           </div>
