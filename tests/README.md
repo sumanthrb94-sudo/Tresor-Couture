@@ -4,6 +4,13 @@ End-to-end suite for the Tresor Couture storefront + serverless API.
 Non-destructive: it browses, asserts the API contract, and submits clearly
 tagged `e2e+…@example.com` capture emails. **It never completes a real payment.**
 
+## CI (GitHub Actions)
+
+- **`.github/workflows/ci.yml`** — runs on every push + PR: `npm ci` → `npm run lint` (tsc) → `npm run build` → a guard that fails the build if a server SDK/secret (`firebase-admin`, `RAZORPAY_KEY_SECRET`, `BREVO_API_KEY`) leaks into `dist/assets/`. This is the green-gate for merging.
+- **`.github/workflows/e2e.yml`** — runs this Playwright suite against a live URL. GitHub runners have open network (unlike the dev sandbox), so they can reach `tresorcouture.in`. Triggers: manual (`workflow_dispatch`, optional `base_url` input) and a daily 06:30 UTC production smoke. Set repo variable **`E2E_BASE_URL`** to change the default target. HTML report is uploaded as an artifact.
+
+To run E2E manually: GitHub → Actions → "E2E (Playwright)" → Run workflow → (optionally paste a preview URL).
+
 ## One-time setup
 ```bash
 npm install
