@@ -16,13 +16,14 @@ interface Props {
 
 /**
  * Provider-agnostic marketing capture. Writes opt-ins straight to the
- * Firestore `subscribers` collection so we own the audience from day one —
- * even before an ESP (MailerLite) or WhatsApp BSP is connected. A later
- * sync job (or the admin export) pushes these into the marketing platform.
+ * Firestore `subscribers` collection so we own the audience from day one,
+ * then best-effort syncs the contact into Brevo (the marketing engine) via
+ * /api/subscribers/sync. Firestore stays the source of truth; the Brevo push
+ * no-ops cleanly when BREVO_API_KEY isn't set.
  *
- * Capture must never fail the visitor: any write error is swallowed and the
- * success state is still shown (the lead is far more valuable than a perfect
- * confirmation). Duplicates are de-duped downstream at sync time.
+ * Capture must never fail the visitor: any write/sync error is swallowed and
+ * the success state is still shown (the lead is far more valuable than a
+ * perfect confirmation). Duplicates are upserted/de-duped downstream.
  */
 const NewsletterForm: React.FC<Props> = ({ source = 'web', className = '', compact = false }) => {
   const [email, setEmail] = useState('');
@@ -43,6 +44,17 @@ const NewsletterForm: React.FC<Props> = ({ source = 'web', className = '', compa
       await subscribersApi.add({ email, phone: phone || undefined, source });
     } catch {
       // Best-effort: never block the visitor on a Firestore hiccup.
+    }
+    // Best-effort push into Brevo (marketing engine). No-ops cleanly when
+    // BREVO_API_KEY isn't set; Firestore remains the source of truth.
+    try {
+      await fetch('/api/subscribers/sync', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), phone: phone || undefined, source }),
+      });
+    } catch {
+      /* ignore — the lead is already captured in Firestore */
     }
     trackLead({ source });
     setState('done');

@@ -6,7 +6,7 @@ Two separate systems. **Both need a verified sending domain — start the DNS st
 |---|---|---|---|
 | **Auth** (password reset, verify, email change) | Firebase Auth | Firebase Console → Authentication → Templates | Branded HTML ready in `branding/email-templates/auth/`; needs pasting |
 | **Transactional** (order confirmation + status) | "Trigger Email from Firestore" extension watching the `mail/` collection | Firebase Extensions + SMTP | Code ready (`buildOrderConfirmationEmail` / `buildOrderStatusEmail` in `src/lib/firebase.ts`); extension **not installed** |
-| **Marketing** (welcome, abandoned cart, launch) | MailerLite | MailerLite dashboard | Not built; `subscribers` Firestore collection already capturing leads |
+| **Marketing** (welcome, abandoned cart, launch) | **Brevo** | Brevo dashboard | Contact-sync built + wired (`api/subscribers/sync.ts`); needs `BREVO_API_KEY`. Campaigns authored in Brevo. |
 
 ---
 
@@ -51,18 +51,25 @@ Per `branding/email-templates/SETUP-WALKTHROUGH.md`:
 
 ---
 
-## C. Marketing email — MailerLite
+## C. Marketing email — Brevo  ✅ engine chosen
 
-### C1. Account + domain (CEO, START TODAY for the DNS wait)
-1. https://dashboard.mailerlite.com → sign up.
-2. **Settings → Domains → verify a sending domain** (SPF/DKIM). Same DNS wait as A1.
-3. **Integrations → Developer API → Generate token** → hand back **`MAILERLITE_API_KEY`** (server secret).
+Brevo is the marketing engine (campaigns + automations authored in the Brevo
+dashboard). The app's only code responsibility is to **sync opt-ins into Brevo
+contacts** — already built and wired (`api/subscribers/sync.ts` +
+`api/_lib/brevo.ts`, called best-effort by `NewsletterForm`).
 
-### C2. Wire capture → MailerLite (Eng, P3)
-Leads already land in the `subscribers` Firestore collection (email + optional WhatsApp + source; `subscribersApi.add` in `src/lib/firebase.ts`). Eng syncs that collection into a MailerLite group. De-dup at sync.
+### C1. API key + (optional) list (CEO, ~10 min)
+1. Brevo → **SMTP & API → API Keys → Generate a new API key** → hand back **`BREVO_API_KEY`** (server secret; set in Vercel → Production + Preview).
+2. (Optional) Brevo → **Contacts → Lists** → create e.g. "Tresor Launch" → note its numeric id → set **`BREVO_LIST_ID`** so synced contacts land in that list.
+3. (If you also use Brevo SMTP for transactional/auth email — section A — verify your sending domain's SPF/DKIM. Marketing campaigns also send better from a verified domain.)
 
-### C3. Build the campaigns (CEO, P3)
-- **Welcome automation** (trigger: joins group).
+### C2. Capture → Brevo sync (Eng — DONE)
+Leads land in the `subscribers` Firestore collection (source of truth) **and** are upserted into Brevo via `POST /api/subscribers/sync` on every newsletter/footer signup. The sync is **credential-gated**: with no `BREVO_API_KEY` it's a clean no-op (the Firestore capture still works). Phone numbers map to Brevo `SMS`/`WHATSAPP` attributes; `source` maps to `SOURCE`. Upsert = automatic de-dup.
+
+> Backfill: existing `subscribers` docs captured before the key was set aren't auto-pushed. Either export them (admin) and import the CSV into Brevo once, or ask Eng for a one-off backfill script.
+
+### C3. Build the campaigns (CEO, P3 — in Brevo)
+- **Welcome automation** (trigger: contact added to the list).
 - **Abandoned-cart** flow.
 - **Launch** campaign off the brand social kit.
 
@@ -70,9 +77,10 @@ Leads already land in the `subscribers` Firestore collection (email + optional W
 
 ## Handback checklist
 
-- [ ] Blaze enabled (gates the extension)
-- [ ] SMTP domain verified; SMTP URI entered in the extension config
+- [ ] Blaze enabled (gates the transactional extension — section A)
+- [ ] SMTP domain verified; SMTP URI entered in the extension config (section A)
 - [ ] `mail/` smoke test delivered
 - [ ] Auth templates pasted + action URL set
-- [ ] `MAILERLITE_API_KEY` provided
-- [ ] MailerLite sending domain verified
+- [ ] `BREVO_API_KEY` set in Vercel (enables contact sync)
+- [ ] (optional) `BREVO_LIST_ID` set
+- [ ] Welcome / abandoned-cart / launch campaigns built in Brevo

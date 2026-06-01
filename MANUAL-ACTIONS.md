@@ -31,7 +31,7 @@ These are the long-pole items. Even if you do nothing else today, **submit these
 | 1 | **Razorpay account + KYC.** Sign up, submit business PAN, GST, bank account, address proof. Activation requires this to clear. | https://dashboard.razorpay.com/signup | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `VITE_RAZORPAY_KEY_ID` | 1–2 hrs to submit | **2–7 business days** for KYC/activation | CEO + Finance |
 | 2 | **WhatsApp Business Platform** via a BSP (AiSensy / Interakt / Wati / Gupshup) **or** Meta Cloud API direct. Register a business phone number + submit message templates for approval. | See `docs/WHATSAPP-SETUP.md` | BSP API key / phone-number-id + token (names in that doc) | 1–2 hrs | **Number verification 1–3 days + each template 1–2 days** | CEO + Ops |
 | 3 | **Transactional email — verify a sending domain** (SPF + DKIM DNS records) on SendGrid/Brevo. DNS propagation is the wait. | SendGrid: https://app.sendgrid.com · Brevo: https://app.brevo.com | `SMTP` connection URI (entered in Firebase, not Vercel) | 45 min | **DNS verify a few hours – 48 hrs** | CEO + Eng |
-| 4 | **MailerLite — verify sending domain** (SPF/DKIM) for marketing email. Same DNS-propagation wait as #3. | https://dashboard.mailerlite.com | `MAILERLITE_API_KEY` | 30 min | **DNS verify a few hours – 48 hrs** | CEO |
+| 4 | **Brevo — generate API key** (marketing engine; ✅ Brevo already set up). Contact-sync code is built and wired — it just needs the key. | https://app.brevo.com → SMTP & API → API Keys | `BREVO_API_KEY` (+ optional `BREVO_LIST_ID`) | 10 min | none (key is instant) | CEO |
 | 5 | **Legal/policy pages live** (Privacy, Terms, Returns/Refund/Cancellation, Shipping, Contact). **Razorpay activation will not complete without these published.** | Your site footer + Razorpay merchant profile | URLs of the 5 published pages | 3–6 hrs (draft + review) | gated by your lawyer's turnaround | CEO + Legal |
 
 > **Why these five first:** #1 and #2 cannot be rushed once submitted — KYC and template review are external review queues. #3/#4 wait on DNS. #5 is a hard gate on #1. Everything else in this runbook can be done in an afternoon once you have the credentials.
@@ -74,7 +74,7 @@ This is weeks of work and gated on physical/operational setup, not code. Begin s
 
 | # | Action | Where | Hand back to Eng | Your time | Owner |
 |---|---|---|---|---|---|
-| 22 | Build MailerLite **Welcome**, **abandoned-cart**, and **launch** campaigns; wire the `subscribers` Firestore collection → MailerLite sync. | MailerLite | (uses `MAILERLITE_API_KEY`) | hours | CEO + Eng |
+| 22 | Build Brevo **Welcome**, **abandoned-cart**, and **launch** campaigns. (Contact sync `subscribers` → Brevo is already built + wired via `api/subscribers/sync.ts` — just set `BREVO_API_KEY`.) | Brevo | (uses `BREVO_API_KEY`) | hours | CEO |
 | 23 | Meta **Conversions API** server-side events (improves attribution as iOS blocks the pixel). | Events Manager | `META_CAPI_TOKEN` | hours | CEO + Eng |
 | 24 | Meta **product catalog feed** for dynamic retargeting / Advantage+ shopping ads. | Commerce Manager | catalog ID | hours | CEO + Eng |
 | 25 | **GST invoicing** on orders (5% GST is already computed in code; you need GSTIN on invoices + a compliant invoice template). | Finance | GSTIN | hours | Finance |
@@ -91,7 +91,8 @@ This is weeks of work and gated on physical/operational setup, not code. Begin s
 | `VITE_RAZORPAY_KEY_ID` | **public** | same as Key ID (browser checkout needs it) | 1 |
 | `FIREBASE_SERVICE_ACCOUNT` | secret (server) | Firebase → Service accounts → generate key | 8 |
 | `SMTP` connection URI | secret (in Firebase) | SendGrid/Brevo | 3, 9 |
-| `MAILERLITE_API_KEY` | secret (server) | MailerLite → Integrations → API | 4 |
+| `BREVO_API_KEY` | secret (server) | Brevo → SMTP & API → API Keys | 4 |
+| `BREVO_LIST_ID` | server (optional) | Brevo → Contacts → Lists | 4 |
 | WhatsApp BSP token / phone-number-id | secret (server) | your BSP / Meta | 2 |
 | `META_CAPI_TOKEN` | secret (server) | Meta Events Manager | 23 |
 | `VITE_GA4_MEASUREMENT_ID` | **public** | Google Analytics | 11 |
@@ -110,7 +111,7 @@ This is weeks of work and gated on physical/operational setup, not code. Begin s
 |---|---|
 | Razorpay payments + webhook + serverless backend | `docs/PAYMENTS-SETUP.md` |
 | GA4 + Meta Pixel + consent + Conversions API | `docs/ANALYTICS-SETUP.md` |
-| Transactional (Firebase extension) + marketing (MailerLite) email | `docs/EMAIL-SETUP.md` |
+| Transactional (Firebase extension) + marketing (Brevo) email | `docs/EMAIL-SETUP.md` |
 | WhatsApp Business Platform / BSP | `docs/WHATSAPP-SETUP.md` |
 | 40-minute delivery operations | `docs/DELIVERY-OPS.md` |
 | Final go-live checklist | `docs/PRODUCTION-CHECKLIST.md` |

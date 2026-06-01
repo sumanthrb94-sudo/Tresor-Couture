@@ -28,7 +28,7 @@ Final gate before flipping the switch. Each box should be ticked by the named ow
 - [ ] Sending domain verified (SPF/DKIM). (CEO)
 - [ ] Trigger Email extension installed; `mail/` smoke test delivered. (CEO+Eng)
 - [ ] Auth templates branded + action URL set. (CEO)
-- [ ] `MAILERLITE_API_KEY` set; sending domain verified. (CEO)
+- [ ] `BREVO_API_KEY` set (marketing contact sync via `/api/subscribers/sync`); Welcome/abandoned-cart/launch campaigns built in Brevo. (CEO)
 
 ## WhatsApp
 - [ ] Number verified; transactional templates approved. (CEO+Ops)
