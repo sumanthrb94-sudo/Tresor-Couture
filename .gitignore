@@ -16,3 +16,9 @@ functions/node_modules/
 
 # Newman / Postman run artefacts — regenerated locally, not part of source.
 postman/run-report.json
+
+# Playwright E2E artefacts
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
