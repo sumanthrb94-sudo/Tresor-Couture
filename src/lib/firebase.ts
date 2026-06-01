@@ -73,6 +73,34 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 /* ------------------------------------------------------------------ */
+/*  Brevo event bridge                                                */
+/* ------------------------------------------------------------------ */
+/**
+ * Fire a Brevo automation trigger via the serverless /api/events/track
+ * bridge (the API key must stay server-side, so the browser can't call Brevo
+ * directly). Best-effort + fire-and-forget: a tracking failure must never
+ * block sign-up or order placement. No-ops cleanly when Brevo isn't
+ * configured server-side.
+ */
+export function trackBrevoEvent(input: {
+  event: 'signup' | 'order_placed';
+  email: string;
+  properties?: Record<string, unknown>;
+  eventData?: Record<string, unknown>;
+}): void {
+  try {
+    void fetch('/api/events/track', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(input),
+      keepalive: true, // survive a navigation right after the call
+    }).catch(() => {});
+  } catch {
+    /* ignore */
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /*  Auth                                                              */
 /* ------------------------------------------------------------------ */
 
@@ -88,6 +116,12 @@ export async function register(input: { email: string; password: string; fullNam
     createdAt: new Date().toISOString()
   };
   await setDoc(doc(db, 'users', cred.user.uid), profile);
+  // Fire the Brevo welcome/sign-up trigger (best-effort).
+  trackBrevoEvent({
+    event: 'signup',
+    email: input.email,
+    properties: { FIRSTNAME: input.fullName, ...(input.phone ? { SMS: input.phone } : {}) },
+  });
   return { user: cred.user, profile };
 }
 
@@ -704,6 +738,23 @@ export const ordersApi = {
         createdAt: serverTimestamp(),
         read: false,
       });
+      // Fire the Brevo order-placed trigger for COD / demo orders (the
+      // Razorpay-paid path fires the same event server-side in verify.ts).
+      if (email) {
+        trackBrevoEvent({
+          event: 'order_placed',
+          email,
+          properties: { FIRSTNAME: name },
+          eventData: {
+            order_id: ref.id,
+            total,
+            currency: 'INR',
+            item_count: items.length,
+            payment_method: input.paymentMethod,
+            payment_status: input.paymentMethod === 'cod' ? 'cod' : 'unpaid',
+          },
+        });
+      }
     } catch (err) {
       console.warn('[orders] post-place notifications failed', (err as Error).message);
     }

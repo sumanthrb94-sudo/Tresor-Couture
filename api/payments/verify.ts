@@ -25,6 +25,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { getDb, firebaseAdminConfigured } from '../_lib/firebaseAdmin.js';
 import { computeBreakdown } from '../_lib/pricing.js';
 import { getRazorpay, razorpayConfigured, verifyCheckoutSignature } from '../_lib/razorpay.js';
+import { trackBrevoEvent, BREVO_EVENTS } from '../_lib/brevo.js';
 import { readJson, type ApiRequest, type ApiResponse } from '../_lib/http.js';
 
 interface VerifyBody {
@@ -161,6 +162,31 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
         createdAt: FieldValue.serverTimestamp(),
       });
     });
+
+    // Fire the Brevo order-placed event so the CEO's Brevo automation sends
+    // the confirmation — covers card/UPI buyers, matching the COD path. The
+    // customer email comes from the shipping address. Best-effort: a Brevo
+    // hiccup must never fail an order that is already safely persisted + paid.
+    try {
+      const addr = (order.shippingAddress ?? {}) as { email?: string; fullName?: string };
+      if (addr.email) {
+        await trackBrevoEvent({
+          event: BREVO_EVENTS.orderPlaced(),
+          email: addr.email,
+          properties: addr.fullName ? { FIRSTNAME: addr.fullName } : undefined,
+          eventData: {
+            order_id: orderRef.id,
+            total: breakdown.total,
+            currency: 'INR',
+            item_count: breakdown.lines.length,
+            payment_method: order.paymentMethod ?? 'card',
+            payment_status: 'paid',
+          },
+        });
+      }
+    } catch {
+      /* ignore — the order is already persisted and paid */
+    }
 
     res.status(200).json({ ok: true, orderId: orderRef.id });
   } catch (err) {

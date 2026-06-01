@@ -73,6 +73,20 @@ Leads land in the `subscribers` Firestore collection (source of truth) **and** a
 - **Abandoned-cart** flow.
 - **Launch** campaign off the brand social kit.
 
+### C4. Brevo automation triggers (events the app fires) — DONE in code
+The app emits Brevo **events** (`/v3/events`) so your Brevo-side automations have a trigger. Point each automation's "track an event" trigger at the matching event name:
+
+| App moment | Brevo event name (default) | Where it fires | Event data sent |
+|---|---|---|---|
+| New sign-up (email/password register) | `signup` | `register()` → `/api/events/track` | `FIRSTNAME`, `SMS` (contact props) |
+| Order placed — COD / demo | `order_placed` | `ordersApi.place()` → `/api/events/track` | `order_id`, `total`, `currency`, `item_count`, `payment_method`, `payment_status` |
+| Order placed — Razorpay paid (card/UPI) | `order_placed` | `api/payments/verify.ts` (server) | same, with `payment_status:'paid'` |
+
+- **Both order paths fire the same `order_placed` event**, so a single Brevo automation covers COD *and* card/UPI buyers — no double-wiring.
+- Event names are configurable without a code change via `BREVO_EVENT_SIGNUP` / `BREVO_EVENT_ORDER_PLACED` (set them to whatever names your existing automations already listen for, or rename your triggers to match the defaults).
+- All firing is **best-effort + credential-gated**: no `BREVO_API_KEY` → clean no-op; a Brevo outage never blocks sign-up or an order.
+- **Note:** these events are how a Brevo *automation* sends the confirmation. They are separate from the Firebase `mail/` Trigger-Email path (section A) — if you ALSO leave that extension enabled it will send its own order email, so to avoid double-sends, drive order confirmations from **either** the Brevo automation **or** the `mail/` extension, not both.
+
 ---
 
 ## Handback checklist
