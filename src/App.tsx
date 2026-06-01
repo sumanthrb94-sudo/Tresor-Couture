@@ -12,6 +12,7 @@ import SignupCallout from './components/SignupCallout';
 import ProductRail from './components/ProductRail';
 import LookbookRail from './components/LookbookRail';
 import Footer from './components/Footer';
+import BottomNav from './components/BottomNav';
 import ErrorBoundary from './components/ErrorBoundary';
 import ShopPage from './pages/ShopPage';
 import ProductPage from './pages/ProductPage';
@@ -201,6 +202,10 @@ const Chrome: React.FC = () => {
         </Suspense>
       </ErrorBoundary>
       {!isAdmin && <Footer />}
+      {/* Mobile sticky bottom nav. Reserve space so content/footer isn't hidden
+          behind it on phones (the bar is ~58px + safe-area). */}
+      {!isAdmin && <div className="lg:hidden h-[58px]" aria-hidden />}
+      {!isAdmin && <BottomNav />}
     </div>
   );
 };

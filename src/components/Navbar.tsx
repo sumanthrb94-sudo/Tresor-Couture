@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronDown, Heart, LayoutDashboard, LogIn, LogOut, Menu, Search, ShoppingBag, User, UserPlus, X } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Heart, LayoutDashboard, LogIn, LogOut, Menu, Search, ShoppingBag, User, UserPlus, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
@@ -34,6 +34,7 @@ const Navbar: React.FC = () => {
 
   const [search, setSearch] = useState('');
   const [searchFocus, setSearchFocus] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [hoverCat, setHoverCat] = useState<string | null>(null);
@@ -74,14 +75,24 @@ const Navbar: React.FC = () => {
 
   const onSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const q = search.trim();
     if (suggestions[0]) {
       navigate({ name: 'product', id: suggestions[0].id });
-      setSearch('');
-      setSearchFocus(false);
-    } else if (search.trim()) {
-      goShop();
+    } else if (q) {
+      navigate({ name: 'search', q });
     }
+    setSearch('');
+    setSearchFocus(false);
+    setSearchOpen(false);
   };
+
+  // Lock body scroll while the full-screen mobile search overlay is open.
+  useEffect(() => {
+    if (searchOpen) {
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = ''; };
+    }
+  }, [searchOpen]);
 
   const megaPanel = (label: MasterCategory) => {
     const subs = MASTER_CATEGORY_TREE[label] ?? [];
@@ -156,6 +167,84 @@ const Navbar: React.FC = () => {
       </div>
     );
   };
+
+  const searchOverlay = (
+    <AnimatePresence>
+      {searchOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          className="lg:hidden fixed inset-0 z-[210] bg-white flex flex-col"
+        >
+          <form onSubmit={onSearchSubmit} className="flex items-center gap-2 px-3 py-3 border-b border-[color:var(--color-myntra-border-soft)]">
+            <button type="button" onClick={() => { setSearchOpen(false); setSearch(''); }} aria-label="Close search" className="p-2 -ml-1 text-[color:var(--color-myntra-navy)]">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[color:var(--color-myntra-ink-mute)] pointer-events-none" />
+              <input
+                autoFocus
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search for sarees, lehengas, dresses…"
+                className="input-search"
+                aria-label="Search catalogue"
+                enterKeyHint="search"
+              />
+              {search && (
+                <button type="button" onClick={() => setSearch('')} aria-label="Clear" className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-[color:var(--color-myntra-ink-mute)]">
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </form>
+          <div className="flex-1 overflow-y-auto">
+            {suggestions.length > 0 ? (
+              <ul>
+                {suggestions.map(f => (
+                  <li key={f.id}>
+                    <button
+                      type="button"
+                      onClick={() => { navigate({ name: 'product', id: f.id }); setSearch(''); setSearchOpen(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 border-b border-[color:var(--color-myntra-border-soft)] text-left active:bg-[color:var(--color-myntra-bg-soft)]"
+                    >
+                      <img src={f.photo} alt="" onError={e => { (e.currentTarget as HTMLImageElement).src = f.image; }} className="w-12 h-14 object-cover bg-[color:var(--color-myntra-bg-soft)]" />
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-bold truncate">{f.brand}</p>
+                        <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] truncate">{f.name}</p>
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : search.trim() ? (
+              <button type="button" onClick={() => { navigate({ name: 'search', q: search.trim() }); setSearch(''); setSearchOpen(false); }} className="w-full text-left px-4 py-3 text-[14px] font-semibold text-[color:var(--color-myntra-pink)]">
+                Search for “{search.trim()}”
+              </button>
+            ) : (
+              <div className="px-4 py-4">
+                <p className="text-[11px] uppercase tracking-[0.14em] font-bold text-[color:var(--color-myntra-ink-mute)] mb-3">Popular</p>
+                <div className="flex flex-wrap gap-2">
+                  {['Sarees', 'Lehenga Cholis', 'Anarkalis', 'Western Wear', 'Fabrics'].map(term => (
+                    <button
+                      key={term}
+                      type="button"
+                      onClick={() => { navigate({ name: 'shop', category: term }); setSearchOpen(false); }}
+                      className="px-3 py-1.5 rounded-full border border-[color:var(--color-myntra-border-soft)] text-[12px] text-[color:var(--color-myntra-ink)]"
+                    >
+                      {term}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 
   const mobileDrawer = (
     <AnimatePresence>
@@ -407,6 +496,15 @@ const Navbar: React.FC = () => {
               dropdown (pink-dot indicator) — no separate text links, which
               previously crowded and overlapped the search box on laptops. */}
           <div className="flex items-center gap-1 md:gap-2 ml-auto md:ml-0 shrink-0">
+            {/* Mobile search trigger — phones have no inline search bar, so this
+                opens a full-screen search overlay (persistent access). */}
+            <button
+              className="md:hidden flex flex-col items-center px-2 py-1 group"
+              onClick={() => setSearchOpen(true)}
+              aria-label="Search"
+            >
+              <Search className="w-5 h-5 text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]" />
+            </button>
             <div className="relative">
               <button
                 onClick={() => setProfileOpen(v => !v)}
@@ -536,6 +634,7 @@ const Navbar: React.FC = () => {
       </header>
 
       {typeof document !== 'undefined' && createPortal(mobileDrawer, document.body)}
+      {typeof document !== 'undefined' && createPortal(searchOverlay, document.body)}
     </>
   );
 };

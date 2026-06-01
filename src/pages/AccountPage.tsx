@@ -135,39 +135,39 @@ const AccountPage: React.FC<Props> = ({ tab = 'profile' }) => {
           Hello, {user.fullName.split(' ')[0] || 'there'}
         </h1>
 
-        {/* Mobile tab bar */}
-        <nav className="md:hidden -mx-4 px-4 mb-4 overflow-x-auto">
-          <ul className="flex gap-2 min-w-max">
+        {/* Mobile tab bar — 4-up grid so every tab (incl. Addresses) is visible
+            without horizontal scrolling. Sign out sits on its own row below. */}
+        <div className="md:hidden mb-4">
+          <nav className="grid grid-cols-4 border border-[color:var(--color-myntra-border-soft)] rounded overflow-hidden divide-x divide-[color:var(--color-myntra-border-soft)]">
             {TABS.map(t => {
               const Icon = t.icon;
               const active = t.id === tab;
               return (
-                <li key={t.id}>
-                  <button
-                    onClick={() => navigate({ name: 'account', tab: t.id })}
-                    className={`inline-flex items-center gap-1.5 px-3 py-2 text-[12px] font-bold uppercase tracking-wider border whitespace-nowrap ${
-                      active
-                        ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)] bg-white'
-                        : 'border-[color:var(--color-myntra-border-soft)] text-[color:var(--color-myntra-ink-soft)] bg-white'
-                    }`}
-                  >
-                    <Icon className="w-3.5 h-3.5" />
-                    {t.label}
-                  </button>
-                </li>
+                <button
+                  key={t.id}
+                  onClick={() => navigate({ name: 'account', tab: t.id })}
+                  className={`flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-bold uppercase tracking-wide ${
+                    active
+                      ? 'text-[color:var(--color-myntra-pink)] bg-[color:var(--color-myntra-bg-sale)]'
+                      : 'text-[color:var(--color-myntra-ink-soft)] bg-white'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {t.label}
+                </button>
               );
             })}
-            <li>
-              <button
-                onClick={handleSignOut}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-[12px] font-bold uppercase tracking-wider border border-[color:var(--color-myntra-border-soft)] text-[color:var(--color-myntra-ink-soft)] bg-white whitespace-nowrap"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                Sign out
-              </button>
-            </li>
-          </ul>
-        </nav>
+          </nav>
+          <div className="text-right mt-2">
+            <button
+              onClick={handleSignOut}
+              className="inline-flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] hover:text-[color:var(--color-myntra-pink)]"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Sign out
+            </button>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-4 md:gap-6">
           {/* Desktop sidebar */}

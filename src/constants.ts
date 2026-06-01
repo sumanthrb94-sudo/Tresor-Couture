@@ -931,6 +931,7 @@ export const CATEGORIES: Fabric['category'][] = ['Silk', 'Cotton', 'Wool', 'Line
  * the home-page CategoryStrip, the mobile drawer and the shop filter UI.
  */
 export const MASTER_CATEGORIES: MasterCategory[] = [
+  'Fabrics',
   'Dyeable Fabrics',
   'Lace',
   'Sarees',
