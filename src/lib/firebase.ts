@@ -16,6 +16,7 @@ import {
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
+  fetchSignInMethodsForEmail,
   GoogleAuthProvider,
   RecaptchaVerifier,
   signInWithPhoneNumber,
@@ -97,6 +98,10 @@ export const db = getFirestore(app);
 /*  Auth                                                              */
 /* ------------------------------------------------------------------ */
 
+/** Canonical email form. Stored consistently on every profile so the same
+ *  address can't spawn case/whitespace-variant duplicate records. */
+const normEmail = (e: string | null | undefined): string => (e ?? '').trim().toLowerCase();
+
 /**
  * Fire-and-forget capture of a brand-new user into Brevo, however they signed
  * up (email/password, Google, or phone OTP). Captures whatever identity we
@@ -142,11 +147,12 @@ function captureNewUser(user: FbUser, fullName?: string, phone?: string): void {
 }
 
 export async function register(input: { email: string; password: string; fullName: string; phone?: string }) {
-  const cred = await createUserWithEmailAndPassword(auth, input.email, input.password);
+  const email = normEmail(input.email);
+  const cred = await createUserWithEmailAndPassword(auth, email, input.password);
   await updateProfile(cred.user, { displayName: input.fullName });
   const profile = {
     uid: cred.user.uid,
-    email: input.email,
+    email,
     fullName: input.fullName,
     phone: input.phone ?? null,
     role: 'customer' as const,
@@ -244,7 +250,7 @@ async function materialiseGoogleProfile(user: FbUser) {
   if (existing.exists()) return;
   await setDoc(doc(db, 'users', user.uid), {
     uid:       user.uid,
-    email:     user.email ?? '',
+    email:     normEmail(user.email),
     fullName:  user.displayName ?? user.email?.split('@')[0] ?? 'Tresor Member',
     phone:     user.phoneNumber ?? null,
     role:      'customer' as const,
@@ -278,6 +284,26 @@ export async function loginWithGoogle() {
     // The user dismissing the popup isn't an error worth surfacing.
     if (code === 'auth/cancelled-popup-request' || code === 'auth/popup-closed-by-user') {
       return null;
+    }
+    // Same email already registered with a DIFFERENT provider (e.g. they first
+    // signed up with email+password). Firebase blocks the silent second account
+    // to avoid a duplicate. Tell the user exactly how to get in, rather than
+    // surfacing the raw code. (If the Firebase Console "link accounts that use
+    // the same email" setting is on, Firebase auto-links and this never fires.)
+    if (code === 'auth/account-exists-with-different-credential') {
+      const email = (err as { customData?: { email?: string } }).customData?.email;
+      let methods: string[] = [];
+      try { if (email) methods = await fetchSignInMethodsForEmail(auth, email); } catch { /* ignore */ }
+      const how = methods.includes('password')
+        ? 'your email and password'
+        : methods.includes('phone')
+          ? 'your phone number'
+          : 'your original sign-in method';
+      const friendly = new Error(
+        `An account already exists for ${email ?? 'this email'}. Please sign in with ${how}.`
+      );
+      (friendly as { code?: string }).code = 'auth/account-exists-with-different-credential';
+      throw friendly;
     }
     // Only when the environment genuinely can't open a popup do we fall back to
     // redirect (desktop in-app webviews, strict popup blockers).
@@ -407,7 +433,7 @@ export async function confirmPhoneCode(code: string) {
   if (!existing.exists()) {
     await setDoc(profileDoc, {
       uid:       cred.user.uid,
-      email:     cred.user.email ?? '',
+      email:     normEmail(cred.user.email),
       fullName:  cred.user.displayName ?? cred.user.phoneNumber ?? 'Tresor Member',
       phone:     cred.user.phoneNumber ?? null,
       role:      'customer' as const,

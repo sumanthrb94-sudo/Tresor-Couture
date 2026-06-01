@@ -110,7 +110,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const normalised = email.trim().toLowerCase();
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(normalised)) throw new Error('Enter a valid email.');
       if (password.length < 6) throw new Error('Password must be at least 6 characters.');
-      await fbRegister({ email: normalised, password, fullName: fullName.trim(), phone: phone?.trim() });
+      try {
+        await fbRegister({ email: normalised, password, fullName: fullName.trim(), phone: phone?.trim() });
+      } catch (err) {
+        // Don't let a second signup create a duplicate — point them to sign-in.
+        const code = (err as { code?: string }).code;
+        if (code === 'auth/email-already-in-use') {
+          throw new Error('An account with this email already exists. Please sign in instead (use Google if you signed up with it).');
+        }
+        throw err;
+      }
     },
     []
   );
