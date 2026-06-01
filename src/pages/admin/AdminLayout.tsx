@@ -1,16 +1,17 @@
 import React from 'react';
-import { LayoutDashboard, Package, ShoppingBag, Tag, Star, Palette, LogOut, ExternalLink } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Tag, Star, Palette, LogOut, ExternalLink, Zap } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
 
-type Section = 'dashboard' | 'products' | 'orders' | 'coupons' | 'reviews';
+type Section = 'dashboard' | 'products' | 'orders' | 'coupons' | 'reviews' | 'delivery';
 
 const NAV: { id: Section; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
   { id: 'dashboard', label: 'Dashboard', Icon: LayoutDashboard },
   { id: 'products', label: 'Products', Icon: Package },
   { id: 'orders', label: 'Orders', Icon: ShoppingBag },
   { id: 'coupons', label: 'Coupons', Icon: Tag },
-  { id: 'reviews', label: 'Reviews', Icon: Star }
+  { id: 'reviews', label: 'Reviews', Icon: Star },
+  { id: 'delivery', label: 'Delivery', Icon: Zap }
 ];
 
 const AdminLayout: React.FC<{ section: Section; children: React.ReactNode }> = ({ section, children }) => {

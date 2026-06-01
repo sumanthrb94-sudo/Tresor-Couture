@@ -180,7 +180,7 @@ export type Route =
   | { name: 'login' }
   | { name: 'register' }
   | { name: 'account'; tab?: 'profile' | 'orders' | 'wishlist' | 'addresses' }
-  | { name: 'admin'; section?: 'dashboard' | 'products' | 'orders' | 'coupons' | 'reviews' }
+  | { name: 'admin'; section?: 'dashboard' | 'products' | 'orders' | 'coupons' | 'reviews' | 'delivery' }
   | { name: 'admin-brand-kit'; section?: string }
   | { name: 'auth-action'; mode: string; oobCode: string; apiKey?: string; continueUrl?: string }
   | { name: 'not-found'; path?: string };

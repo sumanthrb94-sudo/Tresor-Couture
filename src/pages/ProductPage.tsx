@@ -9,6 +9,7 @@ import FabricImage from '../components/FabricImage';
 import ProductCard from '../components/ProductCard';
 import ReviewsSection from '../components/ReviewsSection';
 import StickyAddToCart from '../components/StickyAddToCart';
+import DeliveryChecker from '../components/DeliveryChecker';
 import { productsApi } from '../lib/firebase';
 import { analytics } from '../lib/analytics';
 import type { Fabric } from '../types';
@@ -63,8 +64,6 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
   const [selectedColor, setSelectedColor] = useState<string | undefined>(fabric?.colors?.[0]?.name);
   const [quantity, setQuantity] = useState<number>(1);
   const [activeImage, setActiveImage] = useState<number>(0);
-  const [pin, setPin] = useState('');
-  const [pinChecked, setPinChecked] = useState<null | boolean>(null);
   const [openSection, setOpenSection] = useState<'specs' | 'care' | 'delivery' | null>('specs');
 
   // Re-sync defaults when the fabric finishes loading or changes. Resetting
@@ -176,11 +175,6 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
   const handleWish = () => {
     if (!fabric) return;
     toggleWish(fabric.id);
-  };
-
-  const checkPin = () => {
-    if (/^[0-9]{6}$/.test(pin.trim())) setPinChecked(true);
-    else setPinChecked(false);
   };
 
   return (
@@ -359,27 +353,8 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
             </div>
 
             {/* Delivery */}
-            <div className="border border-[color:var(--color-myntra-border-soft)] rounded p-4 mb-6">
-              <p className="text-[13px] font-extrabold uppercase tracking-wider text-[color:var(--color-myntra-navy)] mb-3 flex items-center gap-2">
-                <MapPin className="w-4 h-4" /> Delivery Options
-              </p>
-              <div className="flex gap-2 mb-2">
-                <input
-                  value={pin}
-                  onChange={e => { setPin(e.target.value); setPinChecked(null); }}
-                  placeholder="Enter pincode"
-                  inputMode="numeric"
-                  className="input-box flex-1"
-                />
-                <button onClick={checkPin} className="text-[13px] font-bold text-[color:var(--color-myntra-pink)] px-3">CHECK</button>
-              </div>
-              {pinChecked === true && (
-                <p className="text-[13px] text-[color:var(--color-myntra-green)] font-semibold">Delivery in 4-6 business days. Cash on Delivery available.</p>
-              )}
-              {pinChecked === false && (
-                <p className="text-[13px] text-[color:var(--color-myntra-pink)] font-semibold">Please enter a valid 6-digit Indian pincode.</p>
-              )}
-              <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mt-3">Please enter PIN code to check delivery time & Pay on Delivery availability.</p>
+            <div className="mb-6">
+              <DeliveryChecker variant="card" />
             </div>
 
             {/* Trust strip */}

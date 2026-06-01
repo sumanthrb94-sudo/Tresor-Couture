@@ -6,8 +6,9 @@ import AdminProducts from './AdminProducts';
 import AdminOrders from './AdminOrders';
 import AdminCoupons from './AdminCoupons';
 import AdminReviews from './AdminReviews';
+import AdminDelivery from './AdminDelivery';
 
-type Section = 'dashboard' | 'products' | 'orders' | 'coupons' | 'reviews';
+type Section = 'dashboard' | 'products' | 'orders' | 'coupons' | 'reviews' | 'delivery';
 
 interface Props {
   section?: Section;
@@ -21,6 +22,7 @@ const AdminPage: React.FC<Props> = ({ section = 'dashboard' }) => (
       {section === 'orders' && <AdminOrders />}
       {section === 'coupons' && <AdminCoupons />}
       {section === 'reviews' && <AdminReviews />}
+      {section === 'delivery' && <AdminDelivery />}
     </AdminLayout>
   </AdminGuard>
 );
