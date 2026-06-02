@@ -8,7 +8,8 @@ import TaxInvoice from '../../components/TaxInvoice';
 import type { Order } from '../../types';
 
 const realised = (o: Order): boolean => o.status !== 'cancelled' && o.status !== 'refunded' && !o.deletedAt;
-const monthKey = (iso: string): string => iso.slice(0, 7); // YYYY-MM
+// Defensive against legacy docs where placedAt is not an ISO string.
+const monthKey = (iso: unknown): string => (typeof iso === 'string' ? iso : '').slice(0, 7); // YYYY-MM
 const fmtMonth = (k: string): string => {
   const [y, m] = k.split('-');
   return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('en-IN', { month: 'short', year: '2-digit' });

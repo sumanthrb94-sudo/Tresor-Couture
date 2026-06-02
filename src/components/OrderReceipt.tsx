@@ -109,27 +109,29 @@ const OrderReceipt: React.FC<Props> = ({ order }) => {
             </thead>
             <tbody>
               {order.items.map((it, idx) => {
-                const rate = it.fabricSnapshot.price;
+                const fs = it.fabricSnapshot ?? ({} as Partial<typeof it.fabricSnapshot>);
+                const rate = fs.price ?? 0;
+                const qty = it.quantity ?? 0;
                 return (
                   <tr key={`${it.fabricId}-${idx}`} className="border-t border-[color:var(--color-myntra-border-soft)] align-top">
                     <td className="px-3 py-2">
                       <div className="flex gap-3 items-start">
                         <FabricImage
-                          photo={it.fabricSnapshot.photo}
-                          fallback={it.fabricSnapshot.image}
-                          alt={it.fabricSnapshot.name}
+                          photo={fs.photo ?? ''}
+                          fallback={fs.image ?? ''}
+                          alt={fs.name ?? 'Item'}
                           className="w-10 h-12 object-cover bg-[color:var(--color-myntra-bg-soft)] flex-shrink-0 print:hidden"
                         />
                         <div className="min-w-0">
-                          <p className="font-bold">{it.fabricSnapshot.brand}</p>
-                          <p className="text-[color:var(--color-myntra-ink-soft)]">{it.fabricSnapshot.name}</p>
+                          <p className="font-bold">{fs.brand ?? 'TRESOR'}</p>
+                          <p className="text-[color:var(--color-myntra-ink-soft)]">{fs.name ?? 'Item'}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-3 py-2">{it.color ?? '—'}</td>
-                    <td className="px-3 py-2 text-right">{it.quantity}</td>
+                    <td className="px-3 py-2 text-right">{qty}</td>
                     <td className="px-3 py-2 text-right">{formatINR(rate)}</td>
-                    <td className="px-3 py-2 text-right font-bold">{formatINR(rate * it.quantity)}</td>
+                    <td className="px-3 py-2 text-right font-bold">{formatINR(rate * qty)}</td>
                   </tr>
                 );
               })}

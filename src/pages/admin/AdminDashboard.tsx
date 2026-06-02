@@ -280,20 +280,23 @@ const AdminDashboard: React.FC = () => {
   const topProducts: TopProduct[] = useMemo(() => {
     const map = new Map<string, TopProduct>();
     for (const o of realisedOrders) {
-      for (const it of o.items) {
+      for (const it of o.items ?? []) {
+        // Defensive: legacy/partial orders may lack a fabricSnapshot or quantity.
+        const fs = it.fabricSnapshot ?? ({} as Partial<typeof it.fabricSnapshot>);
+        const qty = it.quantity ?? 0;
         const existing = map.get(it.fabricId);
-        const lineRev = it.quantity * it.fabricSnapshot.price;
+        const lineRev = qty * (fs.price ?? 0);
         if (existing) {
-          existing.quantity += it.quantity;
+          existing.quantity += qty;
           existing.revenue += lineRev;
         } else {
           map.set(it.fabricId, {
             fabricId: it.fabricId,
-            name: it.fabricSnapshot.name,
-            brand: it.fabricSnapshot.brand,
-            photo: it.fabricSnapshot.photo,
-            image: it.fabricSnapshot.image,
-            quantity: it.quantity,
+            name: fs.name ?? 'Archived item',
+            brand: fs.brand ?? 'TRESOR',
+            photo: fs.photo ?? '',
+            image: fs.image ?? '',
+            quantity: qty,
             revenue: lineRev
           });
         }

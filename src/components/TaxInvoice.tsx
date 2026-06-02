@@ -90,18 +90,19 @@ const TaxInvoice: React.FC<{ order: Order }> = ({ order }) => {
             </thead>
             <tbody>
               {order.items.map((it, idx) => {
-                const rate = it.fabricSnapshot.price;
+                const rate = it.fabricSnapshot?.price ?? 0;
+                const qty = it.quantity ?? 0;
                 return (
                   <tr key={`${it.fabricId}-${idx}`} className="border-t border-[color:var(--color-myntra-border-soft)] align-top">
                     <td className="px-3 py-2">{idx + 1}</td>
                     <td className="px-3 py-2">
-                      <span className="font-semibold">{it.fabricSnapshot.name}</span>
+                      <span className="font-semibold">{it.fabricSnapshot?.name ?? 'Item'}</span>
                       {it.color ? <span className="text-[color:var(--color-myntra-ink-soft)]"> · {it.color}</span> : ''}
                     </td>
                     <td className="px-3 py-2 font-mono">{DEFAULT_HSN}</td>
-                    <td className="px-3 py-2 text-right">{it.quantity}</td>
+                    <td className="px-3 py-2 text-right">{qty}</td>
                     <td className="px-3 py-2 text-right">{formatINR(rate)}</td>
-                    <td className="px-3 py-2 text-right font-semibold">{formatINR(rate * it.quantity)}</td>
+                    <td className="px-3 py-2 text-right font-semibold">{formatINR(rate * qty)}</td>
                   </tr>
                 );
               })}

@@ -230,36 +230,41 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
           Items
         </h3>
         <ul className="bg-white border border-[color:var(--color-myntra-border-soft)] rounded-md divide-y divide-[color:var(--color-myntra-border-soft)]">
-          {order.items.map((it, idx) => (
+          {order.items.map((it, idx) => {
+            const fs = it.fabricSnapshot ?? ({} as Partial<typeof it.fabricSnapshot>);
+            const qty = it.quantity ?? 0;
+            const price = fs.price ?? 0;
+            return (
             <li key={`${it.fabricId}-${idx}`} className="flex items-center gap-3 px-3 py-2.5">
               <div className="w-12 h-12 rounded overflow-hidden bg-[color:var(--color-myntra-bg-soft)] shrink-0">
                 <img
-                  src={it.fabricSnapshot.photo}
-                  alt={it.fabricSnapshot.name}
+                  src={fs.photo ?? ''}
+                  alt={fs.name ?? 'Item'}
                   onError={e => {
-                    (e.currentTarget as HTMLImageElement).src = it.fabricSnapshot.image;
+                    (e.currentTarget as HTMLImageElement).src = fs.image ?? '';
                   }}
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] uppercase font-bold tracking-wider text-[color:var(--color-myntra-ink-mute)] truncate">
-                  {it.fabricSnapshot.brand}
+                  {fs.brand ?? 'TRESOR'}
                 </p>
                 <p className="text-[13px] font-semibold text-[color:var(--color-myntra-navy)] truncate">
-                  {it.fabricSnapshot.name}
+                  {fs.name ?? 'Item'}
                 </p>
                 <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)]">
-                  Qty {it.quantity.toLocaleString('en-IN')}
+                  Qty {qty.toLocaleString('en-IN')}
                   {it.color ? ` · ${it.color}` : ''} ·{' '}
-                  {formatINR(it.fabricSnapshot.price)}
+                  {formatINR(price)}
                 </p>
               </div>
               <p className="text-[13px] font-extrabold text-[color:var(--color-myntra-navy)] tabular-nums shrink-0">
-                {formatINR(Math.round(it.quantity * it.fabricSnapshot.price))}
+                {formatINR(Math.round(qty * price))}
               </p>
             </li>
-          ))}
+            );
+          })}
         </ul>
 
         <dl className="mt-3 grid grid-cols-2 gap-y-1 text-[12px]">

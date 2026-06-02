@@ -68,7 +68,7 @@ const computeEta = (order: Order): Date | null => {
   if (!order.placedAt) return null;
   const placed = new Date(order.placedAt);
   if (Number.isNaN(placed.getTime())) return null;
-  const slow = order.items.some(it => SLOW_CATEGORIES.has(it.fabricSnapshot.masterCategory));
+  const slow = order.items.some(it => SLOW_CATEGORIES.has(it.fabricSnapshot?.masterCategory));
   const days = slow ? ETA_SLOW_DAYS : ETA_FAST_DAYS;
   return new Date(placed.getTime() + days * 24 * 60 * 60 * 1000);
 };
@@ -662,30 +662,34 @@ const OrdersTab: React.FC = () => {
                       Items
                     </p>
                     <ul className="space-y-2">
-                      {order.items.map((it, idx) => (
+                      {order.items.map((it, idx) => {
+                        const fs = it.fabricSnapshot ?? ({} as Partial<typeof it.fabricSnapshot>);
+                        const qty = it.quantity ?? 0;
+                        return (
                         <li key={`${it.fabricId}-${idx}`} className="flex items-center gap-3">
                           <div className="w-10 h-12 shrink-0 bg-white border border-[color:var(--color-myntra-border-soft)] overflow-hidden">
                             <FabricImage
-                              photo={it.fabricSnapshot.photo}
-                              fallback={it.fabricSnapshot.image}
-                              alt={it.fabricSnapshot.name}
+                              photo={fs.photo ?? ''}
+                              fallback={fs.image ?? ''}
+                              alt={fs.name ?? 'Item'}
                               className="w-full h-full object-cover"
                             />
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-[12px] font-bold uppercase text-[color:var(--color-myntra-navy)] truncate">
-                              {it.fabricSnapshot.brand}
+                              {fs.brand ?? 'TRESOR'}
                             </p>
                             <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] truncate">
-                              {it.fabricSnapshot.name} · Qty {it.quantity}
+                              {fs.name ?? 'Item'} · Qty {qty}
                               {it.color ? ` · ${it.color}` : ''}
                             </p>
                           </div>
                           <p className="text-[12px] font-bold shrink-0">
-                            {formatINR(it.quantity * it.fabricSnapshot.price)}
+                            {formatINR(qty * (fs.price ?? 0))}
                           </p>
                         </li>
-                      ))}
+                        );
+                      })}
                     </ul>
                   </div>
 
