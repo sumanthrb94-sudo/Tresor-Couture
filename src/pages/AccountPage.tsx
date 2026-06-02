@@ -25,6 +25,7 @@ import { FABRICS, formatINR } from '../constants';
 import FabricImage from '../components/FabricImage';
 import OrderStatusTracker from '../components/OrderStatusTracker';
 import AddressBookEditor from '../components/AddressBookEditor';
+import LoginSecuritySection from '../components/LoginSecuritySection';
 import { auth, ordersApi } from '../lib/firebase';
 import type { Order, OrderStatus } from '../types';
 
@@ -410,6 +411,7 @@ const ProfileTab: React.FC = () => {
           </button>
         </div>
       </form>
+      <LoginSecuritySection />
     </div>
   );
 };

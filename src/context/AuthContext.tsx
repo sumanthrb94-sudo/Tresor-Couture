@@ -26,6 +26,7 @@ interface AuthContextValue {
   requestPasswordReset: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (patch: Partial<User>) => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -172,6 +173,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     [user, hydrate]
   );
 
+  // Re-read the signed-in user's profile (e.g. after linking a new sign-in
+  // method updates their email/phone server-side).
+  const refresh = useCallback(async () => {
+    if (!user) return;
+    await hydrate(user.id, user.email);
+  }, [user, hydrate]);
+
   return (
     <AuthContext.Provider
       value={{
@@ -185,7 +193,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         confirmPhoneOtp,
         requestPasswordReset,
         logout,
-        updateProfile
+        updateProfile,
+        refresh
       }}
     >
       {children}

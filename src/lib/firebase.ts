@@ -18,6 +18,10 @@ import {
   getRedirectResult,
   fetchSignInMethodsForEmail,
   GoogleAuthProvider,
+  EmailAuthProvider,
+  linkWithPopup,
+  linkWithPhoneNumber,
+  linkWithCredential,
   RecaptchaVerifier,
   signInWithPhoneNumber,
   sendPasswordResetEmail,
@@ -442,6 +446,69 @@ export async function confirmPhoneCode(code: string) {
     captureNewUser(cred.user); // captures the phone number (SMS contact); no email to welcome
   }
   return cred.user;
+}
+
+/* ---------- Account linking (one account, many sign-in methods) ---------- */
+// Lets a signed-in user attach the methods they don't have yet — so a phone
+// signup can add an email/Google (and get order/marketing emails), and an
+// email/Google user can add their phone for OTP login. This is how we avoid
+// the same person ending up with two separate accounts.
+
+/** Provider ids linked to the signed-in user: 'password' | 'google.com' | 'phone'. */
+export function getLinkedProviders(): string[] {
+  return auth.currentUser?.providerData.map(p => p.providerId) ?? [];
+}
+
+/** Link a Google identity to the current account; sync email/photo/name. */
+export async function linkGoogleAccount(): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Not signed in.');
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  const cred = await linkWithPopup(user, provider);
+  const patch: Record<string, unknown> = {};
+  if (cred.user.email) patch.email = normEmail(cred.user.email);
+  if (cred.user.photoURL) patch.photoURL = cred.user.photoURL;
+  if (cred.user.displayName && !user.displayName) patch.fullName = cred.user.displayName;
+  if (Object.keys(patch).length) await setDoc(doc(db, 'users', user.uid), patch, { merge: true });
+  if (cred.user.email) captureNewUser(cred.user); // newly has an email → marketing + welcome
+}
+
+let pendingLinkConfirmation: ConfirmationResult | null = null;
+
+/** Step 1 of linking a phone number to the signed-in account (sends OTP). */
+export async function sendLinkPhoneCode(e164PhoneNumber: string, recaptchaSlotId: string): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Not signed in.');
+  try {
+    const verifier = ensureRecaptcha(recaptchaSlotId);
+    pendingLinkConfirmation = await linkWithPhoneNumber(user, e164PhoneNumber, verifier);
+  } catch (err) {
+    clearRecaptcha();
+    throw err;
+  }
+}
+
+/** Step 2: confirm the OTP, completing the phone link; saves it to the profile. */
+export async function confirmLinkPhoneCode(code: string): Promise<void> {
+  if (!pendingLinkConfirmation) throw new Error('No pending code. Send a code first.');
+  const cred = await pendingLinkConfirmation.confirm(code);
+  pendingLinkConfirmation = null;
+  clearRecaptcha();
+  if (cred.user.phoneNumber) {
+    await setDoc(doc(db, 'users', cred.user.uid), { phone: cred.user.phoneNumber }, { merge: true });
+  }
+}
+
+/** Link an email + password to a phone-only account (gives them email login). */
+export async function linkEmailPassword(email: string, password: string): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) throw new Error('Not signed in.');
+  const e = normEmail(email);
+  await linkWithCredential(user, EmailAuthProvider.credential(e, password));
+  await updateProfile(user, { displayName: user.displayName ?? e.split('@')[0] });
+  await setDoc(doc(db, 'users', user.uid), { email: e }, { merge: true });
+  captureNewUser(user); // newly has an email → marketing capture + welcome
 }
 
 export const signOut = () => fbSignOut(auth);
