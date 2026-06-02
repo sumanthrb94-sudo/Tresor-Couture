@@ -14,7 +14,6 @@ import {
   Code,
 } from 'lucide-react';
 import { useRouter } from '../context/RouterContext';
-import { useAdminAuth } from '../context/AdminAuthContext';
 import {
   COLOR_TOKENS,
   KIT_SECTIONS,
@@ -222,7 +221,6 @@ const PreviewModal: React.FC<{ asset: KitAsset | null; onClose: () => void }> = 
 /* ---- main page ---- */
 const AdminBrandKitPage: React.FC<{ section?: string }> = ({ section }) => {
   const { navigate } = useRouter();
-  const { lock } = useAdminAuth();
   const [active, setActive] = useState<string>(section ?? 'palette');
   const [preview, setPreview] = useState<KitAsset | null>(null);
   const { copy, copied } = useCopy();
@@ -293,10 +291,10 @@ const AdminBrandKitPage: React.FC<{ section?: string }> = ({ section }) => {
               {totalAssets} assets · regen via <code className="font-mono">python3 branding/generate.py</code>
             </span>
             <button
-              onClick={() => { lock(); navigate({ name: 'home' }); }}
+              onClick={() => navigate({ name: 'home' })}
               className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] font-semibold text-[#D8B97A] hover:text-[#F5ECDC] border border-[#D8B97A]/40 hover:border-[#D8B97A] px-3 py-1.5 rounded"
             >
-              <LogOut className="w-3.5 h-3.5" /> Sign out
+              <LogOut className="w-3.5 h-3.5" /> Exit to store
             </button>
           </div>
         </div>

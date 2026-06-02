@@ -28,8 +28,6 @@ const ConfirmationPage  = lazy(() => import('./pages/ConfirmationPage'));
 const LoginPage         = lazy(() => import('./pages/LoginPage'));
 const RegisterPage      = lazy(() => import('./pages/RegisterPage'));
 const AccountPage       = lazy(() => import('./pages/AccountPage'));
-const AdminLoginPage    = lazy(() => import('./pages/AdminLoginPage'));
-const AdminLandingPage  = lazy(() => import('./pages/AdminLandingPage'));
 const AdminBrandKitPage = lazy(() => import('./pages/AdminBrandKitPage'));
 const AdminPage         = lazy(() => import('./pages/admin/AdminPage'));
 const NotFoundPage      = lazy(() => import('./pages/NotFoundPage'));
@@ -42,7 +40,7 @@ import { OrderProvider } from './context/OrderContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { RouterProvider, useRouter } from './context/RouterContext';
-import { AdminAuthProvider, useAdminAuth } from './context/AdminAuthContext';
+import AdminGuard from './pages/admin/AdminGuard';
 
 // Module-level guard so the auto-seed attempt fires at most once per page load
 // regardless of how many Home re-mounts happen during the session.
@@ -151,7 +149,6 @@ const Home: React.FC = () => {
 
 const RoutedView: React.FC = () => {
   const { route } = useRouter();
-  const { unlocked } = useAdminAuth();
   switch (route.name) {
     case 'home':
       return <Home />;
@@ -174,11 +171,15 @@ const RoutedView: React.FC = () => {
     case 'account':
       return <AccountPage tab={route.tab} />;
     case 'admin':
-      return unlocked ? <AdminPage section={route.section} /> : <AdminLoginPage redirectTo="admin" />;
+      // Access is gated by the Firebase `admin: true` custom claim, enforced
+      // inside AdminPage's AdminGuard (and by firestore.rules server-side).
+      return <AdminPage section={route.section} />;
     case 'admin-brand-kit':
-      return unlocked
-        ? <AdminBrandKitPage section={route.section} />
-        : <AdminLoginPage redirectTo="admin-brand-kit" section={route.section} />;
+      return (
+        <AdminGuard>
+          <AdminBrandKitPage section={route.section} />
+        </AdminGuard>
+      );
     case 'auth-action':
       return <AuthActionPage mode={route.mode} oobCode={route.oobCode} continueUrl={route.continueUrl} />;
     case 'policy':
@@ -219,15 +220,13 @@ function App() {
   return (
     <RouterProvider>
       <AuthProvider>
-        <AdminAuthProvider>
-          <WishlistProvider>
-            <CartProvider>
-              <OrderProvider>
-                <Chrome />
-              </OrderProvider>
-            </CartProvider>
-          </WishlistProvider>
-        </AdminAuthProvider>
+        <WishlistProvider>
+          <CartProvider>
+            <OrderProvider>
+              <Chrome />
+            </OrderProvider>
+          </CartProvider>
+        </WishlistProvider>
       </AuthProvider>
     </RouterProvider>
   );

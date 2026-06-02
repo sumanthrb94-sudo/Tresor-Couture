@@ -49,7 +49,6 @@ These are the long-pole items. Even if you do nothing else today, **submit these
 | 10 | **Brand the Firebase Auth email templates** (paste the HTML from `branding/email-templates/auth/`, set sender = "Tresor Couture", set the action URL). | https://console.firebase.google.com → Authentication → Templates | (none) | 20 min | none | CEO |
 | 11 | **GA4 property** — create, get the Measurement ID. | https://analytics.google.com → Admin → Create property | `VITE_GA4_MEASUREMENT_ID` (`G-XXXXXXXXXX`) | 20 min | none | CEO |
 | 12 | **Meta Pixel** — create in Events Manager, link it to your ad account, note the Pixel ID; plan Conversions API token. | https://business.facebook.com/events_manager2 | `VITE_META_PIXEL_ID`, later `META_CAPI_TOKEN` | 30 min | none | CEO |
-| 13 | **Override the admin passcode.** It currently defaults to the literal `tresor-atelier` (in `src/context/AdminAuthContext.tsx`). Choose a strong value and hand it back. | (your password manager) | `VITE_ADMIN_PASSCODE` | 5 min | none | CEO + Eng |
 | 14 | **Bootstrap the admin custom claim** (promote your account to `admin: true`) and **seed the catalog** (`npm run seed`). Engineering runs the commands; you provide your registered account UID. See `DEPLOY.md` §4. | local CLI (Eng) | your account UID | 15 min | none | Eng (CEO provides UID) |
 | 15 | **Custom domain + DNS + SSL.** Add the domain in Vercel, set DNS records, then add the domain to **Firebase → Authentication → Settings → Authorized domains** (OAuth/password-reset break otherwise). Update `VITE_PUBLIC_URL` + `VITE_FIREBASE_AUTH_DOMAIN`. | Vercel → Project → Settings → Domains; Firebase Auth settings | `VITE_PUBLIC_URL`, `VITE_FIREBASE_AUTH_DOMAIN` | 45 min | **DNS a few hours – 48 hrs** | CEO + Eng |
 | 16 | **Catalog / merchandising:** supply real product photos and **confirm per-unit vs per-meter for each SKU** (stitched garments are sold as one piece, not by the metre — see report §5). Decide hosting: Firestore (`npm run seed`) vs connected Shopify / Meta catalog feed. | your files + Eng | per-SKU unit/price/stock sheet | hours–days (your content) | depends on photo readiness | CEO + Eng |
@@ -97,7 +96,6 @@ This is weeks of work and gated on physical/operational setup, not code. Begin s
 | `META_CAPI_TOKEN` | secret (server) | Meta Events Manager | 23 |
 | `VITE_GA4_MEASUREMENT_ID` | **public** | Google Analytics | 11 |
 | `VITE_META_PIXEL_ID` | **public** | Meta Events Manager | 12 |
-| `VITE_ADMIN_PASSCODE` | **public-ish** (UI gate only, not real security) | you choose | 13 |
 | `VITE_PUBLIC_URL` | **public** | your custom domain | 15 |
 | `VITE_FIREBASE_AUTH_DOMAIN` | **public** | your custom domain | 15 |
 
