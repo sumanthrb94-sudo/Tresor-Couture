@@ -50,7 +50,7 @@ const isRealised = (o: Order): boolean => {
   return s !== 'cancelled' && s !== 'refunded';
 };
 
-const sumMeters = (o: Order): number =>
+const sumUnits = (o: Order): number =>
   o.items.reduce((n, it) => n + (it.quantity ?? 0), 0);
 
 const timeAgo = (iso: string): string => {
@@ -245,7 +245,7 @@ const AdminDashboard: React.FC = () => {
     const rows = orders.filter(isRts);
     return {
       orderCount: rows.length,
-      quantity:     rows.reduce((n, o) => n + sumMeters(o), 0),
+      quantity:     rows.reduce((n, o) => n + sumUnits(o), 0),
       value:      rows.reduce((n, o) => n + (o.total ?? 0), 0)
     };
   }, [orders]);
@@ -405,7 +405,7 @@ const AdminDashboard: React.FC = () => {
         <KpiTile
           label="Low Stock Alerts"
           value={lowStockCount.toString()}
-          subtitle={<span>below 10 metres</span>}
+          subtitle={<span>below 10 units</span>}
           Icon={AlertCircle}
           iconBg="#FDF0E1"
           iconColor="var(--color-myntra-orange)"
@@ -426,7 +426,7 @@ const AdminDashboard: React.FC = () => {
             <tr>
               <th className="text-left  font-bold px-5 py-2.5">Line</th>
               <th className="text-right font-bold px-5 py-2.5">Orders</th>
-              <th className="text-right font-bold px-5 py-2.5">Meters</th>
+              <th className="text-right font-bold px-5 py-2.5">Units</th>
               <th className="text-right font-bold px-5 py-2.5">Value</th>
             </tr>
           </thead>
@@ -435,7 +435,7 @@ const AdminDashboard: React.FC = () => {
               <td className="px-5 py-3 font-bold text-[color:var(--color-myntra-navy)]">Realised revenue</td>
               <td className="px-5 py-3 text-right">{realisedOrders.length.toLocaleString('en-IN')}</td>
               <td className="px-5 py-3 text-right">
-                {realisedOrders.reduce((n, o) => n + sumMeters(o), 0).toLocaleString('en-IN')}
+                {realisedOrders.reduce((n, o) => n + sumUnits(o), 0).toLocaleString('en-IN')}
               </td>
               <td className="px-5 py-3 text-right font-bold">{formatINR(totalRevenue)}</td>
             </tr>
@@ -553,7 +553,7 @@ const AdminDashboard: React.FC = () => {
                       {p.name}
                     </p>
                     <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] truncate">
-                      {p.quantity.toLocaleString('en-IN')} m sold
+                      {p.quantity.toLocaleString('en-IN')} units sold
                     </p>
                   </div>
                   <p className="text-[13px] font-extrabold text-[color:var(--color-myntra-navy)] shrink-0">

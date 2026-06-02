@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { Route } from '../types';
+import { Route, PolicyKey } from '../types';
 import { trackPageView } from '../lib/analytics';
 
 const parseLocation = (): Route => {
@@ -67,12 +67,23 @@ const parseHash = (hash: string): Route => {
       const section = segments[1] as
         | 'dashboard'
         | 'products'
+        | 'inventory'
         | 'orders'
+        | 'billing'
+        | 'customers'
         | 'coupons'
         | 'reviews'
+        | 'compliance'
         | undefined;
       return { name: 'admin', section };
     }
+    case 'privacy':
+    case 'terms':
+    case 'refund':
+    case 'shipping':
+    case 'cookies':
+    case 'contact':
+      return { name: 'policy', policy: segments[0] as PolicyKey };
     default:
       return { name: 'not-found', path: cleaned };
   }
@@ -108,6 +119,8 @@ const buildHash = (route: Route): string => {
       return route.section ? `#/admin/${route.section}` : '#/admin';
     case 'admin-brand-kit':
       return route.section ? `#/admin/brand-kit?section=${encodeURIComponent(route.section)}` : '#/admin/brand-kit';
+    case 'policy':
+      return `#/${route.policy}`;
     case 'auth-action':
       // Internal nav never builds this — Firebase redirects to /auth/action
       // directly. Returning '#/' means in-app links never accidentally land

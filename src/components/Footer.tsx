@@ -3,8 +3,21 @@ import { Facebook, Instagram, Twitter, Youtube, Phone, Mail, ShieldCheck, Truck,
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../context/AuthContext';
 import { subscribeContact } from '../lib/notify';
+import type { Route } from '../types';
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+/** Footer link labels that point at a real policy page. Anything not listed
+ *  falls back to home (placeholder marketing links). */
+const POLICY_ROUTES: Record<string, Route> = {
+  'Contact Us': { name: 'policy', policy: 'contact' },
+  'Shipping': { name: 'policy', policy: 'shipping' },
+  'Cancellation': { name: 'policy', policy: 'refund' },
+  'Returns': { name: 'policy', policy: 'refund' },
+  'Privacy Policy': { name: 'policy', policy: 'privacy' },
+  'Terms of Use': { name: 'policy', policy: 'terms' },
+  'Cookie Policy': { name: 'policy', policy: 'cookies' },
+};
 
 const cols = [
   {
@@ -13,7 +26,7 @@ const cols = [
   },
   {
     title: 'Customer Policies',
-    links: ['Contact Us', 'FAQ', 'Track Order', 'Shipping', 'Cancellation', 'Returns', 'Privacy Policy', 'Terms of Use']
+    links: ['Contact Us', 'FAQ', 'Track Order', 'Shipping', 'Cancellation', 'Returns', 'Privacy Policy', 'Cookie Policy', 'Terms of Use']
   },
   {
     title: 'The Atelier',
@@ -59,7 +72,7 @@ const Footer: React.FC = () => {
               {col.links.map(l => (
                 <li key={l}>
                   <button
-                    onClick={() => navigate({ name: 'home' })}
+                    onClick={() => navigate(POLICY_ROUTES[l] ?? { name: 'home' })}
                     className="text-[13px] text-[color:var(--color-myntra-ink-soft)] hover:text-[color:var(--color-myntra-pink)] transition-colors"
                   >
                     {l}

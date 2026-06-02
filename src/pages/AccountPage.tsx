@@ -59,7 +59,7 @@ const formatShortDate = (d: Date) =>
 
 const SLOW_CATEGORIES = new Set(['Studios Prêt', 'Sarees']);
 
-// Same-week SLA for in-stock fabric meters, multi-week SLA for stitched
+// Same-week SLA for in-stock pieces, multi-week SLA for stitched
 // pieces (Studios Prêt) and made-to-order sarees.
 const ETA_FAST_DAYS = 5;
 const ETA_SLOW_DAYS = 14;
@@ -568,7 +568,7 @@ const OrdersTab: React.FC = () => {
 
                 <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mt-1">
                   Placed {formatDate(order.placedAt)} · {order.items.length} item
-                  {order.items.length === 1 ? '' : 's'} · {unitCount} m
+                  {order.items.length === 1 ? '' : 's'} · {unitCount} piece{unitCount === 1 ? '' : 's'}
                 </p>
 
                 {eta && (

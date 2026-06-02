@@ -156,6 +156,30 @@ export interface Coupon {
   active: boolean;
 }
 
+/** Cookie/marketing consent record (DPDP). One per signed-in user, keyed by
+ *  uid; guests keep the same shape in localStorage until they sign in. */
+export interface Consent {
+  /** Owner uid (matches the doc id). */
+  uid?: string;
+  /** Strictly-necessary cookies are always on; this is the analytics/functional opt-in. */
+  analytics: boolean;
+  /** Marketing emails / SMS opt-in. */
+  marketing: boolean;
+  /** Version of the policy the user agreed to (so we can re-prompt on changes). */
+  policyVersion: string;
+  /** ISO timestamp of the choice. */
+  updatedAt: string;
+}
+
+/** The static legal/policy pages surfaced in the footer and Compliance section. */
+export type PolicyKey =
+  | 'privacy'
+  | 'terms'
+  | 'refund'
+  | 'shipping'
+  | 'cookies'
+  | 'contact';
+
 export interface Review {
   id: string;
   fabricId: string;
@@ -180,7 +204,8 @@ export type Route =
   | { name: 'login' }
   | { name: 'register' }
   | { name: 'account'; tab?: 'profile' | 'orders' | 'wishlist' | 'addresses' }
-  | { name: 'admin'; section?: 'dashboard' | 'products' | 'orders' | 'coupons' | 'reviews' }
+  | { name: 'admin'; section?: 'dashboard' | 'products' | 'inventory' | 'orders' | 'billing' | 'customers' | 'coupons' | 'reviews' | 'compliance' }
   | { name: 'admin-brand-kit'; section?: string }
+  | { name: 'policy'; policy: PolicyKey }
   | { name: 'auth-action'; mode: string; oobCode: string; apiKey?: string; continueUrl?: string }
   | { name: 'not-found'; path?: string };

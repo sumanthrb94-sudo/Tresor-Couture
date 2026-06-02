@@ -367,7 +367,7 @@ def stamp_url(im: Image.Image, text="tresorcouture.com", color=GOLD_DEEP):
 
 # ----- social media kit ---------------------------------------------------
 
-TAGLINE = "Heritage Indian Weaves · Sold by the Meter"
+TAGLINE = "Heritage Indian Weaves · Shipped Worldwide"
 SHORT_TAG = "Heritage Indian Weaves"
 
 POSTS = [
@@ -395,8 +395,8 @@ POSTS = [
     {
         "name": "instagram-post-quote-1080",
         "eyebrow": "AN ATELIER NOTE",
-        "title": "Every metre\ntakes a month.",
-        "subtitle": "We sell by the metre — but the loom\ndoesn't care for our calendar.",
+        "title": "Every piece\ntakes a month.",
+        "subtitle": "Each one is woven by hand — but the loom\ndoesn't care for our calendar.",
         "cta": "@TRESORCOUTURE",
     },
     {
@@ -614,7 +614,7 @@ def build_banners():
         624,
         paste_logo_w=380,
         title="Heritage\nIndian Weaves",
-        tagline="Sold by the metre · Shipped worldwide",
+        tagline="Woven by hand · Shipped worldwide",
         logo_at=(440, 312),
         title_at=(1100, 200),
     )
@@ -625,7 +625,7 @@ def build_banners():
         500,
         paste_logo_w=300,
         title="Heritage\nIndian Weaves",
-        tagline="Sold by the metre · Shipped worldwide",
+        tagline="Woven by hand · Shipped worldwide",
         logo_at=(400, 250),
         title_at=(1000, 160),
     )
@@ -739,7 +739,7 @@ def build_og_default():
     d.ellipse([tx - 3, rule_y - 3, tx + 3, rule_y + 3], fill=GOLD)
 
     f_sub = inter(22, "Regular")
-    sub = "Banarasi · Patola · Jamdani · Kanjivaram · Pashmina\nSold by the metre. Shipped worldwide."
+    sub = "Banarasi · Patola · Jamdani · Kanjivaram · Pashmina\nWoven by hand. Shipped worldwide."
     sy = rule_y + 26
     for line in sub.split("\n"):
         tw, _ = text_size(f_sub, line)
@@ -913,7 +913,7 @@ INVOICE = """<?xml version="1.0" encoding="UTF-8"?>
   <rect x="240" y="780" width="2000" height="56" fill="#EAD9BA"/>
   <g font-family="'Inter', sans-serif" font-size="20" font-weight="600" fill="#2A1F12" letter-spacing="3">
     <text x="260" y="816">ITEM</text>
-    <text x="1500" y="816">METRES</text>
+    <text x="1500" y="816">QTY</text>
     <text x="1740" y="816">RATE</text>
     <text x="2220" y="816" text-anchor="end">AMOUNT</text>
   </g>
@@ -1087,7 +1087,7 @@ HANGTAG = """<?xml version="1.0" encoding="UTF-8"?>
     <text x="375" y="900" font-family="'Inter', sans-serif" font-size="16" font-weight="600" letter-spacing="6" fill="#8E6520">WEAVER</text>
     <text x="375" y="940" font-family="'Inter', sans-serif" font-size="22" fill="#2A1F12">{WEAVER}</text>
     <line x1="200" y1="1000" x2="550" y2="1000" stroke="url(#gold)" stroke-width="0.8"/>
-    <text x="375" y="1060" font-family="'Inter', sans-serif" font-size="18" fill="#2A1F12">₹ {PRICE} / metre</text>
+    <text x="375" y="1060" font-family="'Inter', sans-serif" font-size="18" fill="#2A1F12">₹ {PRICE}</text>
     <text x="375" y="1130" font-family="'Inter', sans-serif" font-size="14" letter-spacing="6" font-weight="600" fill="#8E6520">TRESORCOUTURE.COM</text>
   </g>
 </svg>
@@ -1130,7 +1130,7 @@ PACKING_SLIP = """<?xml version="1.0" encoding="UTF-8"?>
   <rect x="240" y="780" width="2000" height="56" fill="#EAD9BA"/>
   <g font-family="'Inter', sans-serif" font-size="20" font-weight="600" fill="#2A1F12" letter-spacing="3">
     <text x="260" y="816">WEAVE</text>
-    <text x="1500" y="816">METRES</text>
+    <text x="1500" y="816">QTY</text>
     <text x="1800" y="816">CODE</text>
   </g>
 
@@ -1251,7 +1251,7 @@ STORIES = [
      "Final lengths of the spring archive.\nThree days. Then gone.",
      "SHOP THE ARCHIVE"),
     ("instagram-reel-cover-1080x1920", "INSIDE THE ATELIER",
-     "Watch a metre\nbecome.",
+     "Watch a weave\nbecome.",
      "From thread to selvedge, one weaver, one shuttle.",
      "TAP TO WATCH"),
 ]

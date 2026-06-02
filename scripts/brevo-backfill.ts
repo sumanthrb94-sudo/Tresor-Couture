@@ -37,7 +37,7 @@ function welcomeHtml(first: string): string {
       <h1 style="font-size:24px;letter-spacing:.04em;margin:0 0 6px;">TRESOR COUTURE</h1>
       <p style="color:#8A7656;font-size:12px;text-transform:uppercase;letter-spacing:.18em;margin:0 0 22px;">Welcome to the atelier</p>
       <p style="font-size:16px;">Dear ${first || 'there'}, welcome to Tresor Couture.</p>
-      <p style="font-size:15px;line-height:1.6;color:#3a3026;">You have access to our ledger of heritage Indian weaves — Banarasi, Patola, Jamdani, Kanjivaram and more — hand-cut to the metre and shipped worldwide. Members get a saved wishlist, faster checkout, and early access to bridal drops.</p>
+      <p style="font-size:15px;line-height:1.6;color:#3a3026;">You have access to our ledger of heritage Indian weaves — Banarasi, Patola, Jamdani, Kanjivaram and more — shipped worldwide. Members get a saved wishlist, faster checkout, and early access to bridal drops.</p>
       <p style="font-size:15px;line-height:1.6;color:#3a3026;">Here is <b>10% off your next order</b> with code <b>WELCOME10</b>.</p>
       <p style="margin-top:24px;"><a href="https://tresorcouture.in/#/shop" style="background:#7A1F2C;color:#fff;text-decoration:none;padding:12px 22px;border-radius:4px;font-family:Arial,sans-serif;font-size:14px;">Explore the collection</a></p>
       <p style="font-size:12px;color:#8A7656;margin-top:28px;">Hand-woven heritage · 40-minute delivery across Hyderabad · free shipping over ₹1,999.</p>

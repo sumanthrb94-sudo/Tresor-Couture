@@ -14,6 +14,13 @@ firebase-debug.*.log
 functions/lib/
 functions/node_modules/
 
+# Firebase Admin SDK service-account keys — SECRETS. Never commit. Keep these
+# outside the repo (or here, gitignored) and reference via GOOGLE_APPLICATION_CREDENTIALS.
+*serviceAccount*.json
+*service-account*.json
+*-adminsdk-*.json
+secrets/
+
 # Newman / Postman run artefacts — regenerated locally, not part of source.
 postman/run-report.json
 

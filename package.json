@@ -10,7 +10,8 @@
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
     "seed": "tsx scripts/seed-firestore.ts",
-    "seed:force": "tsx scripts/seed-firestore.ts --force"
+    "seed:force": "tsx scripts/seed-firestore.ts --force",
+    "set-admin": "tsx scripts/set-admin.ts"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",

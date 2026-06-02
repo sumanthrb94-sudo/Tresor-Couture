@@ -108,7 +108,7 @@ setEvents('Products', 'List all', [test([
   "pm.test('200 OK', () => pm.response.to.have.status(200));",
   "pm.test('catalogue not empty', () => pm.expect(b.documents).to.be.an('array').and.have.length.greaterThan(0));",
   "pm.test('productId captured',  () => pm.expect(pm.environment.get('productId')).to.be.a('string').and.have.length.greaterThan(0));",
-  "pm.test('pricePerMeter on first doc', () => pm.expect(b.documents[0].fields.pricePerMeter).to.exist);"
+  "pm.test('price on first doc', () => pm.expect(b.documents[0].fields.price).to.exist);"
 ])]);
 setEvents('Products', 'Get one', [test([
   "pm.test('200 OK', () => pm.response.to.have.status(200));",
@@ -266,7 +266,7 @@ const negative = {
             status:   { stringValue: 'placed' },
             placedAt: { timestampValue: '2026-05-15T00:00:00Z' },
             total:    { integerValue: '100' },
-            items:    { arrayValue: { values: [{ mapValue: { fields: { fabricId: { stringValue: 'x' }, meters: { integerValue: '1' } } } }] } }
+            items:    { arrayValue: { values: [{ mapValue: { fields: { fabricId: { stringValue: 'x' }, quantity: { integerValue: '1' } } } }] } }
           }
         }, null, 2) }
       },
@@ -289,7 +289,7 @@ const negative = {
             status:   { stringValue: 'placed' },
             placedAt: { timestampValue: '2026-05-15T00:00:00Z' },
             total:    { integerValue: '100' },
-            items:    { arrayValue: { values: [{ mapValue: { fields: { fabricId: { stringValue: '{{productId}}' }, meters: { integerValue: '1' } } } }] } }
+            items:    { arrayValue: { values: [{ mapValue: { fields: { fabricId: { stringValue: '{{productId}}' }, quantity: { integerValue: '1' } } } }] } }
           }
         }, null, 2) }
       },
@@ -391,7 +391,7 @@ const negative = {
         url: { raw: '{{fsBase}}/carts/{{uid}}', host: ['{{fsBase}}'], path: ['carts', '{{uid}}'] },
         body: { mode: 'raw', raw: JSON.stringify({
           fields: {
-            items: { arrayValue: { values: [{ mapValue: { fields: { fabricId: { stringValue: '{{productId}}' }, meters: { integerValue: '2' } } } }] } },
+            items: { arrayValue: { values: [{ mapValue: { fields: { fabricId: { stringValue: '{{productId}}' }, quantity: { integerValue: '2' } } } }] } },
             updatedAt: { timestampValue: '2026-05-15T00:00:00Z' }
           }
         }, null, 2) }

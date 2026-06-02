@@ -20,9 +20,6 @@ service cloud.firestore {
     function fieldChanged(field) {
       return request.resource.data[field] != resource.data[field];
     }
-    function priceOf(productId) {
-      return get(/databases/$(database)/documents/products/$(productId)).data.price;
-    }
 
     /* ---------- products ---------- */
     // Public read · admin write (UI gated to admins via the custom claim).
@@ -140,6 +137,16 @@ service cloud.firestore {
       allow create: if isSignedIn()
         && request.resource.data.kind in ['new_order'];
       allow read, update, delete: if isAdmin();
+    }
+
+    /* ---------- consents (DPDP / cookie + marketing consent) ---------- */
+    // One consent record per signed-in user, keyed by uid. The owner writes
+    // their own choices (cookie/marketing acceptance + timestamp); admins read
+    // all for the compliance register. No public read — consent logs are PII.
+    // Guests' consent stays in localStorage until they sign in.
+    match /consents/{userId} {
+      allow read:  if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId);
     }
 
     /* ---------- deny everything else ---------- */

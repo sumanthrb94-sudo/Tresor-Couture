@@ -36,7 +36,7 @@ const ENTRIES: LookbookEntry[] = [
     photo: '/products/kalamkari-cream-2.jpg',
     eyebrow: 'Story Cloth',
     title: 'Kalamkari',
-    blurb: 'Hand-painted with bamboo pens and natural dyes — every meter carries a story drawn from the epics.',
+    blurb: 'Hand-painted with bamboo pens and natural dyes — every piece carries a story drawn from the epics.',
     ctaLabel: 'Shop Kalamkari',
     ctaCategory: 'Cotton'
   },
@@ -107,7 +107,7 @@ const LookbookRail: React.FC = () => {
             <span className="section-eyebrow">The Lookbook</span>
             <h2 className="text-2xl md:text-3xl font-extrabold mt-1">Stories Woven by Hand</h2>
             <p className="text-[13px] md:text-[14px] text-[color:var(--color-myntra-ink-soft)] mt-2 max-w-xl">
-              Scroll through the weaves that built our atelier — each photographed in our studio, each one available by the meter.
+              Scroll through the weaves that built our atelier — each photographed in our studio, each one ready to ship.
             </p>
           </div>
           <div className="hidden md:flex gap-2 shrink-0">

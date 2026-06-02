@@ -4,7 +4,7 @@
 // The recipient is forced to the authenticated user's own verified email, so
 // this endpoint can't be used to send mail to arbitrary addresses.
 //
-// Body: { order: { id, items:[{name, brand?, meters, color?, price}],
+// Body: { order: { id, items:[{name, brand?, quantity, color?, price}],
 //                  subtotal, shipping, tax, total, couponCode?, couponDiscount?,
 //                  shippingAddress:{fullName,line1,line2?,city,state,postalCode} },
 //         name? }

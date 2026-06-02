@@ -1,16 +1,29 @@
 import React from 'react';
-import { LayoutDashboard, Package, ShoppingBag, Tag, Star, Palette, LogOut, ExternalLink } from 'lucide-react';
+import { LayoutDashboard, Package, Boxes, ShoppingBag, ReceiptText, Users, Tag, Star, Scale, Palette, LogOut, ExternalLink } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
 
-type Section = 'dashboard' | 'products' | 'orders' | 'coupons' | 'reviews';
+type Section =
+  | 'dashboard'
+  | 'products'
+  | 'inventory'
+  | 'orders'
+  | 'billing'
+  | 'customers'
+  | 'coupons'
+  | 'reviews'
+  | 'compliance';
 
 const NAV: { id: Section; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
   { id: 'dashboard', label: 'Dashboard', Icon: LayoutDashboard },
   { id: 'products', label: 'Products', Icon: Package },
+  { id: 'inventory', label: 'Inventory', Icon: Boxes },
   { id: 'orders', label: 'Orders', Icon: ShoppingBag },
+  { id: 'billing', label: 'Billing', Icon: ReceiptText },
+  { id: 'customers', label: 'Customers', Icon: Users },
   { id: 'coupons', label: 'Coupons', Icon: Tag },
-  { id: 'reviews', label: 'Reviews', Icon: Star }
+  { id: 'reviews', label: 'Reviews', Icon: Star },
+  { id: 'compliance', label: 'Compliance', Icon: Scale }
 ];
 
 const AdminLayout: React.FC<{ section: Section; children: React.ReactNode }> = ({ section, children }) => {

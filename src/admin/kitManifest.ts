@@ -160,7 +160,7 @@ export const KIT_SECTIONS: KitSection[] = [
       { id: 'ig-post-launch', name: 'Feed post — Launch', description: '"The Weaves Return Home." Use at brand launch / store reopening.', url: `${SOCIAL}/instagram-post-launch-1080.jpg`, size: '1080 × 1080', aspect: 'square', framing: 'cover', kind: 'jpg' },
       { id: 'ig-post-banarasi', name: 'Feed post — Banarasi', description: 'Weave Story No. 01. Pin under "Banarasi" highlight.', url: `${SOCIAL}/instagram-post-banarasi-1080.jpg`, size: '1080 × 1080', aspect: 'square', framing: 'cover', kind: 'jpg' },
       { id: 'ig-post-patola', name: 'Feed post — Patola', description: 'Weave Story No. 02. Pin under "Patola" highlight.', url: `${SOCIAL}/instagram-post-patola-1080.jpg`, size: '1080 × 1080', aspect: 'square', framing: 'cover', kind: 'jpg' },
-      { id: 'ig-post-quote', name: 'Feed post — Atelier note', description: '"Every metre takes a month." Tone-of-voice carousel opener.', url: `${SOCIAL}/instagram-post-quote-1080.jpg`, size: '1080 × 1080', aspect: 'square', framing: 'cover', kind: 'jpg' },
+      { id: 'ig-post-quote', name: 'Feed post — Atelier note', description: '"Every piece takes a month." Tone-of-voice carousel opener.', url: `${SOCIAL}/instagram-post-quote-1080.jpg`, size: '1080 × 1080', aspect: 'square', framing: 'cover', kind: 'jpg' },
       { id: 'ig-post-weaver', name: 'Feed post — Behind the loom', description: 'Use to announce a weaver feature.', url: `${SOCIAL}/instagram-post-weaver-1080.jpg`, size: '1080 × 1080', aspect: 'square', framing: 'cover', kind: 'jpg' },
       { id: 'ig-post-sale', name: 'Feed post — Archive sale', description: 'Up to 30% off the last bolts. Use for archive events only.', url: `${SOCIAL}/instagram-post-sale-1080.jpg`, size: '1080 × 1080', aspect: 'square', framing: 'cover', kind: 'jpg' },
       { id: 'ig-story-launch', name: 'Story — Launch', description: 'Vertical launch announcement.', url: `${SOCIAL}/instagram-story-launch-1080x1920.jpg`, size: '1080 × 1920', aspect: 'story', framing: 'cover', kind: 'jpg' },
@@ -266,7 +266,7 @@ export const TYPOGRAPHY = {
 export const VOICE_NOTES = [
   'Curated, restrained, archival. Treat every product like a museum artefact.',
   'Avoid exclamation marks. Avoid superlatives ("amazing", "the best").',
-  'Prefer present tense, second person, Indian-English spelling (metre, colour).',
-  'Numbers are honoured: "every metre takes a month" beats "we work slowly".',
+  'Prefer present tense, second person, Indian-English spelling (colour, honour, jewellery).',
+  'Numbers are honoured: "every piece takes a month" beats "we work slowly".',
   'When in doubt, defer to the weaver: name them.',
 ];

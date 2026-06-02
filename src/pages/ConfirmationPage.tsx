@@ -3,6 +3,7 @@ import { CheckCircle2, ShoppingBag, Sparkles, Truck } from 'lucide-react';
 import { ordersApi } from '../lib/firebase';
 import { useRouter } from '../context/RouterContext';
 import OrderReceipt from '../components/OrderReceipt';
+import TaxInvoice from '../components/TaxInvoice';
 import type { Order } from '../types';
 
 interface Props {
@@ -39,6 +40,7 @@ const ConfirmationPage: React.FC<Props> = ({ orderId }) => {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [docView, setDocView] = useState<'receipt' | 'invoice'>('receipt');
 
   useEffect(() => {
     let cancelled = false;
@@ -153,7 +155,23 @@ const ConfirmationPage: React.FC<Props> = ({ orderId }) => {
           </div>
         </section>
 
-        <OrderReceipt order={order} />
+        {/* Receipt / GST tax invoice toggle */}
+        <div className="no-print flex justify-center gap-1 mb-3 bg-white border border-[color:var(--color-myntra-border-soft)] rounded-full p-1 w-fit mx-auto">
+          <button
+            onClick={() => setDocView('receipt')}
+            className={`px-4 py-1.5 rounded-full text-[12px] font-bold transition-colors ${docView === 'receipt' ? 'bg-[color:var(--color-myntra-pink)] text-white' : 'text-[color:var(--color-myntra-ink-soft)]'}`}
+          >
+            Receipt
+          </button>
+          <button
+            onClick={() => setDocView('invoice')}
+            className={`px-4 py-1.5 rounded-full text-[12px] font-bold transition-colors ${docView === 'invoice' ? 'bg-[color:var(--color-myntra-pink)] text-white' : 'text-[color:var(--color-myntra-ink-soft)]'}`}
+          >
+            Tax invoice
+          </button>
+        </div>
+
+        {docView === 'receipt' ? <OrderReceipt order={order} /> : <TaxInvoice order={order} />}
       </div>
     </main>
   );

@@ -435,7 +435,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
                       {key === 'delivery' && (
                         <div className="space-y-2">
                           <p className="flex items-start gap-2"><Zap className="w-4 h-4 mt-0.5 text-[color:var(--color-myntra-pink)] shrink-0" /> <span><b>Hyderabad — 40 minutes.</b> Studios Prêt and Couture Customisations stocked at the city studio go out by motorbike inside forty minutes of order placement.</span></p>
-                          <p className="flex items-start gap-2"><Truck className="w-4 h-4 mt-0.5 text-[color:var(--color-myntra-pink)] shrink-0" /> <span>Free shipping pan-India on orders over ₹1,999. Hand-cut to the metre and dispatched within 48 hours.</span></p>
+                          <p className="flex items-start gap-2"><Truck className="w-4 h-4 mt-0.5 text-[color:var(--color-myntra-pink)] shrink-0" /> <span>Free shipping pan-India on orders over ₹1,999. Dispatched within 48 hours.</span></p>
                         </div>
                       )}
                     </div>

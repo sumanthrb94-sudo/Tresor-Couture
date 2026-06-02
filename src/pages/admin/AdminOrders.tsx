@@ -11,10 +11,12 @@ import {
   ArrowUpRight,
   RefreshCw
 } from 'lucide-react';
+import { FileText, X } from 'lucide-react';
 import { collection, getDocs, orderBy, query as fsQuery, limit as qLimit } from 'firebase/firestore';
 import { db, ordersApi } from '../../lib/firebase';
 import { formatINR } from '../../constants';
 import { useRouter } from '../../context/RouterContext';
+import TaxInvoice from '../../components/TaxInvoice';
 import type { Order, OrderStatus, PaymentMethod } from '../../types';
 
 /* ───────────── domain helpers ───────────── */
@@ -216,6 +218,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
   onCancel
 }) => {
   const status = statusOf(order);
+  const [showInvoice, setShowInvoice] = useState(false);
   const canCancel =
     status !== 'cancelled' && status !== 'refunded' && status !== 'delivered';
 
@@ -247,7 +250,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
                   {it.fabricSnapshot.name}
                 </p>
                 <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)]">
-                  {it.quantity.toLocaleString('en-IN')} m
+                  Qty {it.quantity.toLocaleString('en-IN')}
                   {it.color ? ` · ${it.color}` : ''} ·{' '}
                   {formatINR(it.fabricSnapshot.price)}
                 </p>
@@ -381,8 +384,32 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
               <XCircle className="w-4 h-4" /> Cancel order
             </button>
           )}
+          <button
+            type="button"
+            onClick={() => setShowInvoice(true)}
+            className="btn-outline inline-flex items-center gap-1.5"
+          >
+            <FileText className="w-4 h-4" /> Tax invoice
+          </button>
         </div>
       </div>
+
+      {showInvoice && (
+        <div
+          className="fixed inset-0 z-[120] overflow-y-auto py-6 px-3"
+          style={{ backgroundColor: 'rgba(20,16,24,0.6)' }}
+          onClick={() => setShowInvoice(false)}
+        >
+          <div onClick={e => e.stopPropagation()} className="max-w-[860px] mx-auto">
+            <div className="no-print flex justify-end mb-2">
+              <button onClick={() => setShowInvoice(false)} className="p-2 rounded-full bg-white shadow" aria-label="Close">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <TaxInvoice order={order} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -632,7 +659,7 @@ const AdminOrders: React.FC = () => {
                     const status = statusOf(o);
                     const expanded = expandedId === o.id;
                     const nextStatus = advanceStatus(status);
-                    const itemMeters = o.items.reduce((acc, it) => acc + it.quantity, 0);
+                    const itemUnits = o.items.reduce((acc, it) => acc + it.quantity, 0);
                     return (
                       <React.Fragment key={o.id}>
                         <tr
@@ -666,7 +693,7 @@ const AdminOrders: React.FC = () => {
                           <td className="px-4 py-3 text-[13px] text-right text-[color:var(--color-myntra-navy)] tabular-nums whitespace-nowrap">
                             {o.items.length}
                             <span className="text-[10px] text-[color:var(--color-myntra-ink-mute)] block">
-                              {itemMeters.toLocaleString('en-IN')} m
+                              {itemUnits.toLocaleString('en-IN')} units
                             </span>
                           </td>
                           <td className="px-4 py-3 text-[13px] font-extrabold text-right text-[color:var(--color-myntra-navy)] tabular-nums whitespace-nowrap">
@@ -729,7 +756,7 @@ const AdminOrders: React.FC = () => {
               const status = statusOf(o);
               const expanded = expandedId === o.id;
               const nextStatus = advanceStatus(status);
-              const itemMeters = o.items.reduce((acc, it) => acc + it.quantity, 0);
+              const itemUnits = o.items.reduce((acc, it) => acc + it.quantity, 0);
               return (
                 <div
                   key={o.id}
@@ -756,7 +783,7 @@ const AdminOrders: React.FC = () => {
                       <span>
                         {formatDate(o.placedAt)} · {o.items.length} item
                         {o.items.length === 1 ? '' : 's'} ·{' '}
-                        {itemMeters.toLocaleString('en-IN')} m
+                        {itemUnits.toLocaleString('en-IN')} units
                       </span>
                       <span className="text-[14px] font-extrabold text-[color:var(--color-myntra-navy)] tabular-nums">
                         {formatINR(o.total)}

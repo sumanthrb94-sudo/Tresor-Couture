@@ -968,7 +968,7 @@ const AdminProducts: React.FC = () => {
                           >
                             {stock}
                           </span>
-                          <span className="text-[11px] text-[color:var(--color-myntra-ink-mute)]"> m</span>
+                          <span className="text-[11px] text-[color:var(--color-myntra-ink-mute)]"> units</span>
                         </Td>
                         <Td>
                           {f.rating != null ? (

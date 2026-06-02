@@ -963,7 +963,86 @@ export const usersApi = {
     if (!auth.currentUser) throw new Error('not_signed_in');
     return updateDoc(doc(db, 'users', auth.currentUser.uid), patch);
   },
-  list: () => listAll<DocumentData>('users', [qLimit(200)])
+  list: () => listAll<DocumentData>('users', [qLimit(200)]),
+
+  /**
+   * DPDP "right to access" — assemble everything we hold about one user into a
+   * single portable object: their profile, orders, reviews and consent record.
+   * Admin-only by the rules (or the user themselves for their own uid). The
+   * caller turns this into a JSON download (see lib/csv.downloadJson).
+   */
+  exportData: async (uid: string) => {
+    const [profile, orders, reviews, consent] = await Promise.all([
+      getOne<DocumentData>('users', uid),
+      listAll<DocumentData>('orders', [where('userId', '==', uid), qLimit(500)]),
+      listAll<DocumentData>('reviews', [where('userId', '==', uid), qLimit(500)]),
+      getOne<DocumentData>('consents', uid),
+    ]);
+    return {
+      exportedAt: new Date().toISOString(),
+      uid,
+      profile,
+      orders,
+      reviews,
+      consent,
+    };
+  },
+
+  /**
+   * DPDP "right to erasure", within the rules-only model. We:
+   *   1. Anonymise PII on the user's orders (name/email/phone/address stripped)
+   *      but KEEP the financial fields — GST/tax law requires invoices be
+   *      retained, so we redact rather than delete the order rows.
+   *   2. Delete their reviews and consent record.
+   *   3. Delete the user profile document.
+   * The Firebase Auth identity itself can only be removed with the Admin SDK
+   * (server-side), so that remains a manual step — surfaced in the UI.
+   */
+  adminAnonymiseAndDelete: async (uid: string) => {
+    const orders = await listAll<DocumentData>('orders', [where('userId', '==', uid), qLimit(500)]);
+    for (const o of orders) {
+      await updateDoc(doc(db, 'orders', o.id), {
+        shippingAddress: {
+          fullName: '[redacted]', email: '[redacted]', phone: '[redacted]',
+          line1: '[redacted]', line2: '', city: '[redacted]',
+          state: (o as { shippingAddress?: { state?: string } }).shippingAddress?.state ?? '',
+          postalCode: '', country: 'India',
+        },
+        anonymisedAt: new Date().toISOString(),
+        updatedAt: serverTimestamp(),
+      });
+    }
+    const reviews = await listAll<DocumentData>('reviews', [where('userId', '==', uid), qLimit(500)]);
+    for (const r of reviews) {
+      await deleteDoc(doc(db, 'reviews', r.id));
+    }
+    await deleteDoc(doc(db, 'consents', uid)).catch(() => {});
+    await deleteDoc(doc(db, 'users', uid));
+    return { ordersAnonymised: orders.length, reviewsDeleted: reviews.length };
+  },
+};
+
+/**
+ * Cookie/marketing consent (DPDP). Owner reads/writes their own doc; admins
+ * read all for the compliance register (see firestore.rules /consents).
+ */
+export const consentsApi = {
+  mine: async () => {
+    if (!auth.currentUser) return null;
+    return getOne<DocumentData>('consents', auth.currentUser.uid);
+  },
+  setMine: async (input: { analytics: boolean; marketing: boolean; policyVersion: string }) => {
+    if (!auth.currentUser) throw new Error('not_signed_in');
+    const uid = auth.currentUser.uid;
+    await setDoc(doc(db, 'consents', uid), {
+      uid,
+      analytics: input.analytics,
+      marketing: input.marketing,
+      policyVersion: input.policyVersion,
+      updatedAt: new Date().toISOString(),
+    });
+  },
+  list: () => listAll<DocumentData>('consents', [qLimit(500)]),
 };
 
 export { Timestamp };

@@ -37,7 +37,7 @@
   <rect x="240" y="780" width="2000" height="56" fill="#EAD9BA"/>
   <g font-family="'Inter', sans-serif" font-size="20" font-weight="600" fill="#2A1F12" letter-spacing="3">
     <text x="260" y="816">ITEM</text>
-    <text x="1500" y="816">METRES</text>
+    <text x="1500" y="816">QTY</text>
     <text x="1740" y="816">RATE</text>
     <text x="2220" y="816" text-anchor="end">AMOUNT</text>
   </g>

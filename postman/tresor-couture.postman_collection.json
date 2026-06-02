@@ -286,7 +286,7 @@
                   "pm.test('200 OK', () => pm.response.to.have.status(200));",
                   "pm.test('catalogue not empty', () => pm.expect(b.documents).to.be.an('array').and.have.length.greaterThan(0));",
                   "pm.test('productId captured',  () => pm.expect(pm.environment.get('productId')).to.be.a('string').and.have.length.greaterThan(0));",
-                  "pm.test('pricePerMeter on first doc', () => pm.expect(b.documents[0].fields.pricePerMeter).to.exist);"
+                  "pm.test('price on first doc', () => pm.expect(b.documents[0].fields.price).to.exist);"
                 ]
               }
             }
@@ -393,7 +393,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"fields\": {\n    \"brand\":          { \"stringValue\": \"TRESOR\" },\n    \"name\":           { \"stringValue\": \"Sample Banarasi\" },\n    \"description\":    { \"stringValue\": \"Seeded via Postman.\" },\n    \"pricePerMeter\":  { \"integerValue\": \"4500\" },\n    \"mrpPerMeter\":    { \"integerValue\": \"7999\" },\n    \"photo\":          { \"stringValue\": \"/products/banarasi-purple-1.jpg\" },\n    \"image\":          { \"stringValue\": \"/products/banarasi-purple-1.jpg\" },\n    \"category\":       { \"stringValue\": \"Silk\" },\n    \"masterCategory\": { \"stringValue\": \"Sarees\" },\n    \"subCategory\":    { \"stringValue\": \"Banarasi\" },\n    \"origin\":         { \"stringValue\": \"Varanasi\" },\n    \"tags\":           { \"arrayValue\": { \"values\": [{ \"stringValue\": \"sample\" }] } },\n    \"sticker\":        { \"stringValue\": \"Trending\" },\n    \"inStockMeters\":  { \"integerValue\": \"20\" }\n  }\n}"
+              "raw": "{\n  \"fields\": {\n    \"brand\":          { \"stringValue\": \"TRESOR\" },\n    \"name\":           { \"stringValue\": \"Sample Banarasi\" },\n    \"description\":    { \"stringValue\": \"Seeded via Postman.\" },\n    \"price\":  { \"integerValue\": \"4500\" },\n    \"mrp\":    { \"integerValue\": \"7999\" },\n    \"photo\":          { \"stringValue\": \"/products/banarasi-purple-1.jpg\" },\n    \"image\":          { \"stringValue\": \"/products/banarasi-purple-1.jpg\" },\n    \"category\":       { \"stringValue\": \"Silk\" },\n    \"masterCategory\": { \"stringValue\": \"Sarees\" },\n    \"subCategory\":    { \"stringValue\": \"Banarasi\" },\n    \"origin\":         { \"stringValue\": \"Varanasi\" },\n    \"tags\":           { \"arrayValue\": { \"values\": [{ \"stringValue\": \"sample\" }] } },\n    \"sticker\":        { \"stringValue\": \"Trending\" },\n    \"stock\":  { \"integerValue\": \"20\" }\n  }\n}"
             }
           },
           "event": [
@@ -424,7 +424,7 @@
               }
             ],
             "url": {
-              "raw": "{{fsBase}}/products/{{productId}}?updateMask.fieldPaths=pricePerMeter&updateMask.fieldPaths=sticker",
+              "raw": "{{fsBase}}/products/{{productId}}?updateMask.fieldPaths=price&updateMask.fieldPaths=sticker",
               "host": [
                 "{{fsBase}}"
               ],
@@ -435,7 +435,7 @@
               "query": [
                 {
                   "key": "updateMask.fieldPaths",
-                  "value": "pricePerMeter"
+                  "value": "price"
                 },
                 {
                   "key": "updateMask.fieldPaths",
@@ -445,7 +445,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"fields\": {\n    \"pricePerMeter\": { \"integerValue\": \"4800\" },\n    \"sticker\":       { \"stringValue\": \"Bestseller\" }\n  }\n}"
+              "raw": "{\n  \"fields\": {\n    \"price\": { \"integerValue\": \"4800\" },\n    \"sticker\":       { \"stringValue\": \"Bestseller\" }\n  }\n}"
             }
           },
           "event": [
@@ -600,7 +600,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"fields\": {\n    \"userId\":   { \"stringValue\": \"{{uid}}\" },\n    \"status\":   { \"stringValue\": \"placed\" },\n    \"placedAt\": { \"timestampValue\": \"2026-05-15T00:00:00Z\" },\n    \"paymentMethod\": { \"stringValue\": \"upi\" },\n    \"subtotal\": { \"integerValue\": \"13500\" },\n    \"tax\":      { \"integerValue\": \"675\" },\n    \"shipping\": { \"integerValue\": \"0\" },\n    \"total\":    { \"integerValue\": \"14175\" },\n    \"shippingAddress\": { \"mapValue\": { \"fields\": {\n      \"fullName\":   { \"stringValue\": \"Test User\" },\n      \"email\":      { \"stringValue\": \"{{testEmail}}\" },\n      \"phone\":      { \"stringValue\": \"9876543210\" },\n      \"line1\":      { \"stringValue\": \"Plot 12, Banjara Hills\" },\n      \"city\":       { \"stringValue\": \"Hyderabad\" },\n      \"state\":      { \"stringValue\": \"Telangana\" },\n      \"postalCode\": { \"stringValue\": \"500034\" },\n      \"country\":    { \"stringValue\": \"India\" }\n    }}},\n    \"items\": { \"arrayValue\": { \"values\": [\n      { \"mapValue\": { \"fields\": {\n        \"fabricId\": { \"stringValue\": \"{{productId}}\" },\n        \"meters\":   { \"integerValue\": \"3\" }\n      }}}\n    ]}}\n  }\n}"
+              "raw": "{\n  \"fields\": {\n    \"userId\":   { \"stringValue\": \"{{uid}}\" },\n    \"status\":   { \"stringValue\": \"placed\" },\n    \"placedAt\": { \"timestampValue\": \"2026-05-15T00:00:00Z\" },\n    \"paymentMethod\": { \"stringValue\": \"upi\" },\n    \"subtotal\": { \"integerValue\": \"13500\" },\n    \"tax\":      { \"integerValue\": \"675\" },\n    \"shipping\": { \"integerValue\": \"0\" },\n    \"total\":    { \"integerValue\": \"14175\" },\n    \"shippingAddress\": { \"mapValue\": { \"fields\": {\n      \"fullName\":   { \"stringValue\": \"Test User\" },\n      \"email\":      { \"stringValue\": \"{{testEmail}}\" },\n      \"phone\":      { \"stringValue\": \"9876543210\" },\n      \"line1\":      { \"stringValue\": \"Plot 12, Banjara Hills\" },\n      \"city\":       { \"stringValue\": \"Hyderabad\" },\n      \"state\":      { \"stringValue\": \"Telangana\" },\n      \"postalCode\": { \"stringValue\": \"500034\" },\n      \"country\":    { \"stringValue\": \"India\" }\n    }}},\n    \"items\": { \"arrayValue\": { \"values\": [\n      { \"mapValue\": { \"fields\": {\n        \"fabricId\": { \"stringValue\": \"{{productId}}\" },\n        \"quantity\": { \"integerValue\": \"3\" }\n      }}}\n    ]}}\n  }\n}"
             }
           },
           "event": [
@@ -1011,7 +1011,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"fields\": {\n    \"userId\": {\n      \"stringValue\": \"anonymous\"\n    },\n    \"status\": {\n      \"stringValue\": \"placed\"\n    },\n    \"placedAt\": {\n      \"timestampValue\": \"2026-05-15T00:00:00Z\"\n    },\n    \"total\": {\n      \"integerValue\": \"100\"\n    },\n    \"items\": {\n      \"arrayValue\": {\n        \"values\": [\n          {\n            \"mapValue\": {\n              \"fields\": {\n                \"fabricId\": {\n                  \"stringValue\": \"x\"\n                },\n                \"meters\": {\n                  \"integerValue\": \"1\"\n                }\n              }\n            }\n          }\n        ]\n      }\n    }\n  }\n}"
+              "raw": "{\n  \"fields\": {\n    \"userId\": {\n      \"stringValue\": \"anonymous\"\n    },\n    \"status\": {\n      \"stringValue\": \"placed\"\n    },\n    \"placedAt\": {\n      \"timestampValue\": \"2026-05-15T00:00:00Z\"\n    },\n    \"total\": {\n      \"integerValue\": \"100\"\n    },\n    \"items\": {\n      \"arrayValue\": {\n        \"values\": [\n          {\n            \"mapValue\": {\n              \"fields\": {\n                \"fabricId\": {\n                  \"stringValue\": \"x\"\n                },\n                \"quantity\": {\n                  \"integerValue\": \"1\"\n                }\n              }\n            }\n          }\n        ]\n      }\n    }\n  }\n}"
             }
           },
           "event": [
@@ -1051,7 +1051,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"fields\": {\n    \"userId\": {\n      \"stringValue\": \"{{secondaryUid}}\"\n    },\n    \"status\": {\n      \"stringValue\": \"placed\"\n    },\n    \"placedAt\": {\n      \"timestampValue\": \"2026-05-15T00:00:00Z\"\n    },\n    \"total\": {\n      \"integerValue\": \"100\"\n    },\n    \"items\": {\n      \"arrayValue\": {\n        \"values\": [\n          {\n            \"mapValue\": {\n              \"fields\": {\n                \"fabricId\": {\n                  \"stringValue\": \"{{productId}}\"\n                },\n                \"meters\": {\n                  \"integerValue\": \"1\"\n                }\n              }\n            }\n          }\n        ]\n      }\n    }\n  }\n}"
+              "raw": "{\n  \"fields\": {\n    \"userId\": {\n      \"stringValue\": \"{{secondaryUid}}\"\n    },\n    \"status\": {\n      \"stringValue\": \"placed\"\n    },\n    \"placedAt\": {\n      \"timestampValue\": \"2026-05-15T00:00:00Z\"\n    },\n    \"total\": {\n      \"integerValue\": \"100\"\n    },\n    \"items\": {\n      \"arrayValue\": {\n        \"values\": [\n          {\n            \"mapValue\": {\n              \"fields\": {\n                \"fabricId\": {\n                  \"stringValue\": \"{{productId}}\"\n                },\n                \"quantity\": {\n                  \"integerValue\": \"1\"\n                }\n              }\n            }\n          }\n        ]\n      }\n    }\n  }\n}"
             }
           },
           "event": [
@@ -1241,7 +1241,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"fields\": {\n    \"items\": {\n      \"arrayValue\": {\n        \"values\": [\n          {\n            \"mapValue\": {\n              \"fields\": {\n                \"fabricId\": {\n                  \"stringValue\": \"{{productId}}\"\n                },\n                \"meters\": {\n                  \"integerValue\": \"2\"\n                }\n              }\n            }\n          }\n        ]\n      }\n    },\n    \"updatedAt\": {\n      \"timestampValue\": \"2026-05-15T00:00:00Z\"\n    }\n  }\n}"
+              "raw": "{\n  \"fields\": {\n    \"items\": {\n      \"arrayValue\": {\n        \"values\": [\n          {\n            \"mapValue\": {\n              \"fields\": {\n                \"fabricId\": {\n                  \"stringValue\": \"{{productId}}\"\n                },\n                \"quantity\": {\n                  \"integerValue\": \"2\"\n                }\n              }\n            }\n          }\n        ]\n      }\n    },\n    \"updatedAt\": {\n      \"timestampValue\": \"2026-05-15T00:00:00Z\"\n    }\n  }\n}"
             }
           },
           "event": [

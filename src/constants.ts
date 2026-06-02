@@ -263,7 +263,7 @@ export const FABRICS: Fabric[] = [
     brand: BRAND,
     name: 'Kalamkari Hand-Painted Cotton',
     description:
-      'Hand-painted with natural dyes using bamboo pens. Each meter tells a story drawn from epics and folk traditions.',
+      'Hand-painted with natural dyes using bamboo pens. Each piece tells a story drawn from epics and folk traditions.',
     price: 1650,
     mrp: 2499,
     photo: p(SOURCES.kalamkari),

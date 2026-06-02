@@ -13,6 +13,7 @@ import ProductRail from './components/ProductRail';
 import LookbookRail from './components/LookbookRail';
 import Footer from './components/Footer';
 import BottomNav from './components/BottomNav';
+import ConsentBanner from './components/ConsentBanner';
 import ErrorBoundary from './components/ErrorBoundary';
 import ShopPage from './pages/ShopPage';
 import ProductPage from './pages/ProductPage';
@@ -34,6 +35,7 @@ const AdminPage         = lazy(() => import('./pages/admin/AdminPage'));
 const NotFoundPage      = lazy(() => import('./pages/NotFoundPage'));
 const SearchResultsPage = lazy(() => import('./pages/SearchResultsPage'));
 const AuthActionPage    = lazy(() => import('./pages/AuthActionPage'));
+const LegalPage         = lazy(() => import('./pages/LegalPage'));
 import { FABRICS } from './constants';
 import { CartProvider } from './context/CartContext';
 import { OrderProvider } from './context/OrderContext';
@@ -179,6 +181,8 @@ const RoutedView: React.FC = () => {
         : <AdminLoginPage redirectTo="admin-brand-kit" section={route.section} />;
     case 'auth-action':
       return <AuthActionPage mode={route.mode} oobCode={route.oobCode} continueUrl={route.continueUrl} />;
+    case 'policy':
+      return <LegalPage policy={route.policy} />;
     case 'not-found':
       return <NotFoundPage />;
   }
@@ -206,6 +210,7 @@ const Chrome: React.FC = () => {
           behind it on phones (the bar is ~58px + safe-area). */}
       {!isAdmin && <div className="lg:hidden h-[58px]" aria-hidden />}
       {!isAdmin && <BottomNav />}
+      {!isAdmin && <ConsentBanner />}
     </div>
   );
 };
