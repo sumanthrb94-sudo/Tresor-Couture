@@ -77,7 +77,15 @@ const env = (import.meta as unknown as { env?: Record<string, string | undefined
  * sign-in throws auth/unauthorized-domain regardless of authDomain.
  */
 function resolveAuthDomain(): string {
-  return env.VITE_FIREBASE_AUTH_DOMAIN || 'tresor-couture.firebaseapp.com';
+  const override = env.VITE_FIREBASE_AUTH_DOMAIN?.trim();
+  // GUARD: never let a *.vercel.app authDomain through. Its OAuth handler URL
+  // (https://<app>.vercel.app/__/auth/handler) is NOT a registered redirect URI
+  // on the Google OAuth client, so Google sign-in breaks and the user is bounced
+  // to the vercel.app origin. A stray VITE_FIREBASE_AUTH_DOMAIN=<...>.vercel.app
+  // in the Vercel env must not be able to take auth down — fall back to the
+  // always-registered Firebase handler domain instead.
+  if (override && !/\.vercel\.app$/i.test(override)) return override;
+  return 'tresor-couture.firebaseapp.com';
 }
 
 const firebaseConfig = {
