@@ -16,3 +16,6 @@ functions/node_modules/
 
 # Newman / Postman run artefacts — regenerated locally, not part of source.
 postman/run-report.json
+
+# Large derived PSD exports (regenerable from the poster scripts; too big for git)
+branding/posters/psd/
