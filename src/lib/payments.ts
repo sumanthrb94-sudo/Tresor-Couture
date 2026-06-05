@@ -16,7 +16,21 @@
  * The browser never decides the amount and never writes the paid order.
  */
 
+import { auth } from './firebase';
+
 const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
+
+/** Bearer-token header for the signed-in user, or {} when signed out. The
+ *  server endpoints derive order ownership from this token, not the body. */
+async function authHeader(): Promise<Record<string, string>> {
+  const u = auth.currentUser;
+  if (!u) return {};
+  try {
+    return { Authorization: `Bearer ${await u.getIdToken()}` };
+  } catch {
+    return {};
+  }
+}
 
 /** PUBLIC key id. Safe to expose; the secret stays server-side. */
 export const razorpayKeyId: string | undefined = env.VITE_RAZORPAY_KEY_ID?.trim() || undefined;
@@ -70,7 +84,7 @@ export async function createPaymentOrder(input: {
 }): Promise<CreatedOrder> {
   const res = await fetch('/api/payments/create-order', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await authHeader()) },
     body: JSON.stringify(input),
   });
   if (res.status === 503) throw new PaymentsNotConfiguredError();
@@ -191,7 +205,7 @@ export async function verifyPayment(args: {
 }): Promise<{ orderId: string }> {
   const res = await fetch('/api/payments/verify', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await authHeader()) },
     body: JSON.stringify({
       razorpay_order_id: args.success.razorpay_order_id,
       razorpay_payment_id: args.success.razorpay_payment_id,
@@ -235,4 +249,42 @@ export async function runRazorpayPayment(input: {
       userId: input.userId,
     },
   });
+}
+
+/* ------------------------------------------------------------------ */
+/*  Server-authoritative placement of UNPAID orders (COD / pre-gateway) */
+/* ------------------------------------------------------------------ */
+
+/** Thrown when /api/orders/place isn't available (localhost / Admin SDK
+ *  unconfigured) so the caller can fall back to the direct Firestore write. */
+export class OrdersServerUnavailableError extends Error {
+  constructor() {
+    super('orders_server_unavailable');
+    this.name = 'OrdersServerUnavailableError';
+  }
+}
+
+/**
+ * Place an unpaid order (COD or pre-gateway demo) through the server, which
+ * recomputes the total authoritatively and persists it with
+ * `amountVerified: true`. The returned `order` is the persisted document — the
+ * client must NOT substitute its own totals.
+ */
+export async function placeUnpaidOrderServer(input: {
+  items: CartLine[];
+  couponCode?: string;
+  paymentMethod: 'card' | 'upi' | 'cod';
+  shippingAddress: Record<string, unknown>;
+}): Promise<{ orderId: string; order: Record<string, unknown> }> {
+  const res = await fetch('/api/orders/place', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(await authHeader()) },
+    body: JSON.stringify(input),
+  });
+  if (res.status === 503) throw new OrdersServerUnavailableError();
+  const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+  if (!res.ok || !data.ok) {
+    throw new Error(typeof data.error === 'string' ? data.error : 'place_failed');
+  }
+  return { orderId: String(data.orderId), order: data.order as Record<string, unknown> };
 }

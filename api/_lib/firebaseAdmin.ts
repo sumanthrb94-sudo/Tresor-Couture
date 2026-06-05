@@ -59,10 +59,16 @@ function buildApp(): App {
   return initializeApp({ credential: applicationDefault() });
 }
 
+/** The shared, credentialed Admin app (built once, reused). Exposed so other
+ *  helpers (e.g. ID-token verification in _lib/auth.ts) authenticate against
+ *  the same project/credential as Firestore — no second initialisation. */
+export function getAdminApp(): App {
+  return buildApp();
+}
+
 export function getDb(): Firestore {
   if (cachedDb) return cachedDb;
-  const app = buildApp();
-  cachedDb = getFirestore(app);
+  cachedDb = getFirestore(getAdminApp());
   return cachedDb;
 }
 

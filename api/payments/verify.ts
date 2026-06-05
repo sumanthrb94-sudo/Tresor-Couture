@@ -25,6 +25,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { getDb, firebaseAdminConfigured } from '../_lib/firebaseAdmin.js';
 import { computeBreakdown } from '../_lib/pricing.js';
 import { getRazorpay, razorpayConfigured, verifyCheckoutSignature } from '../_lib/razorpay.js';
+import { verifyRequest } from '../_lib/auth.js';
 import { readJson, type ApiRequest, type ApiResponse } from '../_lib/http.js';
 
 interface VerifyBody {
@@ -47,6 +48,15 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
   }
   if (!razorpayConfigured() || !firebaseAdminConfigured()) {
     res.status(503).json({ error: 'payments_not_configured' });
+    return;
+  }
+
+  // Authenticate the caller. The order's owner is taken from the verified
+  // token (below), NOT from the request body — a client must not be able to
+  // attribute a paid order to someone else's uid.
+  const decoded = await verifyRequest(req);
+  if (!decoded) {
+    res.status(401).json({ error: 'unauthorized' });
     return;
   }
 
@@ -140,7 +150,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
       }
 
       tx.set(orderRef, {
-        userId: order.userId ?? null,
+        // Ownership comes from the verified ID token, never the request body.
+        userId: decoded.uid,
+        customerEmail: decoded.email ?? null,
         items: itemsForDoc,
         subtotal: breakdown.subtotal,
         tax: breakdown.tax,
@@ -152,6 +164,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
         placedAt: new Date().toISOString(),
         status: 'placed',
         paymentStatus: 'paid',
+        // Server-recomputed total (anti-tamper) — safe to invoice.
+        amountVerified: true,
         paymentProvider: 'razorpay',
         paymentId: razorpay_payment_id,
         razorpayOrderId: razorpay_order_id,

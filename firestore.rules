@@ -71,6 +71,15 @@ service cloud.firestore {
       return !('paymentStatus' in request.resource.data)
         || request.resource.data.paymentStatus in ['pending', 'cod', 'unpaid'];
     }
+    // A client-written order's total is computed in the browser and therefore
+    // untrusted. It may NOT claim to be amount-verified — only the server
+    // (Admin SDK, /api/orders/place + /api/payments/verify, which bypass these
+    // rules) can set amountVerified:true after recomputing the total. Invoices
+    // and revenue reports trust that flag.
+    function clientAmountUnverified() {
+      return !('amountVerified' in request.resource.data)
+        || request.resource.data.amountVerified == false;
+    }
     match /orders/{orderId} {
       allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow create: if isSignedIn()
@@ -80,7 +89,8 @@ service cloud.firestore {
         && request.resource.data.items.size() > 0
         && request.resource.data.total is number
         && request.resource.data.total >= 0
-        && validPaymentStatus();
+        && validPaymentStatus()
+        && clientAmountUnverified();
       allow update, delete: if isAdmin();
     }
 

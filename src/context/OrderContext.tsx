@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { Order, PaymentMethod, ShippingAddress } from '../types';
 import { ordersApi } from '../lib/firebase';
+import { placeUnpaidOrderServer, OrdersServerUnavailableError } from '../lib/payments';
 import { useAuth } from './AuthContext';
 
 export interface PlaceOrderInput {
@@ -55,7 +56,27 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [authLoading, refresh]);
 
   const placeOrder = useCallback(async (input: PlaceOrderInput) => {
-    const placed = asOrder(await ordersApi.place(input));
+    // Prefer the server-authoritative path: it recomputes the total from the
+    // catalogue and persists it with `amountVerified: true`, so a tampered
+    // client total can't become an order. Fall back to the direct Firestore
+    // write only when the orders server isn't available (localhost / preview),
+    // in which case the order is flagged `amountVerified: false`.
+    let placed: Order;
+    try {
+      const { order } = await placeUnpaidOrderServer({
+        items: input.items,
+        couponCode: input.couponCode,
+        paymentMethod: input.paymentMethod,
+        shippingAddress: input.shippingAddress as unknown as Record<string, unknown>,
+      });
+      placed = asOrder(order);
+    } catch (err) {
+      if (err instanceof OrdersServerUnavailableError) {
+        placed = asOrder(await ordersApi.place(input));
+      } else {
+        throw err;
+      }
+    }
     // Optimistically prepend so the Account/Orders screen reflects the
     // new row immediately, even before the next refresh cycle.
     setOrders(prev => [placed, ...prev.filter(o => o.id !== placed.id)]);

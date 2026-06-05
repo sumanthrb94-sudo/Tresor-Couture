@@ -855,6 +855,12 @@ export const ordersApi = {
       // No online gateway wired yet — every order is unpaid until COD delivery
       // (or, later, a Cashfree verification flips this to 'paid').
       paymentStatus: 'pending' as const,
+      // This direct-write path is the FALLBACK used only when the
+      // server-authoritative /api/orders/place endpoint is unavailable
+      // (localhost / preview). Its total is computed client-side and therefore
+      // untrusted: the Firestore rules forbid setting this to true, and
+      // invoices/reports must treat such orders as unverified.
+      amountVerified: false as const,
       placedAt: new Date().toISOString(),
       status: 'placed' as const,
       ...(input.couponCode ? { couponCode: input.couponCode.toUpperCase(), couponDiscount } : {})

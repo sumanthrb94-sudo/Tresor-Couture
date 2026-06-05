@@ -11,20 +11,23 @@
 
 ## Severity summary
 
-| ID | Severity | Finding | Location |
-|---|---|---|---|
-| SEC-01 | **High** | Payment endpoints don't authenticate the caller; `userId` is forgeable | `api/payments/create-order.ts`, `api/payments/verify.ts` |
-| SEC-02 | **High** | Client-created COD orders trust client-supplied totals (rules don't validate price) | `firestore.rules:74`, `src/lib/firebase.ts:814` |
-| SEC-03 | **Medium** | No rate limiting / abuse controls on any endpoint; `/api/contact` is public + `*` CORS | all of `api/` |
-| SEC-04 | **Medium** | `coupons` collection is world-readable (codes & values enumerable) | `firestore.rules:39` |
-| SEC-05 | **Medium** | `admin_notifications` writable by any signed-in user (admin-inbox spam) | `firestore.rules:136` |
-| SEC-06 | **Low/Med** | TOCTOU in payment-verify idempotency (duplicate-order race) | `api/payments/verify.ts:80` |
-| SEC-07 | **Low/Med** | Missing CSP and HSTS response headers | `vercel.json:46` |
-| SEC-08 | **Low** | CORS defaults to `*` when `ALLOWED_ORIGIN` is unset | `api/contact.ts:16`, `api/email/*.ts` |
-| SEC-09 | **Low** | 8 moderate transitive dependency advisories (server-only) | `firebase-admin` tree |
-| SEC-10 | **Low** | `mail/` lets a customer enqueue arbitrary HTML to their own verified address | `firestore.rules:120` |
-| SEC-11 | **Info** | No admin read path for `payment_events` orphans (default-deny) | `api/payments/webhook.ts:111` |
-| SEC-12 | **Info** | Doc drift: checklist still cites the removed admin passcode | `docs/PRODUCTION-CHECKLIST.md:22` |
+| ID | Severity | Finding | Location | Status |
+|---|---|---|---|---|
+| SEC-01 | **High** | Payment endpoints don't authenticate the caller; `userId` is forgeable | `api/payments/create-order.ts`, `api/payments/verify.ts` | ✅ **Fixed** (this branch) |
+| SEC-02 | **High** | Client-created COD orders trust client-supplied totals (rules don't validate price) | `firestore.rules:74`, `src/lib/firebase.ts:814` | ✅ **Fixed** (this branch) |
+| SEC-03 | **Medium** | No rate limiting / abuse controls on any endpoint; `/api/contact` is public + `*` CORS | all of `api/` | Open |
+| SEC-04 | **Medium** | `coupons` collection is world-readable (codes & values enumerable) | `firestore.rules:39` | Open |
+| SEC-05 | **Medium** | `admin_notifications` writable by any signed-in user (admin-inbox spam) | `firestore.rules:136` | Open |
+| SEC-06 | **Low/Med** | TOCTOU in payment-verify idempotency (duplicate-order race) | `api/payments/verify.ts:80` | Open |
+| SEC-07 | **Low/Med** | Missing CSP and HSTS response headers | `vercel.json:46` | Open |
+| SEC-08 | **Low** | CORS defaults to `*` when `ALLOWED_ORIGIN` is unset | `api/contact.ts:16`, `api/email/*.ts` | Open |
+| SEC-09 | **Low** | 8 moderate transitive dependency advisories (server-only) | `firebase-admin` tree | Open |
+| SEC-10 | **Low** | `mail/` lets a customer enqueue arbitrary HTML to their own verified address | `firestore.rules:120` | Open |
+| SEC-11 | **Info** | No admin read path for `payment_events` orphans (default-deny) | `api/payments/webhook.ts:111` | Open |
+| SEC-12 | **Info** | Doc drift: checklist still cites the removed admin passcode | `docs/PRODUCTION-CHECKLIST.md:22` | Open |
+
+> **Remediation note (SEC-01, SEC-02):** Fixed on `claude/production-report-security-audit-FVOEX`.
+> SEC-01 — `/api/payments/create-order` and `/api/payments/verify` now require a verified Firebase ID token (`api/_lib/auth.ts`); the paid order's `userId` is taken from the token, never the request body. SEC-02 — a new server-authoritative endpoint `/api/orders/place` recomputes COD/unpaid-order totals from the catalogue, enforces a COD value cap, and writes `amountVerified: true`; `OrderContext.placeOrder` routes through it and only falls back to the direct client write (flagged `amountVerified: false`) when the server is unavailable. The Firestore rule now forbids any client from self-asserting `amountVerified: true`. Verified: `tsc --noEmit` and `vite build` both pass; secret-leak guard clean.
 
 ---
 
@@ -62,6 +65,8 @@ These are not findings — they're controls confirmed present, worth recording s
 
 **Recommendation:** Verify the ID token on both endpoints and derive `userId` from `decoded.uid` — the exact pattern already exists in `api/email/order.ts:32`. Reject unauthenticated calls with `401`. Pass the token from the client (`user.getIdToken()`), as `captureNewUser` already does.
 
+**✅ Resolved (this branch):** Added `api/_lib/auth.ts` (`verifyRequest`/`verifyBearer`). Both `create-order` and `verify` now return `401` without a valid token, and `verify` writes `userId: decoded.uid` (+ `customerEmail`) from the token. The client attaches its bearer token to both calls (`src/lib/payments.ts`).
+
 ---
 
 ### SEC-02 — Client-created COD orders trust client-supplied totals `High`
@@ -73,6 +78,8 @@ These are not findings — they're controls confirmed present, worth recording s
 **Impact:** Fraudulent COD order values; corrupted financial records / invoices. Bounded by the fact that COD is pay-on-delivery and an operator can inspect before dispatch — but the recorded total (and any GST invoice generated from it) would be wrong.
 
 **Recommendation:** Route COD through a server endpoint that prices it authoritatively (reuse `computeBreakdown`), **or** tighten the rule to recompute is infeasible in rules — so at minimum (a) cap COD by value + serviceable pincode, (b) flag COD orders as "amount unverified" until an operator confirms, and (c) never emit a GST invoice from an unverified client total. This is partially acknowledged in the go-live checklist ("COD gated by value cap + serviceable pincode").
+
+**✅ Resolved (this branch):** Added `api/orders/place.ts` — an authenticated, server-authoritative endpoint that recomputes the total via `computeBreakdown`, enforces a COD value cap (`COD_MAX_TOTAL`, default ₹50,000), checks stock, and persists the order with `amountVerified: true`. `OrderContext.placeOrder` now routes through it, falling back to the direct Firestore write (flagged `amountVerified: false`) only when the endpoint is unavailable (localhost/preview). The Firestore rule gained `clientAmountUnverified()`, so a client can never self-assert `amountVerified: true`. **Still operator-side:** serviceable-pincode gating (b) and the invoice/report guard that skips `amountVerified: false` orders (c) — the flag is now in place for both to consume.
 
 ---
 

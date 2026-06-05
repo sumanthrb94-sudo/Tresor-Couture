@@ -18,6 +18,7 @@
 import { getDb, firebaseAdminConfigured } from '../_lib/firebaseAdmin.js';
 import { computeBreakdown } from '../_lib/pricing.js';
 import { getRazorpay, razorpayConfigured } from '../_lib/razorpay.js';
+import { verifyRequest } from '../_lib/auth.js';
 import { readJson, type ApiRequest, type ApiResponse } from '../_lib/http.js';
 
 interface Body {
@@ -40,6 +41,15 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
   if (!firebaseAdminConfigured()) {
     // Without a service account we cannot establish the authoritative amount.
     res.status(503).json({ error: 'payments_not_configured' });
+    return;
+  }
+
+  // Require a signed-in caller. Without this, anyone could spin up Razorpay
+  // orders against our account (cost/abuse) — and there is no reason an
+  // unauthenticated client should be initiating a checkout.
+  const decoded = await verifyRequest(req);
+  if (!decoded) {
+    res.status(401).json({ error: 'unauthorized' });
     return;
   }
 
