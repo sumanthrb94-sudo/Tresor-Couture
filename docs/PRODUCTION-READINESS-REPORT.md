@@ -86,11 +86,11 @@ Browser (React SPA, hash routing)
 | **Admin console** | 🟢 Ready | Now gated purely on the `admin` custom claim (`AdminGuard.tsx`); the old client-side passcode was removed. (Checklist still references it — doc drift, §8.) |
 | **Email** | 🟡 Config | Code complete (Brevo + Trigger Email extension). Needs domain SPF/DKIM, extension install, `BREVO_API_KEY`. |
 | **WhatsApp** | ⚪ Dormant | Wired but no-ops until Meta Cloud API creds + approved template are set. |
-| **Security headers** | 🟡 Partial | X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy present; **CSP and HSTS missing** (SEC-07). |
-| **Abuse / rate limiting** | 🔴 Absent | No throttling on any endpoint; public `/api/contact` is open (SEC-03). |
+| **Security headers** | 🟢 Ready | X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, **plus HSTS + CSP** (SEC-07 fixed — validate CSP in preview). |
+| **Abuse / rate limiting** | 🟢 Basic | Best-effort per-instance rate limiting on public/expensive endpoints (SEC-03 fixed); back with a durable store for hard guarantees. |
 | **Observability** | 🟡 Basic | `console.error` + Vercel Analytics/Speed Insights. No error tracking (Sentry) or structured logs; no health endpoint. |
 | **Tests** | 🟡 Thin | Playwright E2E against live deployments + tsc as the static gate. No unit tests around pricing/coupon math (highest-value place to add them). |
-| **Dependencies** | 🟡 8 moderate | All transitive under `firebase-admin` (server-only); not in client bundle. |
+| **Dependencies** | 🟢 Clean | `npm audit` 0 vulnerabilities (SEC-09 fixed via a patched-`uuid` override). |
 | **Secrets management** | 🟢 Ready | Env-based, gitignored, CI leak-guard, no committed secrets. |
 | **Legal / compliance** | 🟡 Content | DPDP export/erasure implemented; policy pages must be published & linked (per checklist). GST 5% computed in code. |
 
@@ -106,11 +106,13 @@ Browser (React SPA, hash routing)
 
 ## 6. Recommended before/just-after launch (not hard blockers)
 
-- **Rate-limit public + payment endpoints** (SEC-03) — Vercel middleware or Upstash; add a CAPTCHA/honeypot to `/api/contact`.
-- **Add CSP + HSTS headers** (SEC-07) to `vercel.json`.
-- **Set `ALLOWED_ORIGIN`** to the production origin so CORS isn't `*` (SEC-08).
-- **Stop exposing the `coupons` collection** to public reads (SEC-04) — validate codes server-side.
-- **`npm audit fix`** / bump `firebase-admin` to clear the 8 moderate transitive advisories (server-only, low real risk, but easy hygiene).
+The full SEC-03 … SEC-12 hardening set is now **implemented on this branch** (see
+`docs/SECURITY-AUDIT.md`). Remaining items are operational or future polish:
+
+- **Set `ALLOWED_ORIGINS`** in Vercel to the production origin(s) (code defaults to the `tresorcouture.in` domains).
+- **Validate the new CSP** (SEC-07) against a preview deploy before promoting — confirm Razorpay/Firebase/GA/Vercel all load.
+- **Back the rate limiter** (SEC-03) with Upstash / Vercel platform limiting for multi-instance guarantees; add a CAPTCHA/honeypot to `/api/contact` if abuse appears.
+- **Set a Firebase/Google Cloud billing budget + alert.**
 - **Add an error tracker** (Sentry/Logflare) — today a failed `/api/*` call only lands in `console.error` / Vercel logs.
 - **Unit-test the pricing/coupon engine** (`api/_lib/pricing.ts`) — it's the money path and currently has no isolated tests.
 

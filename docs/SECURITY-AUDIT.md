@@ -15,16 +15,30 @@
 |---|---|---|---|---|
 | SEC-01 | **High** | Payment endpoints don't authenticate the caller; `userId` is forgeable | `api/payments/create-order.ts`, `api/payments/verify.ts` | ✅ **Fixed** (this branch) |
 | SEC-02 | **High** | Client-created COD orders trust client-supplied totals (rules don't validate price) | `firestore.rules:74`, `src/lib/firebase.ts:814` | ✅ **Fixed** (this branch) |
-| SEC-03 | **Medium** | No rate limiting / abuse controls on any endpoint; `/api/contact` is public + `*` CORS | all of `api/` | Open |
-| SEC-04 | **Medium** | `coupons` collection is world-readable (codes & values enumerable) | `firestore.rules:39` | Open |
-| SEC-05 | **Medium** | `admin_notifications` writable by any signed-in user (admin-inbox spam) | `firestore.rules:136` | Open |
-| SEC-06 | **Low/Med** | TOCTOU in payment-verify idempotency (duplicate-order race) | `api/payments/verify.ts:80` | Open |
-| SEC-07 | **Low/Med** | Missing CSP and HSTS response headers | `vercel.json:46` | Open |
-| SEC-08 | **Low** | CORS defaults to `*` when `ALLOWED_ORIGIN` is unset | `api/contact.ts:16`, `api/email/*.ts` | Open |
-| SEC-09 | **Low** | 8 moderate transitive dependency advisories (server-only) | `firebase-admin` tree | Open |
-| SEC-10 | **Low** | `mail/` lets a customer enqueue arbitrary HTML to their own verified address | `firestore.rules:120` | Open |
-| SEC-11 | **Info** | No admin read path for `payment_events` orphans (default-deny) | `api/payments/webhook.ts:111` | Open |
-| SEC-12 | **Info** | Doc drift: checklist still cites the removed admin passcode | `docs/PRODUCTION-CHECKLIST.md:22` | Open |
+| SEC-03 | **Medium** | No rate limiting / abuse controls on any endpoint; `/api/contact` is public + `*` CORS | all of `api/` | ✅ **Fixed** |
+| SEC-04 | **Medium** | `coupons` collection is world-readable (codes & values enumerable) | `firestore.rules:39` | ✅ **Fixed** |
+| SEC-05 | **Medium** | `admin_notifications` writable by any signed-in user (admin-inbox spam) | `firestore.rules:136` | ✅ **Fixed** |
+| SEC-06 | **Low/Med** | TOCTOU in payment-verify idempotency (duplicate-order race) | `api/payments/verify.ts:80` | ✅ **Fixed** |
+| SEC-07 | **Low/Med** | Missing CSP and HSTS response headers | `vercel.json:46` | ✅ **Fixed** (validate CSP in preview) |
+| SEC-08 | **Low** | CORS defaults to `*` when `ALLOWED_ORIGIN` is unset | `api/contact.ts:16`, `api/email/*.ts` | ✅ **Fixed** |
+| SEC-09 | **Low** | 8 moderate transitive dependency advisories (server-only) | `firebase-admin` tree | ✅ **Fixed** |
+| SEC-10 | **Low** | `mail/` lets a customer enqueue arbitrary HTML to their own verified address | `firestore.rules:120` | ✅ **Fixed** |
+| SEC-11 | **Info** | No admin read path for `payment_events` orphans (default-deny) | `api/payments/webhook.ts:111` | ✅ **Fixed** |
+| SEC-12 | **Info** | Doc drift: checklist still cites the removed admin passcode | `docs/PRODUCTION-CHECKLIST.md:22` | ✅ **Fixed** |
+
+> **Remediation note (SEC-03 … SEC-12):** All fixed on `claude/production-report-security-audit-FVOEX`.
+> - **SEC-03** — Best-effort fixed-window rate limiter (`api/_lib/rateLimit.ts`) on `create-order`, `verify`, `orders/place`, `coupons/validate`; inline limiter on the public `contact`. Returns `429 + Retry-After`. (Per-instance on serverless — back with Upstash/Vercel platform limiting for hard guarantees.)
+> - **SEC-04** — `coupons` is now admin-read-only; checkout validates via `POST /api/coupons/validate` (Admin SDK) which returns only the discount. Shared `evaluateCoupon` keeps UI/checkout math identical.
+> - **SEC-05** — `admin_notifications` is admin-only; the alert is written server-side from `orders/place` + `payments/verify`.
+> - **SEC-06** — `verify` now claims an idempotency guard doc (`payment_intents/{paymentId}`) inside the transaction, so concurrent/duplicate verifies can't double-write or double-decrement stock.
+> - **SEC-07** — Added `Strict-Transport-Security` and a scoped `Content-Security-Policy` (self + Razorpay/Firebase/Google/GA/Vercel) to `vercel.json`. **Validate the CSP against a preview deploy before promoting** — a missing origin would block a script/XHR.
+> - **SEC-08** — All four self-contained endpoints now reflect only an `ALLOWED_ORIGINS` allow-list (default the production domains), never `*`.
+> - **SEC-09** — `overrides: { uuid: ^11.1.0 }` pins the patched `uuid`; `npm audit` now reports **0 vulnerabilities**. Smoke-tested: `uuid.v4()`, `firebase-admin/*`, and `razorpay` all load.
+> - **SEC-10** — `mail/` is admin-only; transactional mail is enqueued server-side (escaped templates). Customers can no longer enqueue arbitrary HTML.
+> - **SEC-11** — Added an admin read rule for `payment_events` so orphan payments can surface in-console.
+> - **SEC-12** — Checklist updated to the `admin` custom claim; added an `ALLOWED_ORIGINS` line.
+>
+> Verified after all changes: `tsc --noEmit` ✓, `vite build` ✓, secret-leak guard clean, `npm audit` 0 vulns.
 
 > **Remediation note (SEC-01, SEC-02):** Fixed on `claude/production-report-security-audit-FVOEX`.
 > SEC-01 — `/api/payments/create-order` and `/api/payments/verify` now require a verified Firebase ID token (`api/_lib/auth.ts`); the paid order's `userId` is taken from the token, never the request body. SEC-02 — a new server-authoritative endpoint `/api/orders/place` recomputes COD/unpaid-order totals from the catalogue, enforces a COD value cap, and writes `amountVerified: true`; `OrderContext.placeOrder` routes through it and only falls back to the direct client write (flagged `amountVerified: false`) when the server is unavailable. The Firestore rule now forbids any client from self-asserting `amountVerified: true`. Verified: `tsc --noEmit` and `vite build` both pass; secret-leak guard clean.
@@ -200,18 +214,23 @@ Serverless platforms provide no implicit throttle, and billing scales with invoc
 
 ## Prioritized remediation plan
 
-**Before taking real money (P0):**
-1. SEC-01 — authenticate payment endpoints; derive `userId` from the ID token.
-2. SEC-02 — constrain COD (value cap, server pricing or operator confirmation, no invoice from unverified totals).
+**All twelve findings (SEC-01 … SEC-12) are now fixed on this branch.** Remaining
+operator/ops follow-ups (not code) before go-live:
 
-**Pre-launch / first week (P1):**
-3. SEC-03 — rate limiting + CAPTCHA on `/api/contact`; billing budget alert.
-4. SEC-04 — stop exposing `coupons`; validate server-side.
-5. SEC-07 — add CSP (report-only → enforce) and HSTS.
-6. SEC-06 — make verify idempotent by deterministic doc id.
-
-**Hygiene / follow-up (P2):**
-7. SEC-05, SEC-08, SEC-09, SEC-10, SEC-11, SEC-12.
+- **Set `ALLOWED_ORIGINS`** in Vercel to the production origin(s) (the code
+  defaults to the `tresorcouture.in` domains).
+- **Validate the CSP (SEC-07)** against a preview deploy — confirm Razorpay
+  checkout, Google/phone sign-in, GA, and Vercel analytics all load — before
+  promoting to production. Tighten `'unsafe-inline'` on `script-src` later with
+  nonces/hashes if desired.
+- **Back the rate limiter (SEC-03)** with a durable store (Upstash / Vercel
+  platform limiting) for multi-instance guarantees, and add a CAPTCHA/honeypot
+  to `/api/contact` if abuse appears.
+- **Set a Firebase/Google Cloud billing budget + alert** (defense against cost
+  amplification).
+- **Operator items still open from SEC-02:** serviceable-pincode gating, and an
+  invoice/report guard that skips `amountVerified: false` orders (the flag is in
+  place for both to consume).
 
 ---
 

@@ -28,6 +28,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { getDb, firebaseAdminConfigured } from '../_lib/firebaseAdmin.js';
 import { computeBreakdown } from '../_lib/pricing.js';
 import { verifyRequest } from '../_lib/auth.js';
+import { rateLimit } from '../_lib/rateLimit.js';
 import { readJson, type ApiRequest, type ApiResponse } from '../_lib/http.js';
 
 const COD_MAX_TOTAL = Number(process.env.COD_MAX_TOTAL || 50000);
@@ -53,6 +54,13 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
   const decoded = await verifyRequest(req);
   if (!decoded) {
     res.status(401).json({ error: 'unauthorized' });
+    return;
+  }
+
+  const rl = rateLimit({ key: `orders-place:${decoded.uid}`, limit: 15, windowMs: 60_000 });
+  if (!rl.ok) {
+    res.setHeader('Retry-After', String(rl.retryAfter));
+    res.status(429).json({ error: 'rate_limited' });
     return;
   }
 

@@ -27,6 +27,9 @@
     "vite": "^6.2.0",
     "razorpay": "^2.9.6"
   },
+  "overrides": {
+    "uuid": "^11.1.0"
+  },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
     "@types/node": "^22.14.0",

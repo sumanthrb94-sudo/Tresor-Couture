@@ -7,8 +7,15 @@
 
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'tresor-couture';
 
-function setCors(res: any): void {
-  res.setHeader('Access-Control-Allow-Origin', process.env.ALLOWED_ORIGIN || '*');
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ||
+  'https://tresorcouture.in,https://www.tresorcouture.in')
+  .split(',').map(s => s.trim()).filter(Boolean);
+
+function setCors(req: any, res: any): void {
+  const origin = String(req.headers?.origin || '');
+  const allow = ALLOWED_ORIGINS.includes(origin) ? origin : (ALLOWED_ORIGINS[0] || 'null');
+  res.setHeader('Access-Control-Allow-Origin', allow);
+  res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
@@ -62,7 +69,7 @@ async function brevoSendEmail(args: {
 }
 
 export default async function handler(req: any, res: any) {
-  setCors(res);
+  setCors(req, res);
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
 

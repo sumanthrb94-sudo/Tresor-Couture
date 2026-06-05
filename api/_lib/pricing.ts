@@ -59,6 +59,51 @@ function readStock(data: Record<string, unknown>): number | undefined {
   return typeof s === 'number' && isFinite(s) ? s : undefined;
 }
 
+export interface CouponEvaluation {
+  valid: boolean;
+  code?: string;
+  discount: number;
+  reason?: 'not_found' | 'inactive' | 'expired' | 'min_subtotal';
+  minSubtotal?: number;
+}
+
+/**
+ * Authoritative coupon evaluation against the Firestore `coupons` collection
+ * (read via the Admin SDK). Single source of truth shared by `computeBreakdown`
+ * and the public `/api/coupons/validate` endpoint, so the discount shown in the
+ * UI always matches the discount actually applied — and the `coupons`
+ * collection never has to be exposed to client reads.
+ */
+export async function evaluateCoupon(
+  db: Firestore,
+  rawCode: string,
+  subtotal: number,
+): Promise<CouponEvaluation> {
+  const code = rawCode.toUpperCase();
+  const snap = await db.collection('coupons').doc(code).get();
+  if (!snap.exists) return { valid: false, discount: 0, reason: 'not_found' };
+  const cd = (snap.data() ?? {}) as {
+    active?: boolean;
+    kind?: 'percent' | 'flat';
+    value?: number;
+    minSubtotal?: number;
+    maxDiscount?: number;
+    expiresAt?: string;
+  };
+  if (!cd.active) return { valid: false, discount: 0, reason: 'inactive' };
+  if (cd.expiresAt && new Date(cd.expiresAt).getTime() <= Date.now()) {
+    return { valid: false, discount: 0, reason: 'expired' };
+  }
+  if (cd.minSubtotal && subtotal < cd.minSubtotal) {
+    return { valid: false, discount: 0, reason: 'min_subtotal', minSubtotal: cd.minSubtotal };
+  }
+  const discount =
+    cd.kind === 'percent'
+      ? Math.min(cd.maxDiscount ?? Infinity, Math.round(subtotal * ((cd.value ?? 0) / 100)))
+      : cd.value ?? 0;
+  return { valid: true, code, discount };
+}
+
 /**
  * Compute the authoritative breakdown. `paymentMethod` only affects the COD
  * surcharge. Throws on unknown product, bad quantity, or unreadable price.
@@ -97,32 +142,14 @@ export async function computeBreakdown(
 
   const subtotal = lines.reduce((s, l) => s + l.price * l.quantity, 0);
 
-  // Coupon — looked up by document id (uppercased code), same as the client.
+  // Coupon — evaluated via the shared authoritative helper.
   let couponDiscount = 0;
   let appliedCode: string | undefined;
   if (input.couponCode) {
-    const code = input.couponCode.toUpperCase();
-    const cSnap = await db.collection('coupons').doc(code).get();
-    if (cSnap.exists) {
-      const cd = (cSnap.data() ?? {}) as {
-        active?: boolean;
-        kind?: 'percent' | 'flat';
-        value?: number;
-        minSubtotal?: number;
-        maxDiscount?: number;
-        expiresAt?: string;
-      };
-      const valid =
-        cd.active &&
-        (!cd.expiresAt || new Date(cd.expiresAt).getTime() > Date.now()) &&
-        (!cd.minSubtotal || subtotal >= cd.minSubtotal);
-      if (valid) {
-        couponDiscount =
-          cd.kind === 'percent'
-            ? Math.min(cd.maxDiscount ?? Infinity, Math.round(subtotal * ((cd.value ?? 0) / 100)))
-            : cd.value ?? 0;
-        appliedCode = code;
-      }
+    const result = await evaluateCoupon(db, input.couponCode, subtotal);
+    if (result.valid) {
+      couponDiscount = result.discount;
+      appliedCode = result.code;
     }
   }
 

@@ -34,11 +34,12 @@ service cloud.firestore {
     }
 
     /* ---------- coupons ---------- */
-    // Code is the document ID. Public read so the checkout can validate;
-    // admin-only write.
+    // Code is the document ID. NOT publicly readable — a world-readable coupon
+    // collection leaks every code, value and threshold. Checkout validates a
+    // code via the server (/api/coupons/validate, Admin SDK) which returns only
+    // the resulting discount. Admin manages coupons in-console.
     match /coupons/{code} {
-      allow read:  if true;
-      allow write: if isAdmin();
+      allow read, write: if isAdmin();
     }
 
     /* ---------- users ---------- */
@@ -127,26 +128,31 @@ service cloud.firestore {
     //   - Admin may enqueue, read, update, delete anything (status-change
     //     emails, manual replies, queue clean-up).
     //   - No public read — the queue can contain customer order details.
+    // Transactional mail is now enqueued SERVER-SIDE (escaped, templated — see
+    // /api/email/*) or by admin (status emails). Customers may NOT write to the
+    // queue directly: a client-writable mail doc lets a user send arbitrary
+    // HTML from our verified sending domain (to themselves), a needless
+    // reputation/abuse vector. Admin-only.
     match /mail/{mailId} {
-      allow create: if (isSignedIn()
-                        && request.resource.data.uid == request.auth.uid
-                        && request.resource.data.to is string
-                        && request.resource.data.to == request.auth.token.email)
-                     || isAdmin();
-      allow read, update, delete: if isAdmin();
+      allow read, write: if isAdmin();
     }
 
     /* ---------- admin_notifications ---------- */
-    // In-app notifications surfaced in the admin dashboard. Today this is
-    // the channel for "new order" alerts (Cloud Functions can later
-    // promote these to outbound email so the admin doesn't need to poll
-    // the console). Any signed-in user can append (i.e. an order created
-    // by a customer can drop a notification), but only for whitelisted
-    // kinds — no arbitrary writes.
+    // In-app notifications surfaced in the admin dashboard ("new order" alerts).
+    // Written SERVER-SIDE now (Admin SDK, /api/orders/place + payments/verify),
+    // so this is admin-only: a signed-in customer must not be able to flood the
+    // admin inbox with forged alerts. (The client fallback path's best-effort
+    // write degrades silently when the server is unavailable.)
     match /admin_notifications/{notifId} {
-      allow create: if isSignedIn()
-        && request.resource.data.kind in ['new_order'];
-      allow read, update, delete: if isAdmin();
+      allow read, write: if isAdmin();
+    }
+
+    /* ---------- payment_events ---------- */
+    // Orphan/unmatched gateway payments, written server-side (Admin SDK) by the
+    // webhook for manual reconciliation. Admin-readable so they can surface in
+    // the console; never client-writable.
+    match /payment_events/{eventId} {
+      allow read: if isAdmin();
     }
 
     /* ---------- consents (DPDP / cookie + marketing consent) ---------- */

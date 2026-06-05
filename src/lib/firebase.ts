@@ -828,18 +828,26 @@ export const ordersApi = {
       const p = (it.fabricSnapshot as unknown as { price: number }).price;
       return s + p * it.quantity;
     }, 0);
-    // Coupon lookup (public-read rule)
+    // Coupon discount for this fallback (client-write) path. The `coupons`
+    // collection is admin-read-only now, so this direct read is best-effort:
+    // on the authoritative server path (/api/orders/place) the discount is
+    // already applied, and this branch only runs on localhost/preview. A denied
+    // read simply yields no discount rather than failing the whole order.
     let couponDiscount = 0;
     if (input.couponCode) {
-      const c = await getOne<DocumentData>('coupons', input.couponCode.toUpperCase());
-      const cd = c as { active?: boolean; kind?: 'percent' | 'flat'; value?: number; minSubtotal?: number; maxDiscount?: number; expiresAt?: string } | null;
-      const valid = cd && cd.active
-        && (!cd.expiresAt || new Date(cd.expiresAt).getTime() > Date.now())
-        && (!cd.minSubtotal || subtotal >= cd.minSubtotal);
-      if (valid && cd) {
-        couponDiscount = cd.kind === 'percent'
-          ? Math.min(cd.maxDiscount ?? Infinity, Math.round(subtotal * ((cd.value ?? 0) / 100)))
-          : (cd.value ?? 0);
+      try {
+        const c = await getOne<DocumentData>('coupons', input.couponCode.toUpperCase());
+        const cd = c as { active?: boolean; kind?: 'percent' | 'flat'; value?: number; minSubtotal?: number; maxDiscount?: number; expiresAt?: string } | null;
+        const valid = cd && cd.active
+          && (!cd.expiresAt || new Date(cd.expiresAt).getTime() > Date.now())
+          && (!cd.minSubtotal || subtotal >= cd.minSubtotal);
+        if (valid && cd) {
+          couponDiscount = cd.kind === 'percent'
+            ? Math.min(cd.maxDiscount ?? Infinity, Math.round(subtotal * ((cd.value ?? 0) / 100)))
+            : (cd.value ?? 0);
+        }
+      } catch {
+        /* coupons read denied (non-admin) → no discount on the fallback path */
       }
     }
     const taxable = Math.max(0, subtotal - couponDiscount);
@@ -933,17 +941,58 @@ export const couponsApi = {
     return { ...c, code };
   },
   remove:  (code: string) => deleteDoc(doc(db, 'coupons', code.toUpperCase())),
-  validate: async (code: string, subtotal: number) => {
-    const c = await getOne<DocumentData>('coupons', code.toUpperCase());
-    if (!c) return { valid: false, reason: 'not_found' as const };
-    const cd = c as { active?: boolean; kind?: 'percent' | 'flat'; value?: number; minSubtotal?: number; maxDiscount?: number; expiresAt?: string };
-    if (!cd.active) return { valid: false, reason: 'inactive' as const };
-    if (cd.expiresAt && new Date(cd.expiresAt).getTime() < Date.now()) return { valid: false, reason: 'expired' as const };
-    if (cd.minSubtotal && subtotal < cd.minSubtotal) return { valid: false, reason: 'min_subtotal' as const, minSubtotal: cd.minSubtotal };
-    const discount = cd.kind === 'percent'
-      ? Math.min(cd.maxDiscount ?? Infinity, Math.round(subtotal * ((cd.value ?? 0) / 100)))
-      : (cd.value ?? 0);
-    return { valid: true as const, discount, code: cd as DocumentData };
+
+  /**
+   * Validate a coupon for a given subtotal. The `coupons` collection is no
+   * longer client-readable (it would leak every code/value), so validation runs
+   * SERVER-SIDE via /api/coupons/validate, which returns only the resulting
+   * discount. Falls back to a direct read only when the server is unavailable
+   * (localhost / preview); that read is admin-gated by the rules, so for a
+   * non-admin dev it simply resolves to "invalid" — never an exposure.
+   */
+  validate: async (
+    code: string,
+    subtotal: number,
+  ): Promise<{
+    valid: boolean;
+    discount: number;
+    reason?: 'not_found' | 'inactive' | 'expired' | 'min_subtotal';
+    minSubtotal?: number;
+  }> => {
+    const REASONS = ['not_found', 'inactive', 'expired', 'min_subtotal'] as const;
+    const map = (d: { valid?: boolean; discount?: number; reason?: string; minSubtotal?: number }) => {
+      if (d?.valid) return { valid: true, discount: Number(d.discount) || 0 };
+      const reason = (REASONS as readonly string[]).includes(d?.reason ?? '')
+        ? (d!.reason as 'not_found' | 'inactive' | 'expired' | 'min_subtotal')
+        : 'not_found';
+      return { valid: false, discount: 0, reason, ...(d?.minSubtotal ? { minSubtotal: d.minSubtotal } : {}) };
+    };
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ code: code.toUpperCase(), subtotal }),
+      });
+      if (res.ok) return map(await res.json());
+      if (res.status !== 503) return { valid: false, discount: 0, reason: 'not_found' };
+      // 503 → server has no Admin SDK (localhost): fall through to direct read.
+    } catch {
+      /* network error → direct-read fallback */
+    }
+    try {
+      const c = await getOne<DocumentData>('coupons', code.toUpperCase());
+      if (!c) return { valid: false, discount: 0, reason: 'not_found' };
+      const cd = c as { active?: boolean; kind?: 'percent' | 'flat'; value?: number; minSubtotal?: number; maxDiscount?: number; expiresAt?: string };
+      if (!cd.active) return { valid: false, discount: 0, reason: 'inactive' };
+      if (cd.expiresAt && new Date(cd.expiresAt).getTime() < Date.now()) return { valid: false, discount: 0, reason: 'expired' };
+      if (cd.minSubtotal && subtotal < cd.minSubtotal) return { valid: false, discount: 0, reason: 'min_subtotal', minSubtotal: cd.minSubtotal };
+      const discount = cd.kind === 'percent'
+        ? Math.min(cd.maxDiscount ?? Infinity, Math.round(subtotal * ((cd.value ?? 0) / 100)))
+        : (cd.value ?? 0);
+      return { valid: true, discount };
+    } catch {
+      return { valid: false, discount: 0, reason: 'not_found' };
+    }
   }
 };
 

@@ -12,10 +12,37 @@
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
-function setCors(res: any): void {
-  res.setHeader('Access-Control-Allow-Origin', process.env.ALLOWED_ORIGIN || '*');
+// Allow-list of origins permitted to call this endpoint cross-origin. The app
+// itself calls /api/* same-origin (no CORS needed), so this only governs
+// external callers. Override with ALLOWED_ORIGINS (comma-separated) in Vercel.
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ||
+  'https://tresorcouture.in,https://www.tresorcouture.in')
+  .split(',').map(s => s.trim()).filter(Boolean);
+
+function setCors(req: any, res: any): void {
+  const origin = String(req.headers?.origin || '');
+  // Reflect only allow-listed origins; otherwise fall back to the primary site
+  // origin (never the wildcard '*').
+  const allow = ALLOWED_ORIGINS.includes(origin) ? origin : (ALLOWED_ORIGINS[0] || 'null');
+  res.setHeader('Access-Control-Allow-Origin', allow);
+  res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+}
+
+// Best-effort per-instance rate limit (inlined to keep this endpoint
+// import-free / cold-start bullet-proof — see note below). Caveat: per-instance
+// only; back with a durable store for hard guarantees.
+const _rlStore = new Map<string, { count: number; resetAt: number }>();
+function rateLimited(req: any, limit = 10, windowMs = 60_000): boolean {
+  const xff = String(req.headers?.['x-forwarded-for'] || '');
+  const ip = (xff.split(',')[0] || '').trim() || String(req.headers?.['x-real-ip'] || 'unknown');
+  const now = Date.now();
+  const b = _rlStore.get(ip);
+  if (!b || b.resetAt <= now) { _rlStore.set(ip, { count: 1, resetAt: now + windowMs }); return false; }
+  if (b.count >= limit) return true;
+  b.count += 1;
+  return false;
 }
 
 /** Best-effort E.164 normalisation. Returns '' when the input can't be made
@@ -46,9 +73,13 @@ async function brevoUpsert(body: Record<string, unknown>): Promise<void> {
 }
 
 export default async function handler(req: any, res: any) {
-  setCors(res);
+  setCors(req, res);
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
+  if (rateLimited(req)) {
+    res.setHeader('Retry-After', '60');
+    return res.status(429).json({ error: 'rate_limited' });
+  }
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});

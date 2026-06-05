@@ -26,6 +26,7 @@ import { getDb, firebaseAdminConfigured } from '../_lib/firebaseAdmin.js';
 import { computeBreakdown } from '../_lib/pricing.js';
 import { getRazorpay, razorpayConfigured, verifyCheckoutSignature } from '../_lib/razorpay.js';
 import { verifyRequest } from '../_lib/auth.js';
+import { rateLimit } from '../_lib/rateLimit.js';
 import { readJson, type ApiRequest, type ApiResponse } from '../_lib/http.js';
 
 interface VerifyBody {
@@ -60,6 +61,13 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
     return;
   }
 
+  const rl = rateLimit({ key: `verify:${decoded.uid}`, limit: 30, windowMs: 60_000 });
+  if (!rl.ok) {
+    res.setHeader('Retry-After', String(rl.retryAfter));
+    res.status(429).json({ error: 'rate_limited' });
+    return;
+  }
+
   let body: VerifyBody;
   try {
     body = readJson<VerifyBody>(req);
@@ -87,7 +95,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
   try {
     const db = getDb();
 
-    // Idempotency: if we've already recorded this payment, return it.
+    // Fast-path idempotency (cheap, non-authoritative): if a prior verify
+    // already recorded this payment, return it without re-pricing.
     const existing = await db
       .collection('orders')
       .where('paymentId', '==', razorpay_payment_id)
@@ -116,9 +125,24 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
       return;
     }
 
-    // 3. Transactional stock decrement + order write.
+    // 3. Transactional stock decrement + order write, made idempotent by an
+    //    intent guard keyed on the payment id. Two concurrent verify calls for
+    //    the same payment can't both pass: whichever loses the transaction sees
+    //    the guard and returns the already-written order instead of
+    //    double-decrementing stock. (The fast-path query above is only an
+    //    optimisation; THIS is the authoritative idempotency boundary.)
     const orderRef = db.collection('orders').doc();
+    const guardRef = db.collection('payment_intents').doc(razorpay_payment_id);
+    let alreadyOrderId: string | null = null;
+
     await db.runTransaction(async (tx) => {
+      // All reads BEFORE any write (Firestore transaction requirement).
+      const guardSnap = await tx.get(guardRef);
+      if (guardSnap.exists) {
+        alreadyOrderId = (guardSnap.get('orderId') as string | undefined) ?? null;
+        return;
+      }
+
       // Re-read every product inside the transaction for a consistent snapshot.
       const productRefs = breakdown.lines.map((l) => db.collection('products').doc(l.fabricId));
       const snaps = await Promise.all(productRefs.map((ref) => tx.get(ref)));
@@ -174,7 +198,20 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
           : {}),
         createdAt: FieldValue.serverTimestamp(),
       });
+
+      // Claim the payment id so a concurrent/duplicate verify is rejected.
+      tx.set(guardRef, {
+        orderId: orderRef.id,
+        paymentId: razorpay_payment_id,
+        createdAt: FieldValue.serverTimestamp(),
+      });
     });
+
+    // A concurrent call already wrote the order — return it, don't duplicate.
+    if (alreadyOrderId !== null) {
+      res.status(200).json({ ok: true, orderId: alreadyOrderId, alreadyProcessed: true });
+      return;
+    }
 
     // NOTE: the order-confirmation email for paid (card/UPI) orders is a
     // follow-up. Main's email path (`api/email/order.ts`) requires the buyer's

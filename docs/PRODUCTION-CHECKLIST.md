@@ -19,8 +19,9 @@ Final gate before flipping the switch. Each box should be ticked by the named ow
 - [ ] COD gated by value cap + serviceable pincode. (Eng)
 
 ## Security
-- [ ] `VITE_ADMIN_PASSCODE` overridden (NOT the default `tresor-atelier`). (CEO+Eng)
+- [ ] Admin access is the `admin` custom claim only — the client-side passcode gate was removed (commit `c01200f`); admin UI + Firestore rules now key off the claim. (Eng)
 - [ ] Admin custom claim bootstrapped on the founder account (`DEPLOY.md` §4). (Eng)
+- [ ] `ALLOWED_ORIGINS` set to the production origin(s) so API CORS isn't wildcard. (Eng)
 - [ ] `FIREBASE_SERVICE_ACCOUNT` stored as a secret, never committed. (Eng)
 - [ ] Firestore rules reviewed; default-deny confirmed. (Eng)
 
@@ -71,7 +72,7 @@ Run against a **staging deployment** with **Razorpay in TEST mode**. Env needed:
 | **Totals integrity** | attempt a tampered amount | server rejects / recomputes — never charges the browser value |
 | **Lead capture** | submit newsletter + WhatsApp opt-in | doc lands in `subscribers` with `consent` |
 | **Auth** | register, Google sign-in, phone OTP, password reset | all succeed on the live/staging domain |
-| **Admin** | login with `VITE_ADMIN_PASSCODE` → mark order processing/shipped/delivered | status changes + customer email fires (check `mail/`) |
+| **Admin** | sign in with an account carrying the `admin` claim → mark order processing/shipped/delivered | status changes + customer email fires (check `mail/`) |
 | **Serviceability** | enter out-of-zone pincode (once §delivery wired) | blocked / standard-shipping fallback |
 
 > Note: the app uses **hash routing** and is client-rendered — Playwright selectors should wait for client hydration; deep links use `/#/...` fragments (Appendix B).

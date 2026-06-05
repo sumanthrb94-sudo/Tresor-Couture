@@ -19,6 +19,7 @@ import { getDb, firebaseAdminConfigured } from '../_lib/firebaseAdmin.js';
 import { computeBreakdown } from '../_lib/pricing.js';
 import { getRazorpay, razorpayConfigured } from '../_lib/razorpay.js';
 import { verifyRequest } from '../_lib/auth.js';
+import { rateLimit } from '../_lib/rateLimit.js';
 import { readJson, type ApiRequest, type ApiResponse } from '../_lib/http.js';
 
 interface Body {
@@ -50,6 +51,13 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
   const decoded = await verifyRequest(req);
   if (!decoded) {
     res.status(401).json({ error: 'unauthorized' });
+    return;
+  }
+
+  const rl = rateLimit({ key: `create-order:${decoded.uid}`, limit: 20, windowMs: 60_000 });
+  if (!rl.ok) {
+    res.setHeader('Retry-After', String(rl.retryAfter));
+    res.status(429).json({ error: 'rate_limited' });
     return;
   }
 
