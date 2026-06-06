@@ -56,6 +56,7 @@ import {
   type DocumentData,
   type QueryConstraint
 } from 'firebase/firestore';
+import { getBuiltinCoupon } from './coupon';
 
 const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
 
@@ -539,12 +540,16 @@ export async function isAdminUser(): Promise<boolean> {
 
 async function listAll<T>(name: string, constraints: QueryConstraint[] = []): Promise<(T & { id: string })[]> {
   const snap = await getDocs(query(collection(db, name), ...constraints));
-  return snap.docs.map(d => ({ id: d.id, ...(d.data() as T) }));
+  // The Firestore document id is canonical — it is what getOne()/productsApi.get()
+  // resolve by. Spread the stored data FIRST so a stale `id` field inside the
+  // document (e.g. a legacy numeric seed id) can never override the real doc id
+  // and produce a navigation target that 404s.
+  return snap.docs.map(d => ({ ...(d.data() as T), id: d.id }));
 }
 
 async function getOne<T>(name: string, id: string): Promise<(T & { id: string }) | null> {
   const snap = await getDoc(doc(db, name, id));
-  return snap.exists() ? ({ id: snap.id, ...(snap.data() as T) }) : null;
+  return snap.exists() ? ({ ...(snap.data() as T), id: snap.id }) : null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -831,7 +836,8 @@ export const ordersApi = {
     // Coupon lookup (public-read rule)
     let couponDiscount = 0;
     if (input.couponCode) {
-      const c = await getOne<DocumentData>('coupons', input.couponCode.toUpperCase());
+      const c = (await getOne<DocumentData>('coupons', input.couponCode.toUpperCase()))
+        ?? (getBuiltinCoupon(input.couponCode) as DocumentData | null);
       const cd = c as { active?: boolean; kind?: 'percent' | 'flat'; value?: number; minSubtotal?: number; maxDiscount?: number; expiresAt?: string } | null;
       const valid = cd && cd.active
         && (!cd.expiresAt || new Date(cd.expiresAt).getTime() > Date.now())
@@ -920,7 +926,9 @@ export const ordersApi = {
 
 export const couponsApi = {
   list:    () => listAll<DocumentData>('coupons'),
-  get:     (code: string) => getOne<DocumentData>('coupons', code.toUpperCase()),
+  get:     async (code: string) =>
+    (await getOne<DocumentData>('coupons', code.toUpperCase()))
+      ?? (getBuiltinCoupon(code) as DocumentData | null),
   upsert:  async (c: { code: string; description: string; kind: 'percent' | 'flat'; value: number; minSubtotal?: number; maxDiscount?: number; expiresAt?: string; active: boolean }) => {
     const code = c.code.toUpperCase();
     await setDoc(doc(db, 'coupons', code), { ...c, code });
@@ -928,7 +936,11 @@ export const couponsApi = {
   },
   remove:  (code: string) => deleteDoc(doc(db, 'coupons', code.toUpperCase())),
   validate: async (code: string, subtotal: number) => {
-    const c = await getOne<DocumentData>('coupons', code.toUpperCase());
+    // Firestore doc wins (admin-managed); otherwise fall back to the built-in
+    // advertised coupons so the codes promoted on the cart/checkout always work
+    // even when the `coupons` collection hasn't been seeded.
+    const c = (await getOne<DocumentData>('coupons', code.toUpperCase()))
+      ?? (getBuiltinCoupon(code) as DocumentData | null);
     if (!c) return { valid: false, reason: 'not_found' as const };
     const cd = c as { active?: boolean; kind?: 'percent' | 'flat'; value?: number; minSubtotal?: number; maxDiscount?: number; expiresAt?: string };
     if (!cd.active) return { valid: false, reason: 'inactive' as const };

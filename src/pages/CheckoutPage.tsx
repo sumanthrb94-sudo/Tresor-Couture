@@ -513,7 +513,9 @@ const CheckoutPage: React.FC = () => {
 
                 <dl className="space-y-2 text-[14px]">
                   <div className="flex justify-between"><dt>Total MRP</dt><dd>{formatINR(mrpTotal)}</dd></div>
-                  <div className="flex justify-between"><dt>Discount</dt><dd className="text-[color:var(--color-myntra-green)]">- {formatINR(productDiscount)}</dd></div>
+                  {productDiscount > 0 && (
+                    <div className="flex justify-between"><dt>Discount on MRP</dt><dd className="text-[color:var(--color-myntra-green)]">- {formatINR(productDiscount)}</dd></div>
+                  )}
                   {couponDiscount > 0 && (
                     <div className="flex justify-between"><dt>Coupon</dt><dd className="text-[color:var(--color-myntra-green)]">- {formatINR(couponDiscount)}</dd></div>
                   )}

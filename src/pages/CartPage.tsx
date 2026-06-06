@@ -5,12 +5,13 @@ import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
 import { FABRICS, FREE_SHIPPING_THRESHOLD, formatINR } from '../constants';
-import { couponsApi } from '../lib/firebase';
+import { couponsApi, productsApi } from '../lib/firebase';
+import type { Fabric } from '../types';
 import FabricImage from '../components/FabricImage';
 import ProductCard from '../components/ProductCard';
 
 const CartPage: React.FC = () => {
-  const { items, resolved, resolving, updateQuantity, removeItem, subtotal, shipping, tax, total } = useCart();
+  const { items, resolved, resolving, updateQuantity, removeItem, subtotal, shipping, tax, total, unitCount } = useCart();
   const { add: addWish } = useWishlist();
   const { user } = useAuth();
   const { navigate } = useRouter();
@@ -19,6 +20,24 @@ const CartPage: React.FC = () => {
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponBusy, setCouponBusy] = useState(false);
   const [pin, setPin] = useState('');
+
+  // "You might also like" must link to real product pages. Source it from the
+  // live Firestore catalogue (document ids) — the static FABRICS seed carries
+  // numeric ids that 404 against the Firestore-backed product route. Falls back
+  // to FABRICS only until the fetch resolves.
+  const [catalog, setCatalog] = useState<Fabric[] | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const rows = await productsApi.list({ limit: 200 });
+        if (!cancelled && rows.length) setCatalog(rows as unknown as Fabric[]);
+      } catch {
+        /* keep the FABRICS fallback */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   // A coupon is validated against the subtotal at apply time and its discount
   // frozen into state. If the shopper then changes quantities, that frozen
@@ -94,6 +113,12 @@ const CartPage: React.FC = () => {
   const totalAfterCoupon = Math.max(0, total - couponDiscount);
   const remainingForFreeShip = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
 
+  // Mirror the checkout Order Summary exactly: show Total MRP and the markdown
+  // to the selling price as a "Discount" line, so the two screens tell one
+  // consistent pricing story instead of the cart showing only a bare Subtotal.
+  const mrpTotal = resolved.reduce((s, { item, fabric }) => s + (fabric.mrp ?? fabric.price) * item.quantity, 0);
+  const productDiscount = Math.max(0, mrpTotal - subtotal);
+
   const applyCoupon = async () => {
     const code = coupon.trim().toUpperCase();
     if (!code) return;
@@ -121,13 +146,13 @@ const CartPage: React.FC = () => {
     }
   };
 
-  const youMightLike = FABRICS.filter(f => !resolved.some(r => r.fabric.id === f.id)).slice(0, 5);
+  const youMightLike = (catalog ?? FABRICS).filter(f => !resolved.some(r => r.fabric.id === f.id)).slice(0, 5);
 
   return (
     <main className="pt-[100px] md:pt-[112px] pb-12 md:pb-16 bg-[color:var(--color-myntra-bg-soft)] min-h-screen">
       <div className="max-w-[1200px] mx-auto px-4 md:px-8 lg:px-10">
         <h1 className="text-xl md:text-2xl font-extrabold mb-2 text-[color:var(--color-myntra-navy)]">
-          My Bag <span className="text-[14px] font-medium text-[color:var(--color-myntra-ink-mute)] ml-2">{resolved.length} item{resolved.length === 1 ? '' : 's'}</span>
+          My Bag <span className="text-[14px] font-medium text-[color:var(--color-myntra-ink-mute)] ml-2">{unitCount} item{unitCount === 1 ? '' : 's'}</span>
         </h1>
 
         {user ? (
@@ -272,7 +297,7 @@ const CartPage: React.FC = () => {
 
               {/* Price details */}
               <div className="bg-white border border-[color:var(--color-myntra-border-soft)] p-4">
-                <p className="text-[12px] font-extrabold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-4">Price Details ({resolved.length} items)</p>
+                <p className="text-[12px] font-extrabold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-4">Price Details ({unitCount} item{unitCount === 1 ? '' : 's'})</p>
 
                 {remainingForFreeShip > 0 && (
                   <div className="bg-[color:var(--color-myntra-bg-sale)] text-[12px] font-semibold p-2 mb-4 rounded">
@@ -282,9 +307,15 @@ const CartPage: React.FC = () => {
 
                 <dl className="space-y-2.5 text-[14px]">
                   <div className="flex justify-between">
-                    <dt className="text-[color:var(--color-myntra-ink)]">Subtotal</dt>
-                    <dd>{formatINR(subtotal)}</dd>
+                    <dt className="text-[color:var(--color-myntra-ink)]">Total MRP</dt>
+                    <dd>{formatINR(mrpTotal)}</dd>
                   </div>
+                  {productDiscount > 0 && (
+                    <div className="flex justify-between">
+                      <dt className="text-[color:var(--color-myntra-ink)]">Discount on MRP</dt>
+                      <dd className="text-[color:var(--color-myntra-green)]">- {formatINR(productDiscount)}</dd>
+                    </div>
+                  )}
                   {couponDiscount > 0 && (
                     <div className="flex justify-between">
                       <dt className="text-[color:var(--color-myntra-ink)]">Coupon Discount</dt>

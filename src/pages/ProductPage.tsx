@@ -367,11 +367,16 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
                 <input
                   value={pin}
                   onChange={e => { setPin(e.target.value); setPinChecked(null); }}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); checkPin(); } }}
                   placeholder="Enter pincode"
                   inputMode="numeric"
+                  enterKeyHint="search"
                   className="input-box flex-1"
                 />
-                <button onClick={checkPin} className="text-[13px] font-bold text-[color:var(--color-myntra-pink)] px-3">CHECK</button>
+                {/* onPointerDown (not onClick) so the first tap registers even while
+                    the input is focused / the mobile keyboard is dismissing — the
+                    pointer event fires before the blur can swallow the tap. */}
+                <button type="button" onPointerDown={checkPin} className="text-[13px] font-bold text-[color:var(--color-myntra-pink)] px-3">CHECK</button>
               </div>
               {pinChecked === true && (
                 <p className="text-[13px] text-[color:var(--color-myntra-green)] font-semibold">Delivery in 4-6 business days. Cash on Delivery available.</p>
@@ -379,7 +384,11 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
               {pinChecked === false && (
                 <p className="text-[13px] text-[color:var(--color-myntra-pink)] font-semibold">Please enter a valid 6-digit Indian pincode.</p>
               )}
-              <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mt-3">Please enter PIN code to check delivery time & Pay on Delivery availability.</p>
+              {/* Static helper only while no result is shown — once the shopper has
+                  checked a PIN, the result/error message above replaces it. */}
+              {pinChecked === null && (
+                <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mt-3">Please enter PIN code to check delivery time & Pay on Delivery availability.</p>
+              )}
             </div>
 
             {/* Trust strip */}

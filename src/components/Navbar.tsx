@@ -7,7 +7,8 @@ import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
 import { FABRICS, MASTER_CATEGORIES, MASTER_CATEGORY_TREE, OFFER_TICKER } from '../constants';
-import type { MasterCategory } from '../types';
+import { productsApi } from '../lib/firebase';
+import type { Fabric, MasterCategory } from '../types';
 
 type NavEntry =
   | { kind: 'master'; label: MasterCategory; tone?: 'default' | 'premium' }
@@ -51,16 +52,38 @@ const Navbar: React.FC = () => {
   const cartBadge = Math.min(cartItems.length, 99);
   const wishBadge = Math.min(wishIds.length, 99);
 
+  // Live catalogue (Firestore document ids) backs search suggestions and the
+  // mega-menu previews. Sourcing these from the static FABRICS seed instead
+  // navigated to its NUMERIC ids (e.g. /#/product/16) which don't exist as
+  // Firestore document ids — every such link 404'd. We fall back to FABRICS
+  // only until the fetch resolves (or if it fails), so local/dev still shows
+  // suggestions.
+  const [catalog, setCatalog] = useState<Fabric[] | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const rows = await productsApi.list({ limit: 200 });
+        if (!cancelled && rows.length) setCatalog(rows as unknown as Fabric[]);
+      } catch {
+        /* keep the FABRICS fallback */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const searchPool = catalog ?? FABRICS;
+
   const suggestions = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return [];
-    return FABRICS.filter(f =>
+    return searchPool.filter(f =>
       f.name.toLowerCase().includes(q) ||
       f.category.toLowerCase().includes(q) ||
       f.masterCategory.toLowerCase().includes(q) ||
-      f.tags.some(t => t.toLowerCase().includes(q))
+      (f.tags ?? []).some(t => t.toLowerCase().includes(q))
     ).slice(0, 6);
-  }, [search]);
+  }, [search, searchPool]);
 
   const activeCat = route.name === 'shop' ? route.category : undefined;
 
@@ -96,7 +119,7 @@ const Navbar: React.FC = () => {
 
   const megaPanel = (label: MasterCategory) => {
     const subs = MASTER_CATEGORY_TREE[label] ?? [];
-    const items = FABRICS.filter(f => f.masterCategory === label).slice(0, 4);
+    const items = searchPool.filter(f => f.masterCategory === label).slice(0, 4);
     return (
       <div
         className="fixed top-[64px] md:top-[80px] left-1/2 -translate-x-1/2 w-[820px] max-w-[calc(100vw-32px)] bg-white border-t-4 border-[color:var(--color-myntra-pink)] shadow-2xl pt-6 pb-7 px-8 grid grid-cols-[220px_1fr] gap-8 z-[60]"
