@@ -45,15 +45,15 @@ export const BUSINESS: BusinessProfile = {
   pan: 'ABCDE1234F', // TODO: confirm
   cin: '', // proprietorship — no CIN
   addressLines: [
-    'Tresor Atelier', // TODO: confirm registered address
-    'Road No. 12, Banjara Hills',
-    'Hyderabad, Telangana 500034',
+    'Tresor Couture',
+    'Plot No. 110, My Home Vihanga Rd, Q City',
+    'Gachibowli, Hyderabad, Telangana 500046',
     'India',
   ],
   stateName: 'Telangana',
   stateCode: '36',
-  email: 'concierge@tresorcouture.com',
-  phone: '+91 80 1234 5678',
+  email: 'hello@tresorcouture.in',
+  phone: '+91 63042 11922',
   website: 'https://tresorcouture.in',
   policiesUpdatedAt: '2026-06-02',
 };

@@ -134,8 +134,8 @@ const Footer: React.FC = () => {
           </div>
 
           <div className="flex flex-col gap-1.5 text-[13px] text-[color:var(--color-myntra-ink-soft)]">
-            <div className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> +91 80 1234 5678</div>
-            <div className="flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> concierge@tresorcouture.com</div>
+            <div className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> +91 63042 11922</div>
+            <div className="flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> hello@tresorcouture.in</div>
           </div>
         </div>
       </div>
