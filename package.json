@@ -11,6 +11,7 @@
     "lint": "tsc --noEmit",
     "seed": "tsx scripts/seed-firestore.ts",
     "seed:force": "tsx scripts/seed-firestore.ts --force",
+    "fix-address": "tsx scripts/fix-default-address.ts",
     "set-admin": "tsx scripts/set-admin.ts"
   },
   "dependencies": {
