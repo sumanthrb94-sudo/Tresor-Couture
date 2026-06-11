@@ -33,6 +33,31 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 const RECAPTCHA_CONTAINER_ID = 'recaptcha-container';
 
+// Translate Firebase auth error codes into customer-facing copy. Raw SDK
+// messages ("Firebase: Error (auth/invalid-credential).") leak the backend
+// technology and read like a stack trace — never show them to users.
+const AUTH_ERROR_COPY: Record<string, string> = {
+  'auth/invalid-credential': 'Incorrect email or password.',
+  'auth/wrong-password': 'Incorrect email or password.',
+  'auth/user-not-found': 'Incorrect email or password.',
+  'auth/invalid-email': 'Enter a valid email address.',
+  'auth/user-disabled': 'This account has been disabled. Please contact support.',
+  'auth/too-many-requests': 'Too many attempts. Please wait a few minutes and try again.',
+  'auth/network-request-failed': 'Network error — please check your connection and try again.',
+  'auth/weak-password': 'Please choose a stronger password (at least 6 characters).',
+  'auth/popup-closed-by-user': 'Sign-in was cancelled before it finished.'
+};
+
+const friendlyAuthError = (err: unknown, fallback: string): Error => {
+  const code = (err as { code?: string } | null)?.code;
+  if (code && AUTH_ERROR_COPY[code]) return new Error(AUTH_ERROR_COPY[code]);
+  const message = err instanceof Error ? err.message : '';
+  // Our own thrown Errors (validation copy) pass through; anything that still
+  // looks like a raw SDK message is replaced with the generic fallback.
+  if (message && !/firebase|auth\//i.test(message)) return new Error(message);
+  return new Error(fallback);
+};
+
 // Firebase profiles don't carry passwordHash; consumers only read it for
 // equality checks that no longer apply, so an empty string keeps the
 // existing User type happy without leaking a credential.
@@ -103,7 +128,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [hydrate]);
 
   const login = useCallback(async (email: string, password: string) => {
-    await fbLogin(email.trim(), password);
+    try {
+      await fbLogin(email.trim(), password);
+    } catch (err) {
+      throw friendlyAuthError(err, 'Unable to sign in. Please try again.');
+    }
   }, []);
 
   const register = useCallback(
@@ -119,7 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (code === 'auth/email-already-in-use') {
           throw new Error('An account with this email already exists. Please sign in instead (use Google if you signed up with it).');
         }
-        throw err;
+        throw friendlyAuthError(err, 'Unable to create your account. Please try again.');
       }
     },
     []
@@ -150,7 +179,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err) {
       const code = (err as { code?: string }).code;
       if (code === 'auth/user-not-found' || code === 'auth/invalid-email') return;
-      throw err;
+      throw friendlyAuthError(err, 'Could not send the reset link. Please try again.');
     }
   }, []);
 

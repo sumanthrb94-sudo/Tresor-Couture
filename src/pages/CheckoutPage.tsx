@@ -4,7 +4,7 @@ import { useCart } from '../context/CartContext';
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../context/AuthContext';
 import { useOrders } from '../context/OrderContext';
-import { formatINR } from '../constants';
+import { COD_LIMIT, formatINR } from '../constants';
 import { PaymentMethod, ShippingAddress } from '../types';
 import { couponsApi } from '../lib/firebase';
 import { analytics } from '../lib/analytics';
@@ -33,6 +33,19 @@ const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const FIELD_ORDER: (keyof ShippingAddress)[] = [
   'fullName', 'email', 'phone', 'line1', 'city', 'state', 'postalCode', 'country'
 ];
+
+// Per-field rules, shared by the on-submit sweep and the live re-check that
+// clears a field's error as soon as its value becomes valid.
+const FIELD_VALIDATORS: Partial<Record<keyof ShippingAddress, (value: string) => string | null>> = {
+  fullName:   v => (v.trim() ? null : 'Required'),
+  email:      v => (EMAIL_RE.test(v) ? null : 'Enter a valid email'),
+  phone:      v => (PHONE_RE.test(v.trim()) ? null : 'Enter a 10-digit Indian mobile'),
+  line1:      v => (v.trim() ? null : 'Required'),
+  city:       v => (v.trim() ? null : 'Required'),
+  state:      v => (v.trim() ? null : 'Required'),
+  postalCode: v => (PIN_RE.test(v.trim()) ? null : 'Enter a 6-digit PIN'),
+  country:    v => (v.trim() ? null : 'Required')
+};
 
 // IMPORTANT: keep StepBlock and Field at module scope, not inside
 // CheckoutPage. When defined inside the parent, each render creates a
@@ -168,16 +181,17 @@ const CheckoutPage: React.FC = () => {
   const productDiscount = mrpTotal - subtotal;
   const payable = Math.max(0, total - couponDiscount);
 
+  // COD is capped at ₹50,000 and is currently the only live method, so an
+  // over-limit cart has no valid payment path — block Place Order and say so
+  // instead of letting the order through against the advertised limit.
+  const codBlocked = payment === 'cod' && payable > COD_LIMIT;
+
   const validateAddress = (): boolean => {
     const e: Record<string, string> = {};
-    if (!address.fullName.trim()) e.fullName = 'Required';
-    if (!EMAIL_RE.test(address.email)) e.email = 'Enter a valid email';
-    if (!PHONE_RE.test(address.phone.trim())) e.phone = 'Enter a 10-digit Indian mobile';
-    if (!address.line1.trim()) e.line1 = 'Required';
-    if (!address.city.trim()) e.city = 'Required';
-    if (!address.state.trim()) e.state = 'Required';
-    if (!PIN_RE.test(address.postalCode.trim())) e.postalCode = 'Enter a 6-digit PIN';
-    if (!address.country.trim()) e.country = 'Required';
+    for (const field of FIELD_ORDER) {
+      const msg = FIELD_VALIDATORS[field]?.(address[field] ?? '');
+      if (msg) e[field] = msg;
+    }
     setErrors(e);
     if (Object.keys(e).length > 0) {
       const firstBad = FIELD_ORDER.find(f => e[f]);
@@ -185,6 +199,20 @@ const CheckoutPage: React.FC = () => {
       return false;
     }
     return true;
+  };
+
+  // Update a field and clear its validation message the moment the new value
+  // passes — invalid values keep the message until the next submit, so the
+  // user isn't nagged mid-keystroke.
+  const updateField = (field: keyof ShippingAddress, value: string) => {
+    setAddress(a => ({ ...a, [field]: value }));
+    setErrors(prev => {
+      if (!prev[field]) return prev;
+      if (FIELD_VALIDATORS[field]?.(value)) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
   };
 
   const applyCoupon = async () => {
@@ -260,6 +288,13 @@ const CheckoutPage: React.FC = () => {
       setStep('address');
       return;
     }
+    if (codBlocked) {
+      setPlaceError(
+        `Cash on Delivery is available for orders up to ${formatINR(COD_LIMIT)}. ` +
+        'Please adjust your bag, or check back soon — online payments are launching shortly.'
+      );
+      return;
+    }
     if (!user) {
       setPlaceError('Please sign in to place your order.');
       navigate({ name: 'login' });
@@ -330,7 +365,8 @@ const CheckoutPage: React.FC = () => {
                       </p>
                       <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mt-0.5 leading-relaxed">
                         {user.defaultAddress.fullName} · {user.defaultAddress.line1}
-                        {user.defaultAddress.line2 ? `, ${user.defaultAddress.line2}` : ''} · {user.defaultAddress.postalCode}
+                        {user.defaultAddress.line2 ? `, ${user.defaultAddress.line2}` : ''},{' '}
+                        {user.defaultAddress.city}, {user.defaultAddress.state} — {user.defaultAddress.postalCode}
                       </p>
                     </div>
                   </div>
@@ -350,32 +386,32 @@ const CheckoutPage: React.FC = () => {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Full Name" field="fullName" cols={2} errors={errors} fieldRefs={fieldRefs}>
-                  {ref => <input ref={ref} className="input-box" value={address.fullName} onChange={e => setAddress(a => ({ ...a, fullName: e.target.value }))} />}
+                  {ref => <input ref={ref} className="input-box" value={address.fullName} onChange={e => updateField('fullName', e.target.value)} />}
                 </Field>
                 <Field label="Email" field="email" errors={errors} fieldRefs={fieldRefs}>
-                  {ref => <input ref={ref} className="input-box" type="email" value={address.email} onChange={e => setAddress(a => ({ ...a, email: e.target.value }))} />}
+                  {ref => <input ref={ref} className="input-box" type="email" value={address.email} onChange={e => updateField('email', e.target.value)} />}
                 </Field>
                 <Field label="Phone" field="phone" errors={errors} fieldRefs={fieldRefs}>
-                  {ref => <input ref={ref} className="input-box" type="tel" inputMode="tel" placeholder="10-digit mobile" value={address.phone} onChange={e => setAddress(a => ({ ...a, phone: e.target.value }))} />}
+                  {ref => <input ref={ref} className="input-box" type="tel" inputMode="tel" placeholder="10-digit mobile" value={address.phone} onChange={e => updateField('phone', e.target.value)} />}
                 </Field>
                 <Field label="Address Line 1" field="line1" cols={2} errors={errors} fieldRefs={fieldRefs}>
-                  {ref => <input ref={ref} className="input-box" value={address.line1} onChange={e => setAddress(a => ({ ...a, line1: e.target.value }))} />}
+                  {ref => <input ref={ref} className="input-box" value={address.line1} onChange={e => updateField('line1', e.target.value)} />}
                 </Field>
                 <div className="sm:col-span-2">
                   <label className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">Address Line 2 (optional)</label>
                   <input className="input-box" value={address.line2 ?? ''} onChange={e => setAddress(a => ({ ...a, line2: e.target.value }))} />
                 </div>
                 <Field label="City" field="city" errors={errors} fieldRefs={fieldRefs}>
-                  {ref => <input ref={ref} className="input-box" value={address.city} onChange={e => setAddress(a => ({ ...a, city: e.target.value }))} />}
+                  {ref => <input ref={ref} className="input-box" value={address.city} onChange={e => updateField('city', e.target.value)} />}
                 </Field>
                 <Field label="State" field="state" errors={errors} fieldRefs={fieldRefs}>
-                  {ref => <input ref={ref} className="input-box" value={address.state} onChange={e => setAddress(a => ({ ...a, state: e.target.value }))} />}
+                  {ref => <input ref={ref} className="input-box" value={address.state} onChange={e => updateField('state', e.target.value)} />}
                 </Field>
                 <Field label="PIN Code" field="postalCode" errors={errors} fieldRefs={fieldRefs}>
-                  {ref => <input ref={ref} className="input-box" inputMode="numeric" maxLength={6} placeholder="6-digit PIN" value={address.postalCode} onChange={e => setAddress(a => ({ ...a, postalCode: e.target.value.replace(/\D/g, '').slice(0, 6) }))} />}
+                  {ref => <input ref={ref} className="input-box" inputMode="numeric" maxLength={6} placeholder="6-digit PIN" value={address.postalCode} onChange={e => updateField('postalCode', e.target.value.replace(/\D/g, '').slice(0, 6))} />}
                 </Field>
                 <Field label="Country" field="country" errors={errors} fieldRefs={fieldRefs}>
-                  {ref => <input ref={ref} className="input-box" value={address.country} onChange={e => setAddress(a => ({ ...a, country: e.target.value }))} />}
+                  {ref => <input ref={ref} className="input-box" value={address.country} onChange={e => updateField('country', e.target.value)} />}
                 </Field>
               </div>
 
@@ -438,9 +474,17 @@ const CheckoutPage: React.FC = () => {
               </div>
 
               <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)]">
-                Pay in cash when our courier arrives. Available across India for orders below ₹50,000.
+                Pay in cash when our courier arrives. Available across India for orders up to {formatINR(COD_LIMIT)}.
                 Online card &amp; UPI payment will be enabled shortly.
               </p>
+
+              {codBlocked && (
+                <p role="alert" className="mt-4 text-[13px] font-semibold text-[color:var(--color-myntra-pink)] bg-[color:var(--color-myntra-bg-sale)] border border-[color:var(--color-myntra-border)] px-3 py-2 rounded">
+                  Your order total ({formatINR(payable)}) exceeds the Cash on Delivery limit of {formatINR(COD_LIMIT)}.
+                  Please adjust your bag to {formatINR(COD_LIMIT)} or less, or check back soon — online card &amp; UPI
+                  payments are launching shortly.
+                </p>
+              )}
 
               {placeError && (
                 <p role="alert" className="mt-4 text-[13px] font-semibold text-[color:var(--color-myntra-pink)] bg-[color:var(--color-myntra-bg-sale)] border border-[color:var(--color-myntra-border)] px-3 py-2 rounded">
@@ -450,7 +494,7 @@ const CheckoutPage: React.FC = () => {
 
               <button
                 onClick={handlePlaceOrder}
-                disabled={placing}
+                disabled={placing || codBlocked}
                 className="btn-primary mt-5 w-full sm:w-auto inline-flex items-center justify-center gap-2"
               >
                 {placing ? 'Placing order…' : `Place Order · ${formatINR(payable)}`}

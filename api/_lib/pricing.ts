@@ -17,6 +17,8 @@ export const COD_SURCHARGE = 50;
 export const FREE_SHIPPING_THRESHOLD = 1999;
 export const FLAT_SHIPPING = 99;
 export const GST_RATE = 0.05;
+/** Cash on Delivery cap (₹) — mirrored client-side in src/constants.ts. */
+export const COD_LIMIT = 50000;
 
 export interface CartLineInput {
   fabricId: string;

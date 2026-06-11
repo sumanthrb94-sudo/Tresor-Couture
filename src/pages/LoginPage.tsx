@@ -7,6 +7,8 @@ import PhoneOtpForm from '../components/PhoneOtpForm';
 
 type Mode = 'email' | 'phone';
 
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
 const LoginPage: React.FC = () => {
   const { login, requestPasswordReset, user, loading } = useAuth();
   const { navigate, hrefFor } = useRouter();
@@ -46,6 +48,10 @@ const LoginPage: React.FC = () => {
     setError(null);
     if (!email.trim() || !password) {
       setError('Please enter your email and password.');
+      return;
+    }
+    if (!EMAIL_RE.test(email.trim())) {
+      setError('Enter a valid email address.');
       return;
     }
     setSubmitting(true);

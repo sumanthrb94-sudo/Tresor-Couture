@@ -109,6 +109,18 @@ const Navbar: React.FC = () => {
     setSearchOpen(false);
   };
 
+  // Drawer search has no suggestion list, so Enter always lands on the
+  // results page (the header form may jump straight to a matching product).
+  const onDrawerSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = search.trim();
+    if (!q) return;
+    setMobileOpen(false);
+    setMobileExpanded(null);
+    navigate({ name: 'search', q });
+    setSearch('');
+  };
+
   // Lock body scroll while the full-screen mobile search overlay is open.
   useEffect(() => {
     if (searchOpen) {
@@ -320,7 +332,7 @@ const Navbar: React.FC = () => {
               </button>
             </div>
           )}
-          <div className="px-5 py-4 border-b border-[color:var(--color-myntra-border-soft)]">
+          <form onSubmit={onDrawerSearchSubmit} className="px-5 py-4 border-b border-[color:var(--color-myntra-border-soft)]">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[color:var(--color-myntra-ink-mute)]" />
               <input
@@ -328,9 +340,11 @@ const Navbar: React.FC = () => {
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search for fabrics, sarees, lehengas and more"
                 className="input-search"
+                aria-label="Search catalogue"
+                enterKeyHint="search"
               />
             </div>
-          </div>
+          </form>
           <nav className="flex-1 overflow-y-auto px-5 py-4">
             <button
               onClick={() => goShop()}

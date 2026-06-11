@@ -971,6 +971,9 @@ export const MASTER_CATEGORY_TILES: { name: MasterCategory; color: string; tagli
 export const SHIPPING_FLAT_RATE = 99;
 export const FREE_SHIPPING_THRESHOLD = 1999;
 export const TAX_RATE = 0.05;
+// Cash on Delivery cap (₹). Orders above this must use an online method —
+// mirrored server-side in api/_lib/pricing.ts.
+export const COD_LIMIT = 50000;
 
 export const formatINR = (n: number) =>
   new Intl.NumberFormat('en-IN', {

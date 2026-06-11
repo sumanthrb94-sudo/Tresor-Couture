@@ -57,6 +57,13 @@ import {
   type QueryConstraint
 } from 'firebase/firestore';
 import { getBuiltinCoupon } from './coupon';
+import { COD_LIMIT, formatINR } from '../constants';
+
+// Surfaced verbatim in checkout when an over-limit COD order is rejected
+// (server 'cod_limit_exceeded' or the client fallback pricing path).
+const COD_LIMIT_MESSAGE =
+  `Cash on Delivery is available for orders up to ${formatINR(COD_LIMIT)}. ` +
+  'Please adjust your bag, or check back soon — online payments are launching shortly.';
 
 const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
 
@@ -893,6 +900,7 @@ export const ordersApi = {
         useFallback = true; // not configured / endpoint absent → legacy path
       } else {
         const data = (await res.json().catch(() => ({}))) as { orderId?: string; error?: string };
+        if (data.error === 'cod_limit_exceeded') throw new Error(COD_LIMIT_MESSAGE);
         if (!res.ok || !data.orderId) throw new Error(data.error || 'place_failed');
         const saved = (await getOne<DocumentData>('orders', data.orderId)) ?? {};
         const placed = { id: data.orderId, ...saved } as DocumentData & { id: string };
@@ -938,6 +946,7 @@ export const ordersApi = {
     const tax = Math.round(taxable * 0.05);
     const shipping = taxable >= 1999 ? 0 : 99;
     const total = taxable + tax + shipping;
+    if (input.paymentMethod === 'cod' && total > COD_LIMIT) throw new Error(COD_LIMIT_MESSAGE);
     const order = {
       userId: auth.currentUser.uid,
       items,

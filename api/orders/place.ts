@@ -24,7 +24,7 @@
  */
 import { FieldValue } from 'firebase-admin/firestore';
 import { getDb } from '../_lib/firebaseAdmin.js';
-import { computeBreakdown } from '../_lib/pricing.js';
+import { COD_LIMIT, computeBreakdown } from '../_lib/pricing.js';
 import { readJson, header, type ApiRequest, type ApiResponse } from '../_lib/http.js';
 
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'tresor-couture';
@@ -117,6 +117,13 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
       items: order.items,
       couponCode: order.couponCode,
     });
+
+    // COD is capped — a tampered client must not be able to place an
+    // over-limit cash order the checkout UI would have blocked.
+    if ((order.paymentMethod ?? 'cod') === 'cod' && breakdown.total > COD_LIMIT) {
+      res.status(400).json({ error: 'cod_limit_exceeded' });
+      return;
+    }
 
     // Self-contained line snapshots (mirror the client's fabricSnapshot so
     // order history / confirmation emails keep working) from authoritative data.
