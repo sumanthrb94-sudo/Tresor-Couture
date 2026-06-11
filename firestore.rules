@@ -49,7 +49,9 @@ service cloud.firestore {
       allow create: if isOwner(userId)
         && request.resource.data.role == 'customer'
         && request.resource.data.uid == userId
-        && request.resource.data.keys().hasAll(['email', 'fullName', 'role']);
+        && request.resource.data.keys().hasAll(['email', 'fullName', 'role'])
+        && (request.auth.token.email == null
+            || request.resource.data.email == request.auth.token.email);
       allow update: if (isOwner(userId)
                         && !fieldChanged('role')
                         && !fieldChanged('uid')
@@ -80,7 +82,9 @@ service cloud.firestore {
     // into 'pending' for admin moderation. Owner can delete their own;
     // admin can do anything.
     match /reviews/{reviewId} {
-      allow read: if true;
+      allow read: if resource.data.status == 'approved'
+        || isAdmin()
+        || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow create: if isSignedIn()
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.status == 'pending'
@@ -112,7 +116,9 @@ service cloud.firestore {
       allow create: if (isSignedIn()
                         && request.resource.data.uid == request.auth.uid
                         && request.resource.data.to is string
-                        && request.resource.data.to == request.auth.token.email)
+                        && request.resource.data.to == request.auth.token.email
+                        && request.resource.data.message is map
+                        && request.resource.data.keys().hasOnly(['uid', 'to', 'message', 'createdAt']))
                      || isAdmin();
       allow read, update, delete: if isAdmin();
     }
@@ -126,7 +132,12 @@ service cloud.firestore {
     // kinds — no arbitrary writes.
     match /admin_notifications/{notifId} {
       allow create: if isSignedIn()
-        && request.resource.data.kind in ['new_order'];
+        && request.resource.data.kind in ['new_order']
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.read == false
+        && request.resource.data.keys().hasOnly(['kind', 'orderId', 'userId', 'customerEmail', 'total', 'itemCount', 'createdAt', 'read'])
+        && request.resource.data.total is number
+        && request.resource.data.total >= 0;
       allow read, update, delete: if isAdmin();
     }
 
