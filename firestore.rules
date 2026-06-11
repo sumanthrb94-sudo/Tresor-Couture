@@ -59,28 +59,19 @@ service cloud.firestore {
     }
 
     /* ---------- orders ---------- */
-    // An order belongs to the signed-in user; admin sees everything.
-    // Creation must include the authenticated uid, an initial 'placed'
-    // status, and at least one item. Updates are admin-only (fulfilment).
-    // Two creation paths: (1) CLIENT (Web SDK) for COD/demo orders, subject to
-    // these rules — a client may NEVER self-assert paymentStatus 'paid'.
-    // (2) SERVER (Admin SDK, /api/payments/verify) for real Razorpay orders,
-    // which bypasses rules and is the only path that may set 'paid', record
-    // payment ids and decrement stock, all after signature + amount checks.
-    function validPaymentStatus() {
-      return !('paymentStatus' in request.resource.data)
-        || request.resource.data.paymentStatus in ['pending', 'cod', 'unpaid'];
-    }
+    // Orders are created ONLY server-side via the Admin SDK (which bypasses
+    // these rules), where the total is recomputed authoritatively from Firestore
+    // product prices:
+    //   - /api/orders/create   — Cash-on-Delivery (status 'placed', unpaid)
+    //   - /api/payments/verify — Razorpay card/UPI (the only path that may set
+    //                            paymentStatus 'paid', after signature + amount
+    //                            checks, with a transactional stock decrement)
+    // Direct client creation is denied here: it previously trusted a
+    // client-supplied total, so a tampered cart could place an order at any
+    // price. Customers may still READ their own orders; admins fulfil them.
     match /orders/{orderId} {
-      allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
-      allow create: if isSignedIn()
-        && request.resource.data.userId == request.auth.uid
-        && request.resource.data.status == 'placed'
-        && request.resource.data.items is list
-        && request.resource.data.items.size() > 0
-        && request.resource.data.total is number
-        && request.resource.data.total >= 0
-        && validPaymentStatus();
+      allow read:   if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if false;
       allow update, delete: if isAdmin();
     }
 

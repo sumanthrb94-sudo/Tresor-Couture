@@ -823,54 +823,32 @@ export const ordersApi = {
     couponCode?: string;
   }) => {
     if (!auth.currentUser) throw new Error('not_signed_in');
-    // Pull current product data so totals reflect real prices.
-    const items = await Promise.all(input.items.map(async (it) => {
-      const p = await getOne<DocumentData>('products', it.fabricId);
-      if (!p) throw new Error(`unknown_product:${it.fabricId}`);
-      return { ...it, fabricSnapshot: p };
-    }));
-    const subtotal = items.reduce((s, it) => {
-      const p = (it.fabricSnapshot as unknown as { price: number }).price;
-      return s + p * it.quantity;
-    }, 0);
-    // Coupon lookup (public-read rule)
-    let couponDiscount = 0;
-    if (input.couponCode) {
-      const c = (await getOne<DocumentData>('coupons', input.couponCode.toUpperCase()))
-        ?? (getBuiltinCoupon(input.couponCode) as DocumentData | null);
-      const cd = c as { active?: boolean; kind?: 'percent' | 'flat'; value?: number; minSubtotal?: number; maxDiscount?: number; expiresAt?: string } | null;
-      const valid = cd && cd.active
-        && (!cd.expiresAt || new Date(cd.expiresAt).getTime() > Date.now())
-        && (!cd.minSubtotal || subtotal >= cd.minSubtotal);
-      if (valid && cd) {
-        couponDiscount = cd.kind === 'percent'
-          ? Math.min(cd.maxDiscount ?? Infinity, Math.round(subtotal * ((cd.value ?? 0) / 100)))
-          : (cd.value ?? 0);
-      }
+    // Server-authoritative creation. The total and per-line prices are
+    // recomputed on the server from Firestore product data (Admin SDK), so a
+    // tampered client total can never be trusted. Direct client writes to
+    // /orders are denied by firestore.rules — this endpoint (and
+    // /api/payments/verify for card/UPI) is the only way an order is created.
+    const token = await auth.currentUser.getIdToken();
+    const resp = await fetch('/api/orders/create', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        items: input.items,
+        shippingAddress: input.shippingAddress,
+        paymentMethod: input.paymentMethod,
+        couponCode: input.couponCode,
+      }),
+    });
+    if (!resp.ok) {
+      let code = 'order_failed';
+      try { code = ((await resp.json()) as { error?: string }).error ?? code; } catch { /* non-JSON body */ }
+      throw new Error(code);
     }
-    const taxable = Math.max(0, subtotal - couponDiscount);
-    const tax = Math.round(taxable * 0.05);
-    const shipping = taxable >= 1999 ? 0 : 99;
-    const total = taxable + tax + shipping;
-    const order = {
-      userId: auth.currentUser.uid,
-      items,
-      subtotal, tax, shipping, total,
-      shippingAddress: input.shippingAddress,
-      paymentMethod: input.paymentMethod,
-      // No online gateway wired yet — every order is unpaid until COD delivery
-      // (or, later, a Cashfree verification flips this to 'paid').
-      paymentStatus: 'pending' as const,
-      placedAt: new Date().toISOString(),
-      status: 'placed' as const,
-      ...(input.couponCode ? { couponCode: input.couponCode.toUpperCase(), couponDiscount } : {})
-    };
-    const ref = await addDoc(collection(db, 'orders'), order);
+    const { order } = (await resp.json()) as { order: DocumentData & { id: string } };
 
-    // Customer-side notifications. Both are best-effort — a failure to
-    // enqueue the email or admin alert should not lose the order itself,
-    // so we swallow errors here and rely on Firestore-side observability
-    // (the order doc IS the source of truth).
+    // Customer-side notifications, built from the server's authoritative order.
+    // Best-effort — a failure here must not lose the order (the order doc IS the
+    // source of truth, already persisted server-side).
     try {
       const email = auth.currentUser.email;
       const name  = auth.currentUser.displayName ?? email?.split('@')[0] ?? 'Tresor Member';
@@ -879,9 +857,12 @@ export const ordersApi = {
       if (email) {
         const { subject, html, text } = buildOrderConfirmationEmail({
           customerName: name,
-          orderId: ref.id,
-          items: items as never,
-          subtotal, shipping, tax, total,
+          orderId: order.id,
+          items: order.items as never,
+          subtotal: order.subtotal as number,
+          shipping: order.shipping as number,
+          tax: order.tax as number,
+          total: order.total as number,
           shippingAddressLine: addrLine,
         });
         await emailApi.enqueue({ to: email, subject, html, text });
@@ -890,11 +871,11 @@ export const ordersApi = {
       // outbound email; for now they surface in the admin dashboard.
       await addDoc(collection(db, 'admin_notifications'), {
         kind: 'new_order',
-        orderId: ref.id,
+        orderId: order.id,
         userId: auth.currentUser.uid,
         customerEmail: email ?? null,
-        total,
-        itemCount: items.length,
+        total: order.total,
+        itemCount: Array.isArray(order.items) ? order.items.length : 0,
         createdAt: serverTimestamp(),
         read: false,
       });
@@ -902,7 +883,7 @@ export const ordersApi = {
       console.warn('[orders] post-place notifications failed', (err as Error).message);
     }
 
-    return { id: ref.id, ...order };
+    return order;
   },
   setStatus: async (id: string, status: 'placed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded') => {
     await updateDoc(doc(db, 'orders', id), { status, updatedAt: serverTimestamp() });
