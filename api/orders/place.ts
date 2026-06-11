@@ -79,7 +79,17 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
   }
 
   // Build the credentialed app FIRST (so token verification reuses it), then auth.
-  const db = getDb();
+  // A malformed/invalid service account makes getDb() throw at init — degrade to
+  // 503 (the client then falls back to its rule-constrained write) instead of a
+  // 500 FUNCTION_INVOCATION_FAILED, and log the real reason for the operator.
+  let db: ReturnType<typeof getDb>;
+  try {
+    db = getDb();
+  } catch (err) {
+    console.error('[orders/place] admin init failed:', err instanceof Error ? err.message : err);
+    res.status(503).json({ error: 'orders_not_configured' });
+    return;
+  }
   const decoded = await verifyIdToken(header(req, 'authorization'));
   if (!decoded?.uid) {
     res.status(401).json({ error: 'unauthorized' });
