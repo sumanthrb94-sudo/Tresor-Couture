@@ -71,6 +71,32 @@ service cloud.firestore {
       return !('paymentStatus' in request.resource.data)
         || request.resource.data.paymentStatus in ['pending', 'cod', 'unpaid'];
     }
+    // A client (Web SDK) order may set the money fields, so they must be
+    // INTERNALLY CONSISTENT — a tampered client can't post a real cart with a
+    // fake total, claim free shipping it didn't earn, or invent a discount
+    // without a coupon. Mirrors ordersApi.place() / pricing.ts:
+    //   taxable  = subtotal - couponDiscount
+    //   shipping = taxable >= 1999 ? 0 : 99   (FREE_SHIPPING_THRESHOLD/FLAT_SHIPPING)
+    //   total    = taxable + tax + shipping   (±1 for integer rounding)
+    // NOTE: this can't re-derive prices from the catalog (rules can't sum a
+    // line list), so a fully-fabricated low-price cart is still possible — the
+    // server path (Admin SDK) is the authoritative pricer for that residual.
+    function moneyConsistent() {
+      let d = request.resource.data;
+      let discount = ('couponDiscount' in d) ? d.couponDiscount : 0;
+      let net = d.subtotal - discount;
+      let taxable = net > 0 ? net : 0; // mirrors Math.max(0, subtotal - discount)
+      return ('subtotal' in d) && ('tax' in d) && ('shipping' in d)
+        && d.subtotal is number && d.tax is number && d.shipping is number
+        && d.total is number && discount is number
+        && d.subtotal >= 0 && d.tax >= 0 && discount >= 0
+        && (d.shipping == 0 || d.shipping == 99)
+        && (taxable >= 1999 ? d.shipping == 0 : d.shipping == 99)
+        && d.total >= taxable + d.tax + d.shipping - 1
+        && d.total <= taxable + d.tax + d.shipping + 1
+        // No coupon code on the order ⇒ no self-asserted discount.
+        && (('couponCode' in d) || discount == 0);
+    }
     match /orders/{orderId} {
       allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow create: if isSignedIn()
@@ -80,6 +106,7 @@ service cloud.firestore {
         && request.resource.data.items.size() > 0
         && request.resource.data.total is number
         && request.resource.data.total >= 0
+        && moneyConsistent()
         && validPaymentStatus();
       allow update, delete: if isAdmin();
     }

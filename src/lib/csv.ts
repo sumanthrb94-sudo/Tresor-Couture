@@ -4,10 +4,19 @@
  * list, stock valuation) without any backend.
  */
 
-/** RFC-4180 field escaping: quote when the value contains a comma, quote or
- *  newline, and double any embedded quotes. */
+/** RFC-4180 field escaping + CSV formula-injection guard.
+ *  - Quote when the value contains a comma, quote or newline (double embedded
+ *    quotes).
+ *  - A cell beginning with `= + - @` (or a tab/CR) is executed as a FORMULA by
+ *    Excel/Sheets. Since exports carry customer-supplied data (names, emails,
+ *    addresses), prefix those with an apostrophe so spreadsheets treat them as
+ *    literal text. Clean numbers are left alone so numeric columns still sum. */
 function escapeField(value: unknown): string {
-  const s = value == null ? '' : String(value);
+  let s = value == null ? '' : String(value);
+  const isPlainNumber = typeof value === 'number' || /^-?\d+(\.\d+)?$/.test(s);
+  if (!isPlainNumber && /^[=+\-@\t\r]/.test(s)) {
+    s = `'${s}`;
+  }
   if (/[",\n\r]/.test(s)) {
     return `"${s.replace(/"/g, '""')}"`;
   }

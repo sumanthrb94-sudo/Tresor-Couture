@@ -1,0 +1,159 @@
+/**
+ * POST /api/orders/place — server-authoritative COD / unpaid order placement.
+ *
+ * The browser used to compute the order total and write it straight to
+ * Firestore, so a tampered client could place a real cart at a fake price.
+ * This endpoint is the authoritative pricer for non-Razorpay (COD/unpaid)
+ * orders: it verifies the buyer's Firebase ID token, RECOMPUTES every amount
+ * from Firestore via the Admin SDK (the client total is ignored), and writes
+ * the order. `userId` is taken from the verified token, never the body.
+ *
+ * Gated strictly on WRITE credentials (a service account) — NOT the keyless
+ * projectId path, which can verify tokens but can't write Firestore. When the
+ * service account isn't set it returns 503 `orders_not_configured`, so the
+ * client falls back to its legacy direct-write path (itself constrained by the
+ * hardened `orders` Firestore rules). The endpoint therefore stays dormant and
+ * harmless until FIREBASE_SERVICE_ACCOUNT is configured in Vercel.
+ *
+ * Body: { order: { items:[{fabricId,quantity,color?}], couponCode?,
+ *                  paymentMethod, shippingAddress } }
+ *
+ * NOTE: mirrors the current client total (no COD surcharge) so the figure
+ * charged equals the figure the checkout UI showed. Real card/UPI money uses
+ * /api/payments/verify, which additionally checks the Razorpay signature.
+ */
+import { FieldValue } from 'firebase-admin/firestore';
+import { getDb } from '../_lib/firebaseAdmin.js';
+import { computeBreakdown } from '../_lib/pricing.js';
+import { readJson, header, type ApiRequest, type ApiResponse } from '../_lib/http.js';
+
+const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'tresor-couture';
+
+/** True only when real WRITE credentials exist. The keyless projectId path can
+ *  verify ID tokens but cannot write Firestore, so we must not advertise this
+ *  endpoint as available on a keyless deploy — return 503 and let the client
+ *  fall back instead of 500-ing mid-checkout. */
+function canWriteOrders(): boolean {
+  return Boolean(
+    (process.env.FIREBASE_SERVICE_ACCOUNT && process.env.FIREBASE_SERVICE_ACCOUNT.trim()) ||
+      process.env.GOOGLE_APPLICATION_CREDENTIALS,
+  );
+}
+
+let _adminAuth: { verifyIdToken(t: string): Promise<{ uid: string; email?: string }> } | null = null;
+async function verifyIdToken(authHeader: string | undefined): Promise<{ uid: string; email?: string } | null> {
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+  if (!token) return null;
+  try {
+    if (!_adminAuth) {
+      const { getApps, initializeApp } = await import('firebase-admin/app');
+      const { getAuth } = await import('firebase-admin/auth');
+      // getDb() has already built the credentialed app by the time we get here,
+      // so getApps()[0] is the service-account app (full auth + Firestore).
+      const app = getApps()[0] ?? initializeApp({ projectId: PROJECT_ID });
+      _adminAuth = getAuth(app) as typeof _adminAuth;
+    }
+    return await _adminAuth!.verifyIdToken(token);
+  } catch {
+    return null;
+  }
+}
+
+interface Body {
+  order?: {
+    items?: { fabricId: string; quantity: number; color?: string }[];
+    couponCode?: string;
+    paymentMethod?: 'card' | 'upi' | 'cod';
+    shippingAddress?: Record<string, unknown>;
+  };
+}
+
+export default async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'method_not_allowed' });
+    return;
+  }
+  if (!canWriteOrders()) {
+    res.status(503).json({ error: 'orders_not_configured' });
+    return;
+  }
+
+  // Build the credentialed app FIRST (so token verification reuses it), then auth.
+  const db = getDb();
+  const decoded = await verifyIdToken(header(req, 'authorization'));
+  if (!decoded?.uid) {
+    res.status(401).json({ error: 'unauthorized' });
+    return;
+  }
+
+  let body: Body;
+  try {
+    body = readJson<Body>(req);
+  } catch {
+    res.status(400).json({ error: 'invalid_json' });
+    return;
+  }
+
+  const order = body.order;
+  if (!order || !Array.isArray(order.items) || order.items.length === 0) {
+    res.status(400).json({ error: 'empty_cart' });
+    return;
+  }
+
+  try {
+    // Authoritative pricing. paymentMethod is intentionally omitted so no COD
+    // surcharge is added — keeps the charged total equal to the UI total.
+    const breakdown = await computeBreakdown(db, {
+      items: order.items,
+      couponCode: order.couponCode,
+    });
+
+    // Self-contained line snapshots (mirror the client's fabricSnapshot so
+    // order history / confirmation emails keep working) from authoritative data.
+    const productRefs = breakdown.lines.map((l) => db.collection('products').doc(l.fabricId));
+    const snaps = await Promise.all(productRefs.map((ref) => ref.get()));
+    const itemsForDoc = breakdown.lines.map((line, i) => {
+      const data = (snaps[i]?.data() ?? {}) as Record<string, unknown>;
+      return {
+        fabricId: line.fabricId,
+        quantity: line.quantity,
+        ...(line.color ? { color: line.color } : {}),
+        fabricSnapshot: { id: line.fabricId, ...data },
+      };
+    });
+
+    const orderRef = db.collection('orders').doc();
+    await orderRef.set({
+      userId: decoded.uid,
+      items: itemsForDoc,
+      subtotal: breakdown.subtotal,
+      tax: breakdown.tax,
+      shipping: breakdown.shipping,
+      total: breakdown.total,
+      shippingAddress: order.shippingAddress ?? {},
+      paymentMethod: order.paymentMethod ?? 'cod',
+      placedAt: new Date().toISOString(),
+      status: 'placed',
+      paymentStatus: 'pending',
+      ...(breakdown.couponCode
+        ? { couponCode: breakdown.couponCode, couponDiscount: breakdown.couponDiscount }
+        : {}),
+      createdAt: FieldValue.serverTimestamp(),
+    });
+
+    res.status(200).json({ ok: true, orderId: orderRef.id });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'place_failed';
+    if (
+      message.startsWith('unknown_product') ||
+      message === 'empty_cart' ||
+      message === 'invalid_line' ||
+      message === 'product_price_unavailable'
+    ) {
+      res.status(400).json({ error: message });
+      return;
+    }
+    console.error('[orders/place] failed', message);
+    res.status(500).json({ error: 'place_failed' });
+  }
+}

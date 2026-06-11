@@ -805,6 +805,48 @@ export const productsApi = {
   remove: (id: string) => deleteDoc(doc(db, 'products', id))
 };
 
+/** Best-effort post-placement notifications (buyer email + in-app admin alert),
+ *  shared by the server and client order-placement paths. Never throws — a
+ *  notification failure must not lose the order (the order doc is the source of
+ *  truth). */
+async function postPlaceNotify(order: DocumentData & { id: string }): Promise<void> {
+  try {
+    const u = auth.currentUser;
+    if (!u) return;
+    const email = u.email;
+    const name = u.displayName ?? email?.split('@')[0] ?? 'Tresor Member';
+    const addr = (order.shippingAddress ?? {}) as { fullName?: string; line1?: string; line2?: string; city?: string; state?: string; pincode?: string };
+    const addrLine = [addr.fullName, addr.line1, addr.line2, addr.city, addr.state, addr.pincode].filter(Boolean).join(', ');
+    const items = Array.isArray(order.items) ? order.items : [];
+    if (email) {
+      const { subject, html, text } = buildOrderConfirmationEmail({
+        customerName: name,
+        orderId: order.id,
+        items: items as never,
+        subtotal: Number(order.subtotal) || 0,
+        shipping: Number(order.shipping) || 0,
+        tax: Number(order.tax) || 0,
+        total: Number(order.total) || 0,
+        shippingAddressLine: addrLine,
+      });
+      await emailApi.enqueue({ to: email, subject, html, text });
+    }
+    // In-app admin alert. A future Cloud Function can promote these to email.
+    await addDoc(collection(db, 'admin_notifications'), {
+      kind: 'new_order',
+      orderId: order.id,
+      userId: u.uid,
+      customerEmail: email ?? null,
+      total: Number(order.total) || 0,
+      itemCount: items.length,
+      createdAt: serverTimestamp(),
+      read: false,
+    });
+  } catch (err) {
+    console.warn('[orders] post-place notifications failed', (err as Error).message);
+  }
+}
+
 export const ordersApi = {
   mine: async () => {
     if (!auth.currentUser) throw new Error('not_signed_in');
@@ -823,6 +865,50 @@ export const ordersApi = {
     couponCode?: string;
   }) => {
     if (!auth.currentUser) throw new Error('not_signed_in');
+
+    // ── Preferred path: server-authoritative pricing ───────────────────
+    // /api/orders/place re-reads prices from Firestore with the Admin SDK and
+    // writes the order, so a tampered client can never set its own total. It
+    // returns 503 when no service account is configured (today's state), and a
+    // non-JSON body when the function isn't deployed (e.g. `vite dev`) — in
+    // either case we fall back to the legacy client write below, which is
+    // itself constrained by the hardened `orders` Firestore rules.
+    let useFallback = false;
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const res = await fetch('/api/orders/place', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          order: {
+            items: input.items,
+            couponCode: input.couponCode,
+            paymentMethod: input.paymentMethod,
+            shippingAddress: input.shippingAddress,
+          },
+        }),
+      });
+      const isJson = (res.headers.get('content-type') ?? '').includes('application/json');
+      if (res.status === 503 || !isJson) {
+        useFallback = true; // not configured / endpoint absent → legacy path
+      } else {
+        const data = (await res.json().catch(() => ({}))) as { orderId?: string; error?: string };
+        if (!res.ok || !data.orderId) throw new Error(data.error || 'place_failed');
+        const saved = (await getOne<DocumentData>('orders', data.orderId)) ?? {};
+        const placed = { id: data.orderId, ...saved } as DocumentData & { id: string };
+        await postPlaceNotify(placed);
+        return placed;
+      }
+    } catch (err) {
+      // Network/fetch failure (TypeError) → fall back so a transient /api blip
+      // never blocks checkout. An explicit server rejection (a plain Error we
+      // threw above) must surface to the user instead of silently writing.
+      if (err instanceof TypeError) useFallback = true;
+      else throw err;
+    }
+    if (!useFallback) throw new Error('place_failed');
+
+    // ── Fallback: client-side pricing + direct write ───────────────────
     // Pull current product data so totals reflect real prices.
     const items = await Promise.all(input.items.map(async (it) => {
       const p = await getOne<DocumentData>('products', it.fabricId);
@@ -866,42 +952,7 @@ export const ordersApi = {
       ...(input.couponCode ? { couponCode: input.couponCode.toUpperCase(), couponDiscount } : {})
     };
     const ref = await addDoc(collection(db, 'orders'), order);
-
-    // Customer-side notifications. Both are best-effort — a failure to
-    // enqueue the email or admin alert should not lose the order itself,
-    // so we swallow errors here and rely on Firestore-side observability
-    // (the order doc IS the source of truth).
-    try {
-      const email = auth.currentUser.email;
-      const name  = auth.currentUser.displayName ?? email?.split('@')[0] ?? 'Tresor Member';
-      const addr  = input.shippingAddress as { fullName?: string; line1?: string; line2?: string; city?: string; state?: string; pincode?: string; phone?: string };
-      const addrLine = [addr.fullName, addr.line1, addr.line2, addr.city, addr.state, addr.pincode].filter(Boolean).join(', ');
-      if (email) {
-        const { subject, html, text } = buildOrderConfirmationEmail({
-          customerName: name,
-          orderId: ref.id,
-          items: items as never,
-          subtotal, shipping, tax, total,
-          shippingAddressLine: addrLine,
-        });
-        await emailApi.enqueue({ to: email, subject, html, text });
-      }
-      // In-app admin alert. A future Cloud Function can promote these to
-      // outbound email; for now they surface in the admin dashboard.
-      await addDoc(collection(db, 'admin_notifications'), {
-        kind: 'new_order',
-        orderId: ref.id,
-        userId: auth.currentUser.uid,
-        customerEmail: email ?? null,
-        total,
-        itemCount: items.length,
-        createdAt: serverTimestamp(),
-        read: false,
-      });
-    } catch (err) {
-      console.warn('[orders] post-place notifications failed', (err as Error).message);
-    }
-
+    await postPlaceNotify({ id: ref.id, ...order });
     return { id: ref.id, ...order };
   },
   setStatus: async (id: string, status: 'placed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded') => {

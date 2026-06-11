@@ -130,11 +130,22 @@ const AuthActionPage: React.FC<Props> = ({ mode, oobCode, continueUrl }) => {
   };
 
   const goToLogin = () => {
-    if (continueUrl && /^https?:\/\//.test(continueUrl)) {
-      window.location.href = continueUrl;
-    } else {
-      navigate({ name: 'login' });
+    // Open-redirect guard: `continueUrl` comes straight from the action link's
+    // query string, so only follow it when it resolves to OUR origin. An
+    // attacker-supplied external host (…?continueUrl=https://evil.com) must
+    // never be navigated to — fall back to the in-app login instead.
+    if (continueUrl) {
+      try {
+        const dest = new URL(continueUrl, window.location.origin);
+        if (dest.origin === window.location.origin) {
+          window.location.href = dest.href;
+          return;
+        }
+      } catch {
+        /* malformed URL → fall through to in-app login */
+      }
     }
+    navigate({ name: 'login' });
   };
 
   return (
