@@ -37,6 +37,6 @@
     <text x="375" y="940" font-family="'Inter', sans-serif" font-size="22" fill="#2A1F12">{WEAVER}</text>
     <line x1="200" y1="1000" x2="550" y2="1000" stroke="url(#gold)" stroke-width="0.8"/>
     <text x="375" y="1060" font-family="'Inter', sans-serif" font-size="18" fill="#2A1F12">₹ {PRICE}</text>
-    <text x="375" y="1130" font-family="'Inter', sans-serif" font-size="14" letter-spacing="6" font-weight="600" fill="#8E6520">TRESORCOUTURE.COM</text>
+    <text x="375" y="1130" font-family="'Inter', sans-serif" font-size="14" letter-spacing="6" font-weight="600" fill="#8E6520">TRESORCOUTURE.IN</text>
   </g>
 </svg>

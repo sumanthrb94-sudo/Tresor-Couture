@@ -3,6 +3,7 @@ import { Facebook, Instagram, Twitter, Youtube, Phone, Mail, ShieldCheck, Truck,
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../context/AuthContext';
 import { subscribeContact } from '../lib/notify';
+import { BUSINESS } from '../lib/business';
 import type { Route } from '../types';
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -134,8 +135,8 @@ const Footer: React.FC = () => {
           </div>
 
           <div className="flex flex-col gap-1.5 text-[13px] text-[color:var(--color-myntra-ink-soft)]">
-            <div className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> +91 80 1234 5678</div>
-            <div className="flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> concierge@tresorcouture.com</div>
+            <div className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> {BUSINESS.phone}</div>
+            <div className="flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> {BUSINESS.email}</div>
           </div>
         </div>
       </div>

@@ -33,6 +33,6 @@
     <text x="750" y="1480" font-family="'Cormorant Garamond', serif" font-size="42" font-style="italic" font-weight="300" fill="#46382A">— The Tresor Atelier</text>
 
     <line x1="600" y1="1840" x2="900" y2="1840" stroke="url(#gold)" stroke-width="0.8"/>
-    <text x="750" y="1900" font-family="'Inter', sans-serif" font-size="22" fill="#8E6520" letter-spacing="6" font-weight="600">TRESORCOUTURE.COM</text>
+    <text x="750" y="1900" font-family="'Inter', sans-serif" font-size="22" fill="#8E6520" letter-spacing="6" font-weight="600">TRESORCOUTURE.IN</text>
   </g>
 </svg>

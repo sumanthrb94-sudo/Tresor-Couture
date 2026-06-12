@@ -31,7 +31,7 @@
 
     <text x="440" y="346" font-size="20" font-weight="400">{EMAIL}</text>
     <text x="440" y="386" font-size="20" font-weight="400">{PHONE}</text>
-    <text x="440" y="426" font-size="20" font-weight="500" fill="#8E6520">tresorcouture.com</text>
+    <text x="440" y="426" font-size="20" font-weight="500" fill="#8E6520">tresorcouture.in</text>
     <text x="440" y="466" font-size="17" font-weight="400" fill="#46382A">Atelier · {ADDRESS}</text>
   </g>
 </svg>

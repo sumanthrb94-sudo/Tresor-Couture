@@ -353,7 +353,7 @@ class Card:
         return paper_canvas(self.w, self.h).convert("RGBA")
 
 
-def stamp_url(im: Image.Image, text="tresorcouture.com", color=GOLD_DEEP):
+def stamp_url(im: Image.Image, text="tresorcouture.in", color=GOLD_DEEP):
     d = ImageDraw.Draw(im)
     f = inter(max(10, im.height // 80), "Medium")
     tw, th = text_size(f, text)
@@ -376,7 +376,7 @@ POSTS = [
         "eyebrow": "AN ATELIER IS BORN",
         "title": "The Weaves\nReturn Home",
         "subtitle": "Banarasi · Patola · Jamdani · Kanjivaram · Pashmina",
-        "cta": "TRESORCOUTURE.COM",
+        "cta": "TRESORCOUTURE.IN",
     },
     {
         "name": "instagram-post-banarasi-1080",
@@ -825,7 +825,7 @@ PRINT_SVGS = {
 
     <text x="440" y="346" font-size="20" font-weight="400">{EMAIL}</text>
     <text x="440" y="386" font-size="20" font-weight="400">{PHONE}</text>
-    <text x="440" y="426" font-size="20" font-weight="500" fill="#8E6520">tresorcouture.com</text>
+    <text x="440" y="426" font-size="20" font-weight="500" fill="#8E6520">tresorcouture.in</text>
     <text x="440" y="466" font-size="17" font-weight="400" fill="#46382A">Atelier · {ADDRESS}</text>
   </g>
 </svg>""",
@@ -867,8 +867,8 @@ LETTERHEAD = """<?xml version="1.0" encoding="UTF-8"?>
   <line x1="240" y1="3260" x2="2240" y2="3260" stroke="url(#gold)" stroke-width="0.8"/>
   <g font-family="'Inter', sans-serif" fill="#46382A" text-anchor="middle">
     <text x="1240" y="3310" font-size="22" letter-spacing="4">Tresor Couture · Heritage Indian Weaves</text>
-    <text x="1240" y="3346" font-size="20" fill="#8E6520">concierge@tresorcouture.com  ·  +91 80 1234 5678  ·  tresorcouture.com</text>
-    <text x="1240" y="3388" font-size="18">Atelier · 14 Cunningham Crescent, Bengaluru 560 052, India</text>
+    <text x="1240" y="3346" font-size="20" fill="#8E6520">hello@tresorcouture.in  ·  +91 63042 11922  ·  tresorcouture.in</text>
+    <text x="1240" y="3388" font-size="18">Atelier · Plot No. 110, My Home Vihanga Rd, Q City, Gachibowli, Hyderabad, Telangana 500046</text>
   </g>
 </svg>
 """
@@ -956,7 +956,7 @@ INVOICE = """<?xml version="1.0" encoding="UTF-8"?>
   <line x1="240" y1="3260" x2="2240" y2="3260" stroke="url(#gold)" stroke-width="0.8"/>
   <g font-family="'Inter', sans-serif" fill="#46382A" text-anchor="middle">
     <text x="1240" y="3320" font-size="22">Payable to · Tresor Couture · A/c 1234567890 · IFSC HDFC0001234</text>
-    <text x="1240" y="3360" font-size="20" fill="#8E6520">concierge@tresorcouture.com  ·  tresorcouture.com</text>
+    <text x="1240" y="3360" font-size="20" fill="#8E6520">hello@tresorcouture.in  ·  tresorcouture.in</text>
   </g>
 </svg>
 """
@@ -996,7 +996,7 @@ THANK_YOU = """<?xml version="1.0" encoding="UTF-8"?>
     <text x="750" y="1480" font-family="'Cormorant Garamond', serif" font-size="42" font-style="italic" font-weight="300" fill="#46382A">— The Tresor Atelier</text>
 
     <line x1="600" y1="1840" x2="900" y2="1840" stroke="url(#gold)" stroke-width="0.8"/>
-    <text x="750" y="1900" font-family="'Inter', sans-serif" font-size="22" fill="#8E6520" letter-spacing="6" font-weight="600">TRESORCOUTURE.COM</text>
+    <text x="750" y="1900" font-family="'Inter', sans-serif" font-size="22" fill="#8E6520" letter-spacing="6" font-weight="600">TRESORCOUTURE.IN</text>
   </g>
 </svg>
 """
@@ -1045,7 +1045,7 @@ CARE_CARD = """<?xml version="1.0" encoding="UTF-8"?>
     </g>
   </g>
 
-  <text x="600" y="1680" text-anchor="middle" font-family="'Inter', sans-serif" font-size="20" letter-spacing="6" font-weight="600" fill="#8E6520">TRESORCOUTURE.COM</text>
+  <text x="600" y="1680" text-anchor="middle" font-family="'Inter', sans-serif" font-size="20" letter-spacing="6" font-weight="600" fill="#8E6520">TRESORCOUTURE.IN</text>
 </svg>
 """
 
@@ -1088,7 +1088,7 @@ HANGTAG = """<?xml version="1.0" encoding="UTF-8"?>
     <text x="375" y="940" font-family="'Inter', sans-serif" font-size="22" fill="#2A1F12">{WEAVER}</text>
     <line x1="200" y1="1000" x2="550" y2="1000" stroke="url(#gold)" stroke-width="0.8"/>
     <text x="375" y="1060" font-family="'Inter', sans-serif" font-size="18" fill="#2A1F12">₹ {PRICE}</text>
-    <text x="375" y="1130" font-family="'Inter', sans-serif" font-size="14" letter-spacing="6" font-weight="600" fill="#8E6520">TRESORCOUTURE.COM</text>
+    <text x="375" y="1130" font-family="'Inter', sans-serif" font-size="14" letter-spacing="6" font-weight="600" fill="#8E6520">TRESORCOUTURE.IN</text>
   </g>
 </svg>
 """
@@ -1145,8 +1145,8 @@ PACKING_SLIP = """<?xml version="1.0" encoding="UTF-8"?>
     <text x="1240" y="3210" font-size="46" font-style="italic" font-weight="300">Worn well, the weave outlives its weaver.</text>
   </g>
   <g font-family="'Inter', sans-serif" text-anchor="middle" fill="#46382A">
-    <text x="1240" y="3300" font-size="22">Returns within 30 days · concierge@tresorcouture.com · +91 80 1234 5678</text>
-    <text x="1240" y="3340" font-size="20" fill="#8E6520" letter-spacing="6" font-weight="600">TRESORCOUTURE.COM</text>
+    <text x="1240" y="3300" font-size="22">Returns within 30 days · hello@tresorcouture.in · +91 63042 11922</text>
+    <text x="1240" y="3340" font-size="20" fill="#8E6520" letter-spacing="6" font-weight="600">TRESORCOUTURE.IN</text>
   </g>
 </svg>
 """
@@ -1213,7 +1213,7 @@ EMAIL_SIG_HTML = """<!--
       <div style="font-size:12px;margin-top:6px;color:#46382A;">
         <a href="mailto:{EMAIL}" style="color:#8E6520;text-decoration:none;">{EMAIL}</a> ·
         <span>{PHONE}</span> ·
-        <a href="https://tresorcouture.com" style="color:#8E6520;text-decoration:none;">tresorcouture.com</a>
+        <a href="https://tresorcouture.in" style="color:#8E6520;text-decoration:none;">tresorcouture.in</a>
       </div>
     </td>
   </tr>
@@ -1240,7 +1240,7 @@ def build_print():
 STORIES = [
     ("instagram-story-launch-1080x1920", "AN ATELIER OPENS",
      "The Weaves\nReturn Home",
-     "Banarasi · Patola · Jamdani · Kanjivaram · Pashmina\nNow open at tresorcouture.com",
+     "Banarasi · Patola · Jamdani · Kanjivaram · Pashmina\nNow open at tresorcouture.in",
      "SHOP NOW"),
     ("instagram-story-product-1080x1920", "WEAVE STORY",
      "Patola,\ntwice tied.",
