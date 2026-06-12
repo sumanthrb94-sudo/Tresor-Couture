@@ -782,6 +782,18 @@ export async function seedCatalog(items: DocumentData[], opts: { force?: boolean
   return { seeded, skipped: false };
 }
 
+/** Firestore rejects `undefined` field values (addDoc/updateDoc both throw).
+ *  Product payloads use `undefined` to mean "field absent", so drop those keys
+ *  before writing. On update this leaves the existing value untouched (rather
+ *  than crashing the whole save). */
+function stripUndefined<T extends DocumentData>(data: T): Partial<T> {
+  const out: Partial<T> = {};
+  for (const k in data) {
+    if (data[k] !== undefined) out[k] = data[k];
+  }
+  return out;
+}
+
 export const productsApi = {
   list:   (opts: { masterCategory?: string; subCategory?: string; limit?: number } = {}) => {
     const c: QueryConstraint[] = [];
@@ -793,7 +805,7 @@ export const productsApi = {
   get:    (id: string) => getOne<DocumentData>('products', id),
   create: async (data: DocumentData) => {
     const ref = await addDoc(collection(db, 'products'), {
-      ...data,
+      ...stripUndefined(data),
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
@@ -801,7 +813,7 @@ export const productsApi = {
     return { ...data, id: ref.id };
   },
   update: (id: string, patch: DocumentData) =>
-    updateDoc(doc(db, 'products', id), { ...patch, updatedAt: serverTimestamp() }),
+    updateDoc(doc(db, 'products', id), { ...stripUndefined(patch), updatedAt: serverTimestamp() }),
   remove: (id: string) => deleteDoc(doc(db, 'products', id))
 };
 

@@ -185,7 +185,7 @@ const draftToFabric = (d: Draft, existing?: Fabric): Fabric => {
     price: Number(d.price),
     mrp: Number(d.mrp),
     photo,
-    photoGallery: gallery.length ? gallery : undefined,
+    photoGallery: gallery,
     image: existing?.image ?? photo,
     gallery: existing?.gallery,
     category: (d.category || 'Silk') as Fabric['category'],
