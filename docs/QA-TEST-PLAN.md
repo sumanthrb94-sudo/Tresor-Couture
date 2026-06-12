@@ -129,6 +129,34 @@ test account and cancel the order afterwards.
 
 ---
 
+## 9. Admin console — CRUD / write paths
+
+Run signed in as an **admin** account (the write paths are gated by the Firebase
+`admin` custom claim + `firestore.rules`). These exercise the *save* paths, not just
+viewing — the surface that was previously untested. Every save below must close the
+editor and refresh the row **with no red "Unsupported field value: undefined" error**.
+
+| ID | Step | Expected | ✓ |
+|----|------|----------|---|
+| AD-1 | Open Admin (footer is admin-only now) → dashboard | Revenue/orders/customers render; no console errors | ☐ |
+| AD-2 | Products → edit a product → change Price/Stock → **Save Changes** | Saves cleanly; new values persist after reload (regression of the `gallery: undefined` crash) | ☐ |
+| AD-3 | Edit a product → **clear all gallery fields** → Save | Saves; gallery images are actually removed (not silently kept) | ☐ |
+| AD-4 | Edit a product that has **no** gallery/subCategory/colors → Save | Saves cleanly (absent fields left untouched, no undefined crash) | ☐ |
+| AD-5 | Products → **Add Product** (new) with required fields → Save | New product created and appears in the list | ☐ |
+| AD-6 | Coupons → create/save a coupon with **min subtotal / max discount / expiry left blank** | Saves cleanly (regression of coupon `undefined` crash); applies correctly at checkout | ☐ |
+| AD-7 | Coupons → save a coupon with all optional fields filled | Saves; values enforced (min subtotal, cap, expiry) | ☐ |
+| AD-8 | Inventory → change a stock value → Save | Persists; low-stock indicator updates | ☐ |
+| AD-9 | Orders → change an order's status (e.g. placed → shipped) | Status updates; reflected in customer's order history | ☐ |
+| AD-10 | Reviews → approve / reject a pending review | Moderation persists; product rating recomputes | ☐ |
+| AD-11 | As a **non-admin**, attempt any of the above writes via REST | Denied (`403`) by `firestore.rules` — admin-only writes (ties to SC-1/SC-5) | ☐ |
+
+> **Why this section exists:** the initial QA only verified the admin dashboard
+> *rendered*; it never saved anything. The product-edit save crashed on `undefined`
+> Firestore fields (`gallery`, `photoGallery`, etc.), and `couponsApi.upsert` had the
+> same latent bug. Both are fixed — AD-2…AD-7 are the regression checks.
+
+---
+
 ## Sign-off
 
 | Section | Pass | Fail | Notes |
@@ -142,5 +170,6 @@ test account and cancel the order afterwards.
 | 6 Account/Orders | | | |
 | 7 Responsive | | | |
 | 8 Security | | | |
+| 9 Admin CRUD | | | |
 
 **Release decision:** ☐ Go ☐ No-go — _________________  **Tester:** _______  **Date:** _______
