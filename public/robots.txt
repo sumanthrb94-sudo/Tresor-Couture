@@ -6,4 +6,4 @@ Disallow: /account
 Disallow: /checkout
 Disallow: /confirmation/
 
-Sitemap: https://tresor-couture.vercel.app/sitemap.xml
+Sitemap: https://tresorcouture.in/sitemap.xml
