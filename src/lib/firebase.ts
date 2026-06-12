@@ -994,7 +994,7 @@ export const couponsApi = {
       ?? (getBuiltinCoupon(code) as DocumentData | null),
   upsert:  async (c: { code: string; description: string; kind: 'percent' | 'flat'; value: number; minSubtotal?: number; maxDiscount?: number; expiresAt?: string; active: boolean }) => {
     const code = c.code.toUpperCase();
-    await setDoc(doc(db, 'coupons', code), { ...c, code });
+    await setDoc(doc(db, 'coupons', code), stripUndefined({ ...c, code }));
     return { ...c, code };
   },
   remove:  (code: string) => deleteDoc(doc(db, 'coupons', code.toUpperCase())),
