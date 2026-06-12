@@ -36,7 +36,7 @@ const cols = [
 
 const Footer: React.FC = () => {
   const { navigate } = useRouter();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [email, setEmail] = useState('');
   const [subState, setSubState] = useState<'idle' | 'busy' | 'done' | 'error'>('idle');
 
@@ -163,12 +163,14 @@ const Footer: React.FC = () => {
           </div>
           <p className="flex items-center gap-4">
             <span>© {new Date().getFullYear()} Tresor Couture · All rights reserved.</span>
-            <button
-              onClick={() => navigate({ name: 'admin' })}
-              className="text-[11px] tracking-[0.18em] uppercase hover:text-[color:var(--color-myntra-pink)] transition-colors"
-            >
-              Atelier Admin
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => navigate({ name: 'admin' })}
+                className="text-[11px] tracking-[0.18em] uppercase hover:text-[color:var(--color-myntra-pink)] transition-colors"
+              >
+                Atelier Admin
+              </button>
+            )}
           </p>
         </div>
       </div>
