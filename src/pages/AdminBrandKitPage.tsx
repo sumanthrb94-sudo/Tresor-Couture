@@ -5,6 +5,7 @@ import {
   Copy,
   Download,
   ExternalLink,
+  FileArchive,
   FileDown,
   FileText,
   Loader2,
@@ -24,6 +25,7 @@ import {
   VOICE_NOTES,
 } from '../admin/kitManifest';
 import { downloadKitAsPdf } from '../admin/exportKitPdf';
+import { downloadKitAssetsZip, type ZipProgress } from '../admin/downloadKitZip';
 
 /* ---- copy hook ---- */
 function useCopy() {
@@ -227,6 +229,7 @@ const AdminBrandKitPage: React.FC<{ section?: string }> = ({ section }) => {
   const [active, setActive] = useState<string>(section ?? 'palette');
   const [preview, setPreview] = useState<KitAsset | null>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [zip, setZip] = useState<ZipProgress | null>(null);
   const { copy, copied } = useCopy();
 
   const handleDownloadPdf = async () => {
@@ -239,6 +242,23 @@ const AdminBrandKitPage: React.FC<{ section?: string }> = ({ section }) => {
       setPdfBusy(false);
     }
   };
+
+  const handleDownloadZip = async () => {
+    if (zip && zip.done < zip.total) return; // already running
+    setZip({ done: 0, total: 0, failed: 0 });
+    try {
+      const result = await downloadKitAssetsZip(setZip);
+      if (result.failed > 0) {
+        window.alert(`Downloaded ${result.total - result.failed}/${result.total} assets — ${result.failed} could not be fetched.`);
+      }
+    } catch {
+      window.alert('Could not build the ZIP. Please try again.');
+    } finally {
+      setZip(null);
+    }
+  };
+
+  const zipBusy = zip !== null;
 
   // observe sections to update the sidebar
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -313,6 +333,15 @@ const AdminBrandKitPage: React.FC<{ section?: string }> = ({ section }) => {
             >
               {pdfBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
               {pdfBusy ? 'Preparing…' : 'Download PDF'}
+            </button>
+            <button
+              onClick={handleDownloadZip}
+              disabled={zipBusy}
+              title="Download every brand asset as a single ZIP"
+              className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] font-semibold text-[#2A1F12] bg-[#D8B97A] hover:bg-[#e6cb95] disabled:opacity-60 px-3 py-1.5 rounded transition-colors"
+            >
+              {zipBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileArchive className="w-3.5 h-3.5" />}
+              {zipBusy ? (zip && zip.total ? `Zipping ${zip.done}/${zip.total}…` : 'Zipping…') : 'Download all (ZIP)'}
             </button>
             <button
               onClick={() => navigate({ name: 'home' })}
