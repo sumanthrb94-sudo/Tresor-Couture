@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Facebook, Instagram, Twitter, Youtube, Phone, Mail, ShieldCheck, Truck, Zap, Check } from 'lucide-react';
+import { Instagram, Phone, Mail, ShieldCheck, Truck, Zap, Check } from 'lucide-react';
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../context/AuthContext';
 import { subscribeContact } from '../lib/notify';
@@ -126,16 +126,20 @@ const Footer: React.FC = () => {
             Keep in Touch
           </h4>
           <div className="flex gap-3 mb-6">
-            {[Facebook, Instagram, Twitter, Youtube].map((Icon, i) => (
-              <a key={i} href="#" className="w-9 h-9 rounded-full bg-white border border-[color:var(--color-myntra-border-soft)] flex items-center justify-center text-[color:var(--color-myntra-ink-soft)] hover:text-[color:var(--color-myntra-pink)] hover:border-[color:var(--color-myntra-pink)] transition-colors">
-                <Icon className="w-4 h-4" />
-              </a>
-            ))}
+            <a
+              href="https://instagram.com/_tresor.couture"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Tresor Couture on Instagram"
+              className="w-9 h-9 rounded-full bg-white border border-[color:var(--color-myntra-border-soft)] flex items-center justify-center text-[color:var(--color-myntra-ink-soft)] hover:text-[color:var(--color-myntra-pink)] hover:border-[color:var(--color-myntra-pink)] transition-colors"
+            >
+              <Instagram className="w-4 h-4" />
+            </a>
           </div>
 
           <div className="flex flex-col gap-1.5 text-[13px] text-[color:var(--color-myntra-ink-soft)]">
-            <div className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> +91 80 1234 5678</div>
-            <div className="flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> concierge@tresorcouture.com</div>
+            <a href="tel:+916304211922" className="flex items-center gap-2 hover:text-[color:var(--color-myntra-pink)]"><Phone className="w-3.5 h-3.5" /> +91 63042 11922</a>
+            <a href="mailto:hello@tresorcouture.in" className="flex items-center gap-2 hover:text-[color:var(--color-myntra-pink)]"><Mail className="w-3.5 h-3.5" /> hello@tresorcouture.in</a>
           </div>
         </div>
       </div>

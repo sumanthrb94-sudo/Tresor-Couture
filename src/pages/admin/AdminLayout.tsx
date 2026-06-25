@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Package, Boxes, ShoppingBag, ReceiptText, Users, Tag, Star, Scale, Palette, LogOut, ExternalLink } from 'lucide-react';
+import { LayoutDashboard, Package, Boxes, ShoppingBag, ReceiptText, Users, Tag, Star, Scale, Zap, Palette, LogOut, ExternalLink } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
 
@@ -12,7 +12,8 @@ type Section =
   | 'customers'
   | 'coupons'
   | 'reviews'
-  | 'compliance';
+  | 'compliance'
+  | 'delivery';
 
 const NAV: { id: Section; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
   { id: 'dashboard', label: 'Dashboard', Icon: LayoutDashboard },
@@ -23,7 +24,8 @@ const NAV: { id: Section; label: string; Icon: React.ComponentType<{ className?:
   { id: 'customers', label: 'Customers', Icon: Users },
   { id: 'coupons', label: 'Coupons', Icon: Tag },
   { id: 'reviews', label: 'Reviews', Icon: Star },
-  { id: 'compliance', label: 'Compliance', Icon: Scale }
+  { id: 'compliance', label: 'Compliance', Icon: Scale },
+  { id: 'delivery', label: 'Delivery', Icon: Zap }
 ];
 
 const AdminLayout: React.FC<{ section: Section; children: React.ReactNode }> = ({ section, children }) => {

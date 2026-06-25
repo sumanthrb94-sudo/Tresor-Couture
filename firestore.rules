@@ -41,6 +41,14 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    /* ---------- config (delivery serviceability, etc.) ---------- */
+    // Public read so the storefront can check 40-min delivery eligibility;
+    // admin-only write (the serviceable pincode list).
+    match /config/{docId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
     /* ---------- users ---------- */
     // Owner reads + updates their own profile. Role and createdAt are
     // protected — only admins can change them.
