@@ -60,6 +60,9 @@ const parseHash = (hash: string): Route => {
       const tab = segments[1] as 'profile' | 'orders' | 'wishlist' | 'addresses' | undefined;
       return { name: 'account', tab };
     }
+    case 'p':
+      if (segments[1]) return { name: 'page', slug: segments[1] };
+      return { name: 'not-found', path: cleaned };
     case 'admin': {
       if (segments[1] === 'brand-kit') {
         return { name: 'admin-brand-kit', section: params.get('section') ?? undefined };
@@ -104,6 +107,8 @@ const buildHash = (route: Route): string => {
       return '#/register';
     case 'account':
       return route.tab ? `#/account/${route.tab}` : '#/account';
+    case 'page':
+      return `#/p/${route.slug}`;
     case 'admin':
       return route.section ? `#/admin/${route.section}` : '#/admin';
     case 'admin-brand-kit':

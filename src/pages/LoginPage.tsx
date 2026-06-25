@@ -148,8 +148,8 @@ const LoginPage: React.FC = () => {
 
                 <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] leading-relaxed">
                   By continuing, you agree to Tresor Couture&apos;s{' '}
-                  <span className="font-semibold text-[color:var(--color-myntra-ink-soft)]">Terms of Use</span> and{' '}
-                  <span className="font-semibold text-[color:var(--color-myntra-ink-soft)]">Privacy Policy</span>.
+                  <button type="button" onClick={() => navigate({ name: 'page', slug: 'terms' })} className="font-semibold text-[color:var(--color-myntra-ink-soft)] hover:text-[color:var(--color-myntra-pink)] underline">Terms of Use</button> and{' '}
+                  <button type="button" onClick={() => navigate({ name: 'page', slug: 'privacy' })} className="font-semibold text-[color:var(--color-myntra-ink-soft)] hover:text-[color:var(--color-myntra-pink)] underline">Privacy Policy</button>.
                 </p>
               </div>
             ) : (
@@ -236,8 +236,8 @@ const LoginPage: React.FC = () => {
 
               <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] leading-relaxed">
                 By continuing, you agree to Tresor Couture&apos;s{' '}
-                <span className="font-semibold text-[color:var(--color-myntra-ink-soft)]">Terms of Use</span> and{' '}
-                <span className="font-semibold text-[color:var(--color-myntra-ink-soft)]">Privacy Policy</span>.
+                <button type="button" onClick={() => navigate({ name: 'page', slug: 'terms' })} className="font-semibold text-[color:var(--color-myntra-ink-soft)] hover:text-[color:var(--color-myntra-pink)] underline">Terms of Use</button> and{' '}
+                <button type="button" onClick={() => navigate({ name: 'page', slug: 'privacy' })} className="font-semibold text-[color:var(--color-myntra-ink-soft)] hover:text-[color:var(--color-myntra-pink)] underline">Privacy Policy</button>.
               </p>
             </form>
             )}

@@ -933,7 +933,6 @@ export const CATEGORIES: Fabric['category'][] = ['Silk', 'Cotton', 'Wool', 'Line
 export const MASTER_CATEGORIES: MasterCategory[] = [
   'Fabrics',
   'Dyeable Fabrics',
-  'Lace',
   'Sarees',
   'Lehenga Cholis',
   'Anarkalis',

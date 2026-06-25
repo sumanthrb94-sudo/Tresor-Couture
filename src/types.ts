@@ -183,4 +183,5 @@ export type Route =
   | { name: 'admin'; section?: 'dashboard' | 'products' | 'orders' | 'coupons' | 'reviews' }
   | { name: 'admin-brand-kit'; section?: string }
   | { name: 'auth-action'; mode: string; oobCode: string; apiKey?: string; continueUrl?: string }
+  | { name: 'page'; slug: string }
   | { name: 'not-found'; path?: string };

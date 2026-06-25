@@ -1,24 +1,52 @@
 import React, { useState } from 'react';
-import { Facebook, Instagram, Twitter, Youtube, Phone, Mail, ShieldCheck, Truck, Zap, Check } from 'lucide-react';
+import { Instagram, Phone, Mail, ShieldCheck, Truck, Zap, Check } from 'lucide-react';
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../context/AuthContext';
 import { subscribeContact } from '../lib/notify';
+import { COMPANY } from '../content/legal';
+import { Route } from '../types';
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
-const cols = [
+// Every footer link points at a real route — no dead "#" links.
+const cols: { title: string; links: { label: string; to: Route }[] }[] = [
   {
     title: 'Online Shopping',
-    links: ['All Fabrics', 'Silks', 'Cottons', 'Wool', 'Linen', 'Satin', 'Mixed', 'Sale']
+    links: [
+      { label: 'All Fabrics',     to: { name: 'shop', category: 'Fabrics' } },
+      { label: 'Dyeable Fabrics', to: { name: 'shop', category: 'Dyeable Fabrics' } },
+      { label: 'Sarees',          to: { name: 'shop', category: 'Sarees' } },
+      { label: 'Lehenga Cholis',  to: { name: 'shop', category: 'Lehenga Cholis' } },
+      { label: 'Anarkalis',       to: { name: 'shop', category: 'Anarkalis' } },
+      { label: 'Western Wear',    to: { name: 'shop', category: 'Western Wear' } },
+      { label: 'Studios Prêt',    to: { name: 'shop', category: 'Studios Prêt' } },
+      { label: 'Shop All',        to: { name: 'shop' } },
+    ],
   },
   {
     title: 'Customer Policies',
-    links: ['Contact Us', 'FAQ', 'Track Order', 'Shipping', 'Cancellation', 'Returns', 'Privacy Policy', 'Terms of Use']
+    links: [
+      { label: 'Contact Us',     to: { name: 'page', slug: 'contact' } },
+      { label: 'FAQ',            to: { name: 'page', slug: 'faq' } },
+      { label: 'Track Order',    to: { name: 'account', tab: 'orders' } },
+      { label: 'Shipping',       to: { name: 'page', slug: 'shipping' } },
+      { label: 'Cancellation',   to: { name: 'page', slug: 'cancellation' } },
+      { label: 'Returns',        to: { name: 'page', slug: 'returns' } },
+      { label: 'Privacy Policy', to: { name: 'page', slug: 'privacy' } },
+      { label: 'Terms of Use',   to: { name: 'page', slug: 'terms' } },
+    ],
   },
   {
     title: 'The Atelier',
-    links: ['About Tresor', 'The Weavers', 'Press', 'Sustainability', 'Careers', 'Atelier Tours']
-  }
+    links: [
+      { label: 'About Tresor',   to: { name: 'page', slug: 'about' } },
+      { label: 'The Weavers',    to: { name: 'page', slug: 'about' } },
+      { label: 'Sustainability', to: { name: 'page', slug: 'about' } },
+      { label: 'Careers',        to: { name: 'page', slug: 'careers' } },
+      { label: 'Press',          to: { name: 'page', slug: 'contact' } },
+      { label: 'Atelier Tours',  to: { name: 'page', slug: 'contact' } },
+    ],
+  },
 ];
 
 const Footer: React.FC = () => {
@@ -57,12 +85,12 @@ const Footer: React.FC = () => {
             <h4 className="text-[12px] font-extrabold uppercase tracking-[0.15em] text-[color:var(--color-myntra-navy)] mb-4">{col.title}</h4>
             <ul className="space-y-2.5">
               {col.links.map(l => (
-                <li key={l}>
+                <li key={l.label}>
                   <button
-                    onClick={() => navigate({ name: 'home' })}
+                    onClick={() => navigate(l.to)}
                     className="text-[13px] text-[color:var(--color-myntra-ink-soft)] hover:text-[color:var(--color-myntra-pink)] transition-colors"
                   >
-                    {l}
+                    {l.label}
                   </button>
                 </li>
               ))}
@@ -113,16 +141,20 @@ const Footer: React.FC = () => {
             Keep in Touch
           </h4>
           <div className="flex gap-3 mb-6">
-            {[Facebook, Instagram, Twitter, Youtube].map((Icon, i) => (
-              <a key={i} href="#" className="w-9 h-9 rounded-full bg-white border border-[color:var(--color-myntra-border-soft)] flex items-center justify-center text-[color:var(--color-myntra-ink-soft)] hover:text-[color:var(--color-myntra-pink)] hover:border-[color:var(--color-myntra-pink)] transition-colors">
-                <Icon className="w-4 h-4" />
-              </a>
-            ))}
+            <a
+              href={COMPANY.instagram}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Tresor Couture on Instagram"
+              className="w-9 h-9 rounded-full bg-white border border-[color:var(--color-myntra-border-soft)] flex items-center justify-center text-[color:var(--color-myntra-ink-soft)] hover:text-[color:var(--color-myntra-pink)] hover:border-[color:var(--color-myntra-pink)] transition-colors"
+            >
+              <Instagram className="w-4 h-4" />
+            </a>
           </div>
 
           <div className="flex flex-col gap-1.5 text-[13px] text-[color:var(--color-myntra-ink-soft)]">
-            <div className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> +91 80 1234 5678</div>
-            <div className="flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> concierge@tresorcouture.com</div>
+            <a href={`tel:${COMPANY.phone.replace(/\s/g, '')}`} className="flex items-center gap-2 hover:text-[color:var(--color-myntra-pink)]"><Phone className="w-3.5 h-3.5" /> {COMPANY.phone}</a>
+            <a href={`mailto:${COMPANY.email}`} className="flex items-center gap-2 hover:text-[color:var(--color-myntra-pink)]"><Mail className="w-3.5 h-3.5" /> {COMPANY.email}</a>
           </div>
         </div>
       </div>

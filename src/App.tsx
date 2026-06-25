@@ -34,6 +34,7 @@ const AdminPage         = lazy(() => import('./pages/admin/AdminPage'));
 const NotFoundPage      = lazy(() => import('./pages/NotFoundPage'));
 const SearchResultsPage = lazy(() => import('./pages/SearchResultsPage'));
 const AuthActionPage    = lazy(() => import('./pages/AuthActionPage'));
+const InfoPage          = lazy(() => import('./pages/InfoPage'));
 import { FABRICS } from './constants';
 import { CartProvider } from './context/CartContext';
 import { OrderProvider } from './context/OrderContext';
@@ -179,6 +180,8 @@ const RoutedView: React.FC = () => {
         : <AdminLoginPage redirectTo="admin-brand-kit" section={route.section} />;
     case 'auth-action':
       return <AuthActionPage mode={route.mode} oobCode={route.oobCode} continueUrl={route.continueUrl} />;
+    case 'page':
+      return <InfoPage slug={route.slug} />;
     case 'not-found':
       return <NotFoundPage />;
   }
