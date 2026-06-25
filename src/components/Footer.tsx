@@ -84,25 +84,27 @@ const Footer: React.FC = () => {
         ))}
 
         <div className="col-span-2 md:col-span-4 lg:col-span-2">
-          <h4 className="text-[12px] font-extrabold uppercase tracking-[0.15em] text-[color:var(--color-myntra-navy)] mb-4">
-            Experience Tresor on Mobile
-          </h4>
-          <div className="flex gap-3 mb-6">
-            <div className="px-4 py-2.5 bg-[color:var(--color-myntra-navy)] text-white rounded-md text-[12px] font-semibold">
-              Get on Google Play
-            </div>
-            <div className="px-4 py-2.5 bg-[color:var(--color-myntra-navy)] text-white rounded-md text-[12px] font-semibold">
-              Download on iOS
-            </div>
-          </div>
-
           <h4 className="text-[12px] font-extrabold uppercase tracking-[0.15em] text-[color:var(--color-myntra-navy)] mb-2">
             Get 10% off your first order
           </h4>
           {subState === 'done' ? (
-            <p className="text-[13px] text-[color:var(--color-myntra-green)] font-semibold mb-6 inline-flex items-center gap-1.5">
-              <Check className="w-4 h-4" /> You're on the list — check your inbox.
-            </p>
+            <div className="mb-6">
+              <p className="text-[13px] text-[color:var(--color-myntra-green)] font-semibold inline-flex items-center gap-1.5">
+                <Check className="w-4 h-4" /> You're on the list!
+              </p>
+              <p className="text-[13px] text-[color:var(--color-myntra-ink)] mt-1.5">
+                Use code{' '}
+                <button
+                  type="button"
+                  onClick={() => navigator.clipboard?.writeText('WELCOME10')}
+                  title="Click to copy"
+                  className="font-extrabold tracking-[0.08em] text-[color:var(--color-myntra-pink)] border border-dashed border-[color:var(--color-myntra-pink)] rounded px-1.5 py-0.5"
+                >
+                  WELCOME10
+                </button>{' '}
+                for 10% off your first order.
+              </p>
+            </div>
           ) : (
             <form onSubmit={handleSubscribe} className="flex gap-2 mb-6 max-w-sm" noValidate>
               <input

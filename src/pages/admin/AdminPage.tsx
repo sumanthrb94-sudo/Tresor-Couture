@@ -11,6 +11,7 @@ import AdminCoupons from './AdminCoupons';
 import AdminReviews from './AdminReviews';
 import AdminCompliance from './AdminCompliance';
 import AdminDelivery from './AdminDelivery';
+import AdminBulkEmail from './AdminBulkEmail';
 
 type Section =
   | 'dashboard'
@@ -22,7 +23,8 @@ type Section =
   | 'coupons'
   | 'reviews'
   | 'compliance'
-  | 'delivery';
+  | 'delivery'
+  | 'bulk-email';
 
 interface Props {
   section?: Section;
@@ -41,6 +43,7 @@ const AdminPage: React.FC<Props> = ({ section = 'dashboard' }) => (
       {section === 'reviews' && <AdminReviews />}
       {section === 'compliance' && <AdminCompliance />}
       {section === 'delivery' && <AdminDelivery />}
+      {section === 'bulk-email' && <AdminBulkEmail />}
     </AdminLayout>
   </AdminGuard>
 );
