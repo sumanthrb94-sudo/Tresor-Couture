@@ -358,7 +358,18 @@ const AdminDashboard: React.FC = () => {
       )}
       {ordersError && (
         <div className="rounded-md px-4 py-3 text-[13px]" style={{ background: '#FBE6E6', color: '#A12626', border: '1px solid #F0C7C7' }}>
-          Couldn't load orders — KPIs and the Sales Report may be empty. ({ordersError})
+          <p className="font-semibold">Couldn't load orders — KPIs and the Sales Report may be empty.</p>
+          {/permission|insufficient/i.test(ordersError) ? (
+            <p className="mt-1 text-[12px]">
+              This is a Firestore permissions denial, not a data problem. Usually one of:
+              {' '}(1) the latest security rules aren't deployed to the live project —
+              run <code className="font-mono">firebase deploy --only firestore:rules</code>; or
+              {' '}(2) your account's <b>admin</b> claim isn't active yet — sign out and back in
+              so the refreshed token carries it.
+            </p>
+          ) : (
+            <p className="mt-1 text-[12px]">({ordersError})</p>
+          )}
         </div>
       )}
 
