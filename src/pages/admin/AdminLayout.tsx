@@ -35,11 +35,11 @@ const AdminLayout: React.FC<{ section: Section; children: React.ReactNode }> = (
   const { navigate } = useRouter();
 
   return (
-    <div className="pt-[100px] min-h-screen bg-[color:var(--color-myntra-bg-soft)]">
-      <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 py-6 md:py-8">
-        <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-4 md:gap-6">
+    <div className="min-h-screen bg-[color:var(--color-myntra-bg-soft)]">
+      <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 py-5 md:py-8">
+        <div className="grid grid-cols-1 md:grid-cols-[240px_minmax(0,1fr)] gap-4 md:gap-6">
           {/* Sidebar */}
-          <aside className="bg-white border border-[color:var(--color-myntra-border-soft)] rounded-md p-4 md:sticky md:top-[110px] md:self-start">
+          <aside className="bg-white border border-[color:var(--color-myntra-border-soft)] rounded-md p-4 md:sticky md:top-5 md:self-start">
             <div className="px-2 pb-4 mb-3 border-b border-[color:var(--color-myntra-border-soft)]">
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--color-myntra-ink-mute)]">
                 Admin
@@ -90,8 +90,9 @@ const AdminLayout: React.FC<{ section: Section; children: React.ReactNode }> = (
             </div>
           </aside>
 
-          {/* Content */}
-          <section>{children}</section>
+          {/* Content — min-w-0 so wide tables/rows scroll instead of
+              overflowing the page (the classic CSS-grid blowout). */}
+          <section className="min-w-0">{children}</section>
         </div>
       </div>
     </div>

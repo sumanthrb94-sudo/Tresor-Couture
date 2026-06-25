@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Send, Mail, Loader2, AlertTriangle, Check, Users } from 'lucide-react';
+import { Send, Mail, Loader2, AlertTriangle, Check, Users, UserPlus } from 'lucide-react';
 import { auth } from '../../lib/firebase';
 
 /**
@@ -47,6 +47,16 @@ const AdminBulkEmail: React.FC = () => {
 
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
+
+  // Manual tools: add one contact to a list, send a one-off email.
+  const [addEmail, setAddEmail] = useState('');
+  const [addName, setAddName] = useState('');
+  const [addBusy, setAddBusy] = useState(false);
+  const [oneTo, setOneTo] = useState('');
+  const [oneBusy, setOneBusy] = useState(false);
+  const [manualMsg, setManualMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
   useEffect(() => {
     let cancelled = false;
@@ -100,6 +110,44 @@ const AdminBulkEmail: React.FC = () => {
     } finally {
       setSending(false);
     }
+  };
+
+  const addContact = async () => {
+    setManualMsg(null);
+    if (!EMAIL_RE.test(addEmail.trim())) { setManualMsg({ ok: false, text: 'Enter a valid email.' }); return; }
+    if (!listId) { setManualMsg({ ok: false, text: 'Choose a list to add the contact to.' }); return; }
+    setAddBusy(true);
+    try {
+      const res = await authedFetch('/api/email/bulk', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'add-contact', email: addEmail.trim(), name: addName.trim() || undefined, listId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) { setManualMsg({ ok: true, text: `Added ${addEmail.trim()} to "${selectedList?.name}".` }); setAddEmail(''); setAddName(''); }
+      else setManualMsg({ ok: false, text: data.detail || data.error || `Could not add contact (${res.status}).` });
+    } catch (e) {
+      setManualMsg({ ok: false, text: e instanceof Error ? e.message : 'Could not add contact.' });
+    } finally { setAddBusy(false); }
+  };
+
+  const sendOne = async () => {
+    setManualMsg(null);
+    if (!EMAIL_RE.test(oneTo.trim())) { setManualMsg({ ok: false, text: 'Enter a valid recipient email.' }); return; }
+    if (!subject.trim() || !html.trim()) { setManualMsg({ ok: false, text: 'Compose a subject and body above first.' }); return; }
+    if (!senderEmail) { setManualMsg({ ok: false, text: 'Choose a sender above.' }); return; }
+    setOneBusy(true);
+    try {
+      const sender = senders.find(s => s.email === senderEmail);
+      const res = await authedFetch('/api/email/bulk', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action: 'send-one', to: oneTo.trim(), subject, htmlContent: html, senderEmail, senderName: sender?.name }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) { setManualMsg({ ok: true, text: `Sent to ${oneTo.trim()}.` }); setOneTo(''); }
+      else setManualMsg({ ok: false, text: data.detail || data.error || `Send failed (${res.status}).` });
+    } catch (e) {
+      setManualMsg({ ok: false, text: e instanceof Error ? e.message : 'Send failed.' });
+    } finally { setOneBusy(false); }
   };
 
   return (
@@ -170,9 +218,42 @@ const AdminBulkEmail: React.FC = () => {
             )}
           </div>
 
+          {/* Send the composed email to a single address (manual / test send). */}
+          <div className="border-t border-[color:var(--color-myntra-border-soft)] pt-4">
+            <span className="text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)]">Or send to one address (uses the subject &amp; body above)</span>
+            <div className="flex flex-col sm:flex-row gap-2 mt-1.5">
+              <input value={oneTo} onChange={e => setOneTo(e.target.value)} type="email" placeholder="customer@email.com" className="input-box flex-1" />
+              <button onClick={sendOne} disabled={oneBusy} className="btn-outline inline-flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-60">
+                {oneBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />} Send to one
+              </button>
+            </div>
+          </div>
+
           <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] pt-1">
             Tip: manage contact lists and unsubscribes in Brevo. Sends are immediate; there’s no recall once dispatched.
           </p>
+        </div>
+      )}
+
+      {/* Add a single customer to a list */}
+      {!loading && configured && !loadErr && (
+        <div className="bg-white border border-[color:var(--color-myntra-border-soft)] rounded-md p-4 mt-4">
+          <h2 className="text-[14px] font-extrabold text-[color:var(--color-myntra-navy)] mb-1">Add a contact to a list</h2>
+          <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mb-3">
+            Manually add a customer’s email to the selected list ({selectedList ? <b>{selectedList.name}</b> : 'choose a list above'}).
+          </p>
+          <div className="grid sm:grid-cols-[1fr_1fr_auto] gap-2">
+            <input value={addEmail} onChange={e => setAddEmail(e.target.value)} type="email" placeholder="customer@email.com" className="input-box" />
+            <input value={addName} onChange={e => setAddName(e.target.value)} placeholder="Name (optional)" className="input-box" />
+            <button onClick={addContact} disabled={addBusy} className="btn-primary inline-flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-60">
+              {addBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />} Add
+            </button>
+          </div>
+          {manualMsg && (
+            <p className={`text-[13px] font-semibold mt-3 inline-flex items-center gap-1.5 ${manualMsg.ok ? 'text-[color:var(--color-myntra-green)]' : 'text-[color:var(--color-myntra-pink)]'}`}>
+              {manualMsg.ok && <Check className="w-4 h-4" />}{manualMsg.text}
+            </p>
+          )}
         </div>
       )}
     </div>

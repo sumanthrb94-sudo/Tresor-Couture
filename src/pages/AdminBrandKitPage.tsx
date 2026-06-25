@@ -303,7 +303,7 @@ const AdminBrandKitPage: React.FC<{ section?: string }> = ({ section }) => {
   const totalAssets = useMemo(() => KIT_SECTIONS.reduce((s, x) => s + x.assets.length, 0), []);
 
   return (
-    <main className="min-h-screen bg-[#F5ECDC] pt-[88px] md:pt-[100px]">
+    <main className="min-h-screen bg-[#F5ECDC]">
       {/* Header bar */}
       <div className="bg-[#2A1F12] text-[#F5ECDC]">
         <div className="max-w-[1320px] mx-auto px-5 md:px-10 py-5 md:py-7 flex flex-wrap items-center gap-4 justify-between">

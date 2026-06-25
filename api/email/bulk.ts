@@ -76,9 +76,49 @@ export default async function handler(req: any, res: any) {
       return res.status(200).json({ configured: true, lists, senders });
     }
 
-    // ---- POST: create + send a campaign now ----
+    // ---- POST: add a contact, send a one-off email, or run a campaign ----
     if (req.method === 'POST') {
       const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+      const action = String(body.action || 'campaign');
+      const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+      // (a) Add a single customer email to a Brevo list.
+      if (action === 'add-contact') {
+        const email = String(body.email || '').trim().toLowerCase().slice(0, 254);
+        const listId = Number(body.listId);
+        if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'invalid_email' });
+        if (!Number.isFinite(listId) || listId <= 0) return res.status(400).json({ error: 'list_required' });
+        const attributes: Record<string, unknown> = { SIGNUP_SOURCE: 'admin' };
+        if (body.name) attributes.FIRSTNAME = String(body.name).split(' ')[0].slice(0, 64);
+        const r = await fetch(`${BREVO}/contacts`, {
+          method: 'POST',
+          headers: brevoHeaders(key),
+          body: JSON.stringify({ email, attributes, listIds: [listId], updateEnabled: true }),
+        });
+        if (!r.ok && r.status !== 204) return res.status(502).json({ error: 'brevo_contact_failed', detail: await r.text() });
+        return res.status(200).json({ ok: true, action: 'add-contact' });
+      }
+
+      // (b) Send a one-off email to a single address (also used as a test send).
+      if (action === 'send-one') {
+        const to = String(body.to || '').trim().toLowerCase().slice(0, 254);
+        const subject = String(body.subject || '').trim();
+        const htmlContent = String(body.htmlContent || '').trim();
+        const senderEmail = String(body.senderEmail || process.env.BREVO_SENDER_EMAIL || '').trim();
+        const senderName = String(body.senderName || process.env.BREVO_SENDER_NAME || 'Tresor Couture').trim();
+        if (!EMAIL_RE.test(to)) return res.status(400).json({ error: 'invalid_recipient' });
+        if (!subject || !htmlContent) return res.status(400).json({ error: 'subject_and_body_required' });
+        if (!senderEmail) return res.status(400).json({ error: 'sender_required' });
+        const r = await fetch(`${BREVO}/smtp/email`, {
+          method: 'POST',
+          headers: brevoHeaders(key),
+          body: JSON.stringify({ sender: { name: senderName, email: senderEmail }, to: [{ email: to }], subject, htmlContent }),
+        });
+        if (!r.ok) return res.status(502).json({ error: 'brevo_send_failed', detail: await r.text() });
+        return res.status(200).json({ ok: true, action: 'send-one' });
+      }
+
+      // (c) Campaign to a whole list (default).
       const subject = String(body.subject || '').trim();
       const htmlContent = String(body.htmlContent || '').trim();
       const senderEmail = String(body.senderEmail || process.env.BREVO_SENDER_EMAIL || '').trim();
