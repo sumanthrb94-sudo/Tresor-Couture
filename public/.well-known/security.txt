@@ -1,0 +1,4 @@
+Contact: mailto:hello@tresorcouture.in
+Expires: 2027-06-26T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://tresorcouture.in/.well-known/security.txt

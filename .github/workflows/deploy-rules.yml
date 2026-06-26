@@ -1,0 +1,40 @@
+name: Deploy Firestore rules
+
+# Manually deploy the repo's firestore.rules + indexes to the live Firebase
+# project. Vercel ships the frontend but NEVER touches Firestore rules, so they
+# can drift from the code (this caused the admin "Missing or insufficient
+# permissions" incident). Run this after merging rule changes.
+#
+# Setup (one-time): create a CI token with `firebase login:ci` and add it as the
+# repo secret FIREBASE_TOKEN (Settings → Secrets and variables → Actions).
+# Until that secret exists this workflow is inert (it only runs on demand).
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'What to deploy'
+        type: choice
+        default: 'rules+indexes'
+        options: ['rules+indexes', 'rules-only']
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install -g firebase-tools
+      - name: Deploy
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          if [ -z "$FIREBASE_TOKEN" ]; then
+            echo "::error::FIREBASE_TOKEN secret is not set. Create one with 'firebase login:ci' and add it under repo Secrets."
+            exit 1
+          fi
+          ONLY="firestore:rules"
+          if [ "${{ inputs.target }}" = "rules+indexes" ]; then ONLY="firestore:rules,firestore:indexes"; fi
+          firebase deploy --only "$ONLY" --project tresor-couture --token "$FIREBASE_TOKEN" --non-interactive
