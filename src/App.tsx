@@ -199,8 +199,10 @@ const Chrome: React.FC = () => {
   const { route } = useRouter();
   const isAdmin = route.name === 'admin' || route.name === 'admin-brand-kit';
   return (
-    <div className="selection:bg-[color:var(--color-myntra-pink)] selection:text-white bg-white min-h-screen">
-      <Navbar />
+    <div className="selection:bg-[color:var(--color-myntra-pink)] selection:text-white bg-white min-h-screen overflow-x-clip">
+      {/* The admin console has its own chrome (sidebar). Rendering the
+          storefront navbar there overlays/cuts the admin content, so hide it. */}
+      {!isAdmin && <Navbar />}
       <ErrorBoundary>
         <Suspense fallback={<RouteFallback />}>
           <RoutedView />

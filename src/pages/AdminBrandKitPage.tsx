@@ -5,7 +5,10 @@ import {
   Copy,
   Download,
   ExternalLink,
+  FileArchive,
+  FileDown,
   FileText,
+  Loader2,
   LogOut,
   Maximize2,
   Palette,
@@ -21,6 +24,8 @@ import {
   TYPOGRAPHY,
   VOICE_NOTES,
 } from '../admin/kitManifest';
+import { downloadKitAsPdf } from '../admin/exportKitPdf';
+import { downloadKitAssetsZip, type ZipProgress } from '../admin/downloadKitZip';
 
 /* ---- copy hook ---- */
 function useCopy() {
@@ -223,7 +228,37 @@ const AdminBrandKitPage: React.FC<{ section?: string }> = ({ section }) => {
   const { navigate } = useRouter();
   const [active, setActive] = useState<string>(section ?? 'palette');
   const [preview, setPreview] = useState<KitAsset | null>(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const [zip, setZip] = useState<ZipProgress | null>(null);
   const { copy, copied } = useCopy();
+
+  const handleDownloadPdf = async () => {
+    setPdfBusy(true);
+    try {
+      await downloadKitAsPdf();
+    } catch {
+      window.alert('Could not open the PDF export. Please try again.');
+    } finally {
+      setPdfBusy(false);
+    }
+  };
+
+  const handleDownloadZip = async () => {
+    if (zip && zip.done < zip.total) return; // already running
+    setZip({ done: 0, total: 0, failed: 0 });
+    try {
+      const result = await downloadKitAssetsZip(setZip);
+      if (result.failed > 0) {
+        window.alert(`Downloaded ${result.total - result.failed}/${result.total} assets — ${result.failed} could not be fetched.`);
+      }
+    } catch {
+      window.alert('Could not build the ZIP. Please try again.');
+    } finally {
+      setZip(null);
+    }
+  };
+
+  const zipBusy = zip !== null;
 
   // observe sections to update the sidebar
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -268,7 +303,7 @@ const AdminBrandKitPage: React.FC<{ section?: string }> = ({ section }) => {
   const totalAssets = useMemo(() => KIT_SECTIONS.reduce((s, x) => s + x.assets.length, 0), []);
 
   return (
-    <main className="min-h-screen bg-[#F5ECDC] pt-[88px] md:pt-[100px]">
+    <main className="min-h-screen bg-[#F5ECDC]">
       {/* Header bar */}
       <div className="bg-[#2A1F12] text-[#F5ECDC]">
         <div className="max-w-[1320px] mx-auto px-5 md:px-10 py-5 md:py-7 flex flex-wrap items-center gap-4 justify-between">
@@ -290,6 +325,24 @@ const AdminBrandKitPage: React.FC<{ section?: string }> = ({ section }) => {
             <span className="hidden md:inline text-[11px] text-[#D8B97A]">
               {totalAssets} assets · regen via <code className="font-mono">python3 branding/generate.py</code>
             </span>
+            <button
+              onClick={handleDownloadPdf}
+              disabled={pdfBusy}
+              title="Build a brand-book PDF — choose “Save as PDF” in the print dialog"
+              className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] font-semibold text-[#2A1F12] bg-[#D8B97A] hover:bg-[#e6cb95] disabled:opacity-60 px-3 py-1.5 rounded transition-colors"
+            >
+              {pdfBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
+              {pdfBusy ? 'Preparing…' : 'Download PDF'}
+            </button>
+            <button
+              onClick={handleDownloadZip}
+              disabled={zipBusy}
+              title="Download every brand asset as a single ZIP"
+              className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] font-semibold text-[#2A1F12] bg-[#D8B97A] hover:bg-[#e6cb95] disabled:opacity-60 px-3 py-1.5 rounded transition-colors"
+            >
+              {zipBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileArchive className="w-3.5 h-3.5" />}
+              {zipBusy ? (zip && zip.total ? `Zipping ${zip.done}/${zip.total}…` : 'Zipping…') : 'Download all (ZIP)'}
+            </button>
             <button
               onClick={() => navigate({ name: 'home' })}
               className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] font-semibold text-[#D8B97A] hover:text-[#F5ECDC] border border-[#D8B97A]/40 hover:border-[#D8B97A] px-3 py-1.5 rounded"

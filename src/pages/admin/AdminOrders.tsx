@@ -645,7 +645,7 @@ const AdminOrders: React.FC = () => {
           {/* Desktop table */}
           <div className="hidden md:block bg-white border border-[color:var(--color-myntra-border-soft)] rounded-md overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+              <table className="w-full text-left border-collapse text-[12px] [&_th]:px-3 [&_th]:py-2.5 [&_td]:px-3 [&_td]:py-2.5">
                 <thead className="sticky top-0 z-10 bg-[color:var(--color-myntra-bg-soft)]">
                   <tr className="text-[11px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-mute)]">
                     <th className="px-4 py-3 w-8" aria-label="Expand" />
@@ -681,14 +681,14 @@ const AdminOrders: React.FC = () => {
                               ▸
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-[13px] font-bold text-[color:var(--color-myntra-navy)] whitespace-nowrap">
-                            #{o.id}
+                          <td className="font-bold text-[color:var(--color-myntra-navy)]">
+                            <span className="font-mono block max-w-[96px] truncate" title={o.id}>#{o.id}</span>
                           </td>
-                          <td className="px-4 py-3 text-[13px] min-w-[180px]">
-                            <p className="font-semibold text-[color:var(--color-myntra-navy)] truncate max-w-[220px]">
+                          <td>
+                            <p className="font-semibold text-[color:var(--color-myntra-navy)] truncate max-w-[150px]">
                               {o.shippingAddress.fullName}
                             </p>
-                            <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] truncate max-w-[220px]">
+                            <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] truncate max-w-[150px]">
                               {o.shippingAddress.email}
                             </p>
                           </td>

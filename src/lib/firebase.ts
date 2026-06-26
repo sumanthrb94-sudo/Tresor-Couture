@@ -805,6 +805,40 @@ export const productsApi = {
   remove: (id: string) => deleteDoc(doc(db, 'products', id))
 };
 
+/* ------------------------------------------------------------------ */
+/*  Delivery config — 40-minute serviceability (admin-editable)        */
+/* ------------------------------------------------------------------ */
+/**
+ * The serviceable-pincode list for 40-minute delivery lives in a single
+ * Firestore doc `config/delivery` (public read so the storefront can check
+ * eligibility; admin-only write). The storefront falls back to the seed list
+ * in src/lib/serviceability.ts if the doc is missing or unreadable, so the
+ * feature works before any admin edit.
+ */
+export const deliveryConfigApi = {
+  /** Read the serviceable pincode list. Returns null if unset/unreadable. */
+  get: async (): Promise<{ pincodes: string[]; updatedAt?: unknown } | null> => {
+    try {
+      const snap = await getDoc(doc(db, 'config', 'delivery'));
+      if (!snap.exists()) return null;
+      const data = snap.data() as { pincodes?: unknown };
+      const pincodes = Array.isArray(data.pincodes)
+        ? data.pincodes.filter((p): p is string => typeof p === 'string')
+        : [];
+      return { pincodes };
+    } catch {
+      return null;
+    }
+  },
+  /** Admin-only: replace the serviceable pincode list. */
+  setPincodes: (pincodes: string[]) =>
+    setDoc(
+      doc(db, 'config', 'delivery'),
+      { pincodes, updatedAt: serverTimestamp() },
+      { merge: true },
+    ),
+};
+
 /** Best-effort post-placement notifications (buyer email + in-app admin alert),
  *  shared by the server and client order-placement paths. Never throws — a
  *  notification failure must not lose the order (the order doc is the source of

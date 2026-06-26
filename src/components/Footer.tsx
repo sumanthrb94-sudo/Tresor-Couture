@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Facebook, Instagram, Twitter, Youtube, Phone, Mail, ShieldCheck, Truck, Zap, Check } from 'lucide-react';
+import { Instagram, Phone, Mail, ShieldCheck, Truck, Zap, Check } from 'lucide-react';
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../context/AuthContext';
 import { subscribeContact } from '../lib/notify';
@@ -53,7 +53,7 @@ const Footer: React.FC = () => {
     <footer className="bg-[color:var(--color-myntra-bg-soft)] mt-10 md:mt-16">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 pt-10 md:pt-14 pb-6 flex flex-col items-center text-center border-b border-[color:var(--color-myntra-border-soft)]">
         <img
-          src="/branding/tc-master-mark.svg"
+          src="/branding/tc-emblem.png"
           alt="Tresor Couture"
           className="h-24 md:h-32 w-auto object-contain mb-3 select-none"
           draggable={false}
@@ -84,25 +84,27 @@ const Footer: React.FC = () => {
         ))}
 
         <div className="col-span-2 md:col-span-4 lg:col-span-2">
-          <h4 className="text-[12px] font-extrabold uppercase tracking-[0.15em] text-[color:var(--color-myntra-navy)] mb-4">
-            Experience Tresor on Mobile
-          </h4>
-          <div className="flex gap-3 mb-6">
-            <div className="px-4 py-2.5 bg-[color:var(--color-myntra-navy)] text-white rounded-md text-[12px] font-semibold">
-              Get on Google Play
-            </div>
-            <div className="px-4 py-2.5 bg-[color:var(--color-myntra-navy)] text-white rounded-md text-[12px] font-semibold">
-              Download on iOS
-            </div>
-          </div>
-
           <h4 className="text-[12px] font-extrabold uppercase tracking-[0.15em] text-[color:var(--color-myntra-navy)] mb-2">
             Get 10% off your first order
           </h4>
           {subState === 'done' ? (
-            <p className="text-[13px] text-[color:var(--color-myntra-green)] font-semibold mb-6 inline-flex items-center gap-1.5">
-              <Check className="w-4 h-4" /> You're on the list — check your inbox.
-            </p>
+            <div className="mb-6">
+              <p className="text-[13px] text-[color:var(--color-myntra-green)] font-semibold inline-flex items-center gap-1.5">
+                <Check className="w-4 h-4" /> You're on the list!
+              </p>
+              <p className="text-[13px] text-[color:var(--color-myntra-ink)] mt-1.5">
+                Use code{' '}
+                <button
+                  type="button"
+                  onClick={() => navigator.clipboard?.writeText('WELCOME10')}
+                  title="Click to copy"
+                  className="font-extrabold tracking-[0.08em] text-[color:var(--color-myntra-pink)] border border-dashed border-[color:var(--color-myntra-pink)] rounded px-1.5 py-0.5"
+                >
+                  WELCOME10
+                </button>{' '}
+                for 10% off your first order.
+              </p>
+            </div>
           ) : (
             <form onSubmit={handleSubscribe} className="flex gap-2 mb-6 max-w-sm" noValidate>
               <input
@@ -126,16 +128,20 @@ const Footer: React.FC = () => {
             Keep in Touch
           </h4>
           <div className="flex gap-3 mb-6">
-            {[Facebook, Instagram, Twitter, Youtube].map((Icon, i) => (
-              <a key={i} href="#" className="w-9 h-9 rounded-full bg-white border border-[color:var(--color-myntra-border-soft)] flex items-center justify-center text-[color:var(--color-myntra-ink-soft)] hover:text-[color:var(--color-myntra-pink)] hover:border-[color:var(--color-myntra-pink)] transition-colors">
-                <Icon className="w-4 h-4" />
-              </a>
-            ))}
+            <a
+              href="https://instagram.com/_tresor.couture"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Tresor Couture on Instagram"
+              className="w-9 h-9 rounded-full bg-white border border-[color:var(--color-myntra-border-soft)] flex items-center justify-center text-[color:var(--color-myntra-ink-soft)] hover:text-[color:var(--color-myntra-pink)] hover:border-[color:var(--color-myntra-pink)] transition-colors"
+            >
+              <Instagram className="w-4 h-4" />
+            </a>
           </div>
 
           <div className="flex flex-col gap-1.5 text-[13px] text-[color:var(--color-myntra-ink-soft)]">
-            <div className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> +91 80 1234 5678</div>
-            <div className="flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> concierge@tresorcouture.com</div>
+            <a href="tel:+916304211922" className="flex items-center gap-2 hover:text-[color:var(--color-myntra-pink)]"><Phone className="w-3.5 h-3.5" /> +91 63042 11922</a>
+            <a href="mailto:hello@tresorcouture.in" className="flex items-center gap-2 hover:text-[color:var(--color-myntra-pink)]"><Mail className="w-3.5 h-3.5" /> hello@tresorcouture.in</a>
           </div>
         </div>
       </div>

@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://tresor-couture.vercel.app/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://tresor-couture.vercel.app/#/shop</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://tresor-couture.vercel.app/#/customise</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://tresor-couture.vercel.app/#/shop?category=Sarees</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tresor-couture.vercel.app/#/shop?category=Lehenga%20Cholis</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tresor-couture.vercel.app/#/shop?category=Anarkalis</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tresor-couture.vercel.app/#/shop?category=Western%20Wear</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tresor-couture.vercel.app/#/shop?category=Studios%20Pr%C3%AAt</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://tresor-couture.vercel.app/#/shop?category=Dyeable%20Fabrics</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://tresor-couture.vercel.app/#/shop?category=Lace</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://tresor-couture.vercel.app/#/login</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>https://tresor-couture.vercel.app/#/register</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://tresorcouture.in/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://tresorcouture.in/#/shop</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://tresorcouture.in/#/shop?category=Sarees</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://tresorcouture.in/#/shop?category=Lehenga%20Cholis</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://tresorcouture.in/#/shop?category=Anarkalis</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://tresorcouture.in/#/shop?category=Western%20Wear</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://tresorcouture.in/#/shop?category=Studios%20Pr%C3%AAt</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://tresorcouture.in/#/shop?category=Dyeable%20Fabrics</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://tresorcouture.in/#/login</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://tresorcouture.in/#/register</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
 </urlset>

@@ -281,7 +281,7 @@ const Navbar: React.FC = () => {
         >
           <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--color-myntra-border-soft)]">
             <button onClick={() => { setMobileOpen(false); navigate({ name: 'home' }); }} className="flex items-center gap-2">
-              <img src="/branding/mark-master.png" alt="" className="h-9 w-auto object-contain" draggable={false} />
+              <img src="/branding/tc-emblem.png" alt="" className="h-9 w-auto object-contain" draggable={false} />
               <span className="font-serif font-semibold text-xl tracking-[0.04em] text-[color:var(--color-myntra-navy)]">TRESOR</span>
               <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--color-myntra-ink-soft)]">couture</span>
             </button>
@@ -418,7 +418,7 @@ const Navbar: React.FC = () => {
             aria-label="Tresor Couture — Home"
           >
             <img
-              src="/branding/mark-master.png"
+              src="/branding/tc-emblem.png"
               alt=""
               aria-hidden="true"
               className="h-10 md:h-12 w-auto select-none object-contain"

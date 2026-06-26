@@ -14,6 +14,15 @@ export type CouponResult =
  * Keyed by the uppercase code (matches the Firestore document-id convention).
  */
 export const BUILTIN_COUPONS: Record<string, Coupon> = {
+  WELCOME10: {
+    code: 'WELCOME10',
+    description: '10% off your first order',
+    kind: 'percent',
+    value: 10,
+    maxDiscount: 2000,
+    minSubtotal: 0,
+    active: true,
+  },
   WEDDING50: {
     code: 'WEDDING50',
     description: 'Extra 10% off bridal silks',

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronDown, MapPin, RefreshCw, ShieldCheck, ShoppingBag, Tag, Trash2 } from 'lucide-react';
+import { ChevronDown, RefreshCw, ShieldCheck, ShoppingBag, Tag, Trash2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
@@ -9,6 +9,7 @@ import { couponsApi, productsApi } from '../lib/firebase';
 import type { Fabric } from '../types';
 import FabricImage from '../components/FabricImage';
 import ProductCard from '../components/ProductCard';
+import DeliveryChecker from '../components/DeliveryChecker';
 
 const CartPage: React.FC = () => {
   const { items, resolved, resolving, updateQuantity, removeItem, subtotal, shipping, tax, total, unitCount } = useCart();
@@ -19,7 +20,6 @@ const CartPage: React.FC = () => {
   const [couponMsg, setCouponMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponBusy, setCouponBusy] = useState(false);
-  const [pin, setPin] = useState('');
 
   // "You might also like" must link to real product pages. Source it from the
   // live Firestore catalogue (document ids) — the static FABRICS seed carries
@@ -172,15 +172,8 @@ const CartPage: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4 lg:gap-6">
           <div className="space-y-3">
-            {/* Pincode banner */}
-            <div className="bg-white border border-[color:var(--color-myntra-border-soft)] p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-[13px] text-[color:var(--color-myntra-ink)]">
-                <MapPin className="w-4 h-4 text-[color:var(--color-myntra-pink)]" />
-                <span className="font-bold">Deliver to:</span>
-                <input value={pin} onChange={e => setPin(e.target.value)} placeholder="Enter pincode" className="border-b border-[color:var(--color-myntra-border)] px-2 py-1 outline-none focus:border-[color:var(--color-myntra-pink)] w-32" />
-              </div>
-              <button className="text-[12px] font-bold text-[color:var(--color-myntra-pink)] uppercase">Change</button>
-            </div>
+            {/* 40-minute delivery serviceability */}
+            <DeliveryChecker variant="card" />
 
             {/* Coupon banner */}
             <div className="bg-white border border-[color:var(--color-myntra-border-soft)] p-3 md:p-4">
