@@ -14,9 +14,6 @@ type NavEntry =
   | { kind: 'master'; label: MasterCategory; tone?: 'default' | 'premium' }
   | { kind: 'static'; label: string; tone?: 'default' | 'premium' };
 
-// The two atelier lines ("Couture Customisations" and "Studios Prêt") render with
-// a distinct serif/gold treatment so they read as signature offerings, not regular
-// shop categories.
 const NAV: NavEntry[] = [
   ...MASTER_CATEGORIES
     .filter(m => m !== 'Studios Prêt')
@@ -25,10 +22,11 @@ const NAV: NavEntry[] = [
 ];
 
 const Navbar: React.FC = () => {
-  // Use the raw items array for badge counts — `itemCount` derives from
-  // `resolved` which is empty until the Firestore product cache hydrates,
-  // so the badge would briefly read "0" right after Add to Bag.
-  const { items: cartItems } = useCart();
+  /* Use itemCount (resolved items) for the badge — NOT cartItems.length.
+     cartItems.length counts raw entries including stale/deleted products
+     that failed to resolve, which is why the badge showed "2" when only
+     1 real item was in the cart. */
+  const { itemCount: cartCount } = useCart();
   const { ids: wishIds } = useWishlist();
   const { user, isAdmin, logout } = useAuth();
   const { navigate, route } = useRouter();
@@ -43,21 +41,14 @@ const Navbar: React.FC = () => {
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : '';
-    // Collapse any expanded category accordion whenever the drawer closes
-    // (via X, logo, or an auth button) so it doesn't reopen stale next time.
     if (!mobileOpen) setMobileExpanded(null);
     return () => { document.body.style.overflow = ''; };
   }, [mobileOpen]);
 
-  const cartBadge = Math.min(cartItems.length, 99);
+  const cartBadge = Math.min(cartCount, 99);
   const wishBadge = Math.min(wishIds.length, 99);
 
-  // Live catalogue (Firestore document ids) backs search suggestions and the
-  // mega-menu previews. Sourcing these from the static FABRICS seed instead
-  // navigated to its NUMERIC ids (e.g. /#/product/16) which don't exist as
-  // Firestore document ids — every such link 404'd. We fall back to FABRICS
-  // only until the fetch resolves (or if it fails), so local/dev still shows
-  // suggestions.
+  // Live catalogue for search
   const [catalog, setCatalog] = useState<Fabric[] | null>(null);
   useEffect(() => {
     let cancelled = false;
@@ -65,9 +56,7 @@ const Navbar: React.FC = () => {
       try {
         const rows = await productsApi.list({ limit: 200 });
         if (!cancelled && rows.length) setCatalog(rows as unknown as Fabric[]);
-      } catch {
-        /* keep the FABRICS fallback */
-      }
+      } catch { /* keep FABRICS fallback */ }
     })();
     return () => { cancelled = true; };
   }, []);
@@ -109,7 +98,6 @@ const Navbar: React.FC = () => {
     setSearchOpen(false);
   };
 
-  // Lock body scroll while the full-screen mobile search overlay is open.
   useEffect(() => {
     if (searchOpen) {
       document.body.style.overflow = 'hidden';
@@ -132,19 +120,13 @@ const Navbar: React.FC = () => {
           </p>
           <ul className="space-y-2 text-sm">
             <li>
-              <button
-                onClick={() => goShop(label)}
-                className="hover:text-[color:var(--color-myntra-pink)] font-semibold"
-              >
+              <button onClick={() => goShop(label)} className="hover:text-[color:var(--color-myntra-pink)] font-semibold">
                 All {label}
               </button>
             </li>
             {subs.map(sub => (
               <li key={sub}>
-                <button
-                  onClick={() => goShop(label, sub)}
-                  className="hover:text-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-ink-soft)]"
-                >
+                <button onClick={() => goShop(label, sub)} className="hover:text-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-ink-soft)]">
                   {sub}
                 </button>
               </li>
@@ -154,36 +136,18 @@ const Navbar: React.FC = () => {
         <div className="grid grid-cols-4 gap-3">
           {items.length > 0 ? (
             items.map(f => (
-              <button
-                key={f.id}
-                onClick={() => { navigate({ name: 'product', id: f.id }); setHoverCat(null); }}
-                className="text-left group"
-              >
+              <button key={f.id} onClick={() => { navigate({ name: 'product', id: f.id }); setHoverCat(null); }} className="text-left group">
                 <div className="aspect-[3/4] bg-[color:var(--color-myntra-bg-soft)] overflow-hidden mb-2">
-                  <img
-                    src={f.photo}
-                    alt={f.name}
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = f.image; }}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+                  <img src={f.photo} alt={f.name} onError={(e) => { (e.currentTarget as HTMLImageElement).src = f.image; }} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
                 <p className="text-[12px] font-bold text-[color:var(--color-myntra-navy)] truncate">{f.brand}</p>
-                <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] truncate">
-                  {f.name.split(' ').slice(0, 3).join(' ')}
-                </p>
+                <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] truncate">{f.name.split(' ').slice(0, 3).join(' ')}</p>
               </button>
             ))
           ) : (
-            <button
-              onClick={() => goShop(label)}
-              className="col-span-4 aspect-[16/6] bg-[color:var(--color-myntra-bg-soft)] border border-dashed border-[color:var(--color-myntra-pink)] flex flex-col items-center justify-center gap-1 text-center px-4 group hover:bg-white transition-colors"
-            >
-              <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-[color:var(--color-myntra-pink)]">
-                Coming soon
-              </span>
-              <span className="text-[13px] font-semibold text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]">
-                Preview the {label} collection ↗
-              </span>
+            <button onClick={() => goShop(label)} className="col-span-4 aspect-[16/6] bg-[color:var(--color-myntra-bg-soft)] border border-dashed border-[color:var(--color-myntra-pink)] flex flex-col items-center justify-center gap-1 text-center px-4 group hover:bg-white transition-colors">
+              <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-[color:var(--color-myntra-pink)]">Coming soon</span>
+              <span className="text-[13px] font-semibold text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]">Preview the {label} collection ↗</span>
             </button>
           )}
         </div>
@@ -194,33 +158,13 @@ const Navbar: React.FC = () => {
   const searchOverlay = (
     <AnimatePresence>
       {searchOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
-          className="lg:hidden fixed inset-0 z-[210] bg-white flex flex-col"
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="lg:hidden fixed inset-0 z-[210] bg-white flex flex-col">
           <form onSubmit={onSearchSubmit} className="flex items-center gap-2 px-3 py-3 border-b border-[color:var(--color-myntra-border-soft)]">
-            <button type="button" onClick={() => { setSearchOpen(false); setSearch(''); }} aria-label="Close search" className="p-2 -ml-1 text-[color:var(--color-myntra-navy)]">
-              <ArrowLeft className="w-5 h-5" />
-            </button>
+            <button type="button" onClick={() => { setSearchOpen(false); setSearch(''); }} aria-label="Close search" className="p-2 -ml-1 text-[color:var(--color-myntra-navy)]"><ArrowLeft className="w-5 h-5" /></button>
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[color:var(--color-myntra-ink-mute)] pointer-events-none" />
-              <input
-                autoFocus
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search for sarees, lehengas, dresses…"
-                className="input-search"
-                aria-label="Search catalogue"
-                enterKeyHint="search"
-              />
-              {search && (
-                <button type="button" onClick={() => setSearch('')} aria-label="Clear" className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-[color:var(--color-myntra-ink-mute)]">
-                  <X className="w-4 h-4" />
-                </button>
-              )}
+              <input autoFocus value={search} onChange={e => setSearch(e.target.value)} placeholder="Search for sarees, lehengas, dresses…" className="input-search" aria-label="Search catalogue" enterKeyHint="search" />
+              {search && <button type="button" onClick={() => setSearch('')} aria-label="Clear" className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-[color:var(--color-myntra-ink-mute)]"><X className="w-4 h-4" /></button>}
             </div>
           </form>
           <div className="flex-1 overflow-y-auto">
@@ -228,11 +172,7 @@ const Navbar: React.FC = () => {
               <ul>
                 {suggestions.map(f => (
                   <li key={f.id}>
-                    <button
-                      type="button"
-                      onClick={() => { navigate({ name: 'product', id: f.id }); setSearch(''); setSearchOpen(false); }}
-                      className="w-full flex items-center gap-3 px-4 py-3 border-b border-[color:var(--color-myntra-border-soft)] text-left active:bg-[color:var(--color-myntra-bg-soft)]"
-                    >
+                    <button type="button" onClick={() => { navigate({ name: 'product', id: f.id }); setSearch(''); setSearchOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 border-b border-[color:var(--color-myntra-border-soft)] text-left active:bg-[color:var(--color-myntra-bg-soft)]">
                       <img src={f.photo} alt="" onError={e => { (e.currentTarget as HTMLImageElement).src = f.image; }} className="w-12 h-14 object-cover bg-[color:var(--color-myntra-bg-soft)]" />
                       <div className="min-w-0">
                         <p className="text-[13px] font-bold truncate">{f.brand}</p>
@@ -243,22 +183,13 @@ const Navbar: React.FC = () => {
                 ))}
               </ul>
             ) : search.trim() ? (
-              <button type="button" onClick={() => { navigate({ name: 'search', q: search.trim() }); setSearch(''); setSearchOpen(false); }} className="w-full text-left px-4 py-3 text-[14px] font-semibold text-[color:var(--color-myntra-pink)]">
-                Search for “{search.trim()}”
-              </button>
+              <button type="button" onClick={() => { navigate({ name: 'search', q: search.trim() }); setSearch(''); setSearchOpen(false); }} className="w-full text-left px-4 py-3 text-[14px] font-semibold text-[color:var(--color-myntra-pink)]">Search for “{search.trim()}”</button>
             ) : (
               <div className="px-4 py-4">
                 <p className="text-[11px] uppercase tracking-[0.14em] font-bold text-[color:var(--color-myntra-ink-mute)] mb-3">Popular</p>
                 <div className="flex flex-wrap gap-2">
                   {['Sarees', 'Lehenga Cholis', 'Anarkalis', 'Western Wear', 'Fabrics'].map(term => (
-                    <button
-                      key={term}
-                      type="button"
-                      onClick={() => { navigate({ name: 'shop', category: term }); setSearchOpen(false); }}
-                      className="px-3 py-1.5 rounded-full border border-[color:var(--color-myntra-border-soft)] text-[12px] text-[color:var(--color-myntra-ink)]"
-                    >
-                      {term}
-                    </button>
+                    <button key={term} type="button" onClick={() => { navigate({ name: 'shop', category: term }); setSearchOpen(false); }} className="px-3 py-1.5 rounded-full border border-[color:var(--color-myntra-border-soft)] text-[12px] text-[color:var(--color-myntra-ink)]">{term}</button>
                   ))}
                 </div>
               </div>
@@ -272,88 +203,44 @@ const Navbar: React.FC = () => {
   const mobileDrawer = (
     <AnimatePresence>
       {mobileOpen && (
-        <motion.div
-          initial={{ x: '-100%' }}
-          animate={{ x: 0 }}
-          exit={{ x: '-100%' }}
-          transition={{ type: 'tween', duration: 0.25 }}
-          className="fixed inset-0 z-[200] bg-white flex flex-col"
-        >
+        <motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'tween', duration: 0.25 }} className="fixed inset-0 z-[200] bg-white flex flex-col">
           <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--color-myntra-border-soft)]">
             <button onClick={() => { setMobileOpen(false); navigate({ name: 'home' }); }} className="flex items-center gap-2">
               <img src="/branding/tc-emblem.png" alt="" className="h-9 w-auto object-contain" draggable={false} />
               <span className="font-serif font-semibold text-xl tracking-[0.04em] text-[color:var(--color-myntra-navy)]">TRESOR</span>
               <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-[color:var(--color-myntra-ink-soft)]">couture</span>
             </button>
-            <button onClick={() => setMobileOpen(false)} aria-label="Close menu">
-              <X className="w-6 h-6" />
-            </button>
+            <button onClick={() => setMobileOpen(false)} aria-label="Close menu"><X className="w-6 h-6" /></button>
           </div>
-          {/* Drawer account strip — surfaces sign-in/up (signed-out) or the active
-              member's name + sign-out (signed-in) before the user scrolls categories. */}
           {user ? (
             <div className="px-5 py-3 border-b border-[color:var(--color-myntra-border-soft)] flex items-center justify-between gap-3 bg-[color:var(--color-myntra-bg-soft)]">
               <div className="min-w-0">
                 <p className="text-[14px] font-extrabold truncate">Hello, {user.fullName.split(' ')[0]}</p>
                 <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] truncate">{user.email}</p>
               </div>
-              <button
-                onClick={() => { setMobileOpen(false); logout(); navigate({ name: 'home' }); }}
-                className="text-[11px] font-bold uppercase tracking-[0.08em] text-[color:var(--color-myntra-pink)] flex items-center gap-1 shrink-0"
-              >
-                <LogOut className="w-4 h-4" /> Sign out
-              </button>
+              <button onClick={() => { setMobileOpen(false); logout(); navigate({ name: 'home' }); }} className="text-[11px] font-bold uppercase tracking-[0.08em] text-[color:var(--color-myntra-pink)] flex items-center gap-1 shrink-0"><LogOut className="w-4 h-4" /> Sign out</button>
             </div>
           ) : (
             <div className="px-5 py-3 border-b border-[color:var(--color-myntra-border-soft)] grid grid-cols-2 gap-2 bg-[#FBF7EE]">
-              <button
-                onClick={() => { setMobileOpen(false); navigate({ name: 'login' }); }}
-                className="flex items-center justify-center gap-1.5 bg-[color:var(--color-myntra-pink)] text-white text-[12px] font-bold uppercase tracking-[0.08em] py-2.5 rounded"
-              >
-                <LogIn className="w-4 h-4" /> Sign in
-              </button>
-              <button
-                onClick={() => { setMobileOpen(false); navigate({ name: 'register' }); }}
-                className="flex items-center justify-center gap-1.5 bg-white border border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)] text-[12px] font-bold uppercase tracking-[0.08em] py-2.5 rounded"
-              >
-                <UserPlus className="w-4 h-4" /> Sign up
-              </button>
+              <button onClick={() => { setMobileOpen(false); navigate({ name: 'login' }); }} className="flex items-center justify-center gap-1.5 bg-[color:var(--color-myntra-pink)] text-white text-[12px] font-bold uppercase tracking-[0.08em] py-2.5 rounded"><LogIn className="w-4 h-4" /> Sign in</button>
+              <button onClick={() => { setMobileOpen(false); navigate({ name: 'register' }); }} className="flex items-center justify-center gap-1.5 bg-white border border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)] text-[12px] font-bold uppercase tracking-[0.08em] py-2.5 rounded"><UserPlus className="w-4 h-4" /> Sign up</button>
             </div>
           )}
           <div className="px-5 py-4 border-b border-[color:var(--color-myntra-border-soft)]">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[color:var(--color-myntra-ink-mute)]" />
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search for fabrics, sarees, lehengas and more"
-                className="input-search"
-              />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search for fabrics, sarees, lehengas and more" className="input-search" />
             </div>
           </div>
           <nav className="flex-1 overflow-y-auto px-5 py-4">
-            <button
-              onClick={() => goShop()}
-              className="w-full text-left py-3 font-bold text-[15px] border-b border-[color:var(--color-myntra-border-soft)]"
-            >
-              All Categories
-            </button>
+            <button onClick={() => goShop()} className="w-full text-left py-3 font-bold text-[15px] border-b border-[color:var(--color-myntra-border-soft)]">All Categories</button>
             {NAV.map(n => {
               if (n.kind === 'static') {
                 const click = () => { goShop(); };
                 const premium = n.tone === 'premium';
                 return (
-                  <button
-                    key={n.label}
-                    onClick={click}
-                    className={
-                      premium
-                        ? 'w-full text-left py-3.5 border-b border-[#E8DCC4] bg-[#FBF7EE] -mx-5 px-5 flex items-center gap-2 font-serif italic text-[17px] text-[#8E6520]'
-                        : 'w-full text-left py-3 text-[15px] border-b border-[color:var(--color-myntra-border-soft)] font-semibold'
-                    }
-                  >
-                    {premium && <span aria-hidden className="w-1.5 h-1.5 rounded-full bg-[color:var(--color-myntra-pink)]" />}
-                    {n.label}
+                  <button key={n.label} onClick={click} className={premium ? 'w-full text-left py-3.5 border-b border-[#E8DCC4] bg-[#FBF7EE] -mx-5 px-5 flex items-center gap-2 font-serif italic text-[17px] text-[#8E6520]' : 'w-full text-left py-3 text-[15px] border-b border-[color:var(--color-myntra-border-soft)] font-semibold'}>
+                    {premium && <span aria-hidden className="w-1.5 h-1.5 rounded-full bg-[color:var(--color-myntra-pink)]" />}{n.label}
                   </button>
                 );
               }
@@ -363,39 +250,16 @@ const Navbar: React.FC = () => {
               return (
                 <div key={n.label} className={`border-b border-[color:var(--color-myntra-border-soft)] ${isPremium ? 'bg-[#FBF7EE] -mx-5 px-5' : ''}`}>
                   <div className="flex items-stretch">
-                    <button
-                      onClick={() => goShop(n.label)}
-                      className={
-                        isPremium
-                          ? 'flex-1 text-left py-3.5 font-serif italic text-[17px] text-[#8E6520] flex items-center gap-2'
-                          : 'flex-1 text-left py-3 font-semibold text-[15px]'
-                      }
-                    >
-                      {isPremium && <span aria-hidden className="w-1.5 h-1.5 rounded-full bg-[color:var(--color-myntra-pink)]" />}
-                      {n.label}
+                    <button onClick={() => goShop(n.label)} className={isPremium ? 'flex-1 text-left py-3.5 font-serif italic text-[17px] text-[#8E6520] flex items-center gap-2' : 'flex-1 text-left py-3 font-semibold text-[15px]'}>
+                      {isPremium && <span aria-hidden className="w-1.5 h-1.5 rounded-full bg-[color:var(--color-myntra-pink)]" />}{n.label}
                     </button>
-                    <button
-                      onClick={() => setMobileExpanded(expanded ? null : n.label)}
-                      aria-label={`${expanded ? 'Collapse' : 'Expand'} ${n.label}`}
-                      aria-expanded={expanded}
-                      className="px-3 flex items-center"
-                    >
-                      <ChevronDown
-                        className={`w-5 h-5 text-[color:var(--color-myntra-ink-soft)] transition-transform ${expanded ? 'rotate-180' : ''}`}
-                      />
+                    <button onClick={() => setMobileExpanded(expanded ? null : n.label)} aria-label={`${expanded ? 'Collapse' : 'Expand'} ${n.label}`} aria-expanded={expanded} className="px-3 flex items-center">
+                      <ChevronDown className={`w-5 h-5 text-[color:var(--color-myntra-ink-soft)] transition-transform ${expanded ? 'rotate-180' : ''}`} />
                     </button>
                   </div>
                   {expanded && subs.length > 0 && (
                     <div className="pb-3 flex flex-wrap gap-2">
-                      {subs.map(sub => (
-                        <button
-                          key={sub}
-                          onClick={() => goShop(n.label, sub)}
-                          className="text-[12px] font-semibold px-3 py-1.5 rounded-full bg-[color:var(--color-myntra-bg-soft)] text-[color:var(--color-myntra-navy)] hover:bg-[color:var(--color-myntra-pink)] hover:text-white transition-colors"
-                        >
-                          {sub}
-                        </button>
-                      ))}
+                      {subs.map(sub => <button key={sub} onClick={() => goShop(n.label, sub)} className="text-[12px] font-semibold px-3 py-1.5 rounded-full bg-[color:var(--color-myntra-bg-soft)] text-[color:var(--color-myntra-navy)] hover:bg-[color:var(--color-myntra-pink)] hover:text-white transition-colors">{sub}</button>)}
                     </div>
                   )}
                 </div>
@@ -410,71 +274,28 @@ const Navbar: React.FC = () => {
   return (
     <>
       <header className="fixed top-0 left-0 w-full z-50 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
-        {/* Top tier — logo, nav, search, icons */}
-        <div className="h-16 md:h-20 px-4 md:px-6 lg:px-6 xl:px-10 flex items-center gap-3 md:gap-4 xl:gap-6">
-          <button
-            onClick={() => navigate({ name: 'home' })}
-            className="flex items-center gap-2 md:gap-2.5 shrink-0 no-tap-highlight"
-            aria-label="Tresor Couture — Home"
-          >
-            <img
-              src="/branding/tc-emblem.png"
-              alt=""
-              aria-hidden="true"
-              className="h-10 md:h-12 w-auto select-none object-contain"
-              loading="eager"
-              draggable={false}
-            />
+        {/* Top tier — logo, centered search, minimal right icons */}
+        <div className="h-16 md:h-20 px-4 md:px-6 lg:px-6 xl:px-10 flex items-center gap-3 md:gap-4">
+          {/* Logo */}
+          <button onClick={() => navigate({ name: 'home' })} className="flex items-center gap-2 md:gap-2.5 shrink-0 no-tap-highlight" aria-label="Tresor Couture — Home">
+            <img src="/branding/tc-emblem.png" alt="" aria-hidden="true" className="h-10 md:h-12 w-auto select-none object-contain" loading="eager" draggable={false} />
             <span className="flex items-baseline gap-1.5">
-              <span className="font-serif font-semibold text-[20px] md:text-[24px] tracking-[0.04em] text-[color:var(--color-myntra-navy)] leading-none">
-                TRESOR
-              </span>
-              <span className="hidden sm:inline text-[10px] md:text-[11px] font-bold uppercase tracking-[0.22em] text-[color:var(--color-myntra-ink-soft)] leading-none">
-                couture
-              </span>
+              <span className="font-serif font-semibold text-[20px] md:text-[24px] tracking-[0.04em] text-[color:var(--color-myntra-navy)] leading-none">TRESOR</span>
+              <span className="hidden sm:inline text-[10px] md:text-[11px] font-bold uppercase tracking-[0.22em] text-[color:var(--color-myntra-ink-soft)] leading-none">couture</span>
             </span>
           </button>
 
-          {/* Desktop mega-menu */}
+          {/* Desktop mega-menu nav — left of center */}
           <nav className="hidden lg:flex items-stretch gap-0 xl:gap-1 h-full min-w-0 flex-shrink overflow-x-auto scrollbar-none" aria-label="Primary">
             {NAV.map(n => {
-              const isActive =
-                (n.kind === 'master' && activeCat === n.label) ||
-                (n.kind === 'static' && n.label === 'Sale' && route.name === 'shop' && !activeCat);
-              const onClick = () => {
-                if (n.kind === 'master') goShop(n.label);
-                else goShop();
-              };
+              const isActive = (n.kind === 'master' && activeCat === n.label) || (n.kind === 'static' && n.label === 'Sale' && route.name === 'shop' && !activeCat);
+              const onClick = () => { if (n.kind === 'master') goShop(n.label); else goShop(); };
               const isPremium = n.tone === 'premium';
               return (
-                <div
-                  key={n.label}
-                  className="relative h-full"
-                  onMouseEnter={() => setHoverCat(n.label)}
-                  onMouseLeave={() => setHoverCat(null)}
-                >
-                  <button
-                    onClick={onClick}
-                    aria-haspopup={n.kind === 'master' ? 'true' : undefined}
-                    aria-expanded={n.kind === 'master' ? hoverCat === n.label : undefined}
-                    className={
-                      isPremium
-                        ? `h-full px-2 flex items-center gap-1.5 whitespace-nowrap font-serif italic text-[12px] tracking-[0.02em] transition-colors no-tap-highlight border-b-[3px] ${
-                            isActive
-                              ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)]'
-                              : 'border-transparent text-[#8E6520] hover:text-[color:var(--color-myntra-pink)]'
-                          }`
-                        : `h-full px-2 flex items-center whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.04em] transition-colors no-tap-highlight border-b-[3px] ${
-                            isActive
-                              ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)]'
-                              : 'border-transparent text-[color:var(--color-myntra-navy)] hover:text-[color:var(--color-myntra-pink)]'
-                          }`
-                    }
-                  >
-                    {isPremium && (
-                      <span aria-hidden className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--color-myntra-pink)]" />
-                    )}
-                    {n.label}
+                <div key={n.label} className="relative h-full" onMouseEnter={() => setHoverCat(n.label)} onMouseLeave={() => setHoverCat(null)}>
+                  <button onClick={onClick} aria-haspopup={n.kind === 'master' ? 'true' : undefined} aria-expanded={n.kind === 'master' ? hoverCat === n.label : undefined}
+                    className={isPremium ? `h-full px-2 flex items-center gap-1.5 whitespace-nowrap font-serif italic text-[12px] tracking-[0.02em] transition-colors no-tap-highlight border-b-[3px] ${isActive ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)]' : 'border-transparent text-[#8E6520] hover:text-[color:var(--color-myntra-pink)]'}` : `h-full px-2 flex items-center whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.04em] transition-colors no-tap-highlight border-b-[3px] ${isActive ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)]' : 'border-transparent text-[color:var(--color-myntra-navy)] hover:text-[color:var(--color-myntra-pink)]'}`}>
+                    {isPremium && <span aria-hidden className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--color-myntra-pink)]" />}{n.label}
                   </button>
                   {n.kind === 'master' && hoverCat === n.label && megaPanel(n.label)}
                 </div>
@@ -482,74 +303,52 @@ const Navbar: React.FC = () => {
             })}
           </nav>
 
-          {/* Search */}
-          <form onSubmit={onSearchSubmit} className="hidden md:block lg:hidden 2xl:block flex-1 min-w-[180px] max-w-[560px] relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[color:var(--color-myntra-ink-mute)] pointer-events-none" />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              onFocus={() => setSearchFocus(true)}
-              onBlur={() => setTimeout(() => setSearchFocus(false), 150)}
-              placeholder="Search for fabrics, sarees, lehengas and more"
-              className="input-search"
-              aria-label="Search catalogue"
-            />
-            {searchFocus && suggestions.length > 0 && (
-              <ul className="absolute top-full left-0 right-0 mt-1 bg-white border border-[color:var(--color-myntra-border-soft)] shadow-xl z-30 max-h-[360px] overflow-y-auto">
-                {suggestions.map(f => (
-                  <li key={f.id}>
-                    <button
-                      type="button"
-                      onMouseDown={() => { navigate({ name: 'product', id: f.id }); setSearch(''); }}
-                      className="w-full flex items-center gap-3 px-3 py-2 hover:bg-[color:var(--color-myntra-bg-soft)] text-left"
-                    >
-                      <img src={f.photo} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).src = f.image; }} className="w-10 h-10 object-cover" />
-                      <div className="min-w-0">
-                        <p className="text-[12px] font-bold truncate">{f.brand}</p>
-                        <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] truncate">{f.name}</p>
-                      </div>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+          {/* CENTERED SEARCH BAR — visible on tablet+ */}
+          <form onSubmit={onSearchSubmit} className="hidden md:flex flex-1 justify-center max-w-xl mx-auto relative">
+            <div className="relative w-full max-w-[480px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[color:var(--color-myntra-ink-mute)] pointer-events-none" />
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                onFocus={() => setSearchFocus(true)}
+                onBlur={() => setTimeout(() => setSearchFocus(false), 150)}
+                placeholder="Search for fabrics, sarees, lehengas and more"
+                className="input-search w-full"
+                aria-label="Search catalogue"
+              />
+              {searchFocus && suggestions.length > 0 && (
+                <ul className="absolute top-full left-0 right-0 mt-1 bg-white border border-[color:var(--color-myntra-border-soft)] shadow-xl z-30 max-h-[360px] overflow-y-auto">
+                  {suggestions.map(f => (
+                    <li key={f.id}>
+                      <button type="button" onMouseDown={() => { navigate({ name: 'product', id: f.id }); setSearch(''); }} className="w-full flex items-center gap-3 px-3 py-2 hover:bg-[color:var(--color-myntra-bg-soft)] text-left">
+                        <img src={f.photo} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).src = f.image; }} className="w-10 h-10 object-cover" />
+                        <div className="min-w-0">
+                          <p className="text-[12px] font-bold truncate">{f.brand}</p>
+                          <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] truncate">{f.name}</p>
+                        </div>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </form>
 
-          {/* Right icons. Guests are routed to sign-in/up via the Profile
-              dropdown (pink-dot indicator) — no separate text links, which
-              previously crowded and overlapped the search box on laptops. */}
-          <div className="flex items-center gap-1 md:gap-2 ml-auto md:ml-0 shrink-0">
-            {/* Mobile search trigger — phones have no inline search bar, so this
-                opens a full-screen search overlay (persistent access). */}
-            <button
-              className="md:hidden flex flex-col items-center px-2 py-1 group"
-              onClick={() => setSearchOpen(true)}
-              aria-label="Search"
-            >
+          {/* Right icons — profile + mobile search + hamburger only */}
+          <div className="flex items-center gap-0 md:gap-1 shrink-0 ml-auto">
+            {/* Mobile search trigger */}
+            <button className="md:hidden flex flex-col items-center px-2 py-1 group" onClick={() => setSearchOpen(true)} aria-label="Search">
               <Search className="w-5 h-5 text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]" />
             </button>
+
+            {/* Profile dropdown — now also shows wishlist + cart counts */}
             <div className="relative">
-              <button
-                onClick={() => setProfileOpen(v => !v)}
-                onMouseEnter={() => setProfileOpen(true)}
-                className="flex flex-col items-center px-2 md:px-3 py-1 group relative"
-                aria-label={user ? 'Profile' : 'Sign in or sign up'}
-                aria-expanded={profileOpen}
-                aria-haspopup="true"
-              >
+              <button onClick={() => setProfileOpen(v => !v)} onMouseEnter={() => setProfileOpen(true)} className="flex flex-col items-center px-2 md:px-3 py-1 group relative" aria-label={user ? 'Profile' : 'Sign in or sign up'} aria-expanded={profileOpen} aria-haspopup="true">
                 <User className="w-5 h-5 text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]" />
-                {!user && (
-                  <span
-                    aria-hidden
-                    className="absolute top-0.5 right-1 w-2 h-2 rounded-full bg-[color:var(--color-myntra-pink)] ring-2 ring-white"
-                  />
-                )}
+                {!user && <span aria-hidden className="absolute top-0.5 right-1 w-2 h-2 rounded-full bg-[color:var(--color-myntra-pink)] ring-2 ring-white" />}
               </button>
               {profileOpen && (
-                <div
-                  className="absolute top-full right-0 w-64 bg-white border-t-4 border-[color:var(--color-myntra-pink)] shadow-2xl pt-3 pb-2 z-50"
-                  onMouseLeave={() => setProfileOpen(false)}
-                >
+                <div className="absolute top-full right-0 w-64 bg-white border-t-4 border-[color:var(--color-myntra-pink)] shadow-2xl pt-3 pb-2 z-50" onMouseLeave={() => setProfileOpen(false)}>
                   <div className="px-4 pb-3 border-b border-[color:var(--color-myntra-border-soft)]">
                     {user ? (
                       <>
@@ -561,22 +360,10 @@ const Navbar: React.FC = () => {
                         <p className="text-[14px] font-extrabold">Welcome to Tresor</p>
                         <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mb-3">Access your bag, wishlist and orders.</p>
                         <div className="flex flex-col gap-2">
-                          <button
-                            onClick={() => { setProfileOpen(false); navigate({ name: 'login' }); }}
-                            className="w-full text-center bg-[color:var(--color-myntra-pink)] text-white text-[12px] font-bold uppercase tracking-[0.08em] py-2 rounded hover:bg-[color:var(--color-myntra-pink-dark)] transition-colors"
-                          >
-                            Login
-                          </button>
-                          <button
-                            onClick={() => { setProfileOpen(false); navigate({ name: 'register' }); }}
-                            className="w-full text-center bg-white border border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)] text-[12px] font-bold uppercase tracking-[0.08em] py-2 rounded hover:bg-[color:var(--color-myntra-pink)] hover:text-white transition-colors"
-                          >
-                            Sign Up
-                          </button>
+                          <button onClick={() => { setProfileOpen(false); navigate({ name: 'login' }); }} className="w-full text-center bg-[color:var(--color-myntra-pink)] text-white text-[12px] font-bold uppercase tracking-[0.08em] py-2 rounded hover:bg-[color:var(--color-myntra-pink-dark)] transition-colors">Login</button>
+                          <button onClick={() => { setProfileOpen(false); navigate({ name: 'register' }); }} className="w-full text-center bg-white border border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)] text-[12px] font-bold uppercase tracking-[0.08em] py-2 rounded hover:bg-[color:var(--color-myntra-pink)] hover:text-white transition-colors">Sign Up</button>
                         </div>
-                        <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] mt-3 leading-snug">
-                          Member benefits — saved bolts, faster checkout, bridal previews.
-                        </p>
+                        <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] mt-3 leading-snug">Member benefits — saved bolts, faster checkout, bridal previews.</p>
                       </>
                     )}
                   </div>
@@ -585,58 +372,30 @@ const Navbar: React.FC = () => {
                       <>
                         <li><button onClick={() => { setProfileOpen(false); navigate({ name: 'account', tab: 'profile' }); }} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)]">My Profile</button></li>
                         <li><button onClick={() => { setProfileOpen(false); navigate({ name: 'account', tab: 'orders' }); }} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)]">My Orders</button></li>
-                        <li><button onClick={() => { setProfileOpen(false); navigate({ name: 'account', tab: 'wishlist' }); }} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)]">Wishlist</button></li>
+                        <li><button onClick={() => { setProfileOpen(false); navigate({ name: 'account', tab: 'wishlist' }); }} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)] flex items-center gap-2"><Heart className="w-3.5 h-3.5" /> Wishlist {wishBadge > 0 && <span className="ml-auto text-[10px] bg-[color:var(--color-myntra-pink)] text-white rounded-full px-1.5 py-0.5">{wishBadge}</span>}</button></li>
                         <li><button onClick={() => { setProfileOpen(false); navigate({ name: 'account', tab: 'addresses' }); }} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)]">Addresses</button></li>
                       </>
                     )}
+                    {/* Cart link in profile dropdown */}
+                    <li><button onClick={() => { setProfileOpen(false); navigate({ name: 'cart' }); }} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)] flex items-center gap-2"><ShoppingBag className="w-3.5 h-3.5" /> My Bag {cartBadge > 0 && <span className="ml-auto text-[10px] bg-[color:var(--color-myntra-pink)] text-white rounded-full px-1.5 py-0.5">{cartBadge}</span>}</button></li>
                     {isAdmin && (
                       <li>
-                        <button
-                          onClick={() => { setProfileOpen(false); navigate({ name: 'admin' }); }}
-                          className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)] text-[color:var(--color-myntra-pink)] font-bold flex items-center gap-2"
-                        >
+                        <button onClick={() => { setProfileOpen(false); navigate({ name: 'admin' }); }} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)] text-[color:var(--color-myntra-pink)] font-bold flex items-center gap-2">
                           <LayoutDashboard className="w-4 h-4" /> Admin Console
                         </button>
                       </li>
                     )}
                     {user && (
                       <li className="border-t border-[color:var(--color-myntra-border-soft)] mt-1 pt-1">
-                        <button
-                          onClick={() => { setProfileOpen(false); logout(); navigate({ name: 'home' }); }}
-                          className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)] flex items-center gap-2 text-[color:var(--color-myntra-ink-soft)] hover:text-[color:var(--color-myntra-pink)]"
-                        >
-                          <LogOut className="w-4 h-4" /> Sign out
-                        </button>
+                        <button onClick={() => { setProfileOpen(false); logout(); navigate({ name: 'home' }); }} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)] flex items-center gap-2 text-[color:var(--color-myntra-ink-soft)] hover:text-[color:var(--color-myntra-pink)]"><LogOut className="w-4 h-4" /> Sign out</button>
                       </li>
                     )}
                   </ul>
                 </div>
               )}
             </div>
-            <button
-              onClick={() => navigate(user ? { name: 'account', tab: 'wishlist' } : { name: 'login' })}
-              className="flex flex-col items-center px-2 md:px-3 py-1 group relative"
-              aria-label="Wishlist"
-            >
-              <Heart className="w-5 h-5 text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]" />
-              {wishBadge > 0 && (
-                <span className="absolute top-0 right-1 bg-[color:var(--color-myntra-pink)] text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
-                  {wishBadge}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => navigate({ name: 'cart' })}
-              className="flex flex-col items-center px-3 py-1 group relative"
-              aria-label="Bag"
-            >
-              <ShoppingBag className="w-5 h-5 text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]" />
-              {cartBadge > 0 && (
-                <span className="absolute top-0 right-1 bg-[color:var(--color-myntra-pink)] text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
-                  {cartBadge}
-                </span>
-              )}
-            </button>
+
+            {/* Hamburger menu */}
             <button className="lg:hidden p-2" onClick={() => setMobileOpen(true)} aria-label="Open menu">
               <Menu className="w-6 h-6" />
             </button>
@@ -647,10 +406,7 @@ const Navbar: React.FC = () => {
         <div className="bg-[color:var(--color-myntra-navy)] text-white text-[12px] font-semibold tracking-wide py-1.5 overflow-hidden">
           <div className="marquee-track flex gap-12 whitespace-nowrap w-max">
             {[...OFFER_TICKER, ...OFFER_TICKER].map((t, i) => (
-              <span key={i} className="flex items-center gap-3 px-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-[color:var(--color-myntra-pink)]" />
-                {t}
-              </span>
+              <span key={i} className="flex items-center gap-3 px-3"><span className="w-1.5 h-1.5 rounded-full bg-[color:var(--color-myntra-pink)]" />{t}</span>
             ))}
           </div>
         </div>
