@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Pencil,
   Trash2,
@@ -9,7 +9,8 @@ import {
   Image as ImageIcon,
   Save,
   Upload,
-  Tag
+  Tag,
+  Camera
 } from 'lucide-react';
 import { productsApi } from '../../lib/firebase';
 import { CATEGORIES, formatINR } from '../../constants';
@@ -64,6 +65,26 @@ const parseCsvStrings = (raw: string): string[] =>
     .map(s => s.trim())
     .filter(Boolean);
 
+/** Convert a File to a base64 data URL. */
+const readFileAsBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+/** Strip undefined values so Firebase doesn't complain. */
+const cleanPayload = (obj: Record<string, unknown>): Record<string, unknown> => {
+  const cleaned: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      cleaned[key] = value;
+    }
+  }
+  return cleaned;
+};
+
 /* ───────────── draft model ───────────── */
 
 type ColorRow = { name: string; hex: string };
@@ -97,7 +118,7 @@ const emptyDraft = (): Draft => ({
   description: '',
   price: '',
   mrp: '',
-  photo: AVAILABLE_PHOTOS[0],
+  photo: '',
   gallery1: '',
   gallery2: '',
   gallery3: '',
@@ -153,7 +174,7 @@ const validateDraft = (d: Draft): DraftErrors => {
   if (!d.description.trim()) errs.description = 'Description is required';
   if (!d.category) errs.category = 'Pick a category';
   if (!d.origin.trim()) errs.origin = 'Origin is required';
-  if (!d.photo.trim()) errs.photo = 'Photo path is required';
+  if (!d.photo.trim()) errs.photo = 'Photo is required';
 
   const price = Number(d.price);
   if (!Number.isFinite(price) || price <= 0) errs.price = 'Price must be > 0';
@@ -185,7 +206,7 @@ const draftToFabric = (d: Draft, existing?: Fabric): Fabric => {
     price: Number(d.price),
     mrp: Number(d.mrp),
     photo,
-    photoGallery: gallery.length ? gallery : undefined,
+    photoGallery: gallery.length ? gallery : [],
     image: existing?.image ?? photo,
     gallery: existing?.gallery,
     category: (d.category || 'Fabrics') as Fabric['category'],
@@ -227,6 +248,121 @@ const Thumb: React.FC<{ photo: string; fallback?: string; alt: string; className
         if (fb !== src) setSrc(fb);
       }}
     />
+  );
+};
+
+/* ───────────── image upload component ───────────── */
+
+const ImageUpload: React.FC<{
+  value: string;
+  onChange: (value: string) => void;
+  label: string;
+  error?: string;
+  id: string;
+}> = ({ value, onChange, label, error, id }) => {
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const base64 = await readFileAsBase64(file);
+      onChange(base64);
+    } catch {
+      // silently fail
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[color:var(--color-myntra-ink-mute)] mb-1">
+        {label}
+      </label>
+      <div className="flex gap-2">
+        <input
+          className="input-box flex-1"
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder="/products/… or base64"
+        />
+        <div className="w-12 h-14 rounded border border-[color:var(--color-myntra-border-soft)] bg-[color:var(--color-myntra-bg-soft)] overflow-hidden shrink-0">
+          {value ? (
+            <Thumb photo={value} alt={label} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-[color:var(--color-myntra-ink-mute)]">
+              <ImageIcon className="w-4 h-4" />
+            </div>
+          )}
+        </div>
+      </div>
+      {error && <p className="text-[11px] font-semibold text-[#A12626]">{error}</p>}
+
+      {/* Upload options */}
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          ref={fileRef}
+          type="file"
+          id={`file-${id}`}
+          accept="image/*"
+          onChange={handleFile}
+          className="hidden"
+        />
+        <label
+          htmlFor={`file-${id}`}
+          className="btn-outline !py-1.5 !px-3 text-[12px] inline-flex items-center gap-1.5 cursor-pointer"
+        >
+          {uploading ? (
+            <>
+              <span className="w-3 h-3 border-2 border-[color:var(--color-myntra-navy)] border-t-transparent rounded-full animate-spin" />
+              Uploading…
+            </>
+          ) : (
+            <>
+              <Upload className="w-3.5 h-3.5" /> Upload Image
+            </>
+          )}
+        </label>
+
+        {/* Camera capture for mobile */}
+        <input
+          type="file"
+          id={`camera-${id}`}
+          accept="image/*"
+          capture="environment"
+          onChange={handleFile}
+          className="hidden"
+        />
+        <label
+          htmlFor={`camera-${id}`}
+          className="btn-outline !py-1.5 !px-3 text-[12px] inline-flex items-center gap-1.5 cursor-pointer sm:hidden"
+        >
+          <Camera className="w-3.5 h-3.5" /> Take Photo
+        </label>
+
+        {/* Quick-pick dropdown */}
+        <div className="relative flex-1 min-w-[140px]">
+          <select
+            className="input-box !py-1.5 text-[12px] w-full"
+            value=""
+            onChange={e => {
+              if (e.target.value) onChange(e.target.value);
+            }}
+          >
+            <option value="">Quick-pick…</option>
+            {AVAILABLE_PHOTOS.map(p => (
+              <option key={p} value={p}>
+                {p.split('/').pop()}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -447,71 +583,30 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
           <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--color-myntra-ink-mute)] mb-3">
             Media
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-start">
-            <div className="space-y-2">
-              <Field label="Main photo path" error={errors.photo}>
-                <input
-                  className="input-box"
-                  value={draft.photo}
-                  onChange={e => set('photo', e.target.value)}
-                  placeholder="/products/banarasi-purple-1.jpg"
+          <div className="space-y-4">
+            <ImageUpload
+              id="main"
+              label="Main Photo *"
+              value={draft.photo}
+              onChange={v => set('photo', v)}
+              error={errors.photo}
+            />
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {([
+                ['gallery1', draft.gallery1, 'Gallery 1'],
+                ['gallery2', draft.gallery2, 'Gallery 2'],
+                ['gallery3', draft.gallery3, 'Gallery 3']
+              ] as [keyof Draft, string, string][]).map(([k, v, label]) => (
+                <ImageUpload
+                  key={String(k)}
+                  id={String(k)}
+                  label={label}
+                  value={v}
+                  onChange={val => set(k, val as Draft[typeof k])}
                 />
-              </Field>
-              <div className="flex items-center gap-2">
-                <Upload className="w-3.5 h-3.5 text-[color:var(--color-myntra-ink-mute)]" />
-                <select
-                  className="input-box flex-1 !py-2 text-[12px]"
-                  value=""
-                  onChange={e => {
-                    if (e.target.value) set('photo', e.target.value);
-                  }}
-                >
-                  <option value="">Quick-pick from /public/products…</option>
-                  {AVAILABLE_PHOTOS.map(p => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              ))}
             </div>
-            <div className="w-24 h-32 rounded-md overflow-hidden border border-[color:var(--color-myntra-border-soft)] bg-[color:var(--color-myntra-bg-soft)] shrink-0">
-              <Thumb
-                photo={draft.photo}
-                alt="Main preview"
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {([
-              ['gallery1', draft.gallery1],
-              ['gallery2', draft.gallery2],
-              ['gallery3', draft.gallery3]
-            ] as [keyof Draft, string][]).map(([k, v], i) => (
-              <div key={String(k)}>
-                <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[color:var(--color-myntra-ink-mute)] mb-1">
-                  Gallery {i + 1}
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    className="input-box flex-1"
-                    value={v}
-                    onChange={e => set(k, e.target.value as Draft[typeof k])}
-                    placeholder="/products/…"
-                  />
-                  <div className="w-10 h-12 rounded border border-[color:var(--color-myntra-border-soft)] bg-[color:var(--color-myntra-bg-soft)] overflow-hidden shrink-0">
-                    {v ? (
-                      <Thumb photo={v} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[color:var(--color-myntra-ink-mute)]">
-                        <ImageIcon className="w-4 h-4" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
           </div>
         </section>
 
@@ -786,10 +881,11 @@ const AdminProducts: React.FC = () => {
     try {
       const record = draftToFabric(draft, editingExisting ?? undefined);
       const { id, ...payload } = record;
+      const cleaned = cleanPayload(payload as unknown as Record<string, unknown>);
       if (editingExisting) {
-        await productsApi.update(editingExisting.id, payload as unknown as Record<string, unknown>);
+        await productsApi.update(editingExisting.id, cleaned);
       } else {
-        await productsApi.create({ ...payload, id } as unknown as Record<string, unknown>);
+        await productsApi.create({ ...cleaned, id } as unknown as Record<string, unknown>);
       }
       setEditorOpen(false);
       setEditingExisting(null);
@@ -1115,7 +1211,7 @@ const AdminProducts: React.FC = () => {
 
 const Th: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => (
   <th
-    className={`text-left px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[color:var(--color-myntra-ink-mute)] ${
+    className={`text-left px-3 py-2.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--color-myntra-ink-mute)] ${
       className ?? ''
     }`}
   >
