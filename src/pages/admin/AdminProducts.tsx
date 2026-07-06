@@ -188,8 +188,8 @@ const draftToFabric = (d: Draft, existing?: Fabric): Fabric => {
     photoGallery: gallery.length ? gallery : undefined,
     image: existing?.image ?? photo,
     gallery: existing?.gallery,
-    category: (d.category || 'Silk') as Fabric['category'],
-    masterCategory: existing?.masterCategory ?? 'Fabrics',
+    category: (d.category || 'Fabrics') as Fabric['category'],
+    masterCategory: (d.category || 'Fabrics') as Fabric['masterCategory'],
     subCategory: existing?.subCategory,
     origin: d.origin.trim(),
     tags,
@@ -200,7 +200,7 @@ const draftToFabric = (d: Draft, existing?: Fabric): Fabric => {
     rating:
       d.rating !== '' && Number.isFinite(Number(d.rating)) ? Number(d.rating) : existing?.rating,
     reviewCount:
-      d.reviewCount !== '' && Number.isFinite(Number(d.reviewCount))
+      d.rating !== '' && Number.isFinite(Number(d.reviewCount))
         ? Number(d.reviewCount)
         : existing?.reviewCount
   };
@@ -234,18 +234,22 @@ const Thumb: React.FC<{ photo: string; fallback?: string; alt: string; className
 
 const categoryBadge = (cat: Fabric['category']): string => {
   switch (cat) {
-    case 'Silk':
-      return 'bg-[#FDEEF2] text-[#A2275A] border-[#F5C8D6]';
-    case 'Cotton':
+    case 'Fabrics':
       return 'bg-[#E8F2E8] text-[#2F6E2F] border-[#C9DFC9]';
-    case 'Wool':
-      return 'bg-[#F1E8DC] text-[#7A4F1F] border-[#DEC9AA]';
-    case 'Linen':
+    case 'Dyeable Fabrics':
       return 'bg-[#E8EEF6] text-[#274C8A] border-[#C4D2E8]';
-    case 'Mixed':
+    case 'Laces':
       return 'bg-[#F1ECF7] text-[#5C3A8E] border-[#D6C9E9]';
-    case 'Satin':
+    case 'Sarees':
+      return 'bg-[#FDEEF2] text-[#A2275A] border-[#F5C8D6]';
+    case 'Lehenga Cholis':
       return 'bg-[#FBF2E1] text-[#8B5A14] border-[#EFDDB5]';
+    case 'Anarkalis':
+      return 'bg-[#F1E8DC] text-[#7A4F1F] border-[#DEC9AA]';
+    case 'Western Wear':
+      return 'bg-[#E8E8E8] text-[#3A3A3A] border-[#D0D0D0]';
+    case 'Studios Prêt':
+      return 'bg-[#E0E0E0] text-[#4A4A4A] border-[#B8B8B8]';
     default:
       return 'bg-[#F3F3F3] text-[#444] border-[#E0E0E0]';
   }
@@ -862,7 +866,7 @@ const AdminProducts: React.FC = () => {
               <select
                 value={catFilter}
                 onChange={e => setCatFilter(e.target.value as CategoryFilter)}
-                className="input-box pl-9 pr-3 w-full sm:w-[170px]"
+                className="input-box pl-9 pr-3 w-full sm:w-[180px]"
               >
                 <option value="all">All categories</option>
                 {CATEGORIES.map(c => (
@@ -899,7 +903,7 @@ const AdminProducts: React.FC = () => {
                   <tr className="text-left">
                     <Th className="w-[80px]">Photo</Th>
                     <Th>Name</Th>
-                    <Th className="w-[110px]">Category</Th>
+                    <Th className="w-[130px]">Category</Th>
                     <Th className="w-[140px]">Price</Th>
                     <Th className="w-[80px]">Stock</Th>
                     <Th className="w-[80px]">Rating</Th>
