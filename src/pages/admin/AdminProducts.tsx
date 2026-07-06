@@ -10,7 +10,8 @@ import {
   Save,
   Upload,
   Tag,
-  Camera
+  Camera,
+  AlertTriangle
 } from 'lucide-react';
 import { productsApi } from '../../lib/firebase';
 import { CATEGORIES, formatINR } from '../../constants';
@@ -65,14 +66,49 @@ const parseCsvStrings = (raw: string): string[] =>
     .map(s => s.trim())
     .filter(Boolean);
 
-/** Convert a File to a base64 data URL. */
-const readFileAsBase64 = (file: File): Promise<string> =>
+/** Compress an image file via canvas resize to keep payload under 1MB. */
+const compressImage = (file: File, maxDim: number, quality: number): Promise<string> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+        if (width > height && width > maxDim) {
+          height = Math.round((height * maxDim) / width);
+          width = maxDim;
+        } else if (height > maxDim) {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Canvas not supported'));
+          return;
+        }
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = reader.result as string;
+    };
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+
+/** Estimate payload size in KB. */
+const payloadSizeKB = (payload: unknown): number => {
+  try {
+    return new Blob([JSON.stringify(payload)]).size / 1024;
+  } catch {
+    return 0;
+  }
+};
 
 /** Strip undefined values so Firebase doesn't complain. */
 const cleanPayload = (obj: Record<string, unknown>): Record<string, unknown> => {
@@ -165,6 +201,7 @@ interface DraftErrors {
   mrp?: string;
   stock?: string;
   photo?: string;
+  _general?: string;
 }
 
 const validateDraft = (d: Draft): DraftErrors => {
@@ -261,17 +298,24 @@ const ImageUpload: React.FC<{
   id: string;
 }> = ({ value, onChange, label, error, id }) => {
   const [uploading, setUploading] = useState(false);
+  const [uploadErr, setUploadErr] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
+    setUploadErr(null);
     try {
-      const base64 = await readFileAsBase64(file);
+      const base64 = await compressImage(file, 800, 0.8);
+      const sizeKB = new Blob([base64]).size / 1024;
+      if (sizeKB > 900) {
+        setUploadErr('Image still too large after compression. Try a smaller file.');
+        return;
+      }
       onChange(base64);
     } catch {
-      // silently fail
+      setUploadErr('Failed to process image. Try another file.');
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = '';
@@ -287,7 +331,7 @@ const ImageUpload: React.FC<{
         <input
           className="input-box flex-1"
           value={value}
-          onChange={e => onChange(e.target.value)}
+          onChange={e => { onChange(e.target.value); setUploadErr(null); }}
           placeholder="/products/… or base64"
         />
         <div className="w-12 h-14 rounded border border-[color:var(--color-myntra-border-soft)] bg-[color:var(--color-myntra-bg-soft)] overflow-hidden shrink-0">
@@ -301,6 +345,7 @@ const ImageUpload: React.FC<{
         </div>
       </div>
       {error && <p className="text-[11px] font-semibold text-[#A12626]">{error}</p>}
+      {uploadErr && <p className="text-[11px] font-semibold text-[#A12626]">{uploadErr}</p>}
 
       {/* Upload options */}
       <div className="flex flex-wrap items-center gap-2">
@@ -319,7 +364,7 @@ const ImageUpload: React.FC<{
           {uploading ? (
             <>
               <span className="w-3 h-3 border-2 border-[color:var(--color-myntra-navy)] border-t-transparent rounded-full animate-spin" />
-              Uploading…
+              Compressing…
             </>
           ) : (
             <>
@@ -452,6 +497,14 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
           <X className="w-5 h-5" />
         </button>
       </div>
+
+      {/* general error banner */}
+      {errors._general && (
+        <div className="mx-5 sm:mx-6 mt-4 flex items-start gap-2 rounded-md border border-[#F0C7C7] bg-[#FBE6E6] p-3 text-[#A12626]">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+          <p className="text-[12px] font-semibold leading-relaxed">{errors._general}</p>
+        </div>
+      )}
 
       <div className="px-5 sm:px-6 py-5 space-y-7">
         {/* Basics */}
@@ -807,16 +860,21 @@ const AdminProducts: React.FC = () => {
   const [rows, setRows] = useState<Fabric[]>([]);
   const [loading, setLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setFetchError(null);
     (async () => {
       try {
         const list = (await productsApi.list({ limit: 500 })) as unknown as Fabric[];
         if (!cancelled) setRows(list);
-      } catch {
-        if (!cancelled) setRows([]);
+      } catch (err) {
+        if (!cancelled) {
+          setRows([]);
+          setFetchError(err instanceof Error ? err.message : 'Failed to load products');
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -882,6 +940,11 @@ const AdminProducts: React.FC = () => {
       const record = draftToFabric(draft, editingExisting ?? undefined);
       const { id, ...payload } = record;
       const cleaned = cleanPayload(payload as unknown as Record<string, unknown>);
+      const sizeKB = payloadSizeKB(cleaned);
+      if (sizeKB > 950) {
+        setErrors(prev => ({ ...prev, _general: `Product data is ${Math.round(sizeKB)}KB — too large for Firestore (max ~950KB). Remove or shrink images and try again.` }));
+        return;
+      }
       if (editingExisting) {
         await productsApi.update(editingExisting.id, cleaned);
       } else {
@@ -892,7 +955,7 @@ const AdminProducts: React.FC = () => {
       setReloadKey(k => k + 1);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Save failed';
-      setErrors(prev => ({ ...prev, photo: message }));
+      setErrors(prev => ({ ...prev, _general: message }));
     } finally {
       setSaving(false);
     }
@@ -926,6 +989,22 @@ const AdminProducts: React.FC = () => {
   /* ───────────── render ───────────── */
   return (
     <div className="space-y-4">
+      {/* fetch error banner */}
+      {fetchError && (
+        <div className="flex items-start gap-2 rounded-md border border-[#F0C7C7] bg-[#FBE6E6] p-3 text-[#A12626]">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-[12px] font-semibold leading-relaxed">{fetchError}</p>
+            <button
+              onClick={() => setReloadKey(k => k + 1)}
+              className="mt-1.5 text-[11px] font-bold underline"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* header strip */}
       <div className="bg-white border border-[color:var(--color-myntra-border-soft)] rounded-md p-4 sm:p-5">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
