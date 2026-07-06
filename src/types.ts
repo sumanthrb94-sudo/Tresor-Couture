@@ -5,7 +5,7 @@
 export type MasterCategory =
   | 'Fabrics'
   | 'Dyeable Fabrics'
-  | 'Lace'
+  | 'Laces'
   | 'Sarees'
   | 'Lehenga Cholis'
   | 'Anarkalis'
@@ -29,12 +29,14 @@ export interface Fabric {
   /** Guaranteed-loading SVG fabric swatch used as onError fallback. */
   image: string;
   gallery?: string[];
-  /** Fabric weave / base material — kept for filter facets and garment material. */
-  category: 'Silk' | 'Cotton' | 'Wool' | 'Linen' | 'Mixed' | 'Satin';
-  /** Top-level catalogue section. Drives the navbar + category strip. */
+  /** Product application category — drives admin category dropdown and storefront navigation. */
+  category: MasterCategory;
+  /** Top-level catalogue section. Mirrors category for storefront consistency. */
   masterCategory: MasterCategory;
   /** Secondary classification under a master category (e.g. "Half Sarees"). */
   subCategory?: string;
+  /** Fabric material type — informational only (e.g. Silk, Cotton, Wool). Not a category. */
+  materialType?: string;
   origin: string;
   tags: string[];
   /** Optional sticker (e.g. "Trending", "Bestseller", "New In"). */
