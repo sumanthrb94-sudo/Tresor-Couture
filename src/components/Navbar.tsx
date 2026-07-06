@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, ChevronDown, Heart, LayoutDashboard, LogIn, LogOut, Menu, Search, ShoppingBag, User, UserPlus, X } from 'lucide-react';
+import { ArrowLeft, ChevronDown, LogIn, LogOut, Menu, Search, UserPlus, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
 import { FABRICS, MASTER_CATEGORIES, MASTER_CATEGORY_TREE, OFFER_TICKER } from '../constants';
@@ -22,20 +21,13 @@ const NAV: NavEntry[] = [
 ];
 
 const Navbar: React.FC = () => {
-  /* Use itemCount (resolved items) for the badge — NOT cartItems.length.
-     cartItems.length counts raw entries including stale/deleted products
-     that failed to resolve, which is why the badge showed "2" when only
-     1 real item was in the cart. */
-  const { itemCount: cartCount } = useCart();
-  const { ids: wishIds } = useWishlist();
-  const { user, isAdmin, logout } = useAuth();
   const { navigate, route } = useRouter();
+  const { user, logout } = useAuth();
 
   const [search, setSearch] = useState('');
   const [searchFocus, setSearchFocus] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
   const [hoverCat, setHoverCat] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
 
@@ -44,9 +36,6 @@ const Navbar: React.FC = () => {
     if (!mobileOpen) setMobileExpanded(null);
     return () => { document.body.style.overflow = ''; };
   }, [mobileOpen]);
-
-  const cartBadge = Math.min(cartCount, 99);
-  const wishBadge = Math.min(wishIds.length, 99);
 
   // Live catalogue for search
   const [catalog, setCatalog] = useState<Fabric[] | null>(null);
@@ -183,7 +172,7 @@ const Navbar: React.FC = () => {
                 ))}
               </ul>
             ) : search.trim() ? (
-              <button type="button" onClick={() => { navigate({ name: 'search', q: search.trim() }); setSearch(''); setSearchOpen(false); }} className="w-full text-left px-4 py-3 text-[14px] font-semibold text-[color:var(--color-myntra-pink)]">Search for “{search.trim()}”</button>
+              <button type="button" onClick={() => { navigate({ name: 'search', q: search.trim() }); setSearch(''); setSearchOpen(false); }} className="w-full text-left px-4 py-3 text-[14px] font-semibold text-[color:var(--color-myntra-pink)]">Search for "{search.trim()}"</button>
             ) : (
               <div className="px-4 py-4">
                 <p className="text-[11px] uppercase tracking-[0.14em] font-bold text-[color:var(--color-myntra-ink-mute)] mb-3">Popular</p>
@@ -274,8 +263,13 @@ const Navbar: React.FC = () => {
   return (
     <>
       <header className="fixed top-0 left-0 w-full z-50 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
-        {/* Top tier — logo, centered search, minimal right icons */}
+        {/* Top tier — hamburger, logo, centered search, search icon */}
         <div className="h-16 md:h-20 px-4 md:px-6 lg:px-6 xl:px-10 flex items-center gap-3 md:gap-4">
+          {/* Hamburger — left of logo (mobile only) */}
+          <button className="lg:hidden p-2 -ml-2" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+            <Menu className="w-6 h-6" />
+          </button>
+
           {/* Logo */}
           <button onClick={() => navigate({ name: 'home' })} className="flex items-center gap-2 md:gap-2.5 shrink-0 no-tap-highlight" aria-label="Tresor Couture — Home">
             <img src="/branding/tc-emblem.png" alt="" aria-hidden="true" className="h-10 md:h-12 w-auto select-none object-contain" loading="eager" draggable={false} />
@@ -334,70 +328,10 @@ const Navbar: React.FC = () => {
             </div>
           </form>
 
-          {/* Right icons — profile + mobile search + hamburger only */}
-          <div className="flex items-center gap-0 md:gap-1 shrink-0 ml-auto">
-            {/* Mobile search trigger */}
-            <button className="md:hidden flex flex-col items-center px-2 py-1 group" onClick={() => setSearchOpen(true)} aria-label="Search">
+          {/* Right side — search icon only (mobile) */}
+          <div className="flex items-center shrink-0 ml-auto">
+            <button className="md:hidden flex items-center px-2 py-1 group" onClick={() => setSearchOpen(true)} aria-label="Search">
               <Search className="w-5 h-5 text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]" />
-            </button>
-
-            {/* Profile dropdown — now also shows wishlist + cart counts */}
-            <div className="relative">
-              <button onClick={() => setProfileOpen(v => !v)} onMouseEnter={() => setProfileOpen(true)} className="flex flex-col items-center px-2 md:px-3 py-1 group relative" aria-label={user ? 'Profile' : 'Sign in or sign up'} aria-expanded={profileOpen} aria-haspopup="true">
-                <User className="w-5 h-5 text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]" />
-                {!user && <span aria-hidden className="absolute top-0.5 right-1 w-2 h-2 rounded-full bg-[color:var(--color-myntra-pink)] ring-2 ring-white" />}
-              </button>
-              {profileOpen && (
-                <div className="absolute top-full right-0 w-64 bg-white border-t-4 border-[color:var(--color-myntra-pink)] shadow-2xl pt-3 pb-2 z-50" onMouseLeave={() => setProfileOpen(false)}>
-                  <div className="px-4 pb-3 border-b border-[color:var(--color-myntra-border-soft)]">
-                    {user ? (
-                      <>
-                        <p className="text-[14px] font-extrabold truncate">Hello, {user.fullName.split(' ')[0]}</p>
-                        <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] truncate">{user.email}</p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="text-[14px] font-extrabold">Welcome to Tresor</p>
-                        <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mb-3">Access your bag, wishlist and orders.</p>
-                        <div className="flex flex-col gap-2">
-                          <button onClick={() => { setProfileOpen(false); navigate({ name: 'login' }); }} className="w-full text-center bg-[color:var(--color-myntra-pink)] text-white text-[12px] font-bold uppercase tracking-[0.08em] py-2 rounded hover:bg-[color:var(--color-myntra-pink-dark)] transition-colors">Login</button>
-                          <button onClick={() => { setProfileOpen(false); navigate({ name: 'register' }); }} className="w-full text-center bg-white border border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)] text-[12px] font-bold uppercase tracking-[0.08em] py-2 rounded hover:bg-[color:var(--color-myntra-pink)] hover:text-white transition-colors">Sign Up</button>
-                        </div>
-                        <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] mt-3 leading-snug">Member benefits — saved bolts, faster checkout, bridal previews.</p>
-                      </>
-                    )}
-                  </div>
-                  <ul className="py-1 text-[13px]">
-                    {user && (
-                      <>
-                        <li><button onClick={() => { setProfileOpen(false); navigate({ name: 'account', tab: 'profile' }); }} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)]">My Profile</button></li>
-                        <li><button onClick={() => { setProfileOpen(false); navigate({ name: 'account', tab: 'orders' }); }} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)]">My Orders</button></li>
-                        <li><button onClick={() => { setProfileOpen(false); navigate({ name: 'account', tab: 'wishlist' }); }} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)] flex items-center gap-2"><Heart className="w-3.5 h-3.5" /> Wishlist {wishBadge > 0 && <span className="ml-auto text-[10px] bg-[color:var(--color-myntra-pink)] text-white rounded-full px-1.5 py-0.5">{wishBadge}</span>}</button></li>
-                        <li><button onClick={() => { setProfileOpen(false); navigate({ name: 'account', tab: 'addresses' }); }} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)]">Addresses</button></li>
-                      </>
-                    )}
-                    {/* Cart link in profile dropdown */}
-                    <li><button onClick={() => { setProfileOpen(false); navigate({ name: 'cart' }); }} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)] flex items-center gap-2"><ShoppingBag className="w-3.5 h-3.5" /> My Bag {cartBadge > 0 && <span className="ml-auto text-[10px] bg-[color:var(--color-myntra-pink)] text-white rounded-full px-1.5 py-0.5">{cartBadge}</span>}</button></li>
-                    {isAdmin && (
-                      <li>
-                        <button onClick={() => { setProfileOpen(false); navigate({ name: 'admin' }); }} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)] text-[color:var(--color-myntra-pink)] font-bold flex items-center gap-2">
-                          <LayoutDashboard className="w-4 h-4" /> Admin Console
-                        </button>
-                      </li>
-                    )}
-                    {user && (
-                      <li className="border-t border-[color:var(--color-myntra-border-soft)] mt-1 pt-1">
-                        <button onClick={() => { setProfileOpen(false); logout(); navigate({ name: 'home' }); }} className="w-full text-left px-4 py-2 hover:bg-[color:var(--color-myntra-bg-soft)] flex items-center gap-2 text-[color:var(--color-myntra-ink-soft)] hover:text-[color:var(--color-myntra-pink)]"><LogOut className="w-4 h-4" /> Sign out</button>
-                      </li>
-                    )}
-                  </ul>
-                </div>
-              )}
-            </div>
-
-            {/* Hamburger menu */}
-            <button className="lg:hidden p-2" onClick={() => setMobileOpen(true)} aria-label="Open menu">
-              <Menu className="w-6 h-6" />
             </button>
           </div>
         </div>
