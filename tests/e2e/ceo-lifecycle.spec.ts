@@ -119,16 +119,23 @@ test.describe('CEO lifecycle — customer journey', () => {
     // Add to bag
     await addToBag(page);
 
-    // Go to checkout (logged in → click Continue, fill address, save, place order)
+    // Go to checkout (logged in → fill address, save, place order)
     await gotoHash(page, '#/checkout');
     await waitForSignedIn(page);
     await expect(page.getByRole('heading', { name: 'Checkout' })).toBeVisible({ timeout: 15_000 });
-    await page.click('button:has-text("Continue")');
-    await expect(page.getByPlaceholder(/10-digit mobile/i)).toBeVisible({ timeout: 15_000 });
+
+    // The checkout may boot directly into the address step when already signed in.
+    // Only click the intro Continue button if the address form is not yet visible.
+    const mobileInput = page.getByPlaceholder(/10-digit mobile/i);
+    const introContinue = page.locator('button', { hasText: /^Continue$/ });
+    if (await introContinue.isVisible().catch(() => false)) {
+      await introContinue.click();
+    }
+    await expect(mobileInput).toBeVisible({ timeout: 15_000 });
     await fillAddress(page);
-    await page.click('button:has-text("Save & Continue")');
+    await page.getByRole('button', { name: /^Save \& Continue$/ }).click();
     await expect(page.getByText(/Cash on Delivery/i)).toBeVisible({ timeout: 15_000 });
-    await page.click('button:has-text("Place Order")');
+    await page.getByRole('button', { name: /^Place Order$/ }).click();
 
     // Order confirmation
     await page.waitForURL(/#\/confirmation/, { timeout: 60_000 });
