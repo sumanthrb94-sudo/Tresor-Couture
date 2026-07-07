@@ -101,17 +101,6 @@ async function fillAddress(page: Page) {
 test.describe('CEO lifecycle — customer journey', () => {
   test('guest can browse, add to bag, register, place a COD order, and request a return', async ({ page }) => {
     test.setTimeout(120_000);
-    page.on('response', async response => {
-      const url = response.url();
-      if (url.includes('/api/orders/place')) {
-        try {
-          const body = await response.text();
-          console.log(`[network] ${response.status()} ${url}: ${body.slice(0, 500)}`);
-        } catch {
-          console.log(`[network] ${response.status()} ${url}: <could not read body>`);
-        }
-      }
-    });
     await gotoHash(page, '#/');
 
     // Browse storefront
