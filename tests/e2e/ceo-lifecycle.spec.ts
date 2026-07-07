@@ -37,9 +37,13 @@ test.beforeEach(({ page }) => {
 });
 
 async function gotoHash(page: Page, hash: string) {
-  // Hash-router SPA: always reload so the router boots with the correct hash,
-  // then wait for React to hydrate.
-  await page.goto(`${BASE_URL}/${hash}`, { waitUntil: 'domcontentloaded' });
+  // Hash-router SPA: load the bare origin first, then set the hash so the
+  // client router reliably picks up the route. A plain page.goto to a hash URL
+  // is flaky because Playwright may treat same-document hash changes as a
+  // no-op and the router can miss the initial hash.
+  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+  await page.evaluate(h => { window.location.hash = h; }, hash);
+  await page.waitForLoadState('domcontentloaded');
   await acceptCookies(page);
 }
 
