@@ -117,10 +117,10 @@ test.describe('CEO lifecycle — customer journey', () => {
     await waitForSignedIn(page);
     await expect(page.getByRole('heading', { name: 'Checkout' })).toBeVisible({ timeout: 15_000 });
     await page.click('button:has-text("Continue")');
-    await expect(page.getByRole('heading', { name: 'Delivery Address' })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByPlaceholder(/10-digit mobile/i)).toBeVisible({ timeout: 15_000 });
     await fillAddress(page);
     await page.click('button:has-text("Save & Continue")');
-    await expect(page.getByRole('heading', { name: 'Payment Method' })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/Cash on Delivery/i)).toBeVisible({ timeout: 15_000 });
     await page.click('button:has-text("Place Order")');
 
     // Order confirmation
