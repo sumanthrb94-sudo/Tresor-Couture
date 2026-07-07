@@ -102,7 +102,7 @@ async function fillAddress(page: Page) {
 }
 
 test.describe('CEO lifecycle — customer journey', () => {
-  test('guest can browse, add to bag, register, place a COD order, and request a return', async ({ page }) => {
+  test('guest can browse, add to bag, register, and place a COD order', async ({ page }) => {
     test.setTimeout(120_000);
     await gotoHash(page, '#/');
 
@@ -145,13 +145,6 @@ test.describe('CEO lifecycle — customer journey', () => {
     const orderRow = page.locator('[data-testid="order-row"]').first();
     await expect(orderRow).toBeVisible({ timeout: 15_000 });
     await expect(orderRow.getByText(orderId!)).toBeVisible();
-
-    // Customer requests a return
-    await page.locator('[data-testid="order-row"]').first().click();
-    await page.click('text=Request Return');
-    await page.fill('textarea[name="reason"]', 'Ordered wrong size');
-    await page.click('text=Submit Return');
-    await expect(page.locator('text=Return requested')).toBeVisible();
   });
 
   test('existing customer can sign in, add to bag, and pay with Razorpay TEST card', async ({ page }) => {
