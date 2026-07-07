@@ -102,7 +102,7 @@ const ConfirmationPage: React.FC<Props> = ({ orderId }) => {
   const etaLabel = eta.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
   // Short, human-friendly receipt hash for the hero — keeps the long Firestore
   // id off the page chrome while still being unique enough to read aloud.
-  const shortHash = `TC-${order.id.replace(/[^a-zA-Z0-9]/g, '').slice(-6) || order.id.slice(0, 6)}`;
+  const shortHash = `TC-${order.id.slice(-8).toUpperCase()}`;
 
   return (
     <main className="pt-[100px] md:pt-[112px] pb-12 md:pb-16 bg-[color:var(--color-myntra-bg-soft)] min-h-screen">
@@ -125,7 +125,7 @@ const ConfirmationPage: React.FC<Props> = ({ orderId }) => {
             Your atelier is on it.
           </h1>
           <p className="font-mono text-[12px] tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-3">
-            Receipt <span className="text-[color:var(--color-myntra-navy)] font-bold">{shortHash}</span>
+            Receipt <span data-testid="order-id" className="text-[color:var(--color-myntra-navy)] font-bold">{shortHash}</span>
           </p>
           <p className="text-[14px] text-[color:var(--color-myntra-ink-soft)] max-w-md mx-auto">
             Thank you{order.shippingAddress.fullName ? `, ${order.shippingAddress.fullName.split(' ')[0]}` : ''}. A confirmation has been emailed to{' '}

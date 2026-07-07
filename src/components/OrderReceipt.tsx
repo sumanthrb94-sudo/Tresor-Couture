@@ -22,7 +22,7 @@ const OrderReceipt: React.FC<Props> = ({ order }) => {
     dateStyle: 'medium',
     timeStyle: 'short'
   });
-  const shortHash = `TC-${order.id.replace(/[^a-zA-Z0-9]/g, '').slice(-6) || order.id.slice(0, 6)}`;
+  const shortHash = `TC-${order.id.slice(-8).toUpperCase()}`;
 
   return (
     <section className="receipt bg-white border border-[color:var(--color-myntra-border-soft)] print:border-0">
