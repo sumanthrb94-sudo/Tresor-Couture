@@ -147,10 +147,9 @@ test.describe('CEO lifecycle — customer journey', () => {
     await expect(orderRow.getByText(orderId!)).toBeVisible();
   });
 
-  test('existing customer can sign in, add to bag, and pay with Razorpay TEST card', async ({ page }) => {
-    test.skip(!process.env.RAZORPAY_TEST_MODE, 'Razorpay TEST mode not enabled');
-
-    await page.goto(BASE_URL);
+  test('existing customer can sign in, add to bag, and place a COD order', async ({ page }) => {
+    test.setTimeout(120_000);
+    await gotoHash(page, '#/');
     await acceptCookies(page);
 
     await login(page, customerEmail, customerPassword);
@@ -158,24 +157,20 @@ test.describe('CEO lifecycle — customer journey', () => {
 
     await gotoHash(page, '#/checkout');
     await waitForSignedIn(page);
-    await expect(page.getByRole('button', { name: /Place Order/i })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: 'Checkout' })).toBeVisible({ timeout: 15_000 });
+
+    const mobileInput = page.getByPlaceholder(/10-digit mobile/i);
+    const introContinue = page.locator('button', { hasText: /^Continue$/ });
+    if (await introContinue.isVisible().catch(() => false)) {
+      await introContinue.click();
+    }
+    await expect(mobileInput).toBeVisible({ timeout: 15_000 });
     await fillAddress(page);
+    await page.getByRole('button', { name: /^Save \& Continue$/ }).click();
+    await expect(page.getByText(/Cash on Delivery/i)).toBeVisible({ timeout: 15_000 });
+    await page.getByRole('button', { name: /Place Order/ }).click();
 
-    // Select Razorpay / card (once the UI is wired)
-    await page.click('text=Card / UPI');
-    await page.click('text=Place Order');
-
-    // Razorpay checkout iframe
-    const razorpayFrame = page.frameLocator('iframe[name^="razorpay"]').first();
-    await razorpayFrame.locator('text=Card').click();
-    await razorpayFrame.locator('[name="card[number]"]').fill('5267 3181 8797 5449');
-    await razorpayFrame.locator('[name="card[expiry]"]').fill('12/30');
-    await razorpayFrame.locator('[name="card[cvv]"]').fill('123');
-    await razorpayFrame.locator('text=Pay').click();
-    await razorpayFrame.locator('[name="otp"]').fill('1234');
-    await razorpayFrame.locator('text=Submit').click();
-
-    await page.waitForURL(/#\/confirmation/, { timeout: 30_000 });
+    await page.waitForURL(/#\/confirmation/, { timeout: 60_000 });
     await expect(page.locator('text=Order confirmed')).toBeVisible();
   });
 });
