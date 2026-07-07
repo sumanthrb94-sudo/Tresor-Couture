@@ -131,7 +131,7 @@ test.describe('CEO lifecycle — customer journey', () => {
 
     // Order appears in account
     await gotoHash(page, '#/account');
-    await expect(page.locator(`text=${orderId}`)).toBeVisible();
+    await expect(page.locator('main').getByText(orderId!)).toBeVisible();
 
     // Customer requests a return
     await page.locator('[data-testid="order-row"]').first().click();
