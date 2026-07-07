@@ -40,8 +40,8 @@ async function acceptCookies(page: Page) {
 
 async function openFirstProduct(page: Page) {
   await page.goto(`${BASE_URL}/#/shop`);
-  await page.waitForSelector('[data-testid="product-card"]', { timeout: 15_000 });
-  await page.locator('[data-testid="product-card"]').first().click();
+  await page.waitForSelector('.card-product', { timeout: 15_000 });
+  await page.locator('.card-product').first().click();
   await page.waitForSelector('#pdp-add-to-bag', { timeout: 15_000 });
 }
 
@@ -57,9 +57,10 @@ async function registerAccount(page: Page) {
   await page.fill('input[name="fullName"]', 'CEO Test Customer');
   await page.fill('input[name="email"]', customerEmail);
   await page.fill('input[name="password"]', customerPassword);
+  await page.fill('input[name="confirmPassword"]', customerPassword);
   await page.fill('input[name="phone"]', '9876543210');
   await page.click('button[type="submit"]');
-  await page.waitForURL(/#\/(home|account)/, { timeout: 20_000 });
+  await page.waitForURL(/#\/(home|account|$)/, { timeout: 20_000 });
 }
 
 async function login(page: Page, email: string, password: string) {
@@ -67,7 +68,7 @@ async function login(page: Page, email: string, password: string) {
   await page.fill('input[name="email"]', email);
   await page.fill('input[name="password"]', password);
   await page.click('button[type="submit"]');
-  await page.waitForURL(/#\/(home|account|admin)/, { timeout: 20_000 });
+  await page.waitForURL(/#\/(home|account|admin|$)/, { timeout: 20_000 });
 }
 
 async function fillAddress(page: Page) {
@@ -86,21 +87,25 @@ test.describe('CEO lifecycle — customer journey', () => {
     await acceptCookies(page);
 
     // Browse storefront
-    await expect(page.locator('text=TRESOR')).toBeVisible();
-    await gotoHash(page, '#/shop');
-    await page.waitForSelector('[data-testid="product-card"]', { timeout: 15_000 });
+    await expect(page.getByRole('button', { name: 'Tresor Couture — Home' })).toBeVisible();
 
-    // Add to bag
-    await addToBag(page);
-
-    // Register
+    // Register first so the cart stays associated with the account
     await registerAccount(page);
 
-    // Go to checkout
+    // Add to bag
+    await gotoHash(page, '#/shop');
+    await page.waitForSelector('.card-product', { timeout: 15_000 });
+    await addToBag(page);
+
+    // Go to checkout (logged in → click Continue, fill address, save, place order)
     await gotoHash(page, '#/checkout');
-    await page.waitForSelector('text=Place Order', { timeout: 15_000 });
+    await page.waitForSelector('text=Checkout', { timeout: 15_000 });
+    await page.click('button:has-text("Continue")');
+    await page.waitForSelector('text=Delivery Address', { timeout: 15_000 });
     await fillAddress(page);
-    await page.click('text=Place Order');
+    await page.click('button:has-text("Save & Continue")');
+    await page.waitForSelector('text=Payment Method', { timeout: 15_000 });
+    await page.click('button:has-text("Place Order")');
 
     // Order confirmation
     await page.waitForURL(/#\/confirmation/, { timeout: 30_000 });

@@ -12,8 +12,9 @@ import { egressBlocked } from './_helpers';
  *     --project=chromium --headed --workers=1
  */
 
-// Slow the actions so a human can follow along in the visible browser.
-test.use({ launchOptions: { slowMo: 350 } });
+// SlowMo is useful for headed debugging; set via SLOWMO_MS env var.
+const SLOWMO = Number(process.env.SLOWMO_MS ?? 0);
+test.use({ launchOptions: { slowMo: SLOWMO } });
 
 const STAMP = Date.now();
 const TEST_EMAIL = `e2e+signup-${STAMP}@example.com`;

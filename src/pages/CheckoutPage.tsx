@@ -357,32 +357,32 @@ const CheckoutPage: React.FC = () => {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Full Name" field="fullName" cols={2} errors={errors} fieldRefs={fieldRefs}>
-                  {ref => <input ref={ref} className="input-box" value={address.fullName} onChange={e => setAddress(a => ({ ...a, fullName: e.target.value }))} />}
+                  {ref => <input ref={ref} name="fullName" className="input-box" value={address.fullName} onChange={e => setAddress(a => ({ ...a, fullName: e.target.value }))} />}
                 </Field>
                 <Field label="Email" field="email" errors={errors} fieldRefs={fieldRefs}>
-                  {ref => <input ref={ref} className="input-box" type="email" value={address.email} onChange={e => setAddress(a => ({ ...a, email: e.target.value }))} />}
+                  {ref => <input ref={ref} name="email" className="input-box" type="email" value={address.email} onChange={e => setAddress(a => ({ ...a, email: e.target.value }))} />}
                 </Field>
                 <Field label="Phone" field="phone" errors={errors} fieldRefs={fieldRefs}>
-                  {ref => <input ref={ref} className="input-box" type="tel" inputMode="tel" placeholder="10-digit mobile" value={address.phone} onChange={e => setAddress(a => ({ ...a, phone: e.target.value }))} />}
+                  {ref => <input ref={ref} name="phone" className="input-box" type="tel" inputMode="tel" placeholder="10-digit mobile" value={address.phone} onChange={e => setAddress(a => ({ ...a, phone: e.target.value }))} />}
                 </Field>
                 <Field label="Address Line 1" field="line1" cols={2} errors={errors} fieldRefs={fieldRefs}>
-                  {ref => <input ref={ref} className="input-box" value={address.line1} onChange={e => setAddress(a => ({ ...a, line1: e.target.value }))} />}
+                  {ref => <input ref={ref} name="line1" className="input-box" value={address.line1} onChange={e => setAddress(a => ({ ...a, line1: e.target.value }))} />}
                 </Field>
                 <div className="sm:col-span-2">
                   <label className="block text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-1.5">Address Line 2 (optional)</label>
-                  <input className="input-box" value={address.line2 ?? ''} onChange={e => setAddress(a => ({ ...a, line2: e.target.value }))} />
+                  <input name="line2" className="input-box" value={address.line2 ?? ''} onChange={e => setAddress(a => ({ ...a, line2: e.target.value }))} />
                 </div>
                 <Field label="City" field="city" errors={errors} fieldRefs={fieldRefs}>
-                  {ref => <input ref={ref} className="input-box" value={address.city} onChange={e => setAddress(a => ({ ...a, city: e.target.value }))} />}
+                  {ref => <input ref={ref} name="city" className="input-box" value={address.city} onChange={e => setAddress(a => ({ ...a, city: e.target.value }))} />}
                 </Field>
                 <Field label="State" field="state" errors={errors} fieldRefs={fieldRefs}>
-                  {ref => <input ref={ref} className="input-box" value={address.state} onChange={e => setAddress(a => ({ ...a, state: e.target.value }))} />}
+                  {ref => <input ref={ref} name="state" className="input-box" value={address.state} onChange={e => setAddress(a => ({ ...a, state: e.target.value }))} />}
                 </Field>
                 <Field label="PIN Code" field="postalCode" errors={errors} fieldRefs={fieldRefs}>
-                  {ref => <input ref={ref} className="input-box" inputMode="numeric" maxLength={6} placeholder="6-digit PIN" value={address.postalCode} onChange={e => setAddress(a => ({ ...a, postalCode: e.target.value.replace(/\D/g, '').slice(0, 6) }))} />}
+                  {ref => <input ref={ref} name="postalCode" className="input-box" inputMode="numeric" maxLength={6} placeholder="6-digit PIN" value={address.postalCode} onChange={e => setAddress(a => ({ ...a, postalCode: e.target.value.replace(/\D/g, '').slice(0, 6) }))} />}
                 </Field>
                 <Field label="Country" field="country" errors={errors} fieldRefs={fieldRefs}>
-                  {ref => <input ref={ref} className="input-box" value={address.country} onChange={e => setAddress(a => ({ ...a, country: e.target.value }))} />}
+                  {ref => <input ref={ref} name="country" className="input-box" value={address.country} onChange={e => setAddress(a => ({ ...a, country: e.target.value }))} />}
                 </Field>
               </div>
 
