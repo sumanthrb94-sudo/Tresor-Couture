@@ -29,8 +29,11 @@ const timestamp = Date.now();
 const customerEmail = `ceo-test-customer-${timestamp}@example.com`;
 const customerPassword = 'TresorTest123!';
 
-function gotoHash(page: Page, hash: string) {
-  return page.goto(`${BASE_URL}/${hash}`);
+async function gotoHash(page: Page, hash: string) {
+  // Hash-router SPA: always reload so the router boots with the correct hash,
+  // then wait for React to hydrate.
+  await page.goto(`${BASE_URL}/${hash}`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(300);
 }
 
 async function acceptCookies(page: Page) {
@@ -39,7 +42,7 @@ async function acceptCookies(page: Page) {
 }
 
 async function openFirstProduct(page: Page) {
-  await page.goto(`${BASE_URL}/#/shop`);
+  await gotoHash(page, '#/shop');
   await page.waitForSelector('.card-product', { timeout: 15_000 });
   await page.locator('.card-product').first().click();
   await page.waitForSelector('#pdp-add-to-bag', { timeout: 15_000 });
@@ -83,7 +86,7 @@ async function fillAddress(page: Page) {
 
 test.describe('CEO lifecycle — customer journey', () => {
   test('guest can browse, add to bag, register, and place a COD order', async ({ page }) => {
-    await page.goto(BASE_URL);
+    await gotoHash(page, '#/');
     await acceptCookies(page);
 
     // Browse storefront

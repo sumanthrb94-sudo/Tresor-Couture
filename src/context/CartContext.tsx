@@ -73,6 +73,14 @@ const sanitiseItems = (raw: unknown): CartItem[] => {
     .map(x => ({ fabricId: x.fabricId, quantity: x.quantity, color: x.color }));
 };
 
+/** Firestore rejects `undefined` values. Strip optional `color` when absent. */
+const firestoreCartItems = (items: CartItem[]): Record<string, unknown>[] =>
+  items.map(item => {
+    const clean: Record<string, unknown> = { fabricId: item.fabricId, quantity: item.quantity };
+    if (item.color !== undefined) clean.color = item.color;
+    return clean;
+  });
+
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [items, setItems] = useState<CartItem[]>(() => loadCart());
@@ -197,7 +205,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (JSON.stringify(merged) !== JSON.stringify(remoteItems)) {
             void setDoc(
               cartRef,
-              { uid, items: merged, updatedAt: new Date().toISOString() },
+              { uid, items: firestoreCartItems(merged), updatedAt: new Date().toISOString() },
               { merge: true }
             ).catch(() => { /* offline / rules — localStorage still works */ });
           }
@@ -237,7 +245,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const snapshot = pendingWriteRef.current ?? items;
       void setDoc(
         doc(db, 'carts', uid),
-        { uid, items: snapshot, updatedAt: new Date().toISOString() },
+        { uid, items: firestoreCartItems(snapshot), updatedAt: new Date().toISOString() },
         { merge: true }
       ).catch(() => { /* offline — localStorage keeps the bag */ });
       writeTimerRef.current = null;
