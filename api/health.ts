@@ -66,6 +66,7 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
   res.setHeader('Cache-Control', 'no-store, max-age=0');
   res.json({
     ok,
+    nodeVersion: process.version,
     timestamp: new Date().toISOString(),
     region: header(req, 'x-vercel-id')?.split(':')[0] || 'unknown',
     checks,
