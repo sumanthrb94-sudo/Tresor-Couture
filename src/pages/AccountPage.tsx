@@ -532,6 +532,7 @@ const OrdersTab: React.FC = () => {
         return (
           <article
             key={order.id}
+            data-testid="order-row"
             className="bg-white border border-[color:var(--color-myntra-border-soft)]"
           >
             <div className="p-4 flex gap-4">
