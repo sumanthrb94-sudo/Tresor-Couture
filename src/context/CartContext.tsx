@@ -95,6 +95,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const writeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingWriteRef = useRef<CartItem[] | null>(null);
   const currentUidRef = useRef<string | null>(null);
+  // Tracks whether we have ever observed a signed-in user in this session, so
+  // the sign-out cleanup only runs on an explicit transition to signed-out
+  // rather than on the initial mount when `user` is still null. Without this,
+  // the effect would wipe the guest cart loaded from localStorage on every
+  // page reload.
+  const hadUserRef = useRef(false);
 
   // Product details cache — cart items only store the fabricId, so we resolve
   // the rest from Firestore on demand. FABRICS (static seed) is the fallback
@@ -154,6 +160,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // signed-in branch; signing out tears it down and reverts to localStorage.
   useEffect(() => {
     if (!user) {
+      // Only clear state on an explicit sign-out transition. On initial mount
+      // `user` is null but the guest cart has already been loaded from
+      // localStorage — clearing here would wipe it on every page reload.
+      if (hadUserRef.current) {
+        setItems([]);
+        try { localStorage.removeItem(MERGE_FLAG_KEY); } catch { /* ignore */ }
+      }
+      hadUserRef.current = false;
       currentUidRef.current = null;
       remoteReadyRef.current = false;
       skipNextSyncRef.current = false;
@@ -162,16 +176,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         writeTimerRef.current = null;
       }
       pendingWriteRef.current = null;
-      // Clear the previous user's bag from state so it doesn't leak to the
-      // next person on a shared device. Safe re: Firestore — remoteReadyRef is
-      // false so the debounced writer early-returns and won't echo this reset.
-      // The localStorage mirror then overwrites the guest bag with [].
-      setItems([]);
-      // Drop the merge marker so a future sign-in merges from a clean slate.
-      try { localStorage.removeItem(MERGE_FLAG_KEY); } catch { /* ignore */ }
       return;
     }
 
+    hadUserRef.current = true;
     const uid = user.id;
     currentUidRef.current = uid;
     remoteReadyRef.current = false;

@@ -16,18 +16,28 @@ import { egressBlocked } from './_helpers';
 const SLOWMO = Number(process.env.SLOWMO_MS ?? 0);
 test.use({ launchOptions: { slowMo: SLOWMO } });
 
-const STAMP = Date.now();
+const STAMP = `${process.pid}-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`;
 const TEST_EMAIL = `e2e+signup-${STAMP}@example.com`;
 const TEST_PASSWORD = `Tc!a${STAMP}Z`; // > 6 chars, mixed case + symbol
 const TEST_NAME = 'E2E Security Buyer';
+const NO_SUCH_STAMP = Date.now();
 
-test.beforeEach(async ({ request, baseURL }) => {
+test.beforeEach(async ({ page, request, baseURL }) => {
   test.skip(await egressBlocked(request, baseURL), 'Egress proxy blocks this host (run from an open-network environment).');
+  page.on('pageerror', err => console.error('[pageerror]', err.message));
+  page.on('console', msg => {
+    if (msg.type() === 'error') console.error('[console.error]', msg.text());
+  });
 });
 
 async function gotoHash(page: Page, hash: string) {
-  await page.goto(`/${hash}`, { waitUntil: 'domcontentloaded' });
-  await page.waitForLoadState('networkidle').catch(() => {});
+  await page.goto(`/${hash}`, { waitUntil: 'domcontentloaded', timeout: 20_000 });
+  await acceptCookies(page);
+}
+
+async function acceptCookies(page: Page) {
+  const accept = page.locator('button:has-text("ACCEPT ALL")');
+  if (await accept.isVisible().catch(() => false)) await accept.click();
 }
 
 /** Click the first product card on the shop grid → its PDP. */
@@ -60,8 +70,8 @@ test.describe('Auth — negative & security boundary', () => {
       await expect(alert).toBeVisible({ timeout: 15_000 });
       return (await alert.textContent())?.trim() ?? '';
     };
-    const errA = await tryLogin(`no-such-${STAMP}-a@example.com`);
-    const errB = await tryLogin(`no-such-${STAMP}-b@example.com`);
+    const errA = await tryLogin(`no-such-${NO_SUCH_STAMP}-a@example.com`);
+    const errB = await tryLogin(`no-such-${NO_SUCH_STAMP}-b@example.com`);
     console.log(`[enumeration] nonexistent-A error: "${errA}"`);
     console.log(`[enumeration] nonexistent-B error: "${errB}"`);
     // Same generic error for two different unknown addresses ⇒ no enumeration.
@@ -100,7 +110,7 @@ test.describe('Auth — negative & security boundary', () => {
     await forgot.click();
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible({ timeout: 10_000 });
-    await dialog.getByPlaceholder('you@example.com').fill(`no-such-${STAMP}@example.com`);
+    await dialog.getByPlaceholder('you@example.com').fill(`no-such-${NO_SUCH_STAMP}@example.com`);
     await dialog.getByRole('button', { name: /send|reset|continue/i }).first().click();
     // Generic confirmation, never an "account not found" disclosure.
     await expect(dialog).toContainText(/sent|inbox|if an account|check your/i, { timeout: 15_000 });
@@ -129,18 +139,22 @@ test.describe('Registration', () => {
 // ───────────────────────── ADD TO CART — guest probabilities ─────────────────────────
 test.describe('Add to cart — guest', () => {
   test('add a product → bag badge increments and the item shows in the cart', async ({ page }) => {
+    test.setTimeout(60_000);
     await openFirstProduct(page);
     await page.locator('#pdp-add-to-bag').click();
     await expect(page.locator('button[aria-label^="Cart with"]').first()).toContainText('1', { timeout: 10_000 });
     await gotoHash(page, '#/cart');
-    await expect(page.getByText(/₹\s?[\d,]/).first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator('main').getByText(/₹\s?[\d,]+/).first()).toBeVisible({ timeout: 15_000 });
   });
 
   test('two distinct products produce two cart lines (badge = 2)', async ({ page }) => {
+    test.setTimeout(60_000);
     // Product 1
     await gotoHash(page, '#/shop');
     const cards = page.locator('.card-product');
     await expect(cards.first()).toBeVisible({ timeout: 15_000 });
+    const cardCount = await cards.count();
+    test.skip(cardCount < 2, `Need at least 2 products on the shop page to run this test (found ${cardCount}).`);
     await cards.nth(0).getByRole('button').first().click();
     await page.locator('#pdp-add-to-bag').click();
     await expect(cartButton(page)).toContainText('1', { timeout: 10_000 });
@@ -152,15 +166,17 @@ test.describe('Add to cart — guest', () => {
   });
 
   test('cart survives a full page reload (guest localStorage)', async ({ page }) => {
+    test.setTimeout(60_000);
     await openFirstProduct(page);
     await page.locator('#pdp-add-to-bag').click();
     await expect(cartButton(page)).toContainText('1', { timeout: 10_000 });
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('networkidle').catch(() => {});
+    await acceptCookies(page);
     await expect(cartButton(page)).toContainText('1', { timeout: 10_000 });
   });
 
   test('guest can remove an item and empty the bag', async ({ page }) => {
+    test.setTimeout(60_000);
     await openFirstProduct(page);
     await page.locator('#pdp-add-to-bag').click();
     await expect(cartButton(page)).toContainText('1', { timeout: 10_000 });

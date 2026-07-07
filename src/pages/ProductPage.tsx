@@ -353,7 +353,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
               </button>
             </div>
 
-            {/* Delivery — 40-minute serviceability (location + pincode) */}
+            {/* Delivery — same-day serviceability (location + pincode) */}
             <div className="mb-6">
               <DeliveryChecker variant="card" />
             </div>
@@ -361,7 +361,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
             {/* Trust strip */}
             <div className="grid grid-cols-3 gap-3 mb-6">
               {[
-                { Icon: Zap, label: '40-min · Hyderabad' },
+                { Icon: Zap, label: 'Same-day · Hyderabad' },
                 { Icon: Truck, label: 'Free over ₹1,999' },
                 { Icon: ShieldCheck, label: '100% Authentic' }
               ].map(({ Icon, label }) => (

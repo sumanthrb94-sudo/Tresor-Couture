@@ -172,7 +172,7 @@ const CartPage: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4 lg:gap-6">
           <div className="space-y-3">
-            {/* 40-minute delivery serviceability */}
+            {/* Same-day delivery serviceability */}
             <DeliveryChecker variant="card" />
 
             {/* Coupon banner */}

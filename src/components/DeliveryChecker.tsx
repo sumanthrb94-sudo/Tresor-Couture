@@ -83,7 +83,7 @@ const DeliveryChecker: React.FC<Props> = ({ variant = 'card', initialPincode = '
     <div className={`${variant === 'card' ? 'border border-[color:var(--color-myntra-border-soft)] rounded-lg p-4 bg-white' : ''} ${className}`}>
       <p className="text-[12px] font-extrabold uppercase tracking-wider text-[color:var(--color-myntra-navy)] mb-2 inline-flex items-center gap-1.5">
         <Zap className="w-3.5 h-3.5 text-[color:var(--color-myntra-pink)]" />
-        {DELIVERY_PROMISE_MINUTES}-minute delivery · Hyderabad
+        Express same-day delivery · Hyderabad
       </p>
 
       <div className="flex flex-col sm:flex-row gap-2">
@@ -112,7 +112,7 @@ const DeliveryChecker: React.FC<Props> = ({ variant = 'card', initialPincode = '
         <p className="mt-2.5 inline-flex items-start gap-1.5 text-[13px] font-semibold text-[color:var(--color-myntra-green)]">
           <Zap className="w-4 h-4 mt-0.5 shrink-0" />
           <span>
-            Yes — {DELIVERY_PROMISE_MINUTES}-minute delivery available here
+            Yes — same-day delivery available here
             {result?.via === 'radius' && typeof result.distanceKm === 'number'
               ? ` (≈${result.distanceKm.toFixed(1)} km from our hub)`
               : ''}.
