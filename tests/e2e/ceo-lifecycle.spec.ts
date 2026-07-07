@@ -56,7 +56,10 @@ async function openFirstProduct(page: Page) {
   await gotoHash(page, '#/shop');
   const card = page.locator('.card-product').first();
   await expect(card).toBeVisible({ timeout: 15_000 });
-  await card.getByRole('button').first().click();
+  // Click the main card button (the wishlist heart is a separate button inside
+  // the card). Wait for the product route to settle before looking for PDP UI.
+  await card.locator('button').first().click();
+  await page.waitForURL(/#\/product\//, { timeout: 15_000 });
   await expect(page.locator('#pdp-add-to-bag')).toBeVisible({ timeout: 15_000 });
 }
 
