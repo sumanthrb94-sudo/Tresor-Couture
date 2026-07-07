@@ -37,9 +37,16 @@ test.beforeEach(({ page }) => {
 });
 
 async function gotoHash(page: Page, hash: string) {
-  // Hash-router SPA: always reload so the router boots with the correct hash,
-  // then wait for React to hydrate.
-  await page.goto(`${BASE_URL}/${hash}`, { waitUntil: 'domcontentloaded' });
+  const current = new URL(page.url());
+  const base = new URL(BASE_URL);
+  // Avoid full reloads when we're already inside the SPA: just change the hash
+  // so auth/cart state survives and React handles the route switch.
+  if (current.origin === base.origin && current.pathname === base.pathname && current.hash !== hash) {
+    await page.evaluate<void, string>((h) => { window.location.hash = h; }, hash);
+    await page.waitForTimeout(300);
+  } else {
+    await page.goto(`${BASE_URL}/${hash}`, { waitUntil: 'domcontentloaded' });
+  }
   await acceptCookies(page);
 }
 
