@@ -814,11 +814,12 @@ const Field: React.FC<{
 interface ConfirmProps {
   name: string;
   busy: boolean;
+  error: string | null;
   onCancel: () => void;
   onDelete: () => void;
 }
 
-const Confirm: React.FC<ConfirmProps> = ({ name, busy, onCancel, onDelete }) => (
+const Confirm: React.FC<ConfirmProps> = ({ name, busy, error, onCancel, onDelete }) => (
   <div className="bg-white rounded-md max-w-sm w-full mx-auto p-5 shadow-2xl border border-[color:var(--color-myntra-border-soft)]">
     <h3 className="text-[15px] font-extrabold text-[color:var(--color-myntra-navy)] mb-1">
       Delete product?
@@ -827,7 +828,16 @@ const Confirm: React.FC<ConfirmProps> = ({ name, busy, onCancel, onDelete }) => 
       Delete <span className="font-semibold text-[color:var(--color-myntra-navy)]">{name}</span>?
       This cannot be undone.
     </p>
-    <div className="mt-5 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+
+    {/* Delete error banner */}
+    {error && (
+      <div className="mt-3 flex items-start gap-2 rounded-md border border-[#F0C7C7] bg-[#FBE6E6] p-2.5 text-[#A12626]">
+        <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+        <p className="text-[11px] font-semibold leading-relaxed">{error}</p>
+      </div>
+    )}
+
+    <div className="mt-4 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
       <button onClick={onCancel} disabled={busy} className="btn-outline !py-2">
         Cancel
       </button>
@@ -893,6 +903,7 @@ const AdminProducts: React.FC = () => {
 
   const [pendingDelete, setPendingDelete] = useState<Fabric | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   /* filter rows */
   const filtered = useMemo(() => {
@@ -964,13 +975,23 @@ const AdminProducts: React.FC = () => {
   const confirmDelete = async () => {
     if (!pendingDelete) return;
     setDeleting(true);
+    setDeleteError(null);
     try {
       await productsApi.remove(pendingDelete.id);
       setPendingDelete(null);
       setReloadKey(k => k + 1);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Delete failed — check Firestore rules';
+      setDeleteError(message);
     } finally {
       setDeleting(false);
     }
+  };
+
+  const cancelDelete = () => {
+    if (deleting) return;
+    setPendingDelete(null);
+    setDeleteError(null);
   };
 
   /* keyboard: ESC closes overlays */
@@ -979,7 +1000,7 @@ const AdminProducts: React.FC = () => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return;
       if (editorOpen) closeEditor();
-      else if (pendingDelete && !deleting) setPendingDelete(null);
+      else if (pendingDelete && !deleting) cancelDelete();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -1170,7 +1191,7 @@ const AdminProducts: React.FC = () => {
                               icon={<Pencil className="w-4 h-4" />}
                             />
                             <IconBtn
-                              onClick={() => setPendingDelete(f)}
+                              onClick={() => { setPendingDelete(f); setDeleteError(null); }}
                               label="Delete"
                               tone="danger"
                               icon={<Trash2 className="w-4 h-4" />}
@@ -1241,7 +1262,7 @@ const AdminProducts: React.FC = () => {
                           <Pencil className="w-3.5 h-3.5" /> Edit
                         </button>
                         <button
-                          onClick={() => setPendingDelete(f)}
+                          onClick={() => { setPendingDelete(f); setDeleteError(null); }}
                           className="!py-1 !px-2.5 text-[11px] rounded-md font-bold border border-[#F0C7C7] text-[#A12626] bg-white hover:bg-[#FBE6E6] inline-flex items-center gap-1"
                         >
                           <Trash2 className="w-3.5 h-3.5" /> Delete
@@ -1273,11 +1294,12 @@ const AdminProducts: React.FC = () => {
 
       {/* delete overlay */}
       {pendingDelete && (
-        <Overlay onClose={() => !deleting && setPendingDelete(null)} z={130}>
+        <Overlay onClose={() => !deleting && cancelDelete()} z={130}>
           <Confirm
             name={pendingDelete.name}
             busy={deleting}
-            onCancel={() => setPendingDelete(null)}
+            error={deleteError}
+            onCancel={cancelDelete}
             onDelete={confirmDelete}
           />
         </Overlay>
