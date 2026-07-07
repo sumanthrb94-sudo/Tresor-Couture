@@ -37,17 +37,14 @@ test.beforeEach(({ page }) => {
 });
 
 async function gotoHash(page: Page, hash: string) {
-  const current = new URL(page.url());
-  const base = new URL(BASE_URL);
-  // Avoid full reloads when we're already inside the SPA: just change the hash
-  // so auth/cart state survives and React handles the route switch.
-  if (current.origin === base.origin && current.pathname === base.pathname && current.hash !== hash) {
-    await page.evaluate<void, string>((h) => { window.location.hash = h; }, hash);
-    await page.waitForTimeout(300);
-  } else {
-    await page.goto(`${BASE_URL}/${hash}`, { waitUntil: 'domcontentloaded' });
-  }
+  // Hash-router SPA: always reload so the router boots with the correct hash,
+  // then wait for React to hydrate.
+  await page.goto(`${BASE_URL}/${hash}`, { waitUntil: 'domcontentloaded' });
   await acceptCookies(page);
+}
+
+async function waitForSignedIn(page: Page) {
+  await expect(page.locator('button[aria-label="Account menu"]').first()).toBeVisible({ timeout: 15_000 });
 }
 
 async function acceptCookies(page: Page) {
@@ -57,9 +54,10 @@ async function acceptCookies(page: Page) {
 
 async function openFirstProduct(page: Page) {
   await gotoHash(page, '#/shop');
-  await page.waitForSelector('.card-product', { timeout: 15_000 });
-  await page.locator('.card-product').first().click();
-  await page.waitForSelector('#pdp-add-to-bag', { timeout: 15_000 });
+  const card = page.locator('.card-product').first();
+  await expect(card).toBeVisible({ timeout: 15_000 });
+  await card.getByRole('button').first().click();
+  await expect(page.locator('#pdp-add-to-bag')).toBeVisible({ timeout: 15_000 });
 }
 
 async function addToBag(page: Page) {
@@ -78,6 +76,7 @@ async function registerAccount(page: Page) {
   await page.fill('input[name="phone"]', '9876543210');
   await page.click('button[type="submit"]');
   await page.waitForURL(/#\/(home|account|$)/, { timeout: 20_000 });
+  await waitForSignedIn(page);
 }
 
 async function login(page: Page, email: string, password: string) {
@@ -86,6 +85,7 @@ async function login(page: Page, email: string, password: string) {
   await page.fill('input[name="password"]', password);
   await page.click('button[type="submit"]');
   await page.waitForURL(/#\/(home|account|admin|$)/, { timeout: 20_000 });
+  await waitForSignedIn(page);
 }
 
 async function fillAddress(page: Page) {
@@ -110,18 +110,17 @@ test.describe('CEO lifecycle — customer journey', () => {
     await registerAccount(page);
 
     // Add to bag
-    await gotoHash(page, '#/shop');
-    await page.waitForSelector('.card-product', { timeout: 15_000 });
     await addToBag(page);
 
     // Go to checkout (logged in → click Continue, fill address, save, place order)
     await gotoHash(page, '#/checkout');
-    await page.waitForSelector('text=Checkout', { timeout: 15_000 });
+    await waitForSignedIn(page);
+    await expect(page.getByRole('heading', { name: 'Checkout' })).toBeVisible({ timeout: 15_000 });
     await page.click('button:has-text("Continue")');
-    await page.waitForSelector('text=Delivery Address', { timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: 'Delivery Address' })).toBeVisible({ timeout: 15_000 });
     await fillAddress(page);
     await page.click('button:has-text("Save & Continue")');
-    await page.waitForSelector('text=Payment Method', { timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: 'Payment Method' })).toBeVisible({ timeout: 15_000 });
     await page.click('button:has-text("Place Order")');
 
     // Order confirmation
@@ -152,7 +151,8 @@ test.describe('CEO lifecycle — customer journey', () => {
     await addToBag(page);
 
     await gotoHash(page, '#/checkout');
-    await page.waitForSelector('text=Place Order', { timeout: 15_000 });
+    await waitForSignedIn(page);
+    await expect(page.getByRole('button', { name: /Place Order/i })).toBeVisible({ timeout: 15_000 });
     await fillAddress(page);
 
     // Select Razorpay / card (once the UI is wired)
