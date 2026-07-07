@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Home, LayoutGrid, User, Heart, ShoppingBag, LogOut, MapPin, ChevronUp, X, UserCircle, PackageOpen } from 'lucide-react';
+import { Home, LayoutGrid, LayoutDashboard, User, Heart, ShoppingBag, LogOut, MapPin, ChevronUp, X, UserCircle, PackageOpen } from 'lucide-react';
 import { useRouter } from '../context/RouterContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -17,7 +17,7 @@ const BottomNav: React.FC = () => {
   const { route, navigate } = useRouter();
   const { itemCount: cartCount } = useCart();
   const { ids: wishIds } = useWishlist();
-  const { user, logout } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
   const [accountOpen, setAccountOpen] = useState(false);
 
   // Lock body scroll when account menu is open
@@ -136,7 +136,21 @@ const BottomNav: React.FC = () => {
                         Addresses
                       </button>
                     </li>
-                    <li className="pt-2 border-t border-[color:var(--color-myntra-border-soft)]">
+
+                    {/* Admin Console — only for admins */}
+                    {isAdmin && (
+                      <li className="pt-2 border-t border-[color:var(--color-myntra-border-soft)]">
+                        <button
+                          onClick={() => go({ name: 'admin' })}
+                          className="w-full flex items-center gap-4 px-3 py-3.5 rounded-lg text-[15px] font-semibold text-[color:var(--color-myntra-pink)] hover:bg-[color:var(--color-myntra-bg-soft)] transition-colors"
+                        >
+                          <LayoutDashboard className="w-5 h-5" />
+                          Admin Console
+                        </button>
+                      </li>
+                    )}
+
+                    <li className={`${isAdmin ? '' : 'pt-2 border-t border-[color:var(--color-myntra-border-soft)]'}`}>
                       <button
                         onClick={() => { closeAccount(); logout(); navigate({ name: 'home' }); }}
                         className="w-full flex items-center gap-4 px-3 py-3.5 rounded-lg text-[15px] font-semibold text-[#A12626] hover:bg-[#FBE6E6] transition-colors"
