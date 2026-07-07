@@ -131,6 +131,7 @@ test.describe('CEO lifecycle — customer journey', () => {
 
     // Order appears in account
     await gotoHash(page, '#/account');
+    await page.getByRole('button', { name: 'Orders' }).click();
     const orderRow = page.locator('[data-testid="order-row"]').first();
     await expect(orderRow).toBeVisible({ timeout: 15_000 });
     await expect(orderRow.getByText(orderId!)).toBeVisible();
