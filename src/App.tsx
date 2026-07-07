@@ -72,12 +72,12 @@ const Home: React.FC = () => {
   const { trending, newIn, bridal, summer } = useMemo(() => {
     const list = products ?? [];
     const byMaster = list.filter(f => f.masterCategory === 'Sarees' || f.masterCategory === 'Lehenga Cholis');
-    const byCategory = list.filter(f => f.category === 'Silk' || f.category === 'Satin');
+    const byCategory = list.filter(f => f.materialType === 'Silk' || f.materialType === 'Satin');
     return {
       trending: list.filter(f => f.sticker === 'Trending' || f.sticker === 'Bestseller').slice(0, 5),
       newIn:    list.filter(f => f.sticker === 'New In' || f.sticker === 'Limited').slice(0, 5),
       bridal:   (byMaster.length >= 3 ? byMaster : byCategory).slice(0, 5),
-      summer:   list.filter(f => f.category === 'Cotton' || f.category === 'Linen').slice(0, 5)
+      summer:   list.filter(f => f.materialType === 'Cotton' || f.materialType === 'Linen').slice(0, 5)
     };
   }, [products]);
 

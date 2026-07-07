@@ -25,7 +25,10 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { getDb, firebaseAdminConfigured } from '../_lib/firebaseAdmin.js';
 import { computeBreakdown } from '../_lib/pricing.js';
 import { getRazorpay, razorpayConfigured, verifyCheckoutSignature } from '../_lib/razorpay.js';
+import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
+import { validateCsrfToken } from '../_lib/csrf.js';
 import { readJson, type ApiRequest, type ApiResponse } from '../_lib/http.js';
+import { withSentry } from '../_lib/sentry.js';
 
 interface VerifyBody {
   razorpay_order_id?: string;
@@ -40,7 +43,13 @@ interface VerifyBody {
   };
 }
 
-export default async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
+async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
+  if (handleCorsPreflight(req, res, 'POST, OPTIONS')) return;
+  if (rejectDisallowedOrigin(req, res)) return;
+  if (!validateCsrfToken(req, res)) {
+    res.status(403).json({ error: 'csrf_token_invalid' });
+    return;
+  }
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'method_not_allowed' });
     return;
@@ -186,3 +195,5 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
     res.status(500).json({ error: 'verify_failed' });
   }
 }
+
+export default withSentry(handler);

@@ -67,55 +67,16 @@ service cloud.firestore {
     }
 
     /* ---------- orders ---------- */
-    // An order belongs to the signed-in user; admin sees everything.
-    // Creation must include the authenticated uid, an initial 'placed'
-    // status, and at least one item. Updates are admin-only (fulfilment).
-    // Two creation paths: (1) CLIENT (Web SDK) for COD/demo orders, subject to
-    // these rules — a client may NEVER self-assert paymentStatus 'paid'.
-    // (2) SERVER (Admin SDK, /api/payments/verify) for real Razorpay orders,
-    // which bypasses rules and is the only path that may set 'paid', record
-    // payment ids and decrement stock, all after signature + amount checks.
-    function validPaymentStatus() {
-      return !('paymentStatus' in request.resource.data)
-        || request.resource.data.paymentStatus in ['pending', 'cod', 'unpaid'];
-    }
-    // A client (Web SDK) order may set the money fields, so they must be
-    // INTERNALLY CONSISTENT — a tampered client can't post a real cart with a
-    // fake total, claim free shipping it didn't earn, or invent a discount
-    // without a coupon. Mirrors ordersApi.place() / pricing.ts:
-    //   taxable  = subtotal - couponDiscount
-    //   shipping = taxable >= 1999 ? 0 : 99   (FREE_SHIPPING_THRESHOLD/FLAT_SHIPPING)
-    //   total    = taxable + tax + shipping   (±1 for integer rounding)
-    // NOTE: this can't re-derive prices from the catalog (rules can't sum a
-    // line list), so a fully-fabricated low-price cart is still possible — the
-    // server path (Admin SDK) is the authoritative pricer for that residual.
-    function moneyConsistent() {
-      let d = request.resource.data;
-      let discount = ('couponDiscount' in d) ? d.couponDiscount : 0;
-      let net = d.subtotal - discount;
-      let taxable = net > 0 ? net : 0; // mirrors Math.max(0, subtotal - discount)
-      return ('subtotal' in d) && ('tax' in d) && ('shipping' in d)
-        && d.subtotal is number && d.tax is number && d.shipping is number
-        && d.total is number && discount is number
-        && d.subtotal >= 0 && d.tax >= 0 && discount >= 0
-        && (d.shipping == 0 || d.shipping == 99)
-        && (taxable >= 1999 ? d.shipping == 0 : d.shipping == 99)
-        && d.total >= taxable + d.tax + d.shipping - 1
-        && d.total <= taxable + d.tax + d.shipping + 1
-        // No coupon code on the order ⇒ no self-asserted discount.
-        && (('couponCode' in d) || discount == 0);
-    }
+    // Orders are created ONLY by the server (Admin SDK via /api/orders/place or
+    // /api/payments/verify). The Web SDK may NOT create orders: pricing, stock
+    // decrement, and payment-status transitions are all authoritative server
+    // operations. Server writes bypass Firestore rules, so `allow create: false`
+    // here blocks only client SDK attempts.
+    // Reads: user sees their own orders; admins see everything. Updates/deletes
+    // are admin-only (fulfilment / compliance).
     match /orders/{orderId} {
       allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
-      allow create: if isSignedIn()
-        && request.resource.data.userId == request.auth.uid
-        && request.resource.data.status == 'placed'
-        && request.resource.data.items is list
-        && request.resource.data.items.size() > 0
-        && request.resource.data.total is number
-        && request.resource.data.total >= 0
-        && moneyConsistent()
-        && validPaymentStatus();
+      allow create: if false;
       allow update, delete: if isAdmin();
     }
 

@@ -57,6 +57,7 @@ import {
   type QueryConstraint
 } from 'firebase/firestore';
 import { getBuiltinCoupon } from './coupon';
+import { apiPost } from './csrf';
 
 const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
 
@@ -89,18 +90,32 @@ function resolveAuthDomain(): string {
   return 'tresor-couture.firebaseapp.com';
 }
 
+const requiredFirebaseVars = [
+  'VITE_FIREBASE_API_KEY',
+  'VITE_FIREBASE_PROJECT_ID',
+  'VITE_FIREBASE_STORAGE_BUCKET',
+  'VITE_FIREBASE_MESSAGING_SENDER_ID',
+  'VITE_FIREBASE_APP_ID',
+] as const;
+
+const missing = requiredFirebaseVars.filter((key) => !env[key]?.trim());
+if (missing.length > 0) {
+  throw new Error(
+    `Missing required Firebase environment variables: ${missing.join(', ')}. ` +
+    `Copy .env.example to .env.local and fill in the Vite Firebase config.`
+  );
+}
+
 const firebaseConfig = {
-  apiKey:            env.VITE_FIREBASE_API_KEY            ?? 'AIzaSyAIct4PdHbOYaNCYpLdGxh1kDlukwwc_3M',
-  // Use the current origin as authDomain so the OAuth handler is same-origin
-  // (see resolveAuthDomain). This is what makes redirect sign-in work on
-  // mobile when the app is served from the custom domain tresorcouture.in.
+  apiKey:            env.VITE_FIREBASE_API_KEY!,
+  // authDomain is resolved safely below; do not hardcode it here.
   authDomain:        resolveAuthDomain(),
-  projectId:         env.VITE_FIREBASE_PROJECT_ID         ?? 'tresor-couture',
-  storageBucket:     env.VITE_FIREBASE_STORAGE_BUCKET     ?? 'tresor-couture.firebasestorage.app',
-  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID ?? '102541847727',
-  appId:             env.VITE_FIREBASE_APP_ID             ?? '1:102541847727:web:40ef34c4ec6d001c20f85a',
-  // GA4 (Google Analytics for Firebase). Public id; drives Firebase Analytics.
-  measurementId:     env.VITE_FIREBASE_MEASUREMENT_ID     ?? 'G-RT2P8RC6RN'
+  projectId:         env.VITE_FIREBASE_PROJECT_ID!,
+  storageBucket:     env.VITE_FIREBASE_STORAGE_BUCKET!,
+  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID!,
+  appId:             env.VITE_FIREBASE_APP_ID!,
+  // GA4 (Google Analytics for Firebase). Optional; omit if not configured.
+  measurementId:     env.VITE_FIREBASE_MEASUREMENT_ID?.trim() || undefined,
 };
 
 export const app: FirebaseApp = getApps()[0] ?? initializeApp(firebaseConfig);
@@ -138,21 +153,13 @@ function captureNewUser(user: FbUser, fullName?: string, phone?: string): void {
 
       // Marketing-list capture (email contact, or SMS-only contact for a
       // phone signup). The endpoint decides the identifier; we just pass both.
-      fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ email, phone: phoneNumber, name, source: 'signup' }),
-      }).catch(() => {});
+      apiPost('/api/contact', { email, phone: phoneNumber, name, source: 'signup' }).catch(() => {});
 
       // Welcome email only when we have an address to send it to.
       if (email) {
         const token = await user.getIdToken().catch(() => null);
         if (token) {
-          fetch('/api/email/welcome', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
-            body: JSON.stringify({ name }),
-          }).catch(() => {});
+          apiPost('/api/email/welcome', { name }, { authorization: `Bearer ${token}` }).catch(() => {});
         }
       }
     } catch { /* best-effort */ }
@@ -900,94 +907,32 @@ export const ordersApi = {
   }) => {
     if (!auth.currentUser) throw new Error('not_signed_in');
 
-    // ── Preferred path: server-authoritative pricing ───────────────────
-    // /api/orders/place re-reads prices from Firestore with the Admin SDK and
-    // writes the order, so a tampered client can never set its own total. It
-    // returns 503 when no service account is configured (today's state), and a
-    // non-JSON body when the function isn't deployed (e.g. `vite dev`) — in
-    // either case we fall back to the legacy client write below, which is
-    // itself constrained by the hardened `orders` Firestore rules.
-    let useFallback = false;
-    try {
-      const token = await auth.currentUser.getIdToken();
-      const res = await fetch('/api/orders/place', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          order: {
-            items: input.items,
-            couponCode: input.couponCode,
-            paymentMethod: input.paymentMethod,
-            shippingAddress: input.shippingAddress,
-          },
-        }),
-      });
-      const isJson = (res.headers.get('content-type') ?? '').includes('application/json');
-      if (res.status === 503 || !isJson) {
-        useFallback = true; // not configured / endpoint absent → legacy path
-      } else {
-        const data = (await res.json().catch(() => ({}))) as { orderId?: string; error?: string };
-        if (!res.ok || !data.orderId) throw new Error(data.error || 'place_failed');
-        const saved = (await getOne<DocumentData>('orders', data.orderId)) ?? {};
-        const placed = { id: data.orderId, ...saved } as DocumentData & { id: string };
-        await postPlaceNotify(placed);
-        return placed;
-      }
-    } catch (err) {
-      // Network/fetch failure (TypeError) → fall back so a transient /api blip
-      // never blocks checkout. An explicit server rejection (a plain Error we
-      // threw above) must surface to the user instead of silently writing.
-      if (err instanceof TypeError) useFallback = true;
-      else throw err;
-    }
-    if (!useFallback) throw new Error('place_failed');
+    // Server-authoritative path only. The endpoint recomputes pricing, decrements
+    // stock transactionally, and creates the order. There is no client-side
+    // fallback: a missing service account or a server misconfiguration must
+    // surface as a clear error rather than allowing a direct Firestore write.
+    const token = await auth.currentUser.getIdToken();
+    const res = await apiPost('/api/orders/place', {
+      order: {
+        items: input.items,
+        couponCode: input.couponCode,
+        paymentMethod: input.paymentMethod,
+        shippingAddress: input.shippingAddress,
+      },
+    }, { authorization: `Bearer ${token}` });
 
-    // ── Fallback: client-side pricing + direct write ───────────────────
-    // Pull current product data so totals reflect real prices.
-    const items = await Promise.all(input.items.map(async (it) => {
-      const p = await getOne<DocumentData>('products', it.fabricId);
-      if (!p) throw new Error(`unknown_product:${it.fabricId}`);
-      return { ...it, fabricSnapshot: p };
-    }));
-    const subtotal = items.reduce((s, it) => {
-      const p = (it.fabricSnapshot as unknown as { price: number }).price;
-      return s + p * it.quantity;
-    }, 0);
-    // Coupon lookup (public-read rule)
-    let couponDiscount = 0;
-    if (input.couponCode) {
-      const c = (await getOne<DocumentData>('coupons', input.couponCode.toUpperCase()))
-        ?? (getBuiltinCoupon(input.couponCode) as DocumentData | null);
-      const cd = c as { active?: boolean; kind?: 'percent' | 'flat'; value?: number; minSubtotal?: number; maxDiscount?: number; expiresAt?: string } | null;
-      const valid = cd && cd.active
-        && (!cd.expiresAt || new Date(cd.expiresAt).getTime() > Date.now())
-        && (!cd.minSubtotal || subtotal >= cd.minSubtotal);
-      if (valid && cd) {
-        couponDiscount = cd.kind === 'percent'
-          ? Math.min(cd.maxDiscount ?? Infinity, Math.round(subtotal * ((cd.value ?? 0) / 100)))
-          : (cd.value ?? 0);
-      }
+    const isJson = (res.headers.get('content-type') ?? '').includes('application/json');
+    if (res.status === 503 || !isJson) {
+      throw new Error('orders_not_configured');
     }
-    const taxable = Math.max(0, subtotal - couponDiscount);
-    const tax = Math.round(taxable * 0.05);
-    const shipping = taxable >= 1999 ? 0 : 99;
-    const total = taxable + tax + shipping;
-    const order = {
-      userId: auth.currentUser.uid,
-      items,
-      subtotal, tax, shipping, total,
-      shippingAddress: input.shippingAddress,
-      paymentMethod: input.paymentMethod,
-      // No online gateway wired yet — every order is unpaid until COD delivery
-      // (or, later, a Cashfree verification flips this to 'paid').
-      paymentStatus: 'pending' as const,
-      placedAt: new Date().toISOString(),
-      status: 'placed' as const,
-      ...(input.couponCode ? { couponCode: input.couponCode.toUpperCase(), couponDiscount } : {})
-    };
-    const ref = await addDoc(collection(db, 'orders'), order);
-    await postPlaceNotify({ id: ref.id, ...order });
-    return { id: ref.id, ...order };
+
+    const data = (await res.json().catch(() => ({}))) as { orderId?: string; error?: string };
+    if (!res.ok || !data.orderId) throw new Error(data.error || 'place_failed');
+
+    const saved = (await getOne<DocumentData>('orders', data.orderId)) ?? {};
+    const placed = { id: data.orderId, ...saved } as DocumentData & { id: string };
+    await postPlaceNotify(placed);
+    return placed;
   },
   setStatus: async (id: string, status: 'placed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded') => {
     await updateDoc(doc(db, 'orders', id), { status, updatedAt: serverTimestamp() });

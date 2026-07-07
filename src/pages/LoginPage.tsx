@@ -51,8 +51,9 @@ const LoginPage: React.FC = () => {
     setSubmitting(true);
     try {
       await login(email.trim(), password);
-      const isAdminLogin = email.trim().toLowerCase() === 'admin@tresor.test';
-      navigate(isAdminLogin ? { name: 'admin' } : { name: 'home' });
+      // Admins are routed by the global AdminGuard based on the `admin` custom
+      // claim; the login page must not special-case any email address.
+      navigate({ name: 'home' });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unable to sign in.';
       setError(message);

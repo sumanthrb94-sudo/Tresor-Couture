@@ -3,16 +3,13 @@
 // or the UI. Secrets live server-side; the client only passes its ID token.
 
 import { auth } from './firebase';
+import { apiPost } from './csrf';
 import type { Order } from '../types';
 
 /** Add an email to the Brevo marketing list (newsletter / signup capture). */
-export async function subscribeContact(email: string, source = 'site', name?: string): Promise<void> {
+export async function subscribeContact(email: string, source = 'site', name?: string, captchaToken?: string | null): Promise<void> {
   try {
-    await fetch('/api/contact', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ email, source, name }),
-    });
+    await apiPost('/api/contact', { email, source, name, captchaToken });
   } catch {
     /* best-effort */
   }
@@ -25,11 +22,7 @@ export async function sendOrderWhatsApp(order: Order, customerName?: string): Pr
     const u = auth.currentUser;
     if (!u) return;
     const token = await u.getIdToken();
-    await fetch('/api/whatsapp/notify', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
-      body: JSON.stringify({ order: { id: order.id, total: order.total, customerName } }),
-    });
+    await apiPost('/api/whatsapp/notify', { order: { id: order.id, total: order.total, customerName } }, { authorization: `Bearer ${token}` });
   } catch {
     /* best-effort */
   }
@@ -61,11 +54,7 @@ export async function sendOrderEmail(order: Order): Promise<void> {
       },
       name: u.displayName ?? undefined,
     };
-    await fetch('/api/email/order', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
-      body: JSON.stringify(payload),
-    });
+    await apiPost('/api/email/order', payload, { authorization: `Bearer ${token}` });
   } catch {
     /* best-effort */
   }

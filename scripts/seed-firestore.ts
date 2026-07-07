@@ -112,12 +112,20 @@ async function seedCoupons() {
   console.log(`✓ ${COUPONS.length} coupons seeded: ${COUPONS.map(c => c.code).join(', ')}`);
 }
 
-// The demo admin account the login page advertises. Admin access is gated by
-// the `admin: true` custom claim (see isAdminUser in src/lib/firebase.ts).
-const ADMIN_EMAIL = 'admin@tresor.test';
-const ADMIN_PASSWORD = 'tresor-admin';
+// Admin credentials are intentionally NOT hardcoded. Provide them via environment
+// variables when running the seed script, or use `npm run set-admin -- <email>`
+// after seeding to grant the admin claim to an existing user.
+const ADMIN_EMAIL = process.env.ADMIN_SEED_EMAIL?.trim() ?? '';
+const ADMIN_PASSWORD = process.env.ADMIN_SEED_PASSWORD?.trim() ?? '';
 
 async function seedAdmin() {
+  if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
+    console.log('▸ Skipping admin seed — ADMIN_SEED_EMAIL and ADMIN_SEED_PASSWORD are not set.');
+    console.log('  Use `ADMIN_SEED_EMAIL=... ADMIN_SEED_PASSWORD=... npm run seed` to create one,');
+    console.log('  or run `npm run set-admin -- <email>` to promote an existing user.');
+    return;
+  }
+
   console.log('▸ Ensuring admin user...');
   const auth = getAuth();
   let uid: string;
@@ -125,7 +133,7 @@ async function seedAdmin() {
     const existing = await auth.getUserByEmail(ADMIN_EMAIL);
     uid = existing.uid;
     await auth.updateUser(uid, { password: ADMIN_PASSWORD, emailVerified: true });
-    console.log(`  • admin user already existed (${uid}) — password reset to default.`);
+    console.log(`  • admin user already existed (${uid}) — password updated from env.`);
   } catch {
     const created = await auth.createUser({
       email: ADMIN_EMAIL,
@@ -148,7 +156,7 @@ async function seedAdmin() {
     },
     { merge: true }
   );
-  console.log(`✓ admin claim set for ${ADMIN_EMAIL} (sign in with ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}).`);
+  console.log(`✓ admin claim set for ${ADMIN_EMAIL}.`);
 }
 
 async function main() {

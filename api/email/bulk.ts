@@ -12,14 +12,11 @@
 // and Node ESM can't resolve extensionless relative imports, which crashes the
 // function at cold start. Helpers are inlined (mirrors api/email/welcome.ts).
 
+import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
+import { validateCsrfToken } from '../_lib/csrf.js';
+
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'tresor-couture';
 const BREVO = 'https://api.brevo.com/v3';
-
-function setCors(res: any): void {
-  res.setHeader('Access-Control-Allow-Origin', process.env.ALLOWED_ORIGIN || '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-}
 
 // Keyless admin-token verification (firebase-admin against Google public keys).
 let _adminAuth: any = null;
@@ -51,8 +48,11 @@ async function brevoGet(path: string, key: string): Promise<any> {
 }
 
 export default async function handler(req: any, res: any) {
-  setCors(res);
-  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (handleCorsPreflight(req, res, 'GET, POST, OPTIONS')) return;
+  if (rejectDisallowedOrigin(req, res)) return;
+  if (!validateCsrfToken(req, res)) {
+    return res.status(403).json({ error: 'csrf_token_invalid' });
+  }
 
   const admin = await verifyAdmin(req.headers['authorization']);
   if (!admin) return res.status(403).json({ error: 'forbidden' });

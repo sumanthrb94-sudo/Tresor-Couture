@@ -43,3 +43,8 @@ jobs:
             exit 1
           fi
           echo "OK — no server SDK/secret in dist/assets."
+
+      - name: Dependency audit (fail on high/critical)
+        run: npm audit --audit-level=high
+        # Moderate findings are transitive through firebase-admin and are tracked
+        # separately; only high/critical findings block the build.

@@ -3,17 +3,15 @@
  *
  * The browser used to compute the order total and write it straight to
  * Firestore, so a tampered client could place a real cart at a fake price.
- * This endpoint is the authoritative pricer for non-Razorpay (COD/unpaid)
- * orders: it verifies the buyer's Firebase ID token, RECOMPUTES every amount
- * from Firestore via the Admin SDK (the client total is ignored), and writes
- * the order. `userId` is taken from the verified token, never the body.
+ * This endpoint is now the ONLY path for creating orders: it verifies the
+ * buyer's Firebase ID token, RECOMPUTES every amount from Firestore via the
+ * Admin SDK (the client total is ignored), RESERVES inventory by decrementing
+ * product stock inside a Firestore transaction, and writes the order. `userId`
+ * is taken from the verified token, never the body.
  *
- * Gated strictly on WRITE credentials (a service account) — NOT the keyless
- * projectId path, which can verify tokens but can't write Firestore. When the
- * service account isn't set it returns 503 `orders_not_configured`, so the
- * client falls back to its legacy direct-write path (itself constrained by the
- * hardened `orders` Firestore rules). The endpoint therefore stays dormant and
- * harmless until FIREBASE_SERVICE_ACCOUNT is configured in Vercel.
+ * Gated strictly on WRITE credentials (a service account). When the service
+ * account isn't set it returns 503 `orders_not_configured` so the checkout UI
+ * can show a clear "not configured" message instead of a generic error.
  *
  * Body: { order: { items:[{fabricId,quantity,color?}], couponCode?,
  *                  paymentMethod, shippingAddress } }
@@ -25,14 +23,18 @@
 import { FieldValue } from 'firebase-admin/firestore';
 import { getDb } from '../_lib/firebaseAdmin.js';
 import { computeBreakdown } from '../_lib/pricing.js';
+import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
+import { validateCsrfToken } from '../_lib/csrf.js';
+import { rateLimited, rateLimitHeaders } from '../_lib/rateLimit.js';
 import { readJson, header, type ApiRequest, type ApiResponse } from '../_lib/http.js';
+import { withSentry } from '../_lib/sentry.js';
 
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'tresor-couture';
 
 /** True only when real WRITE credentials exist. The keyless projectId path can
  *  verify ID tokens but cannot write Firestore, so we must not advertise this
- *  endpoint as available on a keyless deploy — return 503 and let the client
- *  fall back instead of 500-ing mid-checkout. */
+ *  endpoint as available on a keyless deploy — return 503 instead of 500-ing
+ *  mid-checkout. */
 function canWriteOrders(): boolean {
   return Boolean(
     (process.env.FIREBASE_SERVICE_ACCOUNT && process.env.FIREBASE_SERVICE_ACCOUNT.trim()) ||
@@ -68,11 +70,33 @@ interface Body {
   };
 }
 
-export default async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
+function readStock(data: Record<string, unknown>): number {
+  const s = data.stock;
+  return typeof s === 'number' && isFinite(s) ? s : 0;
+}
+
+async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
+  if (handleCorsPreflight(req, res, 'POST, OPTIONS')) return;
+  if (rejectDisallowedOrigin(req, res)) return;
+  if (!validateCsrfToken(req, res)) {
+    res.status(403).json({ error: 'csrf_token_invalid' });
+    return;
+  }
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'method_not_allowed' });
     return;
   }
+
+  // 5 placement attempts per IP per minute prevents brute-force / cart probing.
+  const ORDER_RATE_LIMIT = { window: 60, max: 5 };
+  for (const [k, v] of Object.entries(rateLimitHeaders(ORDER_RATE_LIMIT))) {
+    res.setHeader(k, v);
+  }
+  if (await rateLimited(req, ORDER_RATE_LIMIT)) {
+    res.status(429).json({ error: 'rate_limited' });
+    return;
+  }
+
   if (!canWriteOrders()) {
     res.status(503).json({ error: 'orders_not_configured' });
     return;
@@ -80,8 +104,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
 
   // Build the credentialed app FIRST (so token verification reuses it), then auth.
   // A malformed/invalid service account makes getDb() throw at init — degrade to
-  // 503 (the client then falls back to its rule-constrained write) instead of a
-  // 500 FUNCTION_INVOCATION_FAILED, and log the real reason for the operator.
+  // 503 instead of a 500 FUNCTION_INVOCATION_FAILED, and log the real reason.
   let db: ReturnType<typeof getDb>;
   try {
     db = getDb();
@@ -121,9 +144,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
     // Self-contained line snapshots (mirror the client's fabricSnapshot so
     // order history / confirmation emails keep working) from authoritative data.
     const productRefs = breakdown.lines.map((l) => db.collection('products').doc(l.fabricId));
-    const snaps = await Promise.all(productRefs.map((ref) => ref.get()));
+    const productSnaps = await Promise.all(productRefs.map((ref) => ref.get()));
     const itemsForDoc = breakdown.lines.map((line, i) => {
-      const data = (snaps[i]?.data() ?? {}) as Record<string, unknown>;
+      const data = (productSnaps[i]?.data() ?? {}) as Record<string, unknown>;
       return {
         fabricId: line.fabricId,
         quantity: line.quantity,
@@ -132,26 +155,47 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
       };
     });
 
-    const orderRef = db.collection('orders').doc();
-    await orderRef.set({
-      userId: decoded.uid,
-      items: itemsForDoc,
-      subtotal: breakdown.subtotal,
-      tax: breakdown.tax,
-      shipping: breakdown.shipping,
-      total: breakdown.total,
-      shippingAddress: order.shippingAddress ?? {},
-      paymentMethod: order.paymentMethod ?? 'cod',
-      placedAt: new Date().toISOString(),
-      status: 'placed',
-      paymentStatus: 'pending',
-      ...(breakdown.couponCode
-        ? { couponCode: breakdown.couponCode, couponDiscount: breakdown.couponDiscount }
-        : {}),
-      createdAt: FieldValue.serverTimestamp(),
+    // Reserve inventory and create the order atomically. If stock is
+    // insufficient for any line, the transaction aborts and we return 409.
+    const orderId = await db.runTransaction(async (tx) => {
+      const snaps = await tx.getAll(...productRefs);
+      for (let i = 0; i < breakdown.lines.length; i++) {
+        const line = breakdown.lines[i];
+        const snap = snaps[i];
+        if (!snap.exists) throw new Error(`unknown_product:${line.fabricId}`);
+        const data = (snap.data() ?? {}) as Record<string, unknown>;
+        const current = readStock(data);
+        if (current < line.quantity) {
+          throw new Error(`insufficient_stock:${line.fabricId}`);
+        }
+        tx.update(snap.ref, {
+          stock: current - line.quantity,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+
+      const orderRef = db.collection('orders').doc();
+      tx.set(orderRef, {
+        userId: decoded.uid,
+        items: itemsForDoc,
+        subtotal: breakdown.subtotal,
+        tax: breakdown.tax,
+        shipping: breakdown.shipping,
+        total: breakdown.total,
+        shippingAddress: order.shippingAddress ?? {},
+        paymentMethod: order.paymentMethod ?? 'cod',
+        placedAt: new Date().toISOString(),
+        status: 'placed',
+        paymentStatus: 'pending',
+        ...(breakdown.couponCode
+          ? { couponCode: breakdown.couponCode, couponDiscount: breakdown.couponDiscount }
+          : {}),
+        createdAt: FieldValue.serverTimestamp(),
+      });
+      return orderRef.id;
     });
 
-    res.status(200).json({ ok: true, orderId: orderRef.id });
+    res.status(200).json({ ok: true, orderId });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'place_failed';
     if (
@@ -163,7 +207,14 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
       res.status(400).json({ error: message });
       return;
     }
+    if (message.startsWith('insufficient_stock:')) {
+      const fabricId = message.slice('insufficient_stock:'.length);
+      res.status(409).json({ error: message, fabricId });
+      return;
+    }
     console.error('[orders/place] failed', message);
     res.status(500).json({ error: 'place_failed' });
   }
 }
+
+export default withSentry(handler);

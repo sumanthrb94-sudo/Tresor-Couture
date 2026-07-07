@@ -5,13 +5,10 @@
 // SELF-CONTAINED: no relative imports (the project is ESM, which can't resolve
 // extensionless relative imports — that crashes the function at cold start).
 
-const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'tresor-couture';
+import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
+import { validateCsrfToken } from '../_lib/csrf.js';
 
-function setCors(res: any): void {
-  res.setHeader('Access-Control-Allow-Origin', process.env.ALLOWED_ORIGIN || '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-}
+const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'tresor-couture';
 
 function escapeHtml(s: string): string {
   return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
@@ -62,8 +59,11 @@ async function brevoSendEmail(args: {
 }
 
 export default async function handler(req: any, res: any) {
-  setCors(res);
-  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (handleCorsPreflight(req, res, 'POST, OPTIONS')) return;
+  if (rejectDisallowedOrigin(req, res)) return;
+  if (!validateCsrfToken(req, res)) {
+    return res.status(403).json({ error: 'csrf_token_invalid' });
+  }
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
 
   const decoded = await verifyIdToken(req.headers['authorization']);
@@ -83,7 +83,7 @@ export default async function handler(req: any, res: any) {
         <p style="font-size:15px;line-height:1.6;color:#3a3026;">You now have access to our ledger of heritage Indian weaves — Banarasi, Patola, Jamdani, Kanjivaram and more — shipped worldwide. As a member you get a saved wishlist, faster checkout, and early access to bridal drops.</p>
         <p style="font-size:15px;line-height:1.6;color:#3a3026;">Here is <b>10% off your first order</b> with code <b style="letter-spacing:.05em;">WELCOME10</b>.</p>
         <p style="margin-top:24px;"><a href="https://tresorcouture.in/#/shop" style="background:#7A1F2C;color:#fff;text-decoration:none;padding:12px 22px;border-radius:4px;font-family:Arial,sans-serif;font-size:14px;">Explore the collection</a></p>
-        <p style="font-size:12px;color:#8A7656;margin-top:28px;">Hand-woven heritage · 40-minute delivery across Hyderabad · free shipping over ₹1,999.</p>
+        <p style="font-size:12px;color:#8A7656;margin-top:28px;">Hand-woven heritage · free shipping over ₹1,999 · dispatched within 48 hours.</p>
       </div></body></html>`;
 
     await brevoSendEmail({

@@ -1101,7 +1101,7 @@ export const CATEGORY_TILES: { name: string; category: string; color: string }[]
 
 /* Offer ticker — looks like Myntra's sticky deals strip. */
 export const OFFER_TICKER: string[] = [
-  '⚡ 40-MINUTE DELIVERY IN HYDERABAD ON DESIGNER WEAR',
   'FREE SHIPPING ON ORDERS ABOVE ₹1,999',
-  'HAND-CUT IN INDIA · SHIPPED WORLDWIDE'
+  'HAND-CUT IN INDIA · SHIPPED WORLDWIDE',
+  'HERITAGE CRAFTSMANSHIP · MODERN ELEGANCE'
 ];

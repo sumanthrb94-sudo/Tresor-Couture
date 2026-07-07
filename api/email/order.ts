@@ -9,16 +9,10 @@
 //                  shippingAddress:{fullName,line1,line2?,city,state,postalCode} },
 //         name? }
 //
-// SELF-CONTAINED: no relative imports (the project is ESM, which can't resolve
-// extensionless relative imports — that crashes the function at cold start).
+import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
+import { validateCsrfToken } from '../_lib/csrf.js';
 
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'tresor-couture';
-
-function setCors(res: any): void {
-  res.setHeader('Access-Control-Allow-Origin', process.env.ALLOWED_ORIGIN || '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-}
 
 function rupee(n: number): string {
   return `₹${Number(n || 0).toLocaleString('en-IN')}`;
@@ -97,7 +91,7 @@ function renderEmail(order: any, customerName: string): { subject: string; html:
     </table>
     <p style="font-size:13px;color:#5D4E36;">Delivering to: ${addr}</p>
     <p style="font-size:13px;color:#5D4E36;">Payment: Cash on Delivery.</p>
-    <p style="font-size:12px;color:#8A7656;margin-top:24px;">Shipped within 48 hours · 40-minute delivery across Hyderabad.</p>
+    <p style="font-size:12px;color:#8A7656;margin-top:24px;">Dispatched within 48 hours · free shipping over ₹1,999.</p>
   </div></body></html>`;
 
   const text = `TRESOR COUTURE — Order confirmed\nOrder ${order.id}\nTotal: ${rupee(order.total)}\nDelivering to: ${addr}\nPayment: Cash on Delivery.\nThank you for your order.`;
@@ -105,8 +99,11 @@ function renderEmail(order: any, customerName: string): { subject: string; html:
 }
 
 export default async function handler(req: any, res: any) {
-  setCors(res);
-  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (handleCorsPreflight(req, res, 'POST, OPTIONS')) return;
+  if (rejectDisallowedOrigin(req, res)) return;
+  if (!validateCsrfToken(req, res)) {
+    return res.status(403).json({ error: 'csrf_token_invalid' });
+  }
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
 
   const decoded = await verifyIdToken(req.headers['authorization']);

@@ -18,7 +18,11 @@
 import { getDb, firebaseAdminConfigured } from '../_lib/firebaseAdmin.js';
 import { computeBreakdown } from '../_lib/pricing.js';
 import { getRazorpay, razorpayConfigured } from '../_lib/razorpay.js';
+import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
+import { validateCsrfToken } from '../_lib/csrf.js';
+import { rateLimited, rateLimitHeaders } from '../_lib/rateLimit.js';
 import { readJson, type ApiRequest, type ApiResponse } from '../_lib/http.js';
+import { withSentry } from '../_lib/sentry.js';
 
 interface Body {
   items?: { fabricId: string; quantity: number; color?: string }[];
@@ -26,9 +30,25 @@ interface Body {
   paymentMethod?: 'card' | 'upi' | 'cod';
 }
 
-export default async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
+async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
+  if (handleCorsPreflight(req, res, 'POST, OPTIONS')) return;
+  if (rejectDisallowedOrigin(req, res)) return;
+  if (!validateCsrfToken(req, res)) {
+    res.status(403).json({ error: 'csrf_token_invalid' });
+    return;
+  }
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'method_not_allowed' });
+    return;
+  }
+
+  // 10 Razorpay order creations per IP per minute.
+  const CREATE_ORDER_RATE_LIMIT = { window: 60, max: 10 };
+  for (const [k, v] of Object.entries(rateLimitHeaders(CREATE_ORDER_RATE_LIMIT))) {
+    res.setHeader(k, v);
+  }
+  if (await rateLimited(req, CREATE_ORDER_RATE_LIMIT)) {
+    res.status(429).json({ error: 'rate_limited' });
     return;
   }
 
@@ -112,3 +132,5 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
     res.status(500).json({ error: 'create_order_failed' });
   }
 }
+
+export default withSentry(handler);

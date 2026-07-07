@@ -124,7 +124,7 @@ const DeliveryChecker: React.FC<Props> = ({ variant = 'card', initialPincode = '
         <p className="mt-2.5 inline-flex items-start gap-1.5 text-[13px] text-[color:var(--color-myntra-ink-soft)]">
           <Truck className="w-4 h-4 mt-0.5 shrink-0 text-[color:var(--color-myntra-navy)]" />
           <span>
-            Not in our 40-minute zone yet — standard delivery applies
+            Outside our same-day zone — standard delivery applies
             <span className="hidden sm:inline"> (free over ₹1,999, else ₹99)</span>.
           </span>
         </p>

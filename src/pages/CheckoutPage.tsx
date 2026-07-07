@@ -280,7 +280,14 @@ const CheckoutPage: React.FC = () => {
       finishOrder(placed.id, address);
     } catch (err) {
       setPlacing(false);
-      setPlaceError(err instanceof Error ? err.message : 'Could not place your order. Please try again.');
+      const raw = err instanceof Error ? err.message : 'Could not place your order. Please try again.';
+      const friendly =
+        raw === 'orders_not_configured'
+          ? 'Checkout is not fully configured yet. Please try again in a moment or contact us for help.'
+          : raw.startsWith('insufficient_stock:')
+          ? 'One or more items in your bag just went out of stock. Please review your cart and try again.'
+          : raw;
+      setPlaceError(friendly);
     }
   };
 

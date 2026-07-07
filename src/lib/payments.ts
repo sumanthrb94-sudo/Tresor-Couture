@@ -16,6 +16,8 @@
  * The browser never decides the amount and never writes the paid order.
  */
 
+import { apiPost } from './csrf';
+
 const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
 
 /** PUBLIC key id. Safe to expose; the secret stays server-side. */
@@ -68,11 +70,7 @@ export async function createPaymentOrder(input: {
   couponCode?: string;
   paymentMethod: 'card' | 'upi' | 'cod';
 }): Promise<CreatedOrder> {
-  const res = await fetch('/api/payments/create-order', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(input),
-  });
+  const res = await apiPost('/api/payments/create-order', input);
   if (res.status === 503) throw new PaymentsNotConfiguredError();
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
   if (!res.ok) {
@@ -189,15 +187,11 @@ export async function verifyPayment(args: {
   success: RazorpaySuccess;
   order: OrderContext;
 }): Promise<{ orderId: string }> {
-  const res = await fetch('/api/payments/verify', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      razorpay_order_id: args.success.razorpay_order_id,
-      razorpay_payment_id: args.success.razorpay_payment_id,
-      razorpay_signature: args.success.razorpay_signature,
-      order: args.order,
-    }),
+  const res = await apiPost('/api/payments/verify', {
+    razorpay_order_id: args.success.razorpay_order_id,
+    razorpay_payment_id: args.success.razorpay_payment_id,
+    razorpay_signature: args.success.razorpay_signature,
+    order: args.order,
   });
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
   if (!res.ok || !data.ok) {

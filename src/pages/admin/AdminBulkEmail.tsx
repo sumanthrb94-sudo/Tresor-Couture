@@ -19,7 +19,7 @@ const STARTER_HTML = `<!doctype html>
     <p style="font-size:16px;">Hello,</p>
     <p style="font-size:15px;line-height:1.6;color:#3a3026;">Write your message here…</p>
     <p style="margin-top:24px;"><a href="https://tresorcouture.in/#/shop" style="background:#7A1F2C;color:#fff;text-decoration:none;padding:12px 22px;border-radius:4px;font-family:Arial,sans-serif;font-size:14px;">Shop the collection</a></p>
-    <p style="font-size:12px;color:#8A7656;margin-top:28px;">Hand-woven heritage · 40-minute delivery across Hyderabad · free shipping over ₹1,999.</p>
+    <p style="font-size:12px;color:#8A7656;margin-top:28px;">Hand-woven heritage · free shipping over ₹1,999 · dispatched within 48 hours.</p>
   </div>
 </body></html>`;
 

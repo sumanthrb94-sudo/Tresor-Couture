@@ -12,13 +12,10 @@
 // SELF-CONTAINED: no relative imports (the project is ESM, which can't resolve
 // extensionless relative imports — that crashes the function at cold start).
 
-const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'tresor-couture';
+import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
+import { validateCsrfToken } from '../_lib/csrf.js';
 
-function setCors(res: any): void {
-  res.setHeader('Access-Control-Allow-Origin', process.env.ALLOWED_ORIGIN || '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-}
+const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'tresor-couture';
 
 function rupee(n: number): string {
   return `₹${Number(n || 0).toLocaleString('en-IN')}`;
@@ -69,8 +66,11 @@ async function whatsappSendTemplate(args: { to: string; params: string[]; langua
 }
 
 export default async function handler(req: any, res: any) {
-  setCors(res);
-  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (handleCorsPreflight(req, res, 'POST, OPTIONS')) return;
+  if (rejectDisallowedOrigin(req, res)) return;
+  if (!validateCsrfToken(req, res)) {
+    return res.status(403).json({ error: 'csrf_token_invalid' });
+  }
   if (req.method !== 'POST') return res.status(405).json({ error: 'method_not_allowed' });
 
   const decoded = await verifyIdToken(req.headers['authorization']);

@@ -342,7 +342,7 @@ const CartPage: React.FC = () => {
               <div className="bg-white border border-[color:var(--color-myntra-border-soft)] p-4 flex items-center gap-3">
                 <ShieldCheck className="w-7 h-7 text-[color:var(--color-myntra-ink-soft)]" />
                 <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] leading-snug">
-                  Safe and secure payments. Free shipping over ₹1,999. 40-minute delivery across Hyderabad. 100% authentic hand-woven.
+                  Safe and secure payments. Free shipping over ₹1,999. Same-day dispatch for eligible Hyderabad orders. 100% authentic hand-woven.
                 </p>
               </div>
             </div>

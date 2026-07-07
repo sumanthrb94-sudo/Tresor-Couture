@@ -3,6 +3,7 @@ import { Instagram, Phone, Mail, ShieldCheck, Truck, Zap, Check } from 'lucide-r
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../context/AuthContext';
 import { subscribeContact } from '../lib/notify';
+import Captcha, { captchaConfigured } from './Captcha';
 import type { Route } from '../types';
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -39,14 +40,17 @@ const Footer: React.FC = () => {
   const { user } = useAuth();
   const [email, setEmail] = useState('');
   const [subState, setSubState] = useState<'idle' | 'busy' | 'done' | 'error'>('idle');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!EMAIL_RE.test(email.trim())) { setSubState('error'); return; }
+    if (captchaConfigured && !captchaToken) { setSubState('error'); return; }
     setSubState('busy');
-    await subscribeContact(email.trim().toLowerCase(), 'footer');
+    await subscribeContact(email.trim().toLowerCase(), 'footer', undefined, captchaToken);
     setSubState('done');
     setEmail('');
+    setCaptchaToken(null);
   };
 
   return (
@@ -61,7 +65,7 @@ const Footer: React.FC = () => {
           decoding="async"
         />
         <p className="text-[13px] md:text-[14px] text-[color:var(--color-myntra-ink-soft)] max-w-md">
-          Heritage Indian designer wear — and across Hyderabad, pieces at your door inside 40 minutes.
+          Heritage Indian designer wear — hand-woven craftsmanship, delivered with care across India.
         </p>
       </div>
       <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 py-10 md:py-12 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 md:gap-10">
@@ -106,18 +110,21 @@ const Footer: React.FC = () => {
               </p>
             </div>
           ) : (
-            <form onSubmit={handleSubscribe} className="flex gap-2 mb-6 max-w-sm" noValidate>
-              <input
-                type="email"
-                value={email}
-                onChange={e => { setEmail(e.target.value); if (subState === 'error') setSubState('idle'); }}
-                placeholder="Your email"
-                aria-label="Email for newsletter"
-                className="input-box flex-1"
-              />
-              <button type="submit" disabled={subState === 'busy'} className="btn-primary whitespace-nowrap disabled:opacity-60">
-                {subState === 'busy' ? '…' : 'Subscribe'}
-              </button>
+            <form onSubmit={handleSubscribe} className="flex flex-col gap-3 mb-6 max-w-sm" noValidate>
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => { setEmail(e.target.value); if (subState === 'error') setSubState('idle'); }}
+                  placeholder="Your email"
+                  aria-label="Email for newsletter"
+                  className="input-box flex-1"
+                />
+                <button type="submit" disabled={subState === 'busy' || (captchaConfigured && !captchaToken)} className="btn-primary whitespace-nowrap disabled:opacity-60">
+                  {subState === 'busy' ? '…' : 'Subscribe'}
+                </button>
+              </div>
+              <Captcha onVerify={setCaptchaToken} size="compact" />
             </form>
           )}
           {subState === 'error' && (

@@ -5,6 +5,10 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 import App from './App.tsx';
 import './index.css';
 import { initAnalytics } from './lib/analytics';
+import { initSentry } from './lib/sentry';
+
+// Initialize Sentry first so it captures any errors during app startup.
+initSentry();
 
 // No-ops unless VITE_GA4_ID is configured (e.g. in Vercel production env).
 initAnalytics();

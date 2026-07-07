@@ -111,7 +111,7 @@ export const POLICIES: Record<PolicyKey, Policy> = {
       ]},
       { heading: 'Dispatch & delivery', body: [
         '• In-stock pieces are dispatched within 48 hours. Made-to-order pieces follow the timeline shown on the product page.',
-        '• Within Hyderabad, eligible in-stock pieces can be delivered the same day (40-minute service where available).',
+        '• Within Hyderabad, eligible in-stock pieces may qualify for same-day delivery; availability is confirmed at checkout.'
       ]},
       { heading: 'Tracking', body: [
         'You will receive a tracking link by email once your parcel leaves the atelier.',

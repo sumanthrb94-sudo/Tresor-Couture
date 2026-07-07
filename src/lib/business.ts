@@ -40,12 +40,18 @@ export interface BusinessProfile {
 
 export const BUSINESS: BusinessProfile = {
   brandName: 'Tresor Couture',
-  legalName: 'Tresor Couture (Sole Proprietorship)', // TODO: confirm registered name
-  gstin: '36ABCDE1234F1Z5', // TODO: confirm — placeholder, Telangana (36) format-valid
-  pan: 'ABCDE1234F', // TODO: confirm
+  // CEO ACTION REQUIRED: replace with the registered legal entity name before
+  // going live. Invoices and policy pages use this value; placeholder text is
+  // not valid for GST invoices or Indian e-commerce disclosure rules.
+  legalName: 'Tresor Couture (Sole Proprietorship)',
+  // CEO ACTION REQUIRED: replace with the real 15-character GSTIN.
+  gstin: '36ABCDE1234F1Z5',
+  // CEO ACTION REQUIRED: replace with the real 10-character PAN.
+  pan: 'ABCDE1234F',
   cin: '', // proprietorship — no CIN
+  // CEO ACTION REQUIRED: replace with the registered place of business.
   addressLines: [
-    'Tresor Atelier', // TODO: confirm registered address
+    'Tresor Atelier',
     'Road No. 12, Banjara Hills',
     'Hyderabad, Telangana 500034',
     'India',
@@ -57,6 +63,10 @@ export const BUSINESS: BusinessProfile = {
   website: 'https://tresorcouture.in',
   policiesUpdatedAt: '2026-06-02',
 };
+
+/** Launch blocker check: grep for these placeholder patterns in this file
+ *  before approving go-live. They must all be replaced with real registrations. */
+export const PLACEHOLDER_PATTERNS = ['36ABCDE1234F1Z5', 'ABCDE1234F'];
 
 /** Default HSN code for woven textile goods, used on invoice lines until a
  *  per-product HSN is captured. 5007 = woven fabrics of silk; broad enough as
