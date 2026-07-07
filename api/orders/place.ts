@@ -43,7 +43,6 @@ function canWriteOrders(): boolean {
 }
 
 let _adminAuth: { verifyIdToken(t: string): Promise<{ uid: string; email?: string }> } | null = null;
-let _lastVerifyError: string | null = null;
 async function verifyIdToken(authHeader: string | undefined): Promise<{ uid: string; email?: string } | null> {
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
   if (!token) return null;
@@ -56,11 +55,8 @@ async function verifyIdToken(authHeader: string | undefined): Promise<{ uid: str
       const app = getApps()[0] ?? initializeApp({ projectId: PROJECT_ID });
       _adminAuth = getAuth(app) as typeof _adminAuth;
     }
-    _lastVerifyError = null;
     return await _adminAuth!.verifyIdToken(token);
-  } catch (err) {
-    _lastVerifyError = err instanceof Error ? err.message : String(err);
-    console.error('[orders/place] verifyIdToken failed:', _lastVerifyError);
+  } catch {
     return null;
   }
 }
@@ -119,7 +115,7 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
   }
   const decoded = await verifyIdToken(header(req, 'authorization'));
   if (!decoded?.uid) {
-    res.status(401).json({ error: 'unauthorized', debug: _lastVerifyError ?? 'no_token' });
+    res.status(401).json({ error: 'unauthorized' });
     return;
   }
 
