@@ -160,18 +160,14 @@ test.describe('CEO lifecycle — admin fulfilment', () => {
     await expect(page.locator('text=Admin')).toBeVisible();
 
     // Open orders
-    await page.click('text=Orders');
-    await page.waitForSelector('[data-testid="order-row"]', { timeout: 15_000 });
+    await page.getByRole('button', { name: 'Orders', exact: true }).click();
+    await page.waitForSelector('tbody tr', { timeout: 15_000 });
 
-    // Open the most recent order
-    await page.locator('[data-testid="order-row"]').first().click();
-    await page.waitForSelector('text=Update Status', { timeout: 15_000 });
-
-    // Move through status lifecycle
+    // Move the most recent order through the status lifecycle
     for (const status of ['processing', 'shipped', 'delivered']) {
-      await page.selectOption('select[name="status"]', status);
-      await page.click('text=Update Status');
-      await expect(page.locator(`text=${status}`).first()).toBeVisible();
+      await page.locator('tbody tr:first-child select[aria-label="Update order status"]').selectOption(status);
+      await page.waitForTimeout(500);
+      await expect(page.locator('tbody tr:first-child select[aria-label="Update order status"]')).toHaveValue(status);
     }
   });
 });
