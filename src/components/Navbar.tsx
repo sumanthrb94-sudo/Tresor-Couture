@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, ChevronDown, LogIn, LogOut, Menu, Search, UserPlus, X } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Heart, LayoutDashboard, LogIn, LogOut, Menu, PackageOpen, Search, ShoppingBag, User, UserCircle, UserPlus, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
 import { FABRICS, MASTER_CATEGORIES, MASTER_CATEGORY_TREE, OFFER_TICKER } from '../constants';
@@ -22,7 +23,9 @@ const NAV: NavEntry[] = [
 
 const Navbar: React.FC = () => {
   const { navigate, route } = useRouter();
-  const { user, logout } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
+  const { itemCount: cartCount } = useCart();
+  const { ids: wishIds } = useWishlist();
 
   const [search, setSearch] = useState('');
   const [searchFocus, setSearchFocus] = useState(false);
@@ -30,12 +33,26 @@ const Navbar: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [hoverCat, setHoverCat] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : '';
     if (!mobileOpen) setMobileExpanded(null);
     return () => { document.body.style.overflow = ''; };
   }, [mobileOpen]);
+
+  // Close desktop account dropdown on outside click
+  useEffect(() => {
+    if (!accountOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+        setAccountOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [accountOpen]);
 
   // Live catalogue for search
   const [catalog, setCatalog] = useState<Fabric[] | null>(null);
@@ -328,11 +345,100 @@ const Navbar: React.FC = () => {
             </div>
           </form>
 
-          {/* Right side — search icon only (mobile) */}
-          <div className="flex items-center shrink-0 ml-auto">
+          {/* Right side — search icon (mobile) + desktop actions */}
+          <div className="flex items-center shrink-0 ml-auto gap-0 md:gap-1">
             <button className="md:hidden flex items-center px-2 py-1 group" onClick={() => setSearchOpen(true)} aria-label="Search">
               <Search className="w-5 h-5 text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]" />
             </button>
+
+            {/* Desktop action icons */}
+            <div className="hidden lg:flex items-center">
+              {/* Wishlist */}
+              <button
+                onClick={() => navigate({ name: 'account', tab: 'wishlist' })}
+                className="relative flex flex-col items-center px-3 py-1 group"
+                aria-label="Wishlist"
+              >
+                <Heart className="w-5 h-5 text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)] transition-colors" />
+                {wishIds.length > 0 && (
+                  <span className="absolute -top-0.5 right-1.5 bg-[color:var(--color-myntra-pink)] text-white text-[9px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1">
+                    {wishIds.length > 9 ? '9+' : wishIds.length}
+                  </span>
+                )}
+              </button>
+
+              {/* Cart */}
+              <button
+                onClick={() => navigate({ name: 'cart' })}
+                className="relative flex flex-col items-center px-3 py-1 group"
+                aria-label={`Cart with ${cartCount} item${cartCount > 1 ? 's' : ''}`}
+              >
+                <ShoppingBag className="w-5 h-5 text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)] transition-colors" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-0.5 right-1.5 bg-[color:var(--color-myntra-pink)] text-white text-[9px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1">
+                    {cartCount > 9 ? '9+' : cartCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Account dropdown */}
+              <div ref={accountRef} className="relative">
+                <button
+                  onClick={() => setAccountOpen(v => !v)}
+                  aria-haspopup="true"
+                  aria-expanded={accountOpen}
+                  className="flex flex-col items-center px-3 py-1 group"
+                  aria-label={user ? 'Account menu' : 'Sign in'}
+                >
+                  <User className={`w-5 h-5 transition-colors ${accountOpen ? 'text-[color:var(--color-myntra-pink)]' : 'text-[color:var(--color-myntra-navy)] group-hover:text-[color:var(--color-myntra-pink)]'}`} />
+                </button>
+
+                {accountOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-[color:var(--color-myntra-border-soft)] shadow-xl rounded-lg py-2 z-[60]">
+                    {user ? (
+                      <>
+                        <div className="px-4 py-3 border-b border-[color:var(--color-myntra-border-soft)] mb-1">
+                          <p className="text-[13px] font-extrabold text-[color:var(--color-myntra-navy)] truncate">Hello, {user.fullName.split(' ')[0]}</p>
+                          <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] truncate">{user.email}</p>
+                        </div>
+                        <button onClick={() => { setAccountOpen(false); navigate({ name: 'account', tab: 'profile' }); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-semibold text-[color:var(--color-myntra-navy)] hover:bg-[color:var(--color-myntra-bg-soft)] text-left">
+                          <UserCircle className="w-4 h-4 text-[color:var(--color-myntra-ink-soft)]" /> My Profile
+                        </button>
+                        <button onClick={() => { setAccountOpen(false); navigate({ name: 'account', tab: 'orders' }); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-semibold text-[color:var(--color-myntra-navy)] hover:bg-[color:var(--color-myntra-bg-soft)] text-left">
+                          <PackageOpen className="w-4 h-4 text-[color:var(--color-myntra-ink-soft)]" /> My Orders
+                        </button>
+                        <button onClick={() => { setAccountOpen(false); navigate({ name: 'account', tab: 'wishlist' }); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-semibold text-[color:var(--color-myntra-navy)] hover:bg-[color:var(--color-myntra-bg-soft)] text-left">
+                          <Heart className="w-4 h-4 text-[color:var(--color-myntra-ink-soft)]" /> Wishlist
+                        </button>
+                        {isAdmin && (
+                          <button onClick={() => { setAccountOpen(false); navigate({ name: 'admin' }); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-semibold text-[color:var(--color-myntra-pink)] hover:bg-[color:var(--color-myntra-bg-soft)] text-left">
+                            <LayoutDashboard className="w-4 h-4" /> Admin Console
+                          </button>
+                        )}
+                        <div className="border-t border-[color:var(--color-myntra-border-soft)] mt-1 pt-1">
+                          <button onClick={() => { setAccountOpen(false); logout(); navigate({ name: 'home' }); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-semibold text-[#A12626] hover:bg-[#FBE6E6] text-left">
+                            <LogOut className="w-4 h-4" /> Sign out
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="px-4 py-3 border-b border-[color:var(--color-myntra-border-soft)] mb-1">
+                          <p className="text-[13px] font-extrabold text-[color:var(--color-myntra-navy)]">Welcome to Tresor</p>
+                          <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)]">Sign in to access your account</p>
+                        </div>
+                        <button onClick={() => { setAccountOpen(false); navigate({ name: 'login' }); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-semibold text-[color:var(--color-myntra-navy)] hover:bg-[color:var(--color-myntra-bg-soft)] text-left">
+                          <LogIn className="w-4 h-4 text-[color:var(--color-myntra-ink-soft)]" /> Sign In
+                        </button>
+                        <button onClick={() => { setAccountOpen(false); navigate({ name: 'register' }); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-semibold text-[color:var(--color-myntra-navy)] hover:bg-[color:var(--color-myntra-bg-soft)] text-left">
+                          <UserPlus className="w-4 h-4 text-[color:var(--color-myntra-ink-soft)]" /> Create Account
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
