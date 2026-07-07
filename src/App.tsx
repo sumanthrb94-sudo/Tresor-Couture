@@ -18,7 +18,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import ShopPage from './pages/ShopPage';
 import ProductPage from './pages/ProductPage';
 import CartPage from './pages/CartPage';
-import { productsApi, seedCatalog } from './lib/firebase';
+import { productsApi } from './lib/firebase';
 import type { Fabric } from './types';
 
 // Routes that aren't on the critical home/shop path are lazy-loaded so they
@@ -34,7 +34,6 @@ const NotFoundPage      = lazy(() => import('./pages/NotFoundPage'));
 const SearchResultsPage = lazy(() => import('./pages/SearchResultsPage'));
 const AuthActionPage    = lazy(() => import('./pages/AuthActionPage'));
 const LegalPage         = lazy(() => import('./pages/LegalPage'));
-import { FABRICS } from './constants';
 import { CartProvider } from './context/CartContext';
 import { OrderProvider } from './context/OrderContext';
 import { WishlistProvider } from './context/WishlistContext';
@@ -42,15 +41,10 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { RouterProvider, useRouter } from './context/RouterContext';
 import AdminGuard from './pages/admin/AdminGuard';
 
-// Module-level guard so the auto-seed attempt fires at most once per page load
-// regardless of how many Home re-mounts happen during the session.
-let autoSeedAttempted = false;
-
 const Home: React.FC = () => {
   const [products, setProducts] = useState<Fabric[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const { isAdmin } = useAuth();
 
   useEffect(() => {
     let cancelled = false;
@@ -58,12 +52,6 @@ const Home: React.FC = () => {
     setProducts(null);
     (async () => {
       try {
-        // Only admins can write under firestore.rules; guest visitors trigger
-        // a permission_denied that we don't want to surface or risk crashing on.
-        if (isAdmin && !autoSeedAttempted) {
-          autoSeedAttempted = true;
-          await seedCatalog(FABRICS as unknown as Record<string, unknown>[]).catch(() => null);
-        }
         const rows = await productsApi.list({ limit: 200 });
         if (!cancelled) setProducts(rows as unknown as Fabric[]);
       } catch (err) {
@@ -74,7 +62,7 @@ const Home: React.FC = () => {
       }
     })();
     return () => { cancelled = true; };
-  }, [isAdmin, reloadKey]);
+  }, [reloadKey]);
 
   const loading = products === null;
 
