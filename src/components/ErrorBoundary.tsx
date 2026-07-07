@@ -22,6 +22,18 @@ class ErrorBoundary extends React.Component<Props, State> {
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     // Surface in DevTools; in real production hook this up to Sentry/Datadog.
     console.error('[Tresor] caught render error', error, info);
+
+    // Lazy-loaded chunks can 404 after a new deployment replaces old assets.
+    // A single hard reload fetches the current index.html and its new chunks.
+    const isChunkError =
+      typeof error?.message === 'string' &&
+      (error.message.includes('Failed to fetch dynamically imported module') ||
+       error.message.includes('Loading chunk') ||
+       error.message.includes('error loading dynamically'));
+    if (isChunkError && !sessionStorage.getItem('tresor-chunk-reload')) {
+      sessionStorage.setItem('tresor-chunk-reload', '1');
+      window.location.reload();
+    }
   }
 
   render() {
@@ -42,13 +54,13 @@ class ErrorBoundary extends React.Component<Props, State> {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
-              onClick={() => { this.setState({ error: null }); window.location.reload(); }}
+              onClick={() => { this.setState({ error: null }); sessionStorage.removeItem('tresor-chunk-reload'); window.location.reload(); }}
               className="px-6 py-3 bg-[color:var(--color-myntra-navy)] text-white text-[12px] font-bold uppercase tracking-[0.14em] rounded inline-flex items-center justify-center gap-2"
             >
               <RefreshCw className="w-4 h-4" /> Reload
             </button>
             <button
-              onClick={() => { window.location.hash = '#/'; this.setState({ error: null }); }}
+              onClick={() => { sessionStorage.removeItem('tresor-chunk-reload'); window.location.hash = '#/'; this.setState({ error: null }); }}
               className="px-6 py-3 border-2 border-[#2A1F12] text-[#2A1F12] text-[12px] font-bold uppercase tracking-[0.14em] rounded"
             >
               Back to storefront
