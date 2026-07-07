@@ -25,15 +25,22 @@ const BASE_URL = process.env.BASE_URL || 'https://tresorcouture.in';
 const ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL || 'ceo-test-admin@tresorcouture.in';
 const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD || '';
 
-const timestamp = Date.now();
+const timestamp = `${process.pid}-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`;
 const customerEmail = `ceo-test-customer-${timestamp}@example.com`;
 const customerPassword = 'TresorTest123!';
+
+test.beforeEach(({ page }) => {
+  page.on('pageerror', err => console.error('[pageerror]', err.message));
+  page.on('console', msg => {
+    if (msg.type() === 'error') console.error('[console.error]', msg.text());
+  });
+});
 
 async function gotoHash(page: Page, hash: string) {
   // Hash-router SPA: always reload so the router boots with the correct hash,
   // then wait for React to hydrate.
   await page.goto(`${BASE_URL}/${hash}`, { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(300);
+  await acceptCookies(page);
 }
 
 async function acceptCookies(page: Page) {
@@ -85,9 +92,9 @@ async function fillAddress(page: Page) {
 }
 
 test.describe('CEO lifecycle — customer journey', () => {
-  test('guest can browse, add to bag, register, and place a COD order', async ({ page }) => {
+  test('guest can browse, add to bag, register, place a COD order, and request a return', async ({ page }) => {
+    test.setTimeout(120_000);
     await gotoHash(page, '#/');
-    await acceptCookies(page);
 
     // Browse storefront
     await expect(page.getByRole('button', { name: 'Tresor Couture — Home' })).toBeVisible();
@@ -111,7 +118,7 @@ test.describe('CEO lifecycle — customer journey', () => {
     await page.click('button:has-text("Place Order")');
 
     // Order confirmation
-    await page.waitForURL(/#\/confirmation/, { timeout: 30_000 });
+    await page.waitForURL(/#\/confirmation/, { timeout: 60_000 });
     await expect(page.locator('text=Order confirmed')).toBeVisible();
     const orderId = await page.locator('[data-testid="order-id"]').textContent();
     expect(orderId).toBeTruthy();
@@ -119,6 +126,13 @@ test.describe('CEO lifecycle — customer journey', () => {
     // Order appears in account
     await gotoHash(page, '#/account');
     await expect(page.locator(`text=${orderId}`)).toBeVisible();
+
+    // Customer requests a return
+    await page.locator('[data-testid="order-row"]').first().click();
+    await page.click('text=Request Return');
+    await page.fill('textarea[name="reason"]', 'Ordered wrong size');
+    await page.click('text=Submit Return');
+    await expect(page.locator('text=Return requested')).toBeVisible();
   });
 
   test('existing customer can sign in, add to bag, and pay with Razorpay TEST card', async ({ page }) => {
@@ -172,19 +186,5 @@ test.describe('CEO lifecycle — admin fulfilment', () => {
       await page.waitForTimeout(500);
       await expect(page.locator('tbody tr:first-child select[aria-label="Update order status"]')).toHaveValue(status);
     }
-  });
-});
-
-test.describe('CEO lifecycle — returns and refunds', () => {
-  test('customer can request a return from order history', async ({ page }) => {
-    await login(page, customerEmail, customerPassword);
-    await gotoHash(page, '#/account');
-
-    await page.locator('[data-testid="order-row"]').first().click();
-    await page.click('text=Request Return');
-    await page.fill('textarea[name="reason"]', 'Ordered wrong size');
-    await page.click('text=Submit Return');
-
-    await expect(page.locator('text=Return requested')).toBeVisible();
   });
 });

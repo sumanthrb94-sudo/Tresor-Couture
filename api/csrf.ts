@@ -12,7 +12,10 @@ import { header, type ApiRequest, type ApiResponse } from './_lib/http.js';
 export default async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
   const origin = header(req, 'origin');
   if (handleCorsPreflight(req, res, 'GET, OPTIONS', true)) return;
-  if (rejectDisallowedOrigin(req, res, true)) return;
+  // Same-origin GET fetches may not send an Origin header. Only reject when an
+  // Origin is explicitly present and not allowlisted; the cookie's SameSite
+  // attribute still prevents cross-origin attackers from reading the token.
+  if (origin && rejectDisallowedOrigin(req, res, true)) return;
 
   if (req.method !== 'GET') {
     res.status(405).json({ error: 'method_not_allowed' });
