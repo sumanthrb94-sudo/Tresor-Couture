@@ -37,16 +37,9 @@ test.beforeEach(({ page }) => {
 });
 
 async function gotoHash(page: Page, hash: string) {
-  // Hash-router SPA: navigate by changing the hash so the client router handles
-  // the route change without a full reload. Reloading would discard in-memory
-  // state (e.g. the cart) before debounced Firestore writes have completed.
-  const current = page.url();
-  if (!current || current === 'about:blank') {
-    await page.goto(`${BASE_URL}/${hash}`, { waitUntil: 'domcontentloaded' });
-  } else {
-    await page.evaluate(h => { window.location.hash = h; }, hash);
-    await page.waitForURL(hash, { timeout: 15_000 });
-  }
+  // Hash-router SPA: always reload so the router boots with the correct hash,
+  // then wait for React to hydrate.
+  await page.goto(`${BASE_URL}/${hash}`, { waitUntil: 'domcontentloaded' });
   await acceptCookies(page);
 }
 
@@ -71,6 +64,9 @@ async function addToBag(page: Page) {
   await openFirstProduct(page);
   await page.locator('#pdp-add-to-bag').click();
   await expect(page.locator('button[aria-label^="Cart with"]').first()).toContainText('1', { timeout: 10_000 });
+  // Cart writes to Firestore are debounced (600 ms). Wait for the sync to
+  // complete before any later page reload, otherwise the bag is lost.
+  await page.waitForTimeout(1_500);
 }
 
 async function registerAccount(page: Page) {
