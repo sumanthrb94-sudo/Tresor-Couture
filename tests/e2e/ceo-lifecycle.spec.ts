@@ -135,7 +135,7 @@ test.describe('CEO lifecycle — customer journey', () => {
     await fillAddress(page);
     await page.getByRole('button', { name: /^Save \& Continue$/ }).click();
     await expect(page.getByText(/Cash on Delivery/i)).toBeVisible({ timeout: 15_000 });
-    await page.getByRole('button', { name: /^Place Order$/ }).click();
+    await page.getByRole('button', { name: /Place Order/ }).click();
 
     // Order confirmation
     await page.waitForURL(/#\/confirmation/, { timeout: 60_000 });
