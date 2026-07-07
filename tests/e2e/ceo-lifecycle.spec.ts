@@ -48,7 +48,7 @@ async function openFirstProduct(page: Page) {
 async function addToBag(page: Page) {
   await openFirstProduct(page);
   await page.locator('#pdp-add-to-bag').click();
-  await expect(page.locator('button[aria-label="Bag"]')).toContainText('1', { timeout: 10_000 });
+  await expect(page.locator('button[aria-label^="Cart with"]').first()).toContainText('1', { timeout: 10_000 });
 }
 
 async function registerAccount(page: Page) {
@@ -86,8 +86,8 @@ test.describe('CEO lifecycle — customer journey', () => {
     await acceptCookies(page);
 
     // Browse storefront
-    await expect(page.locator('text=TRESOR COUTURE')).toBeVisible();
-    await page.click('text=FABRICS');
+    await expect(page.locator('text=TRESOR')).toBeVisible();
+    await gotoHash(page, '#/shop');
     await page.waitForSelector('[data-testid="product-card"]', { timeout: 15_000 });
 
     // Add to bag

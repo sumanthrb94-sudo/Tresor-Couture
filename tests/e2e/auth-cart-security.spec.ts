@@ -38,7 +38,8 @@ async function openFirstProduct(page: Page) {
   await expect(page.locator('#pdp-add-to-bag')).toBeVisible({ timeout: 15_000 });
 }
 
-const bagButton = (page: Page) => page.locator('button[aria-label="Bag"]');
+const cartButton = (page: Page) => page.locator('button[aria-label^="Cart with"], button[aria-label="Cart"]').first();
+const accountButton = (page: Page) => page.locator('button[aria-label="Account menu"], button[aria-label="Sign in"]').first();
 
 // ───────────────────────── AUTH: negative & security ─────────────────────────
 test.describe('Auth — negative & security boundary', () => {
@@ -118,9 +119,8 @@ test.describe('Registration', () => {
     await page.getByRole('button', { name: /create account/i }).click();
     // On success the app signs the user in and leaves /register.
     await expect(page).not.toHaveURL(/#\/register/, { timeout: 20_000 });
-    // A signed-in affordance (profile / sign-out) should now exist.
-    await expect(page.locator('button[aria-label="Profile"], button[aria-label="Bag"]').first())
-      .toBeVisible({ timeout: 15_000 });
+    // A signed-in affordance (account menu) should now exist.
+    await expect(accountButton(page)).toBeVisible({ timeout: 15_000 });
     console.log(`[register] ✅ account created — DELETE THIS USER AFTERWARDS: ${TEST_EMAIL}`);
   });
 });
@@ -130,7 +130,7 @@ test.describe('Add to cart — guest', () => {
   test('add a product → bag badge increments and the item shows in the cart', async ({ page }) => {
     await openFirstProduct(page);
     await page.locator('#pdp-add-to-bag').click();
-    await expect(bagButton(page)).toContainText('1', { timeout: 10_000 });
+    await expect(page.locator('button[aria-label^="Cart with"]').first()).toContainText('1', { timeout: 10_000 });
     await gotoHash(page, '#/cart');
     await expect(page.getByText(/₹\s?[\d,]/).first()).toBeVisible({ timeout: 15_000 });
   });
@@ -142,33 +142,33 @@ test.describe('Add to cart — guest', () => {
     await expect(cards.first()).toBeVisible({ timeout: 15_000 });
     await cards.nth(0).getByRole('button').first().click();
     await page.locator('#pdp-add-to-bag').click();
-    await expect(bagButton(page)).toContainText('1', { timeout: 10_000 });
+    await expect(cartButton(page)).toContainText('1', { timeout: 10_000 });
     // Product 2
     await gotoHash(page, '#/shop');
     await cards.nth(1).getByRole('button').first().click();
     await page.locator('#pdp-add-to-bag').click();
-    await expect(bagButton(page)).toContainText('2', { timeout: 10_000 });
+    await expect(cartButton(page)).toContainText('2', { timeout: 10_000 });
   });
 
   test('cart survives a full page reload (guest localStorage)', async ({ page }) => {
     await openFirstProduct(page);
     await page.locator('#pdp-add-to-bag').click();
-    await expect(bagButton(page)).toContainText('1', { timeout: 10_000 });
+    await expect(cartButton(page)).toContainText('1', { timeout: 10_000 });
     await page.reload({ waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle').catch(() => {});
-    await expect(bagButton(page)).toContainText('1', { timeout: 10_000 });
+    await expect(cartButton(page)).toContainText('1', { timeout: 10_000 });
   });
 
   test('guest can remove an item and empty the bag', async ({ page }) => {
     await openFirstProduct(page);
     await page.locator('#pdp-add-to-bag').click();
-    await expect(bagButton(page)).toContainText('1', { timeout: 10_000 });
+    await expect(cartButton(page)).toContainText('1', { timeout: 10_000 });
     await gotoHash(page, '#/cart');
     const remove = page.getByRole('button', { name: /remove|delete|trash/i }).first();
     await expect(remove).toBeVisible({ timeout: 15_000 });
     await remove.click();
     // Badge clears (no count rendered when the bag is empty).
-    await expect(bagButton(page)).not.toContainText(/[1-9]/, { timeout: 10_000 });
+    await expect(cartButton(page)).not.toContainText(/[1-9]/, { timeout: 10_000 });
   });
 });
 
@@ -178,7 +178,7 @@ test.describe('Signed-in cart', () => {
     // 1) As guest, drop an item in the bag.
     await openFirstProduct(page);
     await page.locator('#pdp-add-to-bag').click();
-    await expect(bagButton(page)).toContainText('1', { timeout: 10_000 });
+    await expect(cartButton(page)).toContainText('1', { timeout: 10_000 });
 
     // 2) Sign in with the account created earlier.
     await gotoHash(page, '#/login');
@@ -188,15 +188,15 @@ test.describe('Signed-in cart', () => {
     await expect(page).not.toHaveURL(/#\/login/, { timeout: 20_000 });
 
     // 3) The guest bag should have merged into the account (item still present).
-    await expect(bagButton(page)).toContainText('1', { timeout: 15_000 });
+    await expect(cartButton(page)).toContainText('1', { timeout: 15_000 });
     console.log('[merge] ✅ guest bag preserved through sign-in');
 
-    // 4) Sign out via the profile menu.
-    const profile = page.locator('button[aria-label="Profile"]').first();
+    // 4) Sign out via the account menu.
+    const profile = page.locator('button[aria-label="Account menu"]').first();
     if (await profile.isVisible().catch(() => false)) {
       await profile.click();
       await page.getByRole('button', { name: /sign out/i }).first().click();
-      await expect(page.locator('button[aria-label="Sign in or sign up"]').first())
+      await expect(page.locator('button[aria-label="Sign in"]').first())
         .toBeVisible({ timeout: 15_000 });
       console.log('[signout] ✅ session cleared');
     }

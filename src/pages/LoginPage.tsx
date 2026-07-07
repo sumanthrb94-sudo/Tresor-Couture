@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Eye, EyeOff, Lock, Mail, ShieldCheck, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
 import GoogleSignInButton from '../components/GoogleSignInButton';
@@ -166,6 +166,7 @@ const LoginPage: React.FC = () => {
                   <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--color-myntra-ink-mute)] pointer-events-none" />
                   <input
                     id="login-email"
+                    name="email"
                     type="email"
                     autoComplete="email"
                     value={email}
@@ -196,6 +197,7 @@ const LoginPage: React.FC = () => {
                   <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--color-myntra-ink-mute)] pointer-events-none" />
                   <input
                     id="login-password"
+                    name="password"
                     type={showPassword ? 'text' : 'password'}
                     autoComplete="current-password"
                     value={password}
@@ -339,21 +341,7 @@ const LoginPage: React.FC = () => {
           </div>
         )}
 
-        {/* Demo creds tip */}
-        <div className="bg-white border border-[color:var(--color-myntra-border-soft)] mt-4 px-4 py-3 flex items-start gap-3">
-          <ShieldCheck className="w-5 h-5 text-[color:var(--color-myntra-green)] shrink-0 mt-0.5" />
-          <div className="text-[12px] text-[color:var(--color-myntra-ink-soft)] leading-relaxed">
-            <p className="font-bold uppercase tracking-wider text-[color:var(--color-myntra-navy)] mb-1">
-              Demo credentials
-            </p>
-            <p>
-              Sign in with{' '}
-              <span className="font-bold text-[color:var(--color-myntra-navy)]">admin@tresor.test</span>{' '}/{' '}
-              <span className="font-bold text-[color:var(--color-myntra-navy)]">tresor-admin</span> to
-              explore the admin console. Customers may register a fresh account below.
-            </p>
-          </div>
-        </div>
+
       </div>
     </main>
   );

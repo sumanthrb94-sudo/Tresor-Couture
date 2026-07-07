@@ -157,6 +157,7 @@ const RegisterPage: React.FC = () => {
                 <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--color-myntra-ink-mute)] pointer-events-none" />
                 <input
                   id="register-name"
+                  name="fullName"
                   type="text"
                   autoComplete="name"
                   value={fullName}
@@ -183,6 +184,7 @@ const RegisterPage: React.FC = () => {
                 <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--color-myntra-ink-mute)] pointer-events-none" />
                 <input
                   id="register-email"
+                  name="email"
                   type="email"
                   autoComplete="email"
                   value={email}
@@ -209,6 +211,7 @@ const RegisterPage: React.FC = () => {
                 <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--color-myntra-ink-mute)] pointer-events-none" />
                 <input
                   id="register-phone"
+                  name="phone"
                   type="tel"
                   autoComplete="tel"
                   value={phone}
@@ -235,6 +238,7 @@ const RegisterPage: React.FC = () => {
                 <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--color-myntra-ink-mute)] pointer-events-none" />
                 <input
                   id="register-password"
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
                   value={password}
@@ -269,6 +273,7 @@ const RegisterPage: React.FC = () => {
                 <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--color-myntra-ink-mute)] pointer-events-none" />
                 <input
                   id="register-confirm"
+                  name="confirmPassword"
                   type={showConfirm ? 'text' : 'password'}
                   autoComplete="new-password"
                   value={confirmPassword}
