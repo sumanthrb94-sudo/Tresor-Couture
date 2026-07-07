@@ -37,13 +37,16 @@ test.beforeEach(({ page }) => {
 });
 
 async function gotoHash(page: Page, hash: string) {
-  // Hash-router SPA: load the bare origin first, then set the hash so the
-  // client router reliably picks up the route. A plain page.goto to a hash URL
-  // is flaky because Playwright may treat same-document hash changes as a
-  // no-op and the router can miss the initial hash.
-  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
-  await page.evaluate(h => { window.location.hash = h; }, hash);
-  await page.waitForLoadState('domcontentloaded');
+  // Hash-router SPA: navigate by changing the hash so the client router handles
+  // the route change without a full reload. Reloading would discard in-memory
+  // state (e.g. the cart) before debounced Firestore writes have completed.
+  const current = page.url();
+  if (!current || current === 'about:blank') {
+    await page.goto(`${BASE_URL}/${hash}`, { waitUntil: 'domcontentloaded' });
+  } else {
+    await page.evaluate(h => { window.location.hash = h; }, hash);
+    await page.waitForURL(hash, { timeout: 15_000 });
+  }
   await acceptCookies(page);
 }
 
