@@ -25,7 +25,7 @@ const BASE_URL = process.env.BASE_URL || 'https://tresorcouture.in';
 const ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL || 'ceo-test-admin@tresorcouture.in';
 const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD || '';
 
-const timestamp = `${process.pid}-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`;
+const timestamp = `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 const customerEmail = `ceo-test-customer-${timestamp}@example.com`;
 const customerPassword = 'TresorTest123!';
 
@@ -83,6 +83,9 @@ async function registerAccount(page: Page) {
   await page.click('button[type="submit"]');
   await page.waitForURL(/#\/(home|account|$)/, { timeout: 20_000 });
   await waitForSignedIn(page);
+  // Auth resolves ~500 ms after the account menu first paints; navigating
+  // before then can be overridden by a delayed post-sign-in redirect.
+  await page.waitForTimeout(1_000);
 }
 
 async function login(page: Page, email: string, password: string) {
@@ -92,6 +95,8 @@ async function login(page: Page, email: string, password: string) {
   await page.click('button[type="submit"]');
   await page.waitForURL(/#\/(home|account|admin|$)/, { timeout: 20_000 });
   await waitForSignedIn(page);
+  // Same auth-settling grace period as registration.
+  await page.waitForTimeout(1_000);
 }
 
 async function fillAddress(page: Page) {
@@ -103,6 +108,8 @@ async function fillAddress(page: Page) {
   await page.fill('input[name="state"]', 'Telangana');
   await page.fill('input[name="postalCode"]', '500034');
 }
+
+test.describe.configure({ mode: 'serial' });
 
 test.describe('CEO lifecycle — customer journey', () => {
   test('guest can browse, add to bag, register, and place a COD order', async ({ page }) => {

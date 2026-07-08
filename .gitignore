@@ -39,3 +39,4 @@ e2e/otp.txt
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+.playwright-mcp/
