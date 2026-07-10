@@ -1,0 +1,702 @@
+[
+  {
+    "id": "HA6758",
+    "brand": "TRESOR",
+    "name": "HA6758",
+    "description": "Extracted from catalogue slide 1. ",
+    "price": 4200.0,
+    "mrp": 6000.0,
+    "photo": "/products/pptx-full/slide01_img2_HA6758.jpg",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [
+      {
+        "name": "D-PURPLE",
+        "hex": "#cccccc"
+      }
+    ],
+    "stock": 9
+  },
+  {
+    "id": "RI5839",
+    "brand": "TRESOR",
+    "name": "RI5839",
+    "description": "Extracted from catalogue slide 2. ",
+    "price": 85.0,
+    "mrp": 121.43,
+    "photo": "/products/pptx-full/slide02_img2_RI5839.png",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 18
+  },
+  {
+    "id": "HA7018",
+    "brand": "TRESOR",
+    "name": "HA7018",
+    "description": "Extracted from catalogue slide 3. ",
+    "price": 1350.0,
+    "mrp": 1928.57,
+    "photo": "/products/pptx-full/slide03_img2_HA7018.jpg",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [
+      {
+        "name": "PINK",
+        "hex": "#cccccc"
+      }
+    ],
+    "stock": 9
+  },
+  {
+    "id": "HA6790",
+    "brand": "TRESOR",
+    "name": "HA6790",
+    "description": "Extracted from catalogue slide 4. ",
+    "price": 985.0,
+    "mrp": 1407.14,
+    "photo": "/products/pptx-full/slide04_img2_HA6790.jpg",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [
+      {
+        "name": "GREEN",
+        "hex": "#cccccc"
+      }
+    ],
+    "stock": 9
+  },
+  {
+    "id": "HA6988",
+    "brand": "TRESOR",
+    "name": "HA6988",
+    "description": "Extracted from catalogue slide 5. ",
+    "price": 890.0,
+    "mrp": 1271.43,
+    "photo": "/products/pptx-full/slide05_img2_HA6988.jpg",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [
+      {
+        "name": "WINE",
+        "hex": "#cccccc"
+      }
+    ],
+    "stock": 9
+  },
+  {
+    "id": "HA6979",
+    "brand": "TRESOR",
+    "name": "HA6979",
+    "description": "Extracted from catalogue slide 6. ",
+    "price": 135.0,
+    "mrp": 192.86,
+    "photo": "/products/pptx-full/slide06_img2_HA6979.jpg",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 9
+  },
+  {
+    "id": "RI5687",
+    "brand": "TRESOR",
+    "name": "RI5687",
+    "description": "Extracted from catalogue slide 7. ",
+    "price": 30.0,
+    "mrp": 42.86,
+    "photo": "/products/pptx-full/slide07_img2_RI5687.png",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 45
+  },
+  {
+    "id": "ST987",
+    "brand": "TRESOR",
+    "name": "ST987",
+    "description": "Extracted from catalogue slide 8. ",
+    "price": 80.0,
+    "mrp": 114.29,
+    "photo": "/products/pptx-full/slide08_img2_ST987.png",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 18
+  },
+  {
+    "id": "MI263",
+    "brand": "TRESOR",
+    "name": "MI263",
+    "description": "Extracted from catalogue slide 9. ",
+    "price": 120.0,
+    "mrp": 171.43,
+    "photo": "/products/pptx-full/slide09_img2_MI263.png",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 18
+  },
+  {
+    "id": "RI4680",
+    "brand": "TRESOR",
+    "name": "RI4680",
+    "description": "Extracted from catalogue slide 10. ",
+    "price": 65.0,
+    "mrp": 92.86,
+    "photo": "/products/pptx-full/slide10_img2_RI4680.jpg",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 9
+  },
+  {
+    "id": "MO3188",
+    "brand": "TRESOR",
+    "name": "MO3188",
+    "description": "Extracted from catalogue slide 11. ",
+    "price": 960.0,
+    "mrp": 1371.43,
+    "photo": "/products/pptx-full/slide11_img2_MO3188.jpg",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 18
+  },
+  {
+    "id": "RI280",
+    "brand": "TRESOR",
+    "name": "RI280",
+    "description": "Extracted from catalogue slide 12. ",
+    "price": 50.0,
+    "mrp": 71.43,
+    "photo": "/products/pptx-full/slide12_img2_RI280.png",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 9
+  },
+  {
+    "id": "MO3650",
+    "brand": "TRESOR",
+    "name": "MO3650",
+    "description": "Extracted from catalogue slide 13. ",
+    "price": 450.0,
+    "mrp": 642.86,
+    "photo": "/products/pptx-full/slide13_img2_MO3650.png",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 9
+  },
+  {
+    "id": "MO2029",
+    "brand": "TRESOR",
+    "name": "MO2029",
+    "description": "Extracted from catalogue slide 14. ",
+    "price": 380.0,
+    "mrp": 542.86,
+    "photo": "/products/pptx-full/slide14_img2_MO2029.png",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 9
+  },
+  {
+    "id": "MO3857",
+    "brand": "TRESOR",
+    "name": "MO3857",
+    "description": "Extracted from catalogue slide 15. ",
+    "price": 440.0,
+    "mrp": 628.57,
+    "photo": "/products/pptx-full/slide15_img2_MO3857.png",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 9
+  },
+  {
+    "id": "MO3392",
+    "brand": "TRESOR",
+    "name": "MO3392",
+    "description": "Extracted from catalogue slide 16. ",
+    "price": 1599.0,
+    "mrp": 2284.29,
+    "photo": "/products/pptx-full/slide16_img2_MO3392.jpg",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 9
+  },
+  {
+    "id": "HA6378",
+    "brand": "TRESOR",
+    "name": "HA6378",
+    "description": "Extracted from catalogue slide 17. ",
+    "price": 4999.0,
+    "mrp": 7141.43,
+    "photo": "/products/pptx-full/slide17_img2_HA6378.jpg",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 10
+  },
+  {
+    "id": "HA6293",
+    "brand": "TRESOR",
+    "name": "HA6293",
+    "description": "Extracted from catalogue slide 18. ",
+    "price": 4800.0,
+    "mrp": 6857.14,
+    "photo": "/products/pptx-full/slide18_img2_HA6293.jpg",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 8
+  },
+  {
+    "id": "HA6387",
+    "brand": "TRESOR",
+    "name": "HA6387",
+    "description": "Extracted from catalogue slide 19. ",
+    "price": 4800.0,
+    "mrp": 6857.14,
+    "photo": "/products/pptx-full/slide19_img2_HA6387.png",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 10
+  },
+  {
+    "id": "ST3382",
+    "brand": "TRESOR",
+    "name": "ST3382",
+    "description": "Extracted from catalogue slide 20. ",
+    "price": 400.0,
+    "mrp": 571.43,
+    "photo": "/products/pptx-full/slide20_img2_ST3382.png",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 9
+  },
+  {
+    "id": "HA6674",
+    "brand": "TRESOR",
+    "name": "HA6674",
+    "description": "Extracted from catalogue slide 21. ",
+    "price": 2899.0,
+    "mrp": 4141.43,
+    "photo": "/products/pptx-full/slide21_img2_HA6674.png",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 9
+  },
+  {
+    "id": "HA3858",
+    "brand": "TRESOR",
+    "name": "HA3858",
+    "description": "Extracted from catalogue slide 22. ",
+    "price": 380.0,
+    "mrp": 542.86,
+    "photo": "/products/pptx-full/slide22_img2_HA3858.png",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 9
+  },
+  {
+    "id": "NO-CODE-S23",
+    "brand": "TRESOR",
+    "name": "NO-CODE-S23",
+    "description": "Extracted from catalogue slide 23. Code not found in slide text; using generated code",
+    "price": 480.0,
+    "mrp": 685.71,
+    "photo": "/products/pptx-full/slide23_img2_NO-CODE-S23.jpg",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Patch",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 1
+  },
+  {
+    "id": "HA4536",
+    "brand": "TRESOR",
+    "name": "HA4536",
+    "description": "Extracted from catalogue slide 24. ",
+    "price": 3800.0,
+    "mrp": 5428.57,
+    "photo": "/products/pptx-full/slide24_img2_HA4536.png",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 3
+  },
+  {
+    "id": "6343",
+    "brand": "TRESOR",
+    "name": "6343",
+    "description": "Extracted from catalogue slide 25. ",
+    "price": 1200.0,
+    "mrp": 1714.29,
+    "photo": "/products/pptx-full/slide25_img2_6343.png",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 9
+  },
+  {
+    "id": "HA6767",
+    "brand": "TRESOR",
+    "name": "HA6767",
+    "description": "Extracted from catalogue slide 26. ",
+    "price": 80.0,
+    "mrp": 114.29,
+    "photo": "/products/pptx-full/slide26_img2_HA6767.jpg",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 9
+  },
+  {
+    "id": "6988",
+    "brand": "TRESOR",
+    "name": "6988",
+    "description": "Extracted from catalogue slide 27. ",
+    "price": 129.0,
+    "mrp": 184.29,
+    "photo": "/products/pptx-full/slide27_img2_6988.jpg",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 9
+  },
+  {
+    "id": "HA6320",
+    "brand": "TRESOR",
+    "name": "HA6320",
+    "description": "Extracted from catalogue slide 28. ",
+    "price": 4800.0,
+    "mrp": 6857.14,
+    "photo": "/products/pptx-full/slide28_img2_HA6320.png",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 3
+  },
+  {
+    "id": "NE1386",
+    "brand": "TRESOR",
+    "name": "NE1386",
+    "description": "Extracted from catalogue slide 30. ",
+    "price": 400.0,
+    "mrp": 571.43,
+    "photo": "/products/pptx-full/slide30_img2_NE1386.png",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Patch",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 1
+  },
+  {
+    "id": "NE1386-S31",
+    "brand": "TRESOR",
+    "name": "NE1386-S31",
+    "description": "Extracted from catalogue slide 31. ",
+    "price": 400.0,
+    "mrp": 571.43,
+    "photo": "/products/pptx-full/slide31_img2_NE1386-S31.png",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Patch",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 1
+  },
+  {
+    "id": "NE1386-S32",
+    "brand": "TRESOR",
+    "name": "NE1386-S32",
+    "description": "Extracted from catalogue slide 32. ",
+    "price": 400.0,
+    "mrp": 571.43,
+    "photo": "/products/pptx-full/slide32_img2_NE1386-S32.png",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Patch",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 1
+  },
+  {
+    "id": "NE1386-S33",
+    "brand": "TRESOR",
+    "name": "NE1386-S33",
+    "description": "Extracted from catalogue slide 33. ",
+    "price": 400.0,
+    "mrp": 571.43,
+    "photo": "/products/pptx-full/slide33_img2_NE1386-S33.png",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Patch",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 1
+  },
+  {
+    "id": "NE1386-S34",
+    "brand": "TRESOR",
+    "name": "NE1386-S34",
+    "description": "Extracted from catalogue slide 34. ",
+    "price": 400.0,
+    "mrp": 571.43,
+    "photo": "/products/pptx-full/slide34_img2_NE1386-S34.png",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Patch",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 1
+  },
+  {
+    "id": "NE1386-S35",
+    "brand": "TRESOR",
+    "name": "NE1386-S35",
+    "description": "Extracted from catalogue slide 35. ",
+    "price": 400.0,
+    "mrp": 571.43,
+    "photo": "/products/pptx-full/slide35_img2_NE1386-S35.png",
+    "image": "",
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Patch",
+    "materialType": "Mixed",
+    "origin": "India",
+    "tags": [
+      "New In"
+    ],
+    "colors": [],
+    "stock": 1
+  }
+]

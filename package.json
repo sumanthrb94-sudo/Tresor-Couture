@@ -14,6 +14,10 @@
     "lint": "tsc --noEmit",
     "seed": "tsx scripts/seed-firestore.ts",
     "seed:force": "tsx scripts/seed-firestore.ts --force",
+    "seed:pptx-catalogue": "tsx scripts/seed-pptx-catalogue.ts",
+    "seed:pptx-catalogue:dry": "tsx scripts/seed-pptx-catalogue.ts --dry-run",
+    "seed:full-catalogue": "tsx scripts/seed-full-catalogue.ts",
+    "seed:full-catalogue:dry": "tsx scripts/seed-full-catalogue.ts --dry-run",
     "set-admin": "tsx scripts/set-admin.ts"
   },
   "dependencies": {
