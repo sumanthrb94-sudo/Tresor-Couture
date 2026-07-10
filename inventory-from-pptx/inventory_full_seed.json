@@ -3,7 +3,7 @@
     "id": "HA6758",
     "brand": "TRESOR",
     "name": "HA6758",
-    "description": "Extracted from catalogue slide 1. ",
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹4200. Perfect for premium couture and bridal projects. Colour: D-PURPLE.",
     "price": 4200.0,
     "mrp": 6000.0,
     "photo": "/products/pptx-full/slide01_img2_HA6758.jpg",
@@ -22,15 +22,18 @@
         "hex": "#cccccc"
       }
     ],
-    "stock": 9
+    "stock": 9,
+    "unitType": "bundle",
+    "sellingPricePerMeter": null,
+    "bundlePrice": 4200.0
   },
   {
     "id": "RI5839",
     "brand": "TRESOR",
     "name": "RI5839",
-    "description": "Extracted from catalogue slide 2. ",
-    "price": 85.0,
-    "mrp": 121.43,
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 18 meters at ₹230. Perfect for premium couture and bridal projects.",
+    "price": 230.0,
+    "mrp": 328.57,
     "photo": "/products/pptx-full/slide02_img2_RI5839.png",
     "image": "",
     "category": "Laces",
@@ -42,13 +45,16 @@
       "New In"
     ],
     "colors": [],
-    "stock": 18
+    "stock": 18,
+    "unitType": "bundle",
+    "sellingPricePerMeter": 85.0,
+    "bundlePrice": 230.0
   },
   {
     "id": "HA7018",
     "brand": "TRESOR",
     "name": "HA7018",
-    "description": "Extracted from catalogue slide 3. ",
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹1350. Perfect for premium couture and bridal projects. Colour: PINK.",
     "price": 1350.0,
     "mrp": 1928.57,
     "photo": "/products/pptx-full/slide03_img2_HA7018.jpg",
@@ -67,13 +73,16 @@
         "hex": "#cccccc"
       }
     ],
-    "stock": 9
+    "stock": 9,
+    "unitType": "bundle",
+    "sellingPricePerMeter": null,
+    "bundlePrice": 1350.0
   },
   {
     "id": "HA6790",
     "brand": "TRESOR",
     "name": "HA6790",
-    "description": "Extracted from catalogue slide 4. ",
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹985. Perfect for premium couture and bridal projects. Colour: GREEN.",
     "price": 985.0,
     "mrp": 1407.14,
     "photo": "/products/pptx-full/slide04_img2_HA6790.jpg",
@@ -92,13 +101,16 @@
         "hex": "#cccccc"
       }
     ],
-    "stock": 9
+    "stock": 9,
+    "unitType": "bundle",
+    "sellingPricePerMeter": null,
+    "bundlePrice": 985.0
   },
   {
     "id": "HA6988",
     "brand": "TRESOR",
     "name": "HA6988",
-    "description": "Extracted from catalogue slide 5. ",
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹890. Perfect for premium couture and bridal projects. Colour: WINE.",
     "price": 890.0,
     "mrp": 1271.43,
     "photo": "/products/pptx-full/slide05_img2_HA6988.jpg",
@@ -117,15 +129,18 @@
         "hex": "#cccccc"
       }
     ],
-    "stock": 9
+    "stock": 9,
+    "unitType": "bundle",
+    "sellingPricePerMeter": null,
+    "bundlePrice": 890.0
   },
   {
     "id": "HA6979",
     "brand": "TRESOR",
     "name": "HA6979",
-    "description": "Extracted from catalogue slide 6. ",
-    "price": 135.0,
-    "mrp": 192.86,
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹450. Perfect for premium couture and bridal projects.",
+    "price": 450.0,
+    "mrp": 642.86,
     "photo": "/products/pptx-full/slide06_img2_HA6979.jpg",
     "image": "",
     "category": "Laces",
@@ -137,15 +152,18 @@
       "New In"
     ],
     "colors": [],
-    "stock": 9
+    "stock": 9,
+    "unitType": "bundle",
+    "sellingPricePerMeter": 135.0,
+    "bundlePrice": 450.0
   },
   {
     "id": "RI5687",
     "brand": "TRESOR",
     "name": "RI5687",
-    "description": "Extracted from catalogue slide 7. ",
-    "price": 30.0,
-    "mrp": 42.86,
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 45 meters at ₹280. Perfect for premium couture and bridal projects.",
+    "price": 280.0,
+    "mrp": 400.0,
     "photo": "/products/pptx-full/slide07_img2_RI5687.png",
     "image": "",
     "category": "Laces",
@@ -157,15 +175,18 @@
       "New In"
     ],
     "colors": [],
-    "stock": 45
+    "stock": 45,
+    "unitType": "bundle",
+    "sellingPricePerMeter": 30.0,
+    "bundlePrice": 280.0
   },
   {
     "id": "ST987",
     "brand": "TRESOR",
     "name": "ST987",
-    "description": "Extracted from catalogue slide 8. ",
-    "price": 80.0,
-    "mrp": 114.29,
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 18 meters at ₹280. Perfect for premium couture and bridal projects.",
+    "price": 280.0,
+    "mrp": 400.0,
     "photo": "/products/pptx-full/slide08_img2_ST987.png",
     "image": "",
     "category": "Laces",
@@ -177,15 +198,18 @@
       "New In"
     ],
     "colors": [],
-    "stock": 18
+    "stock": 18,
+    "unitType": "bundle",
+    "sellingPricePerMeter": 80.0,
+    "bundlePrice": 280.0
   },
   {
     "id": "MI263",
     "brand": "TRESOR",
     "name": "MI263",
-    "description": "Extracted from catalogue slide 9. ",
-    "price": 120.0,
-    "mrp": 171.43,
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 18 meters at ₹450. Perfect for premium couture and bridal projects.",
+    "price": 450.0,
+    "mrp": 642.86,
     "photo": "/products/pptx-full/slide09_img2_MI263.png",
     "image": "",
     "category": "Laces",
@@ -197,15 +221,18 @@
       "New In"
     ],
     "colors": [],
-    "stock": 18
+    "stock": 18,
+    "unitType": "bundle",
+    "sellingPricePerMeter": 120.0,
+    "bundlePrice": 450.0
   },
   {
     "id": "RI4680",
     "brand": "TRESOR",
     "name": "RI4680",
-    "description": "Extracted from catalogue slide 10. ",
-    "price": 65.0,
-    "mrp": 92.86,
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹300. Perfect for premium couture and bridal projects.",
+    "price": 300.0,
+    "mrp": 428.57,
     "photo": "/products/pptx-full/slide10_img2_RI4680.jpg",
     "image": "",
     "category": "Laces",
@@ -217,13 +244,16 @@
       "New In"
     ],
     "colors": [],
-    "stock": 9
+    "stock": 9,
+    "unitType": "bundle",
+    "sellingPricePerMeter": 65.0,
+    "bundlePrice": 300.0
   },
   {
     "id": "MO3188",
     "brand": "TRESOR",
     "name": "MO3188",
-    "description": "Extracted from catalogue slide 11. ",
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 18 meters at ₹960. Perfect for premium couture and bridal projects.",
     "price": 960.0,
     "mrp": 1371.43,
     "photo": "/products/pptx-full/slide11_img2_MO3188.jpg",
@@ -237,15 +267,18 @@
       "New In"
     ],
     "colors": [],
-    "stock": 18
+    "stock": 18,
+    "unitType": "bundle",
+    "sellingPricePerMeter": null,
+    "bundlePrice": 960.0
   },
   {
     "id": "RI280",
     "brand": "TRESOR",
     "name": "RI280",
-    "description": "Extracted from catalogue slide 12. ",
-    "price": 50.0,
-    "mrp": 71.43,
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹250. Perfect for premium couture and bridal projects.",
+    "price": 250.0,
+    "mrp": 357.14,
     "photo": "/products/pptx-full/slide12_img2_RI280.png",
     "image": "",
     "category": "Laces",
@@ -257,15 +290,18 @@
       "New In"
     ],
     "colors": [],
-    "stock": 9
+    "stock": 9,
+    "unitType": "bundle",
+    "sellingPricePerMeter": 50.0,
+    "bundlePrice": 250.0
   },
   {
     "id": "MO3650",
     "brand": "TRESOR",
     "name": "MO3650",
-    "description": "Extracted from catalogue slide 13. ",
-    "price": 450.0,
-    "mrp": 642.86,
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹2400. Perfect for premium couture and bridal projects.",
+    "price": 2400.0,
+    "mrp": 3428.57,
     "photo": "/products/pptx-full/slide13_img2_MO3650.png",
     "image": "",
     "category": "Laces",
@@ -277,15 +313,18 @@
       "New In"
     ],
     "colors": [],
-    "stock": 9
+    "stock": 9,
+    "unitType": "bundle",
+    "sellingPricePerMeter": 450.0,
+    "bundlePrice": 2400.0
   },
   {
     "id": "MO2029",
     "brand": "TRESOR",
     "name": "MO2029",
-    "description": "Extracted from catalogue slide 14. ",
-    "price": 380.0,
-    "mrp": 542.86,
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹2000. Perfect for premium couture and bridal projects.",
+    "price": 2000.0,
+    "mrp": 2857.14,
     "photo": "/products/pptx-full/slide14_img2_MO2029.png",
     "image": "",
     "category": "Laces",
@@ -297,15 +336,18 @@
       "New In"
     ],
     "colors": [],
-    "stock": 9
+    "stock": 9,
+    "unitType": "bundle",
+    "sellingPricePerMeter": 380.0,
+    "bundlePrice": 2000.0
   },
   {
     "id": "MO3857",
     "brand": "TRESOR",
     "name": "MO3857",
-    "description": "Extracted from catalogue slide 15. ",
-    "price": 440.0,
-    "mrp": 628.57,
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹2300. Perfect for premium couture and bridal projects.",
+    "price": 2300.0,
+    "mrp": 3285.71,
     "photo": "/products/pptx-full/slide15_img2_MO3857.png",
     "image": "",
     "category": "Laces",
@@ -317,13 +359,16 @@
       "New In"
     ],
     "colors": [],
-    "stock": 9
+    "stock": 9,
+    "unitType": "bundle",
+    "sellingPricePerMeter": 440.0,
+    "bundlePrice": 2300.0
   },
   {
     "id": "MO3392",
     "brand": "TRESOR",
     "name": "MO3392",
-    "description": "Extracted from catalogue slide 16. ",
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹1599. Perfect for premium couture and bridal projects.",
     "price": 1599.0,
     "mrp": 2284.29,
     "photo": "/products/pptx-full/slide16_img2_MO3392.jpg",
@@ -337,13 +382,16 @@
       "New In"
     ],
     "colors": [],
-    "stock": 9
+    "stock": 9,
+    "unitType": "bundle",
+    "sellingPricePerMeter": null,
+    "bundlePrice": 1599.0
   },
   {
     "id": "HA6378",
     "brand": "TRESOR",
     "name": "HA6378",
-    "description": "Extracted from catalogue slide 17. ",
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 10 meters at ₹4999. Perfect for premium couture and bridal projects.",
     "price": 4999.0,
     "mrp": 7141.43,
     "photo": "/products/pptx-full/slide17_img2_HA6378.jpg",
@@ -357,13 +405,16 @@
       "New In"
     ],
     "colors": [],
-    "stock": 10
+    "stock": 10,
+    "unitType": "bundle",
+    "sellingPricePerMeter": null,
+    "bundlePrice": 4999.0
   },
   {
     "id": "HA6293",
     "brand": "TRESOR",
     "name": "HA6293",
-    "description": "Extracted from catalogue slide 18. ",
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 8 meters at ₹4800. Perfect for premium couture and bridal projects.",
     "price": 4800.0,
     "mrp": 6857.14,
     "photo": "/products/pptx-full/slide18_img2_HA6293.jpg",
@@ -377,13 +428,16 @@
       "New In"
     ],
     "colors": [],
-    "stock": 8
+    "stock": 8,
+    "unitType": "bundle",
+    "sellingPricePerMeter": null,
+    "bundlePrice": 4800.0
   },
   {
     "id": "HA6387",
     "brand": "TRESOR",
     "name": "HA6387",
-    "description": "Extracted from catalogue slide 19. ",
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 10 meters at ₹4800. Perfect for premium couture and bridal projects.",
     "price": 4800.0,
     "mrp": 6857.14,
     "photo": "/products/pptx-full/slide19_img2_HA6387.png",
@@ -397,15 +451,18 @@
       "New In"
     ],
     "colors": [],
-    "stock": 10
+    "stock": 10,
+    "unitType": "bundle",
+    "sellingPricePerMeter": null,
+    "bundlePrice": 4800.0
   },
   {
     "id": "ST3382",
     "brand": "TRESOR",
     "name": "ST3382",
-    "description": "Extracted from catalogue slide 20. ",
-    "price": 400.0,
-    "mrp": 571.43,
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹1599. Perfect for premium couture and bridal projects.",
+    "price": 1599.0,
+    "mrp": 2284.29,
     "photo": "/products/pptx-full/slide20_img2_ST3382.png",
     "image": "",
     "category": "Laces",
@@ -417,13 +474,16 @@
       "New In"
     ],
     "colors": [],
-    "stock": 9
+    "stock": 9,
+    "unitType": "bundle",
+    "sellingPricePerMeter": 400.0,
+    "bundlePrice": 1599.0
   },
   {
     "id": "HA6674",
     "brand": "TRESOR",
     "name": "HA6674",
-    "description": "Extracted from catalogue slide 21. ",
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹2899. Perfect for premium couture and bridal projects.",
     "price": 2899.0,
     "mrp": 4141.43,
     "photo": "/products/pptx-full/slide21_img2_HA6674.png",
@@ -437,15 +497,18 @@
       "New In"
     ],
     "colors": [],
-    "stock": 9
+    "stock": 9,
+    "unitType": "bundle",
+    "sellingPricePerMeter": null,
+    "bundlePrice": 2899.0
   },
   {
     "id": "HA3858",
     "brand": "TRESOR",
     "name": "HA3858",
-    "description": "Extracted from catalogue slide 22. ",
-    "price": 380.0,
-    "mrp": 542.86,
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹1299. Perfect for premium couture and bridal projects.",
+    "price": 1299.0,
+    "mrp": 1855.71,
     "photo": "/products/pptx-full/slide22_img2_HA3858.png",
     "image": "",
     "category": "Laces",
@@ -457,13 +520,16 @@
       "New In"
     ],
     "colors": [],
-    "stock": 9
+    "stock": 9,
+    "unitType": "bundle",
+    "sellingPricePerMeter": 380.0,
+    "bundlePrice": 1299.0
   },
   {
     "id": "NO-CODE-S23",
     "brand": "TRESOR",
     "name": "NO-CODE-S23",
-    "description": "Extracted from catalogue slide 23. Code not found in slide text; using generated code",
+    "description": "Elegant patch / embellishment from TRESOR. Available at ₹480. Perfect for premium couture and bridal projects. Note: Code not found in slide text; using generated code",
     "price": 480.0,
     "mrp": 685.71,
     "photo": "/products/pptx-full/slide23_img2_NO-CODE-S23.jpg",
@@ -477,13 +543,16 @@
       "New In"
     ],
     "colors": [],
-    "stock": 1
+    "stock": 1,
+    "unitType": "unit",
+    "sellingPricePerMeter": 480.0,
+    "bundlePrice": null
   },
   {
     "id": "HA4536",
     "brand": "TRESOR",
     "name": "HA4536",
-    "description": "Extracted from catalogue slide 24. ",
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 3 meters at ₹3800. Perfect for premium couture and bridal projects.",
     "price": 3800.0,
     "mrp": 5428.57,
     "photo": "/products/pptx-full/slide24_img2_HA4536.png",
@@ -497,15 +566,18 @@
       "New In"
     ],
     "colors": [],
-    "stock": 3
+    "stock": 3,
+    "unitType": "bundle",
+    "sellingPricePerMeter": null,
+    "bundlePrice": 3800.0
   },
   {
     "id": "6343",
     "brand": "TRESOR",
     "name": "6343",
-    "description": "Extracted from catalogue slide 25. ",
-    "price": 1200.0,
-    "mrp": 1714.29,
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹7000. Perfect for premium couture and bridal projects.",
+    "price": 7000.0,
+    "mrp": 10000.0,
     "photo": "/products/pptx-full/slide25_img2_6343.png",
     "image": "",
     "category": "Laces",
@@ -517,15 +589,18 @@
       "New In"
     ],
     "colors": [],
-    "stock": 9
+    "stock": 9,
+    "unitType": "bundle",
+    "sellingPricePerMeter": 1200.0,
+    "bundlePrice": 7000.0
   },
   {
     "id": "HA6767",
     "brand": "TRESOR",
     "name": "HA6767",
-    "description": "Extracted from catalogue slide 26. ",
-    "price": 80.0,
-    "mrp": 114.29,
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹700. Perfect for premium couture and bridal projects.",
+    "price": 700.0,
+    "mrp": 1000.0,
     "photo": "/products/pptx-full/slide26_img2_HA6767.jpg",
     "image": "",
     "category": "Laces",
@@ -537,15 +612,18 @@
       "New In"
     ],
     "colors": [],
-    "stock": 9
+    "stock": 9,
+    "unitType": "bundle",
+    "sellingPricePerMeter": 80.0,
+    "bundlePrice": 700.0
   },
   {
     "id": "6988",
     "brand": "TRESOR",
     "name": "6988",
-    "description": "Extracted from catalogue slide 27. ",
-    "price": 129.0,
-    "mrp": 184.29,
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹999. Perfect for premium couture and bridal projects.",
+    "price": 999.0,
+    "mrp": 1427.14,
     "photo": "/products/pptx-full/slide27_img2_6988.jpg",
     "image": "",
     "category": "Laces",
@@ -557,13 +635,16 @@
       "New In"
     ],
     "colors": [],
-    "stock": 9
+    "stock": 9,
+    "unitType": "bundle",
+    "sellingPricePerMeter": 129.0,
+    "bundlePrice": 999.0
   },
   {
     "id": "HA6320",
     "brand": "TRESOR",
     "name": "HA6320",
-    "description": "Extracted from catalogue slide 28. ",
+    "description": "Elegant lace from TRESOR. Sold as a complete bundle of 3 meters at ₹4800. Perfect for premium couture and bridal projects.",
     "price": 4800.0,
     "mrp": 6857.14,
     "photo": "/products/pptx-full/slide28_img2_HA6320.png",
@@ -577,13 +658,16 @@
       "New In"
     ],
     "colors": [],
-    "stock": 3
+    "stock": 3,
+    "unitType": "bundle",
+    "sellingPricePerMeter": null,
+    "bundlePrice": 4800.0
   },
   {
     "id": "NE1386",
     "brand": "TRESOR",
     "name": "NE1386",
-    "description": "Extracted from catalogue slide 30. ",
+    "description": "Elegant patch / embellishment from TRESOR. Available at ₹400. Perfect for premium couture and bridal projects.",
     "price": 400.0,
     "mrp": 571.43,
     "photo": "/products/pptx-full/slide30_img2_NE1386.png",
@@ -597,13 +681,16 @@
       "New In"
     ],
     "colors": [],
-    "stock": 1
+    "stock": 1,
+    "unitType": "unit",
+    "sellingPricePerMeter": null,
+    "bundlePrice": null
   },
   {
     "id": "NE1386-S31",
     "brand": "TRESOR",
     "name": "NE1386-S31",
-    "description": "Extracted from catalogue slide 31. ",
+    "description": "Elegant patch / embellishment from TRESOR. Available at ₹400. Perfect for premium couture and bridal projects.",
     "price": 400.0,
     "mrp": 571.43,
     "photo": "/products/pptx-full/slide31_img2_NE1386-S31.png",
@@ -617,13 +704,16 @@
       "New In"
     ],
     "colors": [],
-    "stock": 1
+    "stock": 1,
+    "unitType": "unit",
+    "sellingPricePerMeter": null,
+    "bundlePrice": null
   },
   {
     "id": "NE1386-S32",
     "brand": "TRESOR",
     "name": "NE1386-S32",
-    "description": "Extracted from catalogue slide 32. ",
+    "description": "Elegant patch / embellishment from TRESOR. Available at ₹400. Perfect for premium couture and bridal projects.",
     "price": 400.0,
     "mrp": 571.43,
     "photo": "/products/pptx-full/slide32_img2_NE1386-S32.png",
@@ -637,13 +727,16 @@
       "New In"
     ],
     "colors": [],
-    "stock": 1
+    "stock": 1,
+    "unitType": "unit",
+    "sellingPricePerMeter": null,
+    "bundlePrice": null
   },
   {
     "id": "NE1386-S33",
     "brand": "TRESOR",
     "name": "NE1386-S33",
-    "description": "Extracted from catalogue slide 33. ",
+    "description": "Elegant patch / embellishment from TRESOR. Available at ₹400. Perfect for premium couture and bridal projects.",
     "price": 400.0,
     "mrp": 571.43,
     "photo": "/products/pptx-full/slide33_img2_NE1386-S33.png",
@@ -657,13 +750,16 @@
       "New In"
     ],
     "colors": [],
-    "stock": 1
+    "stock": 1,
+    "unitType": "unit",
+    "sellingPricePerMeter": null,
+    "bundlePrice": null
   },
   {
     "id": "NE1386-S34",
     "brand": "TRESOR",
     "name": "NE1386-S34",
-    "description": "Extracted from catalogue slide 34. ",
+    "description": "Elegant patch / embellishment from TRESOR. Available at ₹400. Perfect for premium couture and bridal projects.",
     "price": 400.0,
     "mrp": 571.43,
     "photo": "/products/pptx-full/slide34_img2_NE1386-S34.png",
@@ -677,13 +773,16 @@
       "New In"
     ],
     "colors": [],
-    "stock": 1
+    "stock": 1,
+    "unitType": "unit",
+    "sellingPricePerMeter": null,
+    "bundlePrice": null
   },
   {
     "id": "NE1386-S35",
     "brand": "TRESOR",
     "name": "NE1386-S35",
-    "description": "Extracted from catalogue slide 35. ",
+    "description": "Elegant patch / embellishment from TRESOR. Available at ₹400. Perfect for premium couture and bridal projects.",
     "price": 400.0,
     "mrp": 571.43,
     "photo": "/products/pptx-full/slide35_img2_NE1386-S35.png",
@@ -697,6 +796,9 @@
       "New In"
     ],
     "colors": [],
-    "stock": 1
+    "stock": 1,
+    "unitType": "unit",
+    "sellingPricePerMeter": null,
+    "bundlePrice": null
   }
 ]

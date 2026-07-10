@@ -93,6 +93,7 @@ for idx, slide in enumerate(prs.slides, 1):
         r'(?:sp\s+only\s+)?bundle\s*(?:price)?\s*[-:\u2013\u2014]?\s*(\d+(?:\.\d+)?)',
         r'only\s+bundle\s*(\d+(?:\.\d+)?)',
         r'(?<![a-zA-Z])b\s*(\d+(?:\.\d+)?)(?=\s*(?:\n|$|sold|only|\(|\s+\d))',
+        r'bundle\s+of\s+\d+(?:\.\d+)?\s*(?:meter|meters|m)\s+(?:at\s+)?(?:Rs\.?\s*)?(\d+(?:\.\d+)?)',
     ])
 
     og = parse_number(text, [
@@ -126,6 +127,7 @@ for idx, slide in enumerate(prs.slides, 1):
     is_lace = has_meters or 'meter' in text.lower() or 'meters' in text.lower()
 
     # Bundle logic
+    explicit_bundle = bundle
     bundle_price = bundle
     if is_lace and not bundle_price and sp_per_meter and stock:
         try:
@@ -134,12 +136,13 @@ for idx, slide in enumerate(prs.slides, 1):
             pass
 
     # Determine listing price (what customer pays)
-    if sp_per_meter:
+    # Explicit bundle price always wins: it is the fixed price for all meters in stock.
+    if explicit_bundle:
+        listing_price = float(explicit_bundle)
+        unit_type = 'bundle'
+    elif sp_per_meter:
         listing_price = float(sp_per_meter)
         unit_type = 'per meter' if is_lace else 'unit'
-    elif bundle_price:
-        listing_price = float(bundle_price)
-        unit_type = 'bundle'
     elif og:
         listing_price = float(og)
         unit_type = 'unit'
@@ -214,11 +217,41 @@ for r in inventory:
     if not r['listing_price']:
         continue
     colour = r['colour_from_text'] or ''
+    stock = int(float(r['stock_meters'] or 1))
+    category_word = 'lace' if r['is_lace'] else 'patch / embellishment'
+    price_display = f"₹{int(r['listing_price'])}"
+
+    if r['unit_type'] == 'bundle':
+        description = (
+            f"Elegant {category_word} from TRESOR. "
+            f"Sold as a complete bundle of {stock} meter{'s' if stock != 1 else ''} "
+            f"at {price_display}. "
+            f"Perfect for premium couture and bridal projects."
+        )
+    elif r['unit_type'] == 'per meter':
+        description = (
+            f"Elegant {category_word} from TRESOR. "
+            f"Priced at {price_display} per meter; {stock} meter{'s' if stock != 1 else ''} currently available. "
+            f"Ideal for premium couture and bridal projects."
+        )
+    else:
+        description = (
+            f"Elegant {category_word} from TRESOR. "
+            f"Available at {price_display}. "
+            f"Perfect for premium couture and bridal projects."
+        )
+
+    if colour.strip():
+        description += f" Colour: {colour.strip()}."
+
+    if r['notes']:
+        description += f" Note: {r['notes']}"
+
     fabrics.append({
         'id': r['code'],
         'brand': 'TRESOR',
         'name': r['code'],
-        'description': f"Extracted from catalogue slide {r['slide']}. {r['notes']}",
+        'description': description,
         'price': r['listing_price'],
         'mrp': r['mrp'],
         'photo': f"/products/pptx-full/{r['image_files'].split(';')[0]}" if r['image_files'] else '',
@@ -230,7 +263,10 @@ for r in inventory:
         'origin': 'India',
         'tags': ['New In'],
         'colors': [{'name': colour.strip(), 'hex': '#cccccc'}] if colour.strip() else [],
-        'stock': int(float(r['stock_meters'] or 1)),
+        'stock': stock,
+        'unitType': r['unit_type'],
+        'sellingPricePerMeter': float(r['sp_per_meter']) if r['sp_per_meter'] else None,
+        'bundlePrice': float(r['bundle_price']) if r['bundle_price'] else None,
     })
 seed_path = os.path.join(out_dir, 'inventory_full_seed.json')
 with open(seed_path, 'w', encoding='utf-8') as f:
