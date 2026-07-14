@@ -56,6 +56,15 @@ const ProductCard: React.FC<Props> = ({ fabric, compact = false }) => {
               {fabric.subCategory}
             </p>
           )}
+          {fabric.category === 'Laces' && fabric.unitType && (
+            <p className="text-[11px] font-semibold text-[#5C3A8E] mb-1.5">
+              {fabric.unitType === 'bundle' && fabric.bundleSizeMeters
+                ? `${fabric.bundleSizeMeters}m bundle`
+                : fabric.unitType === 'per meter'
+                ? 'Sold per meter'
+                : 'Sold as unit'}
+            </p>
+          )}
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className="text-[14px] font-bold text-[color:var(--color-myntra-navy)]">
               {formatINR(fabric.price)}
