@@ -323,7 +323,7 @@ const draftToFabric = (d: Draft, existing?: Fabric): Fabric => {
     gallery: existing?.gallery,
     category: (d.category || 'Fabrics') as Fabric['category'],
     masterCategory: (d.category || 'Fabrics') as Fabric['masterCategory'],
-    subCategory: existing?.subCategory,
+    subCategory: d.category === 'Laces' ? 'Trim & Edging' : existing?.subCategory,
     origin: d.origin.trim(),
     tags,
     sticker: d.sticker || undefined,
@@ -620,7 +620,17 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
               <select
                 className="input-box"
                 value={draft.category}
-                onChange={e => set('category', e.target.value as Fabric['category'] | '')}
+                onChange={e => {
+                  const next = e.target.value as Fabric['category'] | '';
+                  set('category', next);
+                  if (next !== 'Laces') {
+                    // Non-lace products are always unit-based
+                    set('unitType', '');
+                    set('sellingPricePerMeter', '');
+                    set('bundleSizeMeters', '');
+                    set('bundlePrice', '');
+                  }
+                }}
               >
                 <option value="">— Select —</option>
                 {CATEGORIES.map(c => (
@@ -679,17 +689,27 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
             Pricing &amp; Stock
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <Field label="Unit Type">
-              <select
-                className="input-box"
-                value={draft.unitType}
-                onChange={e => set('unitType', e.target.value as Fabric['unitType'] | '')}
-              >
-                <option value="">Unit (default)</option>
-                <option value="per meter">Per meter</option>
-                <option value="bundle">Bundle of meters</option>
-              </select>
-            </Field>
+            {draft.category === 'Laces' ? (
+              <Field label="Unit Type">
+                <select
+                  className="input-box"
+                  value={draft.unitType}
+                  onChange={e => set('unitType', e.target.value as Fabric['unitType'] | '')}
+                >
+                  <option value="">Unit (default)</option>
+                  <option value="per meter">Per meter</option>
+                  <option value="bundle">Bundle of meters</option>
+                </select>
+              </Field>
+            ) : (
+              <Field label="Unit Type">
+                <input
+                  className="input-box bg-[color:var(--color-myntra-bg-soft)] text-[color:var(--color-myntra-ink-mute)]"
+                  value="Unit (sold per piece)"
+                  disabled
+                />
+              </Field>
+            )}
             <Field label="Cost Price (₹)" error={errors.costPrice}>
               <input
                 type="number"
@@ -730,7 +750,7 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
           </div>
 
           {/* Laces / metered pricing */}
-          {(draft.unitType === 'per meter' || draft.unitType === 'bundle') && (
+          {draft.category === 'Laces' && (draft.unitType === 'per meter' || draft.unitType === 'bundle') && (
             <div className="mt-4 border border-[color:var(--color-myntra-border-soft)] rounded-md p-3 bg-[color:var(--color-myntra-bg-soft)]">
               <div className="flex items-center gap-2 mb-2 text-[color:var(--color-myntra-navy)]">
                 <Ruler className="w-4 h-4" />
