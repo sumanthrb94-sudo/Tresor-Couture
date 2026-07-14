@@ -11,6 +11,7 @@ import ReviewsSection from '../components/ReviewsSection';
 import StickyAddToCart from '../components/StickyAddToCart';
 import DeliveryChecker from '../components/DeliveryChecker';
 import { productsApi } from '../lib/firebase';
+import { useCatalog } from '../context/CatalogContext';
 import { analytics } from '../lib/analytics';
 import type { Fabric } from '../types';
 
@@ -22,6 +23,8 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
   const { navigate } = useRouter();
   const { addItem } = useCart();
   const { has: hasWish, toggle: toggleWish } = useWishlist();
+
+  const { products: catalogProducts, loading: catalogLoading } = useCatalog();
 
   const [fabric, setFabric] = useState<Fabric | null | undefined>(undefined);
   const [similar, setSimilar] = useState<Fabric[]>([]);
@@ -37,20 +40,6 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
         const f = (await productsApi.get(productId)) as unknown as Fabric | null;
         if (cancelled) return;
         setFabric(f);
-        if (f) {
-          // Similar-products fetch is best-effort — a failure here shouldn't
-          // blank the PDP, so we swallow and just render no rail.
-          try {
-            const peers = (await productsApi.list({ limit: 100 })) as unknown as Fabric[];
-            if (!cancelled) {
-              setSimilar(peers.filter(p => p.id !== f.id && p.category === f.category).slice(0, 5));
-            }
-          } catch {
-            if (!cancelled) setSimilar([]);
-          }
-        } else {
-          setSimilar([]);
-        }
       } catch (err) {
         if (!cancelled) {
           setFabric(null);
@@ -60,6 +49,16 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
     })();
     return () => { cancelled = true; };
   }, [productId, reloadKey]);
+
+  // Similar products come from the shared catalogue so the rail is instant.
+  useEffect(() => {
+    if (!fabric || catalogLoading) return;
+    setSimilar(
+      catalogProducts
+        .filter(p => p.id !== fabric.id && p.category === fabric.category)
+        .slice(0, 5)
+    );
+  }, [fabric, catalogProducts, catalogLoading]);
 
   const [selectedColor, setSelectedColor] = useState<string | undefined>(fabric?.colors?.[0]?.name);
   const [quantity, setQuantity] = useState<number>(1);

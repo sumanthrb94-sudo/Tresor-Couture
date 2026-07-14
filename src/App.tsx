@@ -18,8 +18,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import ShopPage from './pages/ShopPage';
 import ProductPage from './pages/ProductPage';
 import CartPage from './pages/CartPage';
-import { productsApi } from './lib/firebase';
-import type { Fabric } from './types';
+import { CatalogProvider, useCatalog } from './context/CatalogContext';
 
 // Routes that aren't on the critical home/shop path are lazy-loaded so they
 // don't bloat the initial bundle. React.lazy splits each into its own chunk.
@@ -42,29 +41,7 @@ import { RouterProvider, useRouter } from './context/RouterContext';
 import AdminGuard from './pages/admin/AdminGuard';
 
 const Home: React.FC = () => {
-  const [products, setProducts] = useState<Fabric[] | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoadError(null);
-    setProducts(null);
-    (async () => {
-      try {
-        const rows = await productsApi.list({ limit: 200 });
-        if (!cancelled) setProducts(rows as unknown as Fabric[]);
-      } catch (err) {
-        if (!cancelled) {
-          setProducts([]);
-          setLoadError(err instanceof Error ? err.message : 'Could not load the catalogue.');
-        }
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [reloadKey]);
-
-  const loading = products === null;
+  const { products, loading, error: loadError, refresh } = useCatalog();
 
   // Rails defined by spec. Bridal prefers master categories (Sarees, Lehenga Cholis)
   // when there are enough; otherwise falls back to silk/satin fabrics so the rail
@@ -102,7 +79,7 @@ const Home: React.FC = () => {
             </p>
             <button
               type="button"
-              onClick={() => setReloadKey(k => k + 1)}
+              onClick={refresh}
               className="text-[13px] font-bold text-[color:var(--color-myntra-pink)] underline"
             >
               Try again
@@ -210,13 +187,15 @@ function App() {
   return (
     <RouterProvider>
       <AuthProvider>
-        <WishlistProvider>
-          <CartProvider>
-            <OrderProvider>
-              <Chrome />
-            </OrderProvider>
-          </CartProvider>
-        </WishlistProvider>
+        <CatalogProvider>
+          <WishlistProvider>
+            <CartProvider>
+              <OrderProvider>
+                <Chrome />
+              </OrderProvider>
+            </CartProvider>
+          </WishlistProvider>
+        </CatalogProvider>
       </AuthProvider>
     </RouterProvider>
   );

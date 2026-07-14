@@ -9,7 +9,7 @@ import {
 import { Fabric, MasterCategory } from '../types';
 import ProductCard from '../components/ProductCard';
 import { useRouter } from '../context/RouterContext';
-import { productsApi } from '../lib/firebase';
+import { useCatalog } from '../context/CatalogContext';
 
 type SortKey = 'recommended' | 'popularity' | 'price-asc' | 'price-desc' | 'rating' | 'newest';
 
@@ -87,31 +87,16 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
     return () => { document.body.style.overflow = ''; };
   }, [mobileFiltersOpen]);
 
-  const [products, setProducts] = useState<Fabric[] | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
+  const { products: allProducts, loading, error: loadError, refresh } = useCatalog();
 
-  useEffect(() => {
-    let cancelled = false;
-    setProducts(null);
-    setLoadError(null);
-    (async () => {
-      try {
-        const rows = await productsApi.list({
-          masterCategory: activeMaster ?? undefined,
-          subCategory: activeSub || undefined,
-          limit: 200
-        });
-        if (!cancelled) setProducts(rows as unknown as Fabric[]);
-      } catch (err) {
-        if (!cancelled) {
-          setProducts([]);
-          setLoadError(err instanceof Error ? err.message : 'Could not load products.');
-        }
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [activeMaster, activeSub, reloadKey]);
+  const products = useMemo(() => {
+    if (!activeMaster) return allProducts;
+    return allProducts.filter(p => {
+      if (p.masterCategory !== activeMaster) return false;
+      if (activeSub && p.subCategory !== activeSub) return false;
+      return true;
+    });
+  }, [allProducts, activeMaster, activeSub]);
 
   const allColors = useMemo(() => {
     const s = new Set<string>();
@@ -153,8 +138,6 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
     }
     return list;
   }, [products, weaveTypes, colors, origins, priceBrackets, sort]);
-
-  const loading = products === null;
 
   const masterTile = activeMaster ? MASTER_CATEGORY_TILES.find(t => t.name === activeMaster) : null;
   const subOptions = activeMaster ? MASTER_CATEGORY_TREE[activeMaster] : [];
@@ -372,7 +355,7 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
                 </p>
                 <button
                   type="button"
-                  onClick={() => setReloadKey(k => k + 1)}
+                  onClick={refresh}
                   className="text-[13px] font-bold text-[color:var(--color-myntra-pink)] underline"
                 >
                   Try again
@@ -391,7 +374,7 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
                   </div>
                 ))}
               </div>
-            ) : (products ?? []).length === 0 && !loadError ? (
+            ) : products.length === 0 && !loadError ? (
               <div className="border border-dashed border-[color:var(--color-myntra-border)] py-20 px-6 text-center bg-[color:var(--color-myntra-bg-soft)]">
                 <p className="font-serif text-2xl md:text-3xl mb-2 text-[color:var(--color-myntra-navy)]">
                   Curated stock is on the loom

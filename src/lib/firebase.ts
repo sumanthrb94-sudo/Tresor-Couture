@@ -39,6 +39,7 @@ import {
 } from 'firebase/auth';
 import {
   getFirestore,
+  enableIndexedDbPersistence,
   collection,
   doc,
   getDoc,
@@ -121,6 +122,14 @@ const firebaseConfig = {
 export const app: FirebaseApp = getApps()[0] ?? initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+/* Persist Firestore data locally so repeat visits and category switches read
+   from IndexedDB first instead of making a fresh network round-trip. */
+try {
+  enableIndexedDbPersistence(db);
+} catch {
+  // Best-effort: some browsers / private modes don't allow persistence.
+}
 
 /* ------------------------------------------------------------------ */
 /*  Auth                                                              */

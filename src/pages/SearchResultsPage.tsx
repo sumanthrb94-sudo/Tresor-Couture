@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import ProductCard from '../components/ProductCard';
-import { productsApi } from '../lib/firebase';
 import { useRouter } from '../context/RouterContext';
+import { useCatalog } from '../context/CatalogContext';
 import type { Fabric } from '../types';
 
 interface Props {
@@ -64,7 +64,7 @@ const SkeletonCard: React.FC = () => (
 
 const SearchResultsPage: React.FC<Props> = ({ q }) => {
   const { navigate } = useRouter();
-  const [products, setProducts] = useState<Fabric[] | null>(null);
+  const { products, loading } = useCatalog();
   const [recent, setRecent] = useState<string[]>(() => readRecent());
 
   // Push current q into the recent-searches stack on mount/change. We dedupe
@@ -79,26 +79,9 @@ const SearchResultsPage: React.FC<Props> = ({ q }) => {
     });
   }, [q]);
 
-  useEffect(() => {
-    let cancelled = false;
-    setProducts(null);
-    (async () => {
-      try {
-        const rows = await productsApi.list({ limit: 200 });
-        if (!cancelled) setProducts(rows as unknown as Fabric[]);
-      } catch {
-        if (!cancelled) setProducts([]);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
-
   const results = useMemo(() => {
-    if (!products) return [];
     return products.filter(p => matches(p, q));
   }, [products, q]);
-
-  const loading = products === null;
 
   return (
     <main className="pt-[100px] md:pt-[112px] pb-12 md:pb-16 bg-white min-h-screen">

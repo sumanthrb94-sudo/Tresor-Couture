@@ -6,9 +6,9 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
+import { useCatalog } from '../context/CatalogContext';
 import { FABRICS, MASTER_CATEGORIES, MASTER_CATEGORY_TREE, OFFER_TICKER } from '../constants';
-import { productsApi } from '../lib/firebase';
-import type { Fabric, MasterCategory } from '../types';
+import type { MasterCategory } from '../types';
 
 type NavEntry =
   | { kind: 'master'; label: MasterCategory; tone?: 'default' | 'premium' }
@@ -54,20 +54,9 @@ const Navbar: React.FC = () => {
     return () => document.removeEventListener('mousedown', handler);
   }, [accountOpen]);
 
-  // Live catalogue for search
-  const [catalog, setCatalog] = useState<Fabric[] | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const rows = await productsApi.list({ limit: 200 });
-        if (!cancelled && rows.length) setCatalog(rows as unknown as Fabric[]);
-      } catch { /* keep FABRICS fallback */ }
-    })();
-    return () => { cancelled = true; };
-  }, []);
-
-  const searchPool = catalog ?? FABRICS;
+  // Shared catalogue for search / mega panels
+  const { products: catalogProducts } = useCatalog();
+  const searchPool = catalogProducts.length ? catalogProducts : FABRICS;
 
   const suggestions = useMemo(() => {
     const q = search.trim().toLowerCase();

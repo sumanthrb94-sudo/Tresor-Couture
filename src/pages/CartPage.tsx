@@ -4,8 +4,9 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
+import { useCatalog } from '../context/CatalogContext';
 import { FABRICS, FREE_SHIPPING_THRESHOLD, formatINR } from '../constants';
-import { couponsApi, productsApi } from '../lib/firebase';
+import { couponsApi } from '../lib/firebase';
 import type { Fabric } from '../types';
 import FabricImage from '../components/FabricImage';
 import ProductCard from '../components/ProductCard';
@@ -21,23 +22,9 @@ const CartPage: React.FC = () => {
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponBusy, setCouponBusy] = useState(false);
 
-  // "You might also like" must link to real product pages. Source it from the
-  // live Firestore catalogue (document ids) — the static FABRICS seed carries
-  // numeric ids that 404 against the Firestore-backed product route. Falls back
-  // to FABRICS only until the fetch resolves.
-  const [catalog, setCatalog] = useState<Fabric[] | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const rows = await productsApi.list({ limit: 200 });
-        if (!cancelled && rows.length) setCatalog(rows as unknown as Fabric[]);
-      } catch {
-        /* keep the FABRICS fallback */
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
+  // "You might also like" uses the shared catalogue; FABRICS is the fallback.
+  const { products: catalogProducts } = useCatalog();
+  const catalog = catalogProducts.length ? catalogProducts : null;
 
   // A coupon is validated against the subtotal at apply time and its discount
   // frozen into state. If the shopper then changes quantities, that frozen
