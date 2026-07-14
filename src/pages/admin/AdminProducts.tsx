@@ -1346,7 +1346,7 @@ const AdminProducts: React.FC = () => {
               <span className="ml-1 font-medium opacity-70">total</span>
             </span>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:items-center">
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--color-myntra-ink-mute)]" />
               <input

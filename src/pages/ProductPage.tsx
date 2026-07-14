@@ -324,6 +324,11 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
               )}
             </div>
 
+            {/* Description */}
+            <div className="mb-6">
+              <p className="text-[14px] text-[color:var(--color-myntra-ink)] leading-relaxed">{fabric.description}</p>
+            </div>
+
             {/* CTAs */}
             <div className="flex gap-3 mb-7">
               <button
@@ -370,11 +375,6 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
                   <p className="text-[11px] font-bold text-[color:var(--color-myntra-ink)] leading-tight">{label}</p>
                 </div>
               ))}
-            </div>
-
-            {/* Description */}
-            <div>
-              <p className="text-[14px] text-[color:var(--color-myntra-ink)] leading-relaxed mb-5">{fabric.description}</p>
             </div>
 
             {/* Accordions */}
