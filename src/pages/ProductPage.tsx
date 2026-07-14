@@ -258,10 +258,31 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
 
             <hr className="border-[color:var(--color-myntra-border-soft)] mb-4" />
 
-            <div className="flex items-baseline gap-2 flex-wrap mb-1">
+            <div className="flex items-baseline gap-3 flex-wrap mb-2">
               <span className="text-[24px] font-extrabold text-[color:var(--color-myntra-navy)]">{formatINR(fabric.price)}</span>
+              {fabric.mrp > fabric.price && (
+                <>
+                  <span className="text-[16px] text-[color:var(--color-myntra-ink-mute)] line-through">{formatINR(fabric.mrp)}</span>
+                  <span className="text-[13px] font-bold text-[color:var(--color-myntra-green)]">{Math.round(((fabric.mrp - fabric.price) / fabric.mrp) * 100)}% OFF</span>
+                </>
+              )}
             </div>
-            <p className="text-[13px] font-bold text-[color:var(--color-myntra-green)] mb-1">inclusive of all taxes</p>
+            <p className="text-[13px] font-bold text-[color:var(--color-myntra-green)] mb-4">inclusive of all taxes</p>
+
+            {fabric.category === 'Laces' && (
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                <span className="inline-block px-2.5 py-1 rounded-full bg-[#F1ECF7] text-[#5C3A8E] border border-[#D6C9E9] text-[11px] font-bold uppercase tracking-wide">
+                  {fabric.unitType === 'bundle' && fabric.bundleSizeMeters
+                    ? `${fabric.bundleSizeMeters}m bundle`
+                    : fabric.unitType === 'per meter'
+                    ? 'Per meter'
+                    : 'Lace'}
+                </span>
+                {fabric.productCode && (
+                  <span className="text-[12px] text-[color:var(--color-myntra-ink-mute)]">Code: {fabric.productCode}</span>
+                )}
+              </div>
+            )}
 
             {/* Colour */}
             {fabric.colors && fabric.colors.length > 0 && (
@@ -317,7 +338,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
                   </div>
                   {stock < 10 && (
                     <p className="text-[12px] text-[color:var(--color-myntra-pink)] font-semibold mt-2">
-                      Only {stock} left in stock — order soon
+                      Only {stock} {fabric.category === 'Laces' ? (fabric.unitType === 'bundle' ? 'meters' : 'meters') : 'left'} in stock — order soon
                     </p>
                   )}
                 </>
@@ -401,7 +422,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
                           <dt className="text-[color:var(--color-myntra-ink-soft)]">Fabric</dt><dd className="font-semibold">{fabric.weaveType ?? fabric.category}</dd>
                           <dt className="text-[color:var(--color-myntra-ink-soft)]">Origin</dt><dd className="font-semibold">{fabric.origin}</dd>
                           <dt className="text-[color:var(--color-myntra-ink-soft)]">Category</dt><dd className="font-semibold">{fabric.category}</dd>
-                          <dt className="text-[color:var(--color-myntra-ink-soft)]">In Stock</dt><dd className="font-semibold">{stock} {stock === 1 ? 'piece' : 'pieces'}</dd>
+                          <dt className="text-[color:var(--color-myntra-ink-soft)]">In Stock</dt><dd className="font-semibold">{stock} {fabric.category === 'Laces' ? (fabric.unitType === 'bundle' ? `meters (${fabric.bundleSizeMeters ? Math.floor(stock / fabric.bundleSizeMeters) : stock} bundle${Math.floor(stock / (fabric.bundleSizeMeters ?? 1)) === 1 ? '' : 's'})` : 'meters') : (stock === 1 ? 'piece' : 'pieces')}</dd>
                           <dt className="text-[color:var(--color-myntra-ink-soft)]">Tags</dt><dd className="font-semibold">{fabric.tags.join(', ')}</dd>
                         </dl>
                       )}

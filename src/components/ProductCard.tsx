@@ -1,9 +1,10 @@
 import React from 'react';
-import { Heart, Star } from 'lucide-react';
+import { Heart, Star, ShoppingBag } from 'lucide-react';
 import { Fabric } from '../types';
 import { formatINR } from '../constants';
 import { useRouter } from '../context/RouterContext';
 import { useWishlist } from '../context/WishlistContext';
+import { useCart } from '../context/CartContext';
 import FabricImage from './FabricImage';
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
 const ProductCard: React.FC<Props> = ({ fabric, compact = false }) => {
   const { navigate } = useRouter();
   const { has, toggle } = useWishlist();
+  const { addItem } = useCart();
   const wished = has(fabric.id);
 
   return (
@@ -71,6 +73,18 @@ const ProductCard: React.FC<Props> = ({ fabric, compact = false }) => {
             </span>
           </div>
         </div>
+      </button>
+
+      {/* Add to bag */}
+      <button
+        onClick={e => {
+          e.stopPropagation();
+          addItem({ fabricId: fabric.id, quantity: 1 });
+        }}
+        aria-label="Add to bag"
+        className="absolute bottom-3 right-2 w-9 h-9 rounded-full bg-[color:var(--color-myntra-navy)] text-white border border-[color:var(--color-myntra-navy)] flex items-center justify-center hover:scale-110 transition-transform shadow-sm"
+      >
+        <ShoppingBag className="w-4 h-4" />
       </button>
 
       <button
