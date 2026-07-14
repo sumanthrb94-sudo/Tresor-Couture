@@ -136,13 +136,17 @@ for idx, slide in enumerate(prs.slides, 1):
             pass
 
     # Determine listing price (what customer pays)
-    # Explicit bundle price always wins: it is the fixed price for all meters in stock.
+    # Explicit bundle price always wins: it is the fixed price for all meters/units in stock.
     if explicit_bundle:
         listing_price = float(explicit_bundle)
         unit_type = 'bundle'
     elif sp_per_meter:
         listing_price = float(sp_per_meter)
         unit_type = 'per meter' if is_lace else 'unit'
+    elif bp and not is_lace:
+        # Non-metered / bundle-only items: BP is the bundle selling price.
+        listing_price = float(bp)
+        unit_type = 'bundle'
     elif og:
         listing_price = float(og)
         unit_type = 'unit'
@@ -222,10 +226,13 @@ for r in inventory:
     price_display = f"₹{int(r['listing_price'])}"
 
     if r['unit_type'] == 'bundle':
+        if r['is_lace']:
+            bundle_desc = f"Sold as a complete bundle of {stock} meter{'s' if stock != 1 else ''} at {price_display}."
+        else:
+            bundle_desc = f"Sold as a complete bundle at {price_display}."
         description = (
             f"Elegant {category_word} from TRESOR. "
-            f"Sold as a complete bundle of {stock} meter{'s' if stock != 1 else ''} "
-            f"at {price_display}. "
+            f"{bundle_desc} "
             f"Perfect for premium couture and bridal projects."
         )
     elif r['unit_type'] == 'per meter':
@@ -251,6 +258,7 @@ for r in inventory:
         'id': r['code'],
         'brand': 'TRESOR',
         'name': r['code'],
+        'productCode': r['code'],
         'description': description,
         'price': r['listing_price'],
         'mrp': r['mrp'],
@@ -265,7 +273,9 @@ for r in inventory:
         'colors': [{'name': colour.strip(), 'hex': '#cccccc'}] if colour.strip() else [],
         'stock': stock,
         'unitType': r['unit_type'],
+        'costPrice': None,
         'sellingPricePerMeter': float(r['sp_per_meter']) if r['sp_per_meter'] else None,
+        'bundleSizeMeters': stock if r['unit_type'] == 'bundle' and stock else None,
         'bundlePrice': float(r['bundle_price']) if r['bundle_price'] else None,
     })
 seed_path = os.path.join(out_dir, 'inventory_full_seed.json')

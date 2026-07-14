@@ -17,6 +17,17 @@ const stockStatus = (n: number): { label: string; cls: string } => {
   return { label: 'In stock', cls: 'bg-[#E8F2E8] text-[#2F6E2F] border-[#C9DFC9]' };
 };
 
+const unitLabel = (unitType?: Fabric['unitType']): string => {
+  switch (unitType) {
+    case 'per meter':
+      return 'meter';
+    case 'bundle':
+      return 'bundle';
+    default:
+      return 'unit';
+  }
+};
+
 /* KPI tile — same visual language as the dashboard. */
 const Kpi: React.FC<{ label: string; value: string; Icon: React.ComponentType<{ className?: string }>; iconBg: string; iconColor: string; alert?: boolean }> = ({ label, value, Icon, iconBg, iconColor, alert }) => (
   <div className={`bg-white border rounded-md p-4 flex items-center gap-3 ${alert ? 'border-[#F0C7C7]' : 'border-[color:var(--color-myntra-border-soft)]'}`}>
@@ -99,10 +110,40 @@ const AdminInventory: React.FC = () => {
   };
 
   const exportCsv = () => {
-    const headers = ['Product', 'Brand', 'Category', 'Origin', 'Price', 'Stock (units)', 'Stock value', 'Status'];
+    const headers = [
+      'Product ID',
+      'Product Code',
+      'Product Name',
+      'Brand',
+      'Category',
+      'Origin',
+      'Unit Type',
+      'Bundle Size (meters)',
+      'Price per Meter (₹)',
+      'Bundle Price (₹)',
+      'Price (₹)',
+      'Stock',
+      'Stock Value (₹)',
+      'Status'
+    ];
     const data = filtered.map(f => {
       const s = f.stock ?? 0;
-      return [f.name, f.brand, f.category, f.origin, f.price, s, s * (f.price ?? 0), stockStatus(s).label];
+      return [
+        f.category === 'Laces' ? (f.productCode ?? f.id) : f.id,
+        f.productCode ?? '',
+        f.name,
+        f.brand,
+        f.category,
+        f.origin,
+        f.unitType ?? 'unit',
+        f.bundleSizeMeters ?? '',
+        f.sellingPricePerMeter ?? '',
+        f.bundlePrice ?? '',
+        f.price,
+        s,
+        s * (f.price ?? 0),
+        stockStatus(s).label
+      ];
     });
     downloadCsv(`tresor-inventory-${new Date().toISOString().slice(0, 10)}`, toCsv(headers, data));
   };
@@ -159,7 +200,7 @@ const AdminInventory: React.FC = () => {
                   <th className="px-3 py-2.5">Product</th>
                   <th className="px-3 py-2.5">Category</th>
                   <th className="px-3 py-2.5 text-right">Price</th>
-                  <th className="px-3 py-2.5 text-center">Stock (units)</th>
+                  <th className="px-3 py-2.5 text-center">Stock</th>
                   <th className="px-3 py-2.5 text-right">Stock value</th>
                   <th className="px-3 py-2.5">Status</th>
                 </tr>
@@ -178,11 +219,22 @@ const AdminInventory: React.FC = () => {
                           <div className="min-w-0">
                             <div className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-[color:var(--color-myntra-navy)]">{f.brand}</div>
                             <div className="text-[13px] font-semibold text-[color:var(--color-myntra-navy)] line-clamp-1">{f.name}</div>
+                            {f.category === 'Laces' && (
+                              <div className="text-[10px] font-bold text-[#5C3A8E]">Code: {f.productCode ?? f.id}</div>
+                            )}
                           </div>
                         </div>
                       </td>
                       <td className="px-3 py-2.5 text-[color:var(--color-myntra-ink-soft)]">{f.category}</td>
-                      <td className="px-3 py-2.5 text-right font-semibold">{formatINR(f.price)}</td>
+                      <td className="px-3 py-2.5 text-right font-semibold">
+                        <div>{formatINR(f.price)}</div>
+                        {f.unitType === 'per meter' && Number.isFinite(f.sellingPricePerMeter as number) && (
+                          <div className="text-[11px] text-[#5C3A8E]">₹{f.sellingPricePerMeter}/m</div>
+                        )}
+                        {f.unitType === 'bundle' && Number.isFinite(f.bundlePrice as number) && (
+                          <div className="text-[11px] text-[#5C3A8E]">{f.bundleSizeMeters}m bundle @ {formatINR(f.bundlePrice as number)}</div>
+                        )}
+                      </td>
                       <td className="px-3 py-2.5">
                         <div className="flex items-center justify-center gap-1.5">
                           <button onClick={() => setStock(f, s - 1)} disabled={s <= 0 || savingId === f.id} className="w-7 h-7 rounded border border-[color:var(--color-myntra-border-soft)] flex items-center justify-center hover:bg-white disabled:opacity-40" aria-label="Decrease stock">
@@ -199,6 +251,14 @@ const AdminInventory: React.FC = () => {
                           </button>
                           {savedId === f.id && <Check className="w-4 h-4 text-[color:var(--color-myntra-green)]" />}
                         </div>
+                        <div className="text-center text-[10px] text-[color:var(--color-myntra-ink-mute)] mt-1">
+                          {unitLabel(f.unitType)}s
+                        </div>
+                        {f.unitType === 'bundle' && Number.isFinite(f.bundleSizeMeters as number) && (
+                          <div className="text-center text-[10px] text-[#5C3A8E] font-semibold">
+                            {f.bundleSizeMeters}m each
+                          </div>
+                        )}
                       </td>
                       <td className="px-3 py-2.5 text-right font-semibold">{formatINR(s * (f.price ?? 0))}</td>
                       <td className="px-3 py-2.5">

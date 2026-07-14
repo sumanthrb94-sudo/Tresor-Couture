@@ -11,10 +11,15 @@ import {
   Upload,
   Tag,
   Camera,
-  AlertTriangle
+  AlertTriangle,
+  Ruler,
+  Download,
+  Check
 } from 'lucide-react';
 import { productsApi } from '../../lib/firebase';
 import { CATEGORIES, formatINR } from '../../constants';
+import { toCsv, downloadCsv } from '../../lib/csv';
+import LACE_SEED from '../../../inventory-from-pptx/inventory_full_seed.json';
 import type { Fabric } from '../../types';
 
 /* ───────────── domain helpers ───────────── */
@@ -58,6 +63,23 @@ const newId = (): string =>
 const discountPercent = (price: number, mrp: number): number => {
   if (!Number.isFinite(price) || !Number.isFinite(mrp) || mrp <= 0 || price >= mrp) return 0;
   return Math.round(((mrp - price) / mrp) * 100);
+};
+
+const unitLabel = (unitType?: Fabric['unitType']): string => {
+  switch (unitType) {
+    case 'per meter':
+      return 'meter';
+    case 'bundle':
+      return 'bundle';
+    default:
+      return 'unit';
+  }
+};
+
+const laceBundleLabel = (f: Fabric): string => {
+  if (f.unitType === 'bundle' && f.bundleSizeMeters) return `${f.bundleSizeMeters}m bundle`;
+  if (f.unitType === 'per meter') return 'per meter';
+  return '';
 };
 
 const parseCsvStrings = (raw: string): string[] =>
@@ -129,6 +151,7 @@ interface Draft {
   id: string;
   brand: string;
   name: string;
+  productCode: string;
   description: string;
   price: string;
   mrp: string;
@@ -142,6 +165,11 @@ interface Draft {
   sticker: Fabric['sticker'] | '';
   colors: ColorRow[];
   stock: string;
+  unitType: Fabric['unitType'] | '';
+  costPrice: string;
+  sellingPricePerMeter: string;
+  bundleSizeMeters: string;
+  bundlePrice: string;
   weaveType: string;
   rating: string;
   reviewCount: string;
@@ -151,6 +179,7 @@ const emptyDraft = (): Draft => ({
   id: '',
   brand: 'TRESOR',
   name: '',
+  productCode: '',
   description: '',
   price: '',
   mrp: '',
@@ -164,6 +193,11 @@ const emptyDraft = (): Draft => ({
   sticker: '',
   colors: [],
   stock: '',
+  unitType: '',
+  costPrice: '',
+  sellingPricePerMeter: '',
+  bundleSizeMeters: '',
+  bundlePrice: '',
   weaveType: '',
   rating: '',
   reviewCount: ''
@@ -173,6 +207,7 @@ const fabricToDraft = (f: Fabric): Draft => ({
   id: f.id,
   brand: f.brand,
   name: f.name,
+  productCode: f.productCode ?? '',
   description: f.description,
   price: String(f.price),
   mrp: String(f.mrp),
@@ -186,6 +221,11 @@ const fabricToDraft = (f: Fabric): Draft => ({
   sticker: f.sticker ?? '',
   colors: (f.colors ?? []).map(c => ({ name: c.name, hex: c.hex })),
   stock: f.stock != null ? String(f.stock) : '',
+  unitType: f.unitType ?? '',
+  costPrice: f.costPrice != null ? String(f.costPrice) : '',
+  sellingPricePerMeter: f.sellingPricePerMeter != null ? String(f.sellingPricePerMeter) : '',
+  bundleSizeMeters: f.bundleSizeMeters != null ? String(f.bundleSizeMeters) : '',
+  bundlePrice: f.bundlePrice != null ? String(f.bundlePrice) : '',
   weaveType: f.weaveType ?? '',
   rating: f.rating != null ? String(f.rating) : '',
   reviewCount: f.reviewCount != null ? String(f.reviewCount) : ''
@@ -194,15 +234,25 @@ const fabricToDraft = (f: Fabric): Draft => ({
 interface DraftErrors {
   brand?: string;
   name?: string;
+  productCode?: string;
   description?: string;
   category?: string;
   origin?: string;
   price?: string;
   mrp?: string;
   stock?: string;
+  costPrice?: string;
+  sellingPricePerMeter?: string;
+  bundleSizeMeters?: string;
+  bundlePrice?: string;
   photo?: string;
   _general?: string;
 }
+
+const isPositiveNumber = (v: string): boolean => {
+  const n = Number(v);
+  return v !== '' && Number.isFinite(n) && n >= 0;
+};
 
 const validateDraft = (d: Draft): DraftErrors => {
   const errs: DraftErrors = {};
@@ -224,6 +274,25 @@ const validateDraft = (d: Draft): DraftErrors => {
     const stock = Number(d.stock);
     if (!Number.isFinite(stock) || stock < 0) errs.stock = 'Stock must be ≥ 0';
   }
+
+  if (d.costPrice !== '' && !isPositiveNumber(d.costPrice)) {
+    errs.costPrice = 'Cost price must be ≥ 0';
+  }
+
+  const isLacesPricing = d.unitType === 'per meter' || d.unitType === 'bundle';
+  if (isLacesPricing) {
+    if (d.sellingPricePerMeter !== '' && !isPositiveNumber(d.sellingPricePerMeter)) {
+      errs.sellingPricePerMeter = 'Price per meter must be ≥ 0';
+    }
+  }
+  if (d.unitType === 'bundle') {
+    if (d.bundleSizeMeters !== '' && !isPositiveNumber(d.bundleSizeMeters)) {
+      errs.bundleSizeMeters = 'Bundle size must be ≥ 0';
+    }
+    if (d.bundlePrice !== '' && !isPositiveNumber(d.bundlePrice)) {
+      errs.bundlePrice = 'Bundle price must be ≥ 0';
+    }
+  }
   return errs;
 };
 
@@ -235,10 +304,16 @@ const draftToFabric = (d: Draft, existing?: Fabric): Fabric => {
   const tags = parseCsvStrings(d.tagsCsv);
   const photo = d.photo.trim();
 
+  const parseOpt = (v: string): number | undefined =>
+    v !== '' && Number.isFinite(Number(v)) ? Number(v) : undefined;
+  const parseNullable = (v: string): number | null =>
+    v !== '' && Number.isFinite(Number(v)) ? Number(v) : null;
+
   const next: Fabric = {
     id: d.id || newId(),
     brand: d.brand.trim(),
     name: d.name.trim(),
+    productCode: d.productCode.trim() || undefined,
     description: d.description.trim(),
     price: Number(d.price),
     mrp: Number(d.mrp),
@@ -254,6 +329,11 @@ const draftToFabric = (d: Draft, existing?: Fabric): Fabric => {
     sticker: d.sticker || undefined,
     colors: colors.length ? colors : undefined,
     stock: d.stock !== '' ? Number(d.stock) : undefined,
+    unitType: d.unitType || undefined,
+    costPrice: parseOpt(d.costPrice),
+    sellingPricePerMeter: parseNullable(d.sellingPricePerMeter),
+    bundleSizeMeters: parseNullable(d.bundleSizeMeters),
+    bundlePrice: parseNullable(d.bundlePrice),
     weaveType: d.weaveType.trim() || undefined,
     rating:
       d.rating !== '' && Number.isFinite(Number(d.rating)) ? Number(d.rating) : existing?.rating,
@@ -528,6 +608,14 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
                 placeholder="Banarasi Bridal Silk"
               />
             </Field>
+            <Field label="Product Code" error={errors.productCode}>
+              <input
+                className="input-box"
+                value={draft.productCode}
+                onChange={e => set('productCode', e.target.value)}
+                placeholder="HA6758"
+              />
+            </Field>
             <Field label="Category" error={errors.category}>
               <select
                 className="input-box"
@@ -591,6 +679,36 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
             Pricing &amp; Stock
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <Field label="Unit Type">
+              <select
+                className="input-box"
+                value={draft.unitType}
+                onChange={e => set('unitType', e.target.value as Fabric['unitType'] | '')}
+              >
+                <option value="">Unit (default)</option>
+                <option value="per meter">Per meter</option>
+                <option value="bundle">Bundle of meters</option>
+              </select>
+            </Field>
+            <Field label="Cost Price (₹)" error={errors.costPrice}>
+              <input
+                type="number"
+                min={0}
+                className="input-box"
+                value={draft.costPrice}
+                onChange={e => set('costPrice', e.target.value)}
+                placeholder="Buying cost"
+              />
+            </Field>
+            <Field label="Stock" error={errors.stock}>
+              <input
+                type="number"
+                min={0}
+                className="input-box"
+                value={draft.stock}
+                onChange={e => set('stock', e.target.value)}
+              />
+            </Field>
             <Field label="Price (₹)" error={errors.price}>
               <input
                 type="number"
@@ -609,16 +727,52 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
                 onChange={e => set('mrp', e.target.value)}
               />
             </Field>
-            <Field label="Stock (units)" error={errors.stock}>
-              <input
-                type="number"
-                min={0}
-                className="input-box"
-                value={draft.stock}
-                onChange={e => set('stock', e.target.value)}
-              />
-            </Field>
           </div>
+
+          {/* Laces / metered pricing */}
+          {(draft.unitType === 'per meter' || draft.unitType === 'bundle') && (
+            <div className="mt-4 border border-[color:var(--color-myntra-border-soft)] rounded-md p-3 bg-[color:var(--color-myntra-bg-soft)]">
+              <div className="flex items-center gap-2 mb-2 text-[color:var(--color-myntra-navy)]">
+                <Ruler className="w-4 h-4" />
+                <span className="text-[12px] font-bold uppercase tracking-[0.12em]">Laces / Metered Pricing</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <Field label="Selling Price per Meter (₹)" error={errors.sellingPricePerMeter}>
+                  <input
+                    type="number"
+                    min={0}
+                    className="input-box"
+                    value={draft.sellingPricePerMeter}
+                    onChange={e => set('sellingPricePerMeter', e.target.value)}
+                  />
+                </Field>
+                {draft.unitType === 'bundle' && (
+                  <>
+                    <Field label="Bundle Size (meters)" error={errors.bundleSizeMeters}>
+                      <input
+                        type="number"
+                        min={0}
+                        className="input-box"
+                        value={draft.bundleSizeMeters}
+                        onChange={e => set('bundleSizeMeters', e.target.value)}
+                        placeholder="e.g. 9"
+                      />
+                    </Field>
+                    <Field label="Bundle Price (₹)" error={errors.bundlePrice}>
+                      <input
+                        type="number"
+                        min={0}
+                        className="input-box"
+                        value={draft.bundlePrice}
+                        onChange={e => set('bundlePrice', e.target.value)}
+                      />
+                    </Field>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="mt-3 flex flex-wrap items-center gap-2 text-[12px]">
             {disc > 0 && (
               <span className="badge-discount">{disc}% OFF</span>
@@ -862,6 +1016,78 @@ const Confirm: React.FC<ConfirmProps> = ({ name, busy, error, onCancel, onDelete
   </div>
 );
 
+/* ───────────── bulk action confirm ───────────── */
+
+interface ActionConfirmProps {
+  action: 'wipe' | 'seed-laces' | null;
+  busy: boolean;
+  error: string | null;
+  success: string | null;
+  onCancel: () => void;
+  onConfirm: () => void;
+}
+
+const ACTION_TITLES: Record<'wipe' | 'seed-laces', string> = {
+  wipe: 'Wipe all products?',
+  'seed-laces': 'Seed laces catalogue?'
+};
+
+const ACTION_BODIES: Record<'wipe' | 'seed-laces', string> = {
+  wipe: 'This will permanently delete every product from the database. The storefront and home screen will show 0 products.',
+  'seed-laces': 'This will add the 34 lace products from the PPTX catalogue. Existing products with the same code will be overwritten.'
+};
+
+const ActionConfirm: React.FC<ActionConfirmProps> = ({ action, busy, error, success, onCancel, onConfirm }) => {
+  if (!action) return null;
+  return (
+    <div className="bg-white rounded-md max-w-sm w-full mx-auto p-5 shadow-2xl border border-[color:var(--color-myntra-border-soft)]">
+      <h3 className="text-[15px] font-extrabold text-[color:var(--color-myntra-navy)] mb-1">
+        {ACTION_TITLES[action]}
+      </h3>
+      <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)]">
+        {ACTION_BODIES[action]}
+      </p>
+
+      {error && (
+        <div className="mt-3 flex items-start gap-2 rounded-md border border-[#F0C7C7] bg-[#FBE6E6] p-2.5 text-[#A12626]">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+          <p className="text-[11px] font-semibold leading-relaxed">{error}</p>
+        </div>
+      )}
+      {success && (
+        <div className="mt-3 flex items-start gap-2 rounded-md border border-[#C9DFC9] bg-[#E8F2E8] p-2.5 text-[#2F6E2F]">
+          <Check className="w-4 h-4 shrink-0 mt-0.5" />
+          <p className="text-[11px] font-semibold leading-relaxed">{success}</p>
+        </div>
+      )}
+
+      <div className="mt-4 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+        <button onClick={onCancel} disabled={busy} className="btn-outline !py-2">
+          Cancel
+        </button>
+        <button
+          onClick={onConfirm}
+          disabled={busy || success != null}
+          className="!py-2 !px-4 rounded-md font-bold text-white text-[13px] inline-flex items-center justify-center gap-2 transition-colors disabled:opacity-60"
+          style={{ backgroundColor: action === 'wipe' ? '#A12626' : 'var(--color-myntra-navy, #282c3f)' }}
+        >
+          {busy ? (
+            <>
+              <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Working…
+            </>
+          ) : (
+            <>
+              {action === 'wipe' ? <Trash2 className="w-4 h-4" /> : <Upload className="w-4 h-4" />}
+              {action === 'wipe' ? 'Wipe' : 'Seed'}
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 /* ───────────── main page ───────────── */
 
 type CategoryFilter = Fabric['category'] | 'all';
@@ -894,6 +1120,7 @@ const AdminProducts: React.FC = () => {
 
   const [query, setQuery] = useState('');
   const [catFilter, setCatFilter] = useState<CategoryFilter>('all');
+  const [lacesShowcase, setLacesShowcase] = useState(false);
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingExisting, setEditingExisting] = useState<Fabric | null>(null);
@@ -905,20 +1132,27 @@ const AdminProducts: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  const [pendingAction, setPendingAction] = useState<'wipe' | 'seed-laces' | null>(null);
+  const [actionBusy, setActionBusy] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+
   /* filter rows */
+  const effectiveCat = lacesShowcase ? 'Laces' : catFilter;
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return rows.filter(f => {
-      if (catFilter !== 'all' && f.category !== catFilter) return false;
+      if (effectiveCat !== 'all' && f.category !== effectiveCat) return false;
       if (!q) return true;
       return (
         f.name.toLowerCase().includes(q) ||
+        (f.productCode ?? '').toLowerCase().includes(q) ||
         f.brand.toLowerCase().includes(q) ||
         f.category.toLowerCase().includes(q) ||
         f.origin.toLowerCase().includes(q)
       );
     });
-  }, [rows, query, catFilter]);
+  }, [rows, query, effectiveCat]);
 
   /* open editor handlers */
   const openCreate = () => {
@@ -992,6 +1226,80 @@ const AdminProducts: React.FC = () => {
     if (deleting) return;
     setPendingDelete(null);
     setDeleteError(null);
+  };
+
+  /* bulk destructive actions */
+  const cancelAction = () => {
+    if (actionBusy) return;
+    setPendingAction(null);
+    setActionError(null);
+    setActionSuccess(null);
+  };
+
+  const runPendingAction = async () => {
+    if (!pendingAction || actionBusy) return;
+    setActionBusy(true);
+    setActionError(null);
+    setActionSuccess(null);
+    try {
+      if (pendingAction === 'wipe') {
+        const deleted = await productsApi.removeAll();
+        setActionSuccess(`Wiped ${deleted} product${deleted === 1 ? '' : 's'}.`);
+      } else if (pendingAction === 'seed-laces') {
+        const seeded = await productsApi.seedWithIds(LACE_SEED as unknown as Record<string, unknown>[]);
+        setActionSuccess(`Seeded ${seeded} lace product${seeded === 1 ? '' : 's'}.`);
+      }
+      setReloadKey(k => k + 1);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Action failed';
+      setActionError(message);
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
+  /* export products CSV — laces product codes are used as the product ID column */
+  const exportCsv = () => {
+    const headers = [
+      'Product ID',
+      'Product Code',
+      'Brand',
+      'Name',
+      'Category',
+      'Origin',
+      'Unit Type',
+      'Bundle Size (meters)',
+      'Price per Meter (₹)',
+      'Bundle Price (₹)',
+      'Price (₹)',
+      'MRP (₹)',
+      'Cost Price (₹)',
+      'Stock',
+      'Stock Status'
+    ];
+    const data = filtered.map(f => {
+      const s = f.stock ?? 0;
+      const lowStock = s > 0 && s < 10;
+      const status = s <= 0 ? 'Out of stock' : lowStock ? 'Low stock' : 'In stock';
+      return [
+        f.category === 'Laces' ? (f.productCode ?? f.id) : f.id,
+        f.productCode ?? '',
+        f.brand,
+        f.name,
+        f.category,
+        f.origin,
+        f.unitType ?? 'unit',
+        f.bundleSizeMeters ?? '',
+        f.sellingPricePerMeter ?? '',
+        f.bundlePrice ?? '',
+        f.price,
+        f.mrp,
+        f.costPrice ?? '',
+        s,
+        status
+      ];
+    });
+    downloadCsv(`tresor-products-${new Date().toISOString().slice(0, 10)}`, toCsv(headers, data));
   };
 
   /* keyboard: ESC closes overlays */
@@ -1078,9 +1386,47 @@ const AdminProducts: React.FC = () => {
             >
               <Plus className="w-4 h-4" /> Add Product
             </button>
+            <button
+              onClick={() => setLacesShowcase(v => !v)}
+              className={`btn-outline inline-flex items-center justify-center gap-1.5 !py-2.5 ${lacesShowcase ? 'bg-[#F1ECF7] border-[#D6C9E9] text-[#5C3A8E]' : ''}`}
+              title="Toggle laces meter/bundle view"
+            >
+              <Ruler className="w-4 h-4" /> {lacesShowcase ? 'Hide Laces View' : 'Showcase Laces'}
+            </button>
+            <button
+              onClick={exportCsv}
+              className="btn-outline inline-flex items-center justify-center gap-1.5 !py-2.5"
+            >
+              <Download className="w-4 h-4" /> Export CSV
+            </button>
+            <button
+              onClick={() => { setPendingAction('seed-laces'); setActionError(null); setActionSuccess(null); }}
+              className="btn-outline inline-flex items-center justify-center gap-1.5 !py-2.5"
+              title="Seed laces from PPTX catalogue"
+            >
+              <Upload className="w-4 h-4" /> Seed Laces
+            </button>
+            <button
+              onClick={() => { setPendingAction('wipe'); setActionError(null); setActionSuccess(null); }}
+              className="inline-flex items-center justify-center gap-1.5 !py-2.5 rounded-md font-bold text-white text-[13px] border border-[#F0C7C7] transition-colors disabled:opacity-60"
+              style={{ backgroundColor: '#A12626' }}
+              title="Delete all products"
+            >
+              <Trash2 className="w-4 h-4" /> Wipe DB
+            </button>
           </div>
         </div>
       </div>
+
+      {/* laces showcase banner */}
+      {lacesShowcase && (
+        <div className="bg-[#F1ECF7] border border-[#D6C9E9] rounded-md p-3 flex items-center gap-2 text-[#5C3A8E]">
+          <Ruler className="w-4 h-4 shrink-0" />
+          <p className="text-[12px] font-semibold">
+            Laces showcase is on. Stock is shown in meters/bundles and product codes are highlighted.
+          </p>
+        </div>
+      )}
 
       {/* content */}
       <div className="bg-white border border-[color:var(--color-myntra-border-soft)] rounded-md overflow-hidden">
@@ -1132,6 +1478,11 @@ const AdminProducts: React.FC = () => {
                           <div className="text-[13px] font-semibold text-[color:var(--color-myntra-navy)] line-clamp-2">
                             {f.name}
                           </div>
+                          {lacesShowcase && f.category === 'Laces' && (
+                            <div className="text-[10px] font-bold text-[#5C3A8E] mt-0.5">
+                              Code: {f.productCode ?? f.id}
+                            </div>
+                          )}
                           <div className="text-[11px] text-[color:var(--color-myntra-ink-mute)] mt-0.5">
                             {f.origin}
                           </div>
@@ -1149,6 +1500,16 @@ const AdminProducts: React.FC = () => {
                           <div className="font-bold text-[color:var(--color-myntra-navy)]">
                             {formatINR(f.price)}
                           </div>
+                          {f.unitType === 'per meter' && Number.isFinite(f.sellingPricePerMeter as number) && (
+                            <div className="text-[11px] text-[#5C3A8E] font-semibold">
+                              ₹{f.sellingPricePerMeter}/m
+                            </div>
+                          )}
+                          {f.unitType === 'bundle' && Number.isFinite(f.bundlePrice as number) && (
+                            <div className="text-[11px] text-[#5C3A8E] font-semibold">
+                              {f.bundleSizeMeters}m bundle @ {formatINR(f.bundlePrice as number)}
+                            </div>
+                          )}
                           {f.mrp > f.price && (
                             <div className="text-[11px] text-[color:var(--color-myntra-ink-mute)]">
                               <span className="line-through">{formatINR(f.mrp)}</span>
@@ -1168,7 +1529,12 @@ const AdminProducts: React.FC = () => {
                           >
                             {stock}
                           </span>
-                          <span className="text-[11px] text-[color:var(--color-myntra-ink-mute)]"> units</span>
+                          <span className="text-[11px] text-[color:var(--color-myntra-ink-mute)]"> {unitLabel(f.unitType)}s</span>
+                          {f.unitType === 'bundle' && Number.isFinite(f.bundleSizeMeters as number) && (
+                            <div className="text-[10px] text-[#5C3A8E] font-semibold">
+                              {f.bundleSizeMeters}m each
+                            </div>
+                          )}
                         </Td>
                         <Td>
                           {f.rating != null ? (
@@ -1227,6 +1593,11 @@ const AdminProducts: React.FC = () => {
                       <div className="text-[13px] font-semibold text-[color:var(--color-myntra-navy)] line-clamp-2">
                         {f.name}
                       </div>
+                      {lacesShowcase && f.category === 'Laces' && (
+                        <div className="text-[10px] font-bold text-[#5C3A8E] mt-0.5">
+                          Code: {f.productCode ?? f.id}
+                        </div>
+                      )}
                       <div className="text-[11px] text-[color:var(--color-myntra-ink-mute)]">
                         {f.origin}
                       </div>
@@ -1241,6 +1612,12 @@ const AdminProducts: React.FC = () => {
                         <span className="text-[13px] font-bold text-[color:var(--color-myntra-navy)]">
                           {formatINR(f.price)}
                         </span>
+                        {f.unitType === 'per meter' && Number.isFinite(f.sellingPricePerMeter as number) && (
+                          <span className="text-[11px] text-[#5C3A8E] font-semibold">₹{f.sellingPricePerMeter}/m</span>
+                        )}
+                        {f.unitType === 'bundle' && Number.isFinite(f.bundlePrice as number) && (
+                          <span className="text-[11px] text-[#5C3A8E] font-semibold">{f.bundleSizeMeters}m bundle</span>
+                        )}
                         {f.mrp > f.price && (
                           <span className="text-[11px] text-[color:var(--color-myntra-ink-mute)] line-through">
                             {formatINR(f.mrp)}
@@ -1251,7 +1628,7 @@ const AdminProducts: React.FC = () => {
                             lowStock ? 'text-[#A12626]' : 'text-[color:var(--color-myntra-ink-soft)]'
                           }`}
                         >
-                          {stock} in stock
+                          {stock} {unitLabel(f.unitType)}s in stock
                         </span>
                       </div>
                       <div className="mt-2 flex gap-1.5">
@@ -1301,6 +1678,20 @@ const AdminProducts: React.FC = () => {
             error={deleteError}
             onCancel={cancelDelete}
             onDelete={confirmDelete}
+          />
+        </Overlay>
+      )}
+
+      {/* bulk action overlay */}
+      {pendingAction && (
+        <Overlay onClose={() => !actionBusy && cancelAction()} z={140}>
+          <ActionConfirm
+            action={pendingAction}
+            busy={actionBusy}
+            error={actionError}
+            success={actionSuccess}
+            onCancel={cancelAction}
+            onConfirm={runPendingAction}
           />
         </Overlay>
       )}

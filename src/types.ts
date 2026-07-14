@@ -44,6 +44,18 @@ export interface Fabric {
   colors?: { name: string; hex: string }[];
   /** Units available to sell. Drives the quantity stepper + out-of-stock. */
   stock?: number;
+  /** Unique product code / SKU shown in exports (e.g. HA6758). Especially important for laces. */
+  productCode?: string;
+  /** How the product is sold: per unit, per meter, or as a bundle of meters (laces). */
+  unitType?: 'unit' | 'per meter' | 'bundle';
+  /** Buying / cost price for margin reporting. */
+  costPrice?: number;
+  /** Selling price per meter when unitType is 'per meter' or 'bundle'. */
+  sellingPricePerMeter?: number | null;
+  /** Number of meters in one bundle when unitType is 'bundle'. */
+  bundleSizeMeters?: number | null;
+  /** Total selling price of one bundle when unitType is 'bundle'. */
+  bundlePrice?: number | null;
   /** Fabric/weave descriptor shown in product details (e.g. "Banarasi brocade"). */
   weaveType?: string;
   rating?: number;

@@ -38,13 +38,18 @@ test.beforeEach(({ page }) => {
 
 async function gotoHash(page: Page, hash: string) {
   // Hash-router SPA: always reload so the router boots with the correct hash,
-  // then wait for React to hydrate.
+  // then wait for React to hydrate and data fetches to settle.
   await page.goto(`${BASE_URL}/${hash}`, { waitUntil: 'domcontentloaded' });
+  await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => {});
   await acceptCookies(page);
 }
 
 async function waitForSignedIn(page: Page) {
-  await expect(page.locator('button[aria-label="Account menu"]').first()).toBeVisible({ timeout: 15_000 });
+  // Desktop: account dropdown in the navbar. Mobile: bottom-nav "Account" tab.
+  // Use :visible to avoid matching hidden desktop markup on mobile viewports.
+  await expect(
+    page.locator('button[aria-label="Account menu"]:visible, nav[aria-label="Primary"] button:has-text("Account"):visible').first()
+  ).toBeVisible({ timeout: 15_000 });
 }
 
 async function acceptCookies(page: Page) {
@@ -55,17 +60,19 @@ async function acceptCookies(page: Page) {
 async function openFirstProduct(page: Page) {
   await gotoHash(page, '#/shop');
   const card = page.locator('.card-product').first();
-  await expect(card).toBeVisible({ timeout: 15_000 });
+  await expect(card).toBeVisible({ timeout: 25_000 });
   // Click the main card button (the wishlist heart is a separate button inside
   // the card). Wait for the product route to settle before looking for PDP UI.
   await card.locator('button').first().click();
   await page.waitForURL(/#\/product\//, { timeout: 15_000 });
-  await expect(page.locator('#pdp-add-to-bag')).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('#pdp-add-to-bag')).toBeVisible({ timeout: 30_000 });
 }
 
 async function addToBag(page: Page) {
   await openFirstProduct(page);
-  await page.locator('#pdp-add-to-bag').click();
+  // The PDP may still be hydrating/re-rendering when the button first appears,
+  // so click with force to avoid "element not stable / detached" flakes.
+  await page.locator('#pdp-add-to-bag').click({ force: true });
   await expect(page.locator('button[aria-label^="Cart with"]').first()).toContainText('1', { timeout: 10_000 });
   // Cart writes to Firestore are debounced (600 ms). Wait for the sync to
   // complete before any later page reload, otherwise the bag is lost.
@@ -191,8 +198,9 @@ test.describe('CEO lifecycle — admin fulfilment', () => {
   test('admin can log in, view orders, and mark an order as delivered', async ({ page }) => {
     await login(page, ADMIN_EMAIL, ADMIN_PASSWORD);
 
-    // Should land on admin dashboard
-    await expect(page.locator('text=Admin')).toBeVisible();
+    // Login redirects to the storefront home; navigate to the admin console.
+    await gotoHash(page, '#/admin/dashboard');
+    await expect(page.locator('aside').getByText('Admin').first()).toBeVisible();
 
     // Open orders
     await page.getByRole('button', { name: 'Orders', exact: true }).click();

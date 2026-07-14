@@ -809,7 +809,34 @@ export const productsApi = {
   },
   update: (id: string, patch: DocumentData) =>
     updateDoc(doc(db, 'products', id), { ...patch, updatedAt: serverTimestamp() }),
-  remove: (id: string) => deleteDoc(doc(db, 'products', id))
+  remove: (id: string) => deleteDoc(doc(db, 'products', id)),
+  /** Delete every document in the products collection. Returns count deleted. */
+  removeAll: async () => {
+    let deleted = 0;
+    while (true) {
+      const snap = await getDocs(query(collection(db, 'products'), qLimit(400)));
+      if (snap.empty) break;
+      await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+      deleted += snap.size;
+    }
+    return deleted;
+  },
+  /** Seed products preserving their explicit ids. */
+  seedWithIds: async (items: DocumentData[]) => {
+    let seeded = 0;
+    for (const it of items) {
+      const id = it.id as string | undefined;
+      if (!id) continue;
+      await setDoc(doc(db, 'products', id), {
+        ...it,
+        id,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      seeded += 1;
+    }
+    return seeded;
+  }
 };
 
 /* ------------------------------------------------------------------ */

@@ -18,7 +18,13 @@
     "seed:pptx-catalogue:dry": "tsx scripts/seed-pptx-catalogue.ts --dry-run",
     "seed:full-catalogue": "tsx scripts/seed-full-catalogue.ts",
     "seed:full-catalogue:dry": "tsx scripts/seed-full-catalogue.ts --dry-run",
-    "set-admin": "tsx scripts/set-admin.ts"
+    "set-admin": "tsx scripts/set-admin.ts",
+    "open:signed-in-chrome": "npx tsx scripts/open-signed-in-chrome.ts",
+    "open:signed-in-cdp": "npx tsx scripts/open-signed-in-cdp.ts",
+    "test:e2e:signed-in": "npx playwright test tests/e2e/signed-in --project=signed-in-chrome --workers=1",
+    "test:e2e:signed-in:cdp": "set CDP_URL=http://localhost:9222 && npx playwright test tests/e2e/signed-in --project=signed-in-chrome --workers=1",
+    "test:e2e:signed-in:smoke": "npx playwright test tests/e2e/signed-in/signed-in-smoke.spec.ts --project=signed-in-chrome --workers=1",
+    "test:e2e:signed-in:lifecycle": "npx playwright test tests/e2e/signed-in/signed-in-lifecycle.spec.ts --project=signed-in-chrome --workers=1"
   },
   "dependencies": {
     "@sentry/node": "^10.63.0",

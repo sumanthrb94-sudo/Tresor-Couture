@@ -38,7 +38,12 @@ export default defineConfig({
     navigationTimeout: 20_000,
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'mobile-safari', use: { ...devices['iPhone 13'] } },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: 'signed-in/**/*.spec.ts' },
+    { name: 'mobile-safari', use: { ...devices['iPhone 13'] }, testIgnore: 'signed-in/**/*.spec.ts' },
+    {
+      name: 'signed-in-chrome',
+      testMatch: 'signed-in/**/*.spec.ts',
+      use: { ...devices['Desktop Chrome'] },
+    },
   ],
 });
