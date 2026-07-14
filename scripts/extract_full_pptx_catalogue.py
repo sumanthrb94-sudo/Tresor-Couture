@@ -266,7 +266,7 @@ for r in inventory:
         'image': '',
         'category': 'Laces',
         'masterCategory': 'Laces',
-        'subCategory': 'Trim & Edging' if r['is_lace'] else 'Patch',
+        'subCategory': 'Trim & Edging',
         'materialType': 'Mixed',
         'origin': 'India',
         'tags': ['New In'],

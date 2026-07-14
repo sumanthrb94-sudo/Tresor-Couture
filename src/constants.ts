@@ -1001,7 +1001,7 @@ export const MASTER_CATEGORIES: MasterCategory[] = [
 export const MASTER_CATEGORY_TREE: Record<MasterCategory, string[]> = {
   Fabrics: ['Silk', 'Cotton', 'Wool', 'Linen', 'Satin', 'Mixed'],
   'Dyeable Fabrics': ['Cotton', 'Silk', 'Linen', 'Mixed'],
-  Laces: ['Chantilly', 'French', 'Embroidered', 'Cotton', 'Trim & Edging'],
+  Laces: ['Trim & Edging'],
   Sarees: ['Half Sarees', 'Banarasi', 'Kanjivaram', 'Patola', 'Bandhani', 'Jamdani', 'Mashru'],
   'Lehenga Cholis': ['Bridal', 'Festive', 'Contemporary'],
   Anarkalis: ['Floor-length', 'Knee-length', 'Embroidered'],
