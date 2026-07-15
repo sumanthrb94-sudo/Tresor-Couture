@@ -21,6 +21,10 @@ on:
   schedule:
     - cron: '30 6 * * *' # 06:30 UTC daily production smoke
 
+permissions:
+  contents: read
+  actions: write
+
 concurrency:
   group: e2e-${{ github.ref }}
   cancel-in-progress: true
@@ -37,7 +41,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
@@ -47,7 +51,7 @@ jobs:
         run: npx playwright install --with-deps chromium webkit
 
       - name: Run E2E against ${{ env.BASE_URL }}
-        run: npm run test:e2e
+        run: npm run test:e2e:signed-in:smoke
 
       - name: Upload HTML report
         if: ${{ !cancelled() }}

@@ -116,7 +116,6 @@ class Store<T extends BaseRecord> {
 
 import { Fabric, Order, User, Coupon, Review } from '../types';
 import { FABRICS as SEED_FABRICS } from '../constants';
-import { sha256 } from './hash';
 
 export const fabricsStore = new Store<Fabric>('fabrics:v1', () => SEED_FABRICS);
 export const ordersStore = new Store<Order>('orders:v2');
@@ -154,17 +153,3 @@ function seedCoupons(): (Coupon & BaseRecord)[] {
   ];
 }
 
-/* Default admin so the team can sign in immediately. */
-export async function ensureAdminSeed(): Promise<void> {
-  const existing = await usersStore.list();
-  if (existing.some(u => u.role === 'admin')) return;
-  const passwordHash = await sha256('tresor-admin');
-  await usersStore.create({
-    id: 'admin-default',
-    email: 'admin@tresor.test',
-    passwordHash,
-    fullName: 'Tresor Atelier',
-    role: 'admin',
-    createdAt: new Date().toISOString()
-  });
-}

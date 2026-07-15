@@ -268,7 +268,6 @@ for r in inventory:
         'masterCategory': 'Laces',
         'subCategory': 'Trim & Edging',
         'materialType': 'Mixed',
-        'origin': 'India',
         'tags': ['New In'],
         'colors': [{'name': colour.strip(), 'hex': '#cccccc'}] if colour.strip() else [],
         'stock': stock,

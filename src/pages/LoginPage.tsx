@@ -16,9 +16,11 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [blocked, setBlocked] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotBusy, setForgotBusy] = useState(false);
+  const [forgotBlocked, setForgotBlocked] = useState(false);
   const [forgotMsg, setForgotMsg] = useState<string | null>(null);
   // Google popup + profile-hydrate is in flight (set by GoogleSignInButton).
   const [googleBusy, setGoogleBusy] = useState(false);
@@ -43,12 +45,14 @@ const LoginPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (blocked) return;
     setError(null);
     if (!email.trim() || !password) {
       setError('Please enter your email and password.');
       return;
     }
     setSubmitting(true);
+    setBlocked(true);
     try {
       await login(email.trim(), password);
       // Admins are routed by the global AdminGuard based on the `admin` custom
@@ -59,6 +63,7 @@ const LoginPage: React.FC = () => {
       setError(message);
     } finally {
       setSubmitting(false);
+      window.setTimeout(() => setBlocked(false), 1500);
     }
   };
 
@@ -70,8 +75,10 @@ const LoginPage: React.FC = () => {
 
   const handleForgotSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (forgotBlocked) return;
     setForgotMsg(null);
     setForgotBusy(true);
+    setForgotBlocked(true);
     try {
       await requestPasswordReset(forgotEmail);
       // Generic copy — never reveals whether the email is registered.
@@ -82,6 +89,7 @@ const LoginPage: React.FC = () => {
       setForgotMsg((err as Error).message ?? 'Could not send reset link. Please try again.');
     } finally {
       setForgotBusy(false);
+      window.setTimeout(() => setForgotBlocked(false), 3000);
     }
   };
 

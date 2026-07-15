@@ -33,6 +33,7 @@ const RegisterPage: React.FC = () => {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [blocked, setBlocked] = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
 
   // Loader instead of flashing the form while auth resolves / sign-up is in flight.
@@ -53,7 +54,10 @@ const RegisterPage: React.FC = () => {
     if (fullName.trim().length < 2) next.fullName = 'Enter your full name (min 2 characters).';
     if (!EMAIL_RE.test(email.trim())) next.email = 'Enter a valid email address.';
     if (phone.trim() && !PHONE_RE.test(phone.trim())) next.phone = 'Enter a valid phone number.';
-    if (password.length < 6) next.password = 'Password must be at least 6 characters.';
+    if (password.length < 8) next.password = 'Password must be at least 8 characters.';
+    else if (!/[A-Za-z]/.test(password) || (!/\d/.test(password) && !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password))) {
+      next.password = 'Password must include a letter and a number or symbol.';
+    }
     if (password !== confirmPassword) next.confirmPassword = 'Passwords do not match.';
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -61,9 +65,11 @@ const RegisterPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (blocked) return;
     setSubmitError(null);
     if (!validate()) return;
     setSubmitting(true);
+    setBlocked(true);
     try {
       await register({
         fullName: fullName.trim(),
@@ -77,6 +83,7 @@ const RegisterPage: React.FC = () => {
       setSubmitError(message);
     } finally {
       setSubmitting(false);
+      window.setTimeout(() => setBlocked(false), 1500);
     }
   };
 

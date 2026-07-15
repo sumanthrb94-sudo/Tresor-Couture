@@ -28,6 +28,9 @@ const PhoneOtpForm: React.FC<Props> = ({ onDone, verifyLabel = 'Verify & Continu
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resendCount, setResendCount] = useState(0);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [verifyAttempts, setVerifyAttempts] = useState(0);
 
   useEffect(() => {
     if (!error) return;
@@ -41,17 +44,30 @@ const PhoneOtpForm: React.FC<Props> = ({ onDone, verifyLabel = 'Verify & Continu
   // gone and throws "reCAPTCHA client element has been removed: 0".
   useEffect(() => () => clearRecaptcha(), []);
 
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const id = window.setInterval(() => setResendCooldown(c => c - 1), 1000);
+    return () => window.clearInterval(id);
+  }, [resendCooldown]);
+
   const handleSend = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    if (resendCooldown > 0) return;
+    if (resendCount >= 3) {
+      setError('Too many OTP requests. Please try again later.');
+      return;
+    }
     const digits = phone.replace(/[^\d]/g, '');
-    if (digits.length < 6) {
+    if (digits.length < 6 || digits.length > 12) {
       setError('Enter a valid mobile number.');
       return;
     }
     setBusy(true);
     try {
       await loginWithPhone(`${country}${digits}`);
+      setResendCount(c => c + 1);
+      setResendCooldown(60);
       setStep('otp');
     } catch (err) {
       setError((err as Error).message ?? 'Could not send OTP. Please retry.');
@@ -63,6 +79,10 @@ const PhoneOtpForm: React.FC<Props> = ({ onDone, verifyLabel = 'Verify & Continu
   const handleVerify = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    if (verifyAttempts >= 5) {
+      setError('Too many attempts. Please request a new code.');
+      return;
+    }
     if (!/^\d{6}$/.test(code.trim())) {
       setError('Enter the 6-digit code we sent you.');
       return;
@@ -72,6 +92,7 @@ const PhoneOtpForm: React.FC<Props> = ({ onDone, verifyLabel = 'Verify & Continu
       await confirmPhoneOtp(code.trim());
       onDone?.();
     } catch (err) {
+      setVerifyAttempts(a => a + 1);
       setError((err as Error).message ?? 'Invalid OTP. Try again.');
     } finally {
       setBusy(false);
@@ -125,8 +146,8 @@ const PhoneOtpForm: React.FC<Props> = ({ onDone, verifyLabel = 'Verify & Continu
             </p>
           )}
 
-          <button type="submit" disabled={busy} className="btn-primary w-full">
-            {busy ? 'Sending code…' : 'Send code'}
+          <button type="submit" disabled={busy || resendCooldown > 0} className="btn-primary w-full">
+            {busy ? 'Sending code…' : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Send code'}
           </button>
 
           <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] leading-relaxed">

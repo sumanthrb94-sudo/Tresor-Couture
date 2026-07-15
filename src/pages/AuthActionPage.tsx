@@ -17,6 +17,8 @@ interface Props {
 type ResetPhase = 'verifying' | 'ready' | 'submitting' | 'done' | 'error';
 type VerifyPhase = 'applying' | 'done' | 'error';
 
+const ALLOWED_MODES = new Set(['resetPassword', 'verifyEmail', 'recoverEmail']);
+
 /**
  * Branded handler for Firebase email action links — the page the user
  * lands on after clicking "Reset my password" / "Confirm my email" in a
@@ -111,8 +113,12 @@ const AuthActionPage: React.FC<Props> = ({ mode, oobCode, continueUrl }) => {
   const handleResetSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setResetError(null);
-    if (newPassword.length < 6) {
-      setResetError('Password must be at least 6 characters.');
+    if (newPassword.length < 8) {
+      setResetError('Password must be at least 8 characters.');
+      return;
+    }
+    if (!/[A-Za-z]/.test(newPassword) || (!/\d/.test(newPassword) && !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword))) {
+      setResetError('Password must include a letter and a number or symbol.');
       return;
     }
     if (newPassword !== confirmPassword) {

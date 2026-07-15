@@ -66,14 +66,13 @@ export function getDb(): Firestore {
   return cachedDb;
 }
 
-/** True when the Admin SDK can initialise: an explicit credential, or the
- *  keyless projectId path (which matches main's email functions running on
- *  Vercel where the org blocks service-account key creation). */
+/** True only when real Admin SDK credentials are available. The keyless
+ *  projectId-only initialisation can verify ID tokens but cannot write
+ *  Firestore, so it must not be treated as "configured" for state-changing
+ *  endpoints. */
 export function firebaseAdminConfigured(): boolean {
   return Boolean(
     (process.env.FIREBASE_SERVICE_ACCOUNT && process.env.FIREBASE_SERVICE_ACCOUNT.trim()) ||
-      process.env.GOOGLE_APPLICATION_CREDENTIALS ||
-      process.env.FIREBASE_PROJECT_ID ||
-      process.env.GCLOUD_PROJECT,
+      process.env.GOOGLE_APPLICATION_CREDENTIALS,
   );
 }

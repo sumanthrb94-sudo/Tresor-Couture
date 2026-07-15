@@ -160,7 +160,6 @@ interface Draft {
   gallery2: string;
   gallery3: string;
   category: Fabric['category'] | '';
-  origin: string;
   tagsCsv: string;
   sticker: Fabric['sticker'] | '';
   colors: ColorRow[];
@@ -188,7 +187,6 @@ const emptyDraft = (): Draft => ({
   gallery2: '',
   gallery3: '',
   category: '',
-  origin: '',
   tagsCsv: '',
   sticker: '',
   colors: [],
@@ -216,7 +214,6 @@ const fabricToDraft = (f: Fabric): Draft => ({
   gallery2: f.photoGallery?.[1] ?? '',
   gallery3: f.photoGallery?.[2] ?? '',
   category: f.category,
-  origin: f.origin,
   tagsCsv: (f.tags ?? []).join(', '),
   sticker: f.sticker ?? '',
   colors: (f.colors ?? []).map(c => ({ name: c.name, hex: c.hex })),
@@ -237,7 +234,6 @@ interface DraftErrors {
   productCode?: string;
   description?: string;
   category?: string;
-  origin?: string;
   price?: string;
   mrp?: string;
   stock?: string;
@@ -260,7 +256,6 @@ const validateDraft = (d: Draft): DraftErrors => {
   if (!d.name.trim()) errs.name = 'Name is required';
   if (!d.description.trim()) errs.description = 'Description is required';
   if (!d.category) errs.category = 'Pick a category';
-  if (!d.origin.trim()) errs.origin = 'Origin is required';
   if (!d.photo.trim()) errs.photo = 'Photo is required';
 
   const price = Number(d.price);
@@ -324,7 +319,6 @@ const draftToFabric = (d: Draft, existing?: Fabric): Fabric => {
     category: (d.category || 'Fabrics') as Fabric['category'],
     masterCategory: (d.category || 'Fabrics') as Fabric['masterCategory'],
     subCategory: d.category === 'Laces' ? 'Trim & Edging' : existing?.subCategory,
-    origin: d.origin.trim(),
     tags,
     sticker: d.sticker || undefined,
     colors: colors.length ? colors : undefined,
@@ -622,14 +616,15 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
                 value={draft.category}
                 onChange={e => {
                   const next = e.target.value as Fabric['category'] | '';
-                  set('category', next);
+                  const nextDraft: Draft = { ...draft, category: next };
                   if (next !== 'Laces') {
                     // Non-lace products are always unit-based
-                    set('unitType', '');
-                    set('sellingPricePerMeter', '');
-                    set('bundleSizeMeters', '');
-                    set('bundlePrice', '');
+                    nextDraft.unitType = '';
+                    nextDraft.sellingPricePerMeter = '';
+                    nextDraft.bundleSizeMeters = '';
+                    nextDraft.bundlePrice = '';
                   }
+                  onChange(nextDraft);
                 }}
               >
                 <option value="">— Select —</option>
@@ -639,14 +634,6 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
                   </option>
                 ))}
               </select>
-            </Field>
-            <Field label="Origin" error={errors.origin}>
-              <input
-                className="input-box"
-                value={draft.origin}
-                onChange={e => set('origin', e.target.value)}
-                placeholder="Varanasi"
-              />
             </Field>
             <Field label="Weave type">
               <input
@@ -1168,8 +1155,7 @@ const AdminProducts: React.FC = () => {
         f.name.toLowerCase().includes(q) ||
         (f.productCode ?? '').toLowerCase().includes(q) ||
         f.brand.toLowerCase().includes(q) ||
-        f.category.toLowerCase().includes(q) ||
-        f.origin.toLowerCase().includes(q)
+        f.category.toLowerCase().includes(q)
       );
     });
   }, [rows, query, effectiveCat]);
@@ -1286,7 +1272,6 @@ const AdminProducts: React.FC = () => {
       'Brand',
       'Name',
       'Category',
-      'Origin',
       'Unit Type',
       'Bundle Size (meters)',
       'Price per Meter (₹)',
@@ -1307,7 +1292,6 @@ const AdminProducts: React.FC = () => {
         f.brand,
         f.name,
         f.category,
-        f.origin,
         f.unitType ?? 'unit',
         f.bundleSizeMeters ?? '',
         f.sellingPricePerMeter ?? '',
@@ -1372,7 +1356,7 @@ const AdminProducts: React.FC = () => {
               <input
                 value={query}
                 onChange={e => setQuery(e.target.value)}
-                placeholder="Search name, brand, origin…"
+                placeholder="Search name, brand, category…"
                 className="input-box pl-9 w-full sm:w-[260px]"
               />
               {query && (
@@ -1503,9 +1487,6 @@ const AdminProducts: React.FC = () => {
                               Code: {f.productCode ?? f.id}
                             </div>
                           )}
-                          <div className="text-[11px] text-[color:var(--color-myntra-ink-mute)] mt-0.5">
-                            {f.origin}
-                          </div>
                         </Td>
                         <Td>
                           <span
@@ -1618,9 +1599,7 @@ const AdminProducts: React.FC = () => {
                           Code: {f.productCode ?? f.id}
                         </div>
                       )}
-                      <div className="text-[11px] text-[color:var(--color-myntra-ink-mute)]">
-                        {f.origin}
-                      </div>
+
                       <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
                         <span
                           className={`inline-block px-1.5 py-0.5 rounded-full border text-[10px] font-bold ${categoryBadge(

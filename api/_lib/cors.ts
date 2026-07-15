@@ -24,12 +24,24 @@ export interface CorsResponse {
 
 const CANONICAL_ORIGINS = ['https://tresorcouture.in', 'https://www.tresorcouture.in'];
 
+function isProduction(): boolean {
+  return process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production';
+}
+
 export function allowedOrigins(): string[] {
   const extra = String(process.env.ALLOWED_ORIGIN || '')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
-  return [...CANONICAL_ORIGINS, ...extra];
+  // Reject wildcards: they would allow any origin with credentials.
+  const safe = extra.filter((o) => {
+    if (o === '*') {
+      console.error('[cors] ALLOWED_ORIGIN wildcard "*" is not permitted; ignoring.');
+      return false;
+    }
+    return true;
+  });
+  return [...CANONICAL_ORIGINS, ...safe];
 }
 
 function headerValue(req: CorsRequest, name: string): string | undefined {
@@ -46,7 +58,8 @@ function headerValue(req: CorsRequest, name: string): string | undefined {
 export function originAllowed(origin: string | undefined, allowPreview = false): boolean {
   if (!origin) return false; // require an explicit Origin for browser requests
   if (allowedOrigins().includes(origin)) return true;
-  if (!allowPreview) return false;
+  // Preview / localhost origins are only allowed in non-production environments.
+  if (!allowPreview || isProduction()) return false;
   try {
     const host = new URL(origin).hostname;
     return host.endsWith('.vercel.app') || host === 'localhost' || host === '127.0.0.1';

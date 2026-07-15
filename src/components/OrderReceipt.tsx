@@ -154,7 +154,7 @@ const OrderReceipt: React.FC<Props> = ({ order }) => {
           </div>
 
           <dl className="text-[12px] space-y-1.5 sm:justify-self-end sm:min-w-[240px]">
-            <div className="flex justify-between gap-6"><dt>Subtotal</dt><dd>{formatINR(order.subtotal)}</dd></div>
+            <div className="flex justify-between gap-6"><dt>Subtotal (incl. GST)</dt><dd>{formatINR(order.subtotal)}</dd></div>
             {order.couponCode && (
               <div className="flex justify-between gap-6">
                 <dt>Coupon · {order.couponCode}</dt>
@@ -165,7 +165,7 @@ const OrderReceipt: React.FC<Props> = ({ order }) => {
               <dt>Shipping</dt>
               <dd>{order.shipping === 0 ? 'FREE' : formatINR(order.shipping)}</dd>
             </div>
-            <div className="flex justify-between gap-6"><dt>GST</dt><dd>{formatINR(order.tax)}</dd></div>
+            <div className="flex justify-between gap-6"><dt>GST (incl.)</dt><dd>{formatINR(order.tax)}</dd></div>
             <div className="flex justify-between gap-6 pt-2 mt-2 border-t border-[color:var(--color-myntra-border)] font-extrabold text-[14px]">
               <dt>Total</dt><dd>{formatINR(order.total)}</dd>
             </div>

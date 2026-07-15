@@ -20,6 +20,9 @@ service cloud.firestore {
     function fieldChanged(field) {
       return request.resource.data[field] != resource.data[field];
     }
+    function optionalString(data, field, maxLen) {
+      return !(field in data) || (data[field] is string && data[field].size() <= maxLen);
+    }
 
     /* ---------- products ---------- */
     // Public read · admin write (UI gated to admins via the custom claim).
@@ -61,7 +64,11 @@ service cloud.firestore {
       allow update: if (isOwner(userId)
                         && !fieldChanged('role')
                         && !fieldChanged('uid')
-                        && !fieldChanged('createdAt'))
+                        && !fieldChanged('createdAt')
+                        && optionalString(request.resource.data, 'email', 254)
+                        && optionalString(request.resource.data, 'fullName', 128)
+                        && optionalString(request.resource.data, 'phone', 32)
+                        && (!(request.resource.data.keys().hasAny(['defaultAddress'])) || request.resource.data.defaultAddress is map))
                      || isAdmin();
       allow delete: if isAdmin();
     }
@@ -91,7 +98,13 @@ service cloud.firestore {
         && request.resource.data.status == 'pending'
         && request.resource.data.rating is number
         && request.resource.data.rating >= 1
-        && request.resource.data.rating <= 5;
+        && request.resource.data.rating <= 5
+        && request.resource.data.fabricId is string
+        && request.resource.data.fabricId.size() > 0
+        && exists(/databases/$(database)/documents/products/$(request.resource.data.fabricId))
+        && optionalString(request.resource.data, 'title', 120)
+        && optionalString(request.resource.data, 'body', 2000)
+        && optionalString(request.resource.data, 'authorName', 64);
       allow update: if isAdmin();
       allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
     }
@@ -115,6 +128,7 @@ service cloud.firestore {
     //   - No public read — the queue can contain customer order details.
     match /mail/{mailId} {
       allow create: if (isSignedIn()
+                        && request.auth.token.email_verified == true
                         && request.resource.data.uid == request.auth.uid
                         && request.resource.data.to is string
                         && request.resource.data.to == request.auth.token.email)
@@ -130,8 +144,13 @@ service cloud.firestore {
     // by a customer can drop a notification), but only for whitelisted
     // kinds — no arbitrary writes.
     match /admin_notifications/{notifId} {
+      // Customers may create a new-order notification only for their own order.
       allow create: if isSignedIn()
-        && request.resource.data.kind in ['new_order'];
+        && request.resource.data.kind in ['new_order']
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.orderId is string
+        && exists(/databases/$(database)/documents/orders/$(request.resource.data.orderId))
+        && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.userId == request.auth.uid;
       allow read, update, delete: if isAdmin();
     }
 
@@ -142,7 +161,11 @@ service cloud.firestore {
     // Guests' consent stays in localStorage until they sign in.
     match /consents/{userId} {
       allow read:  if isOwner(userId) || isAdmin();
-      allow write: if isOwner(userId);
+      allow write: if isOwner(userId)
+        && request.resource.data.keys().hasAll(['analytics', 'marketing', 'policyVersion', 'updatedAt'])
+        && request.resource.data.analytics is bool
+        && request.resource.data.marketing is bool
+        && request.resource.data.policyVersion is string;
     }
 
     /* ---------- deny everything else ---------- */

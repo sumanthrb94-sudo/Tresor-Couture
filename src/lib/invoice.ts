@@ -1,16 +1,15 @@
 /**
  * GST invoice maths, derived purely from an existing Order (no new storage).
  *
- * Checkout already charges 5% GST on the post-coupon taxable value
- * (see ordersApi.place: tax = round((subtotal - couponDiscount) * 0.05)).
- * Here we split that single tax figure into the CGST/SGST (intra-state) or
- * IGST (inter-state) presentation an Indian tax invoice requires, and mint a
- * stable, human-readable invoice number. Everything reconciles back to
- * order.total by construction.
+ * Product prices are tax-inclusive. The stored order.tax is the 5% GST
+ * component already embedded in the post-coupon subtotal. Here we split that
+ * figure into the CGST/SGST (intra-state) or IGST (inter-state) presentation
+ * an Indian tax invoice requires, and mint a stable, human-readable invoice
+ * number. Everything reconciles back to order.total by construction.
  */
 
 import type { Order } from '../types';
-import { BUSINESS } from './business';
+import { BUSINESS, GST_RATE } from './business';
 
 export interface GstBreakdown {
   /** Net taxable value (post-coupon subtotal). */
@@ -30,11 +29,13 @@ const norm = (s: string | undefined | null): string =>
 
 /** Split order.tax into CGST/SGST or IGST based on place of supply. */
 export function gstBreakdown(order: Order): GstBreakdown {
-  const taxableValue = Math.max(0, (order.subtotal ?? 0) - (order.couponDiscount ?? 0));
+  // order.subtotal is tax-inclusive; order.tax is the embedded GST component.
+  const inclusiveValue = Math.max(0, (order.subtotal ?? 0) - (order.couponDiscount ?? 0));
   const totalTax = order.tax ?? 0;
+  const taxableValue = inclusiveValue - totalTax;
   // Intra-state when the buyer's shipping state matches the seller's home state.
   const isInterState = norm(order.shippingAddress?.state) !== norm(BUSINESS.stateName);
-  const ratePercent = taxableValue > 0 ? Math.round((totalTax / taxableValue) * 100) : 5;
+  const ratePercent = Math.round(GST_RATE * 100);
 
   if (isInterState) {
     return { taxableValue, isInterState, cgst: 0, sgst: 0, igst: totalTax, totalTax, ratePercent };

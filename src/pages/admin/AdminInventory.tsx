@@ -88,7 +88,7 @@ const AdminInventory: React.FC = () => {
       if (stockFilter === 'low' && !(s > 0 && s < LOW_STOCK)) return false;
       if (stockFilter === 'in' && s < LOW_STOCK) return false;
       if (!q) return true;
-      return f.name.toLowerCase().includes(q) || f.brand.toLowerCase().includes(q) || f.origin.toLowerCase().includes(q);
+      return f.name.toLowerCase().includes(q) || f.brand.toLowerCase().includes(q);
     });
   }, [rows, query, stockFilter, catFilter]);
 
@@ -116,7 +116,6 @@ const AdminInventory: React.FC = () => {
       'Product Name',
       'Brand',
       'Category',
-      'Origin',
       'Unit Type',
       'Bundle Size (meters)',
       'Price per Meter (₹)',
@@ -134,7 +133,6 @@ const AdminInventory: React.FC = () => {
         f.name,
         f.brand,
         f.category,
-        f.origin,
         f.unitType ?? 'unit',
         f.bundleSizeMeters ?? '',
         f.sellingPricePerMeter ?? '',

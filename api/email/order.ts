@@ -11,6 +11,7 @@
 //
 import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
 import { validateCsrfToken } from '../_lib/csrf.js';
+import { getDb } from '../_lib/firebaseAdmin.js';
 
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'tresor-couture';
 
@@ -111,11 +112,18 @@ export default async function handler(req: any, res: any) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
-    const order = body.order;
-    if (!order || !order.id) return res.status(400).json({ error: 'missing_order' });
+    const submitted = body.order;
+    if (!submitted || !submitted.id) return res.status(400).json({ error: 'missing_order' });
+
+    // Verify the order exists and belongs to the caller before rendering an email.
+    const db = getDb();
+    const orderDoc = await db.collection('orders').doc(String(submitted.id)).get();
+    if (!orderDoc.exists) return res.status(404).json({ error: 'order_not_found' });
+    const orderData = orderDoc.data() as Record<string, unknown> | undefined;
+    if (orderData?.userId !== decoded.uid) return res.status(403).json({ error: 'forbidden' });
 
     const name = String(body.name || decoded.name || decoded.email.split('@')[0]);
-    const { subject, html, text } = renderEmail(order, name);
+    const { subject, html, text } = renderEmail(submitted, name);
     // Recipient is the authenticated user's verified email — no spoofing.
     await brevoSendEmail({ to: { email: decoded.email, name }, subject, htmlContent: html, textContent: text });
     return res.status(200).json({ ok: true });

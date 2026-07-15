@@ -7,9 +7,9 @@
  * an optional coupon CODE. Amounts, discounts, tax and shipping are ALL
  * recomputed here so a tampered client total can never be trusted.
  *
- * The maths intentionally mirrors `ordersApi.place()` in src/lib/firebase.ts
- * (5% GST, free shipping >= ₹1999 else ₹99, COD ₹50 surcharge) so the figure
- * shown in the UI matches the figure charged.
+ * Prices are tax-inclusive ("inclusive of all taxes" per product pages and
+ * terms). The 5% GST is reported as a component of the inclusive price but is
+ * not added again to the total. Free shipping >= ₹1999 else ₹99; COD adds ₹50.
  */
 import type { Firestore } from 'firebase-admin/firestore';
 
@@ -127,10 +127,11 @@ export async function computeBreakdown(
   }
 
   const taxable = Math.max(0, subtotal - couponDiscount);
-  const tax = Math.round(taxable * GST_RATE);
+  // Tax-inclusive pricing: report the GST component, do not add it again.
+  const tax = Math.round((taxable * GST_RATE) / (1 + GST_RATE));
   const shipping = taxable >= FREE_SHIPPING_THRESHOLD ? 0 : FLAT_SHIPPING;
   const codSurcharge = input.paymentMethod === 'cod' ? COD_SURCHARGE : 0;
-  const total = taxable + tax + shipping + codSurcharge;
+  const total = taxable + shipping + codSurcharge;
 
   return {
     lines,

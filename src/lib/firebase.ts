@@ -219,15 +219,32 @@ export async function login(email: string, password: string) {
  * exists, we've sent a link" message — never leak whether the address was
  * actually registered (account-enumeration hygiene).
  */
+const ALLOWED_RESET_ORIGINS = new Set([
+  'https://tresorcouture.in',
+  'https://www.tresorcouture.in',
+]);
+
+function allowedResetBase(input: string | undefined): string | undefined {
+  if (!input) return undefined;
+  try {
+    const url = new URL(input);
+    const base = `${url.protocol}//${url.host}`;
+    return ALLOWED_RESET_ORIGINS.has(base) ? base : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function sendPasswordReset(email: string) {
-  // Anchor the post-reset "continue" link on the origin the user is actually
-  // on (tresorcouture.in), NOT on authDomain — which used to send them to the
-  // *.vercel.app domain after resetting. Use the '#/login' hash route: a bare
-  // '/login' path 404s on Vercel (the SPA has no catch-all rewrite).
-  const explicitBase = env.VITE_PUBLIC_APP_URL?.replace(/\/$/, '');
-  const origin = typeof window !== 'undefined' ? window.location.origin : undefined;
+  // Anchor the post-reset "continue" link on an explicitly allowlisted origin.
+  // Never blindly use window.location.origin: a compromised/preview origin could
+  // phish the user after they reset their password.
+  const explicitBase = allowedResetBase(env.VITE_PUBLIC_APP_URL?.replace(/\/$/, ''));
+  const currentOrigin = typeof window !== 'undefined' ? window.location.origin : undefined;
+  const originBase = allowedResetBase(currentOrigin);
   const authDomain = auth.app.options.authDomain;
-  const base = explicitBase ?? origin ?? (authDomain ? `https://${authDomain}` : '');
+  const fallbackBase = authDomain ? `https://${authDomain}` : 'https://tresorcouture.in';
+  const base = explicitBase ?? originBase ?? fallbackBase;
   const continueUrl = `${base}/#/login`;
   await sendPasswordResetEmail(auth, email.trim(), {
     url: continueUrl,
@@ -632,11 +649,10 @@ function buildOrderConfirmationEmail(args: {
   items: { fabricSnapshot: { name: string; brand?: string; price: number }; quantity: number; color?: string }[];
   subtotal: number;
   shipping: number;
-  tax: number;
   total: number;
   shippingAddressLine: string;
 }) {
-  const { customerName, orderId, items, subtotal, shipping, tax, total, shippingAddressLine } = args;
+  const { customerName, orderId, items, subtotal, shipping, total, shippingAddressLine } = args;
   const lineRows = items.map(it => `
     <tr>
       <td style="padding:10px 0;border-bottom:1px solid #EAD9BA;color:#2A1F12;font-family:Georgia,serif">
@@ -665,9 +681,8 @@ function buildOrderConfirmationEmail(args: {
           <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #B8893A;margin:8px 0 20px 0">
             <tr><td style="padding:12px 0 8px 0;font-size:11px;letter-spacing:0.2em;color:#8E6520;font-family:Helvetica,Arial,sans-serif">YOUR ORDER</td></tr>
             ${lineRows}
-            <tr><td colspan="2" style="padding:14px 0 4px 0;text-align:right;font-size:13px;color:#6B6358">Subtotal &nbsp;&nbsp; ${rupee(subtotal)}</td></tr>
+            <tr><td colspan="2" style="padding:14px 0 4px 0;text-align:right;font-size:13px;color:#6B6358">Subtotal (incl. 5% GST) &nbsp;&nbsp; ${rupee(subtotal)}</td></tr>
             <tr><td colspan="2" style="padding:4px 0;text-align:right;font-size:13px;color:#6B6358">Shipping &nbsp;&nbsp; ${shipping === 0 ? 'Complimentary' : rupee(shipping)}</td></tr>
-            <tr><td colspan="2" style="padding:4px 0;text-align:right;font-size:13px;color:#6B6358">GST (5%) &nbsp;&nbsp; ${rupee(tax)}</td></tr>
             <tr><td colspan="2" style="padding:8px 0 0 0;text-align:right;font-size:16px;font-weight:bold;color:#2A1F12">Total &nbsp;&nbsp; ${rupee(total)}</td></tr>
           </table>
 
@@ -693,9 +708,8 @@ function buildOrderConfirmationEmail(args: {
     'YOUR ORDER',
     ...items.map(it => `  ${it.fabricSnapshot.name}${it.color ? ` (${it.color})` : ''} — Qty ${it.quantity} @ ${rupee(it.fabricSnapshot.price)} = ${rupee(it.fabricSnapshot.price * it.quantity)}`),
     '',
-    `Subtotal:  ${rupee(subtotal)}`,
+    `Subtotal (incl. 5% GST):  ${rupee(subtotal)}`,
     `Shipping:  ${shipping === 0 ? 'Complimentary' : rupee(shipping)}`,
-    `GST (5%):  ${rupee(tax)}`,
     `Total:     ${rupee(total)}`,
     '',
     `Shipping to: ${shippingAddressLine}`,
@@ -902,7 +916,6 @@ async function postPlaceNotify(order: DocumentData & { id: string }): Promise<vo
         items: items as never,
         subtotal: Number(order.subtotal) || 0,
         shipping: Number(order.shipping) || 0,
-        tax: Number(order.tax) || 0,
         total: Number(order.total) || 0,
         shippingAddressLine: addrLine,
       });

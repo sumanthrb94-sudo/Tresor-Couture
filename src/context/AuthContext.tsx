@@ -33,15 +33,12 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 const RECAPTCHA_CONTAINER_ID = 'recaptcha-container';
 
-// Firebase profiles don't carry passwordHash; consumers only read it for
-// equality checks that no longer apply, so an empty string keeps the
-// existing User type happy without leaking a credential.
+// Firebase profiles carry the identity; the local User shape mirrors it.
 const toUser = (uid: string, profile: Record<string, unknown> | null, fallbackEmail: string | null): User => {
   const p = profile ?? {};
   return {
     id: uid,
     email: (p.email as string) ?? fallbackEmail ?? '',
-    passwordHash: '',
     fullName: (p.fullName as string) ?? (fallbackEmail?.split('@')[0] ?? 'Tresor Member'),
     phone: (p.phone as string | undefined) ?? undefined,
     role: ((p.role as 'customer' | 'admin') ?? 'customer'),
@@ -103,14 +100,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [hydrate]);
 
   const login = useCallback(async (email: string, password: string) => {
-    await fbLogin(email.trim(), password);
+    try {
+      await fbLogin(email.trim(), password);
+    } catch {
+      // Never expose whether the email exists or the exact Firebase failure.
+      throw new Error('Unable to sign in. Please check your email and password.');
+    }
   }, []);
 
   const register = useCallback(
     async ({ email, password, fullName, phone }: { email: string; password: string; fullName: string; phone?: string }) => {
       const normalised = email.trim().toLowerCase();
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(normalised)) throw new Error('Enter a valid email.');
-      if (password.length < 6) throw new Error('Password must be at least 6 characters.');
+      if (password.length < 8) throw new Error('Password must be at least 8 characters.');
+      if (!/[A-Za-z]/.test(password) || (!/\d/.test(password) && !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password))) {
+        throw new Error('Password must include a letter and a number or symbol.');
+      }
       try {
         await fbRegister({ email: normalised, password, fullName: fullName.trim(), phone: phone?.trim() });
       } catch (err) {
@@ -119,7 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (code === 'auth/email-already-in-use') {
           throw new Error('An account with this email already exists. Please sign in instead (use Google if you signed up with it).');
         }
-        throw err;
+        throw new Error('Unable to create your account. Please try again.');
       }
     },
     []
@@ -150,7 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err) {
       const code = (err as { code?: string }).code;
       if (code === 'auth/user-not-found' || code === 'auth/invalid-email') return;
-      throw err;
+      throw new Error('Unable to send reset link. Please try again.');
     }
   }, []);
 
@@ -158,6 +163,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await fbSignOut();
     setUser(null);
     setIsAdmin(false);
+    // Clean up the legacy localStorage-backed user store on shared devices.
+    try {
+      localStorage.removeItem('users:v1');
+    } catch {
+      /* ignore private-mode errors */
+    }
   }, []);
 
   const updateProfile = useCallback(

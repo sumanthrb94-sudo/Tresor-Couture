@@ -21,8 +21,8 @@ const enabledHere = (): boolean => {
   return host !== 'localhost' && host !== '127.0.0.1' && !host.startsWith('192.168.') && !host.startsWith('169.254.');
 };
 
-export function initAnalytics(): void {
-  if (initialised || !enabledHere()) return;
+export function initAnalytics(consent = false): void {
+  if (initialised || !enabledHere() || !consent) return;
   initialised = true;
   void isSupported()
     .then(ok => { if (ok) instance = getAnalytics(app); })

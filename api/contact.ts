@@ -104,8 +104,8 @@ async function handler(req: any, res: any) {
     return res.status(400).json({ error: 'invalid_contact' });
   } catch (err) {
     console.error('[api/contact]', (err as Error).message);
-    // Don't leak config errors to the client; capture is best-effort.
-    return res.status(200).json({ ok: false });
+    // Don't leak config errors to the client; return a generic server error.
+    return res.status(500).json({ ok: false, error: 'internal_error' });
   }
 }
 

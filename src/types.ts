@@ -37,7 +37,6 @@ export interface Fabric {
   subCategory?: string;
   /** Fabric material type — informational only (e.g. Silk, Cotton, Wool). Not a category. */
   materialType?: string;
-  origin: string;
   tags: string[];
   /** Optional sticker (e.g. "Trending", "Bestseller", "New In"). */
   sticker?: 'Trending' | 'Bestseller' | 'New In' | 'Limited';
@@ -141,8 +140,6 @@ export type UserRole = 'customer' | 'admin';
 export interface User {
   id: string;
   email: string;
-  /** SHA-256 of password — never store plaintext. */
-  passwordHash: string;
   fullName: string;
   phone?: string;
   role: UserRole;

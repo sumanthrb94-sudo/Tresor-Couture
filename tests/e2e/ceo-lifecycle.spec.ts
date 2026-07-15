@@ -23,11 +23,15 @@ import { test, expect, Page } from '@playwright/test';
 
 const BASE_URL = process.env.BASE_URL || 'https://tresorcouture.in';
 const ADMIN_EMAIL = process.env.TEST_ADMIN_EMAIL || 'ceo-test-admin@tresorcouture.in';
-const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD || '';
+const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD;
+if (!ADMIN_PASSWORD) throw new Error('TEST_ADMIN_PASSWORD is required for ceo-lifecycle tests.');
+
+const CUSTOMER_PASSWORD = process.env.E2E_USER_PASSWORD;
+if (!CUSTOMER_PASSWORD) throw new Error('E2E_USER_PASSWORD is required for ceo-lifecycle tests.');
 
 const timestamp = `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 const customerEmail = `ceo-test-customer-${timestamp}@example.com`;
-const customerPassword = 'TresorTest123!';
+const customerPassword = CUSTOMER_PASSWORD;
 
 test.beforeEach(({ page }) => {
   page.on('pageerror', err => console.error('[pageerror]', err.message));

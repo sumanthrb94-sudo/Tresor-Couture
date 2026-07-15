@@ -40,10 +40,13 @@ function isSecureRequest(req: ApiRequest): boolean {
   return true; // default to secure in production
 }
 
+const CSRF_MAX_AGE_SECONDS = 24 * 60 * 60; // 24 hours
+
 export function setCsrfCookie(req: ApiRequest, res: ApiResponse, token: string): void {
   const attrs: Record<string, string | boolean> = {
     Path: '/',
-    SameSite: 'Lax',
+    SameSite: 'Strict',
+    'Max-Age': String(CSRF_MAX_AGE_SECONDS),
     // Not HttpOnly: the SPA must read this cookie to send the header.
   };
   if (isSecureRequest(req)) {

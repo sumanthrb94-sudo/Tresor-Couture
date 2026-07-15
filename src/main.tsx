@@ -10,15 +10,25 @@ import { initSentry } from './lib/sentry';
 // Initialize Sentry first so it captures any errors during app startup.
 initSentry();
 
-// No-ops unless VITE_GA4_ID is configured (e.g. in Vercel production env).
-initAnalytics();
+// Only initialize analytics/performance trackers when the visitor has
+// explicitly opted in via the consent banner (DPDP compliance).
+function readAnalyticsConsent(): boolean {
+  try {
+    const raw = localStorage.getItem('tresor.consent.v1');
+    if (!raw) return false;
+    return (JSON.parse(raw).analytics === true);
+  } catch {
+    return false;
+  }
+}
+const analyticsConsent = readAnalyticsConsent();
+initAnalytics(analyticsConsent);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
-    {/* Vercel Web Analytics (traffic) + Speed Insights (real-user Core Web
-        Vitals). Both are no-ops in local dev and only beacon in production. */}
-    <Analytics />
-    <SpeedInsights />
+    {/* Vercel Web Analytics + Speed Insights are gated on consent. */}
+    {analyticsConsent && <Analytics />}
+    {analyticsConsent && <SpeedInsights />}
   </StrictMode>,
 );

@@ -14,6 +14,7 @@
 
 import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
 import { validateCsrfToken } from '../_lib/csrf.js';
+import { rateLimited, rateLimitHeaders } from '../_lib/rateLimit.js';
 
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'tresor-couture';
 
@@ -75,6 +76,15 @@ export default async function handler(req: any, res: any) {
 
   const decoded = await verifyIdToken(req.headers['authorization']);
   if (!decoded) return res.status(401).json({ error: 'unauthorized' });
+
+  // Limit to 10 notifications per user per hour to prevent spam/abuse.
+  const notifyRateLimit = { window: 3600, max: 10 };
+  for (const [k, v] of Object.entries(rateLimitHeaders(notifyRateLimit))) {
+    res.setHeader(k, v);
+  }
+  if (await rateLimited(req, notifyRateLimit, decoded.uid)) {
+    return res.status(429).json({ error: 'rate_limited' });
+  }
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});

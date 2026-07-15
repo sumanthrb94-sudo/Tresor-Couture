@@ -64,7 +64,6 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
     () => new Set(initialCategory && !isMasterCategory(initialCategory) && initialCategory !== 'All' ? [initialCategory] : [])
   );
   const [colors, setColors] = useState<Set<string>>(new Set());
-  const [origins, setOrigins] = useState<Set<string>>(new Set());
   const [priceBrackets, setPriceBrackets] = useState<Set<string>>(new Set());
   const [sort, setSort] = useState<SortKey>('recommended');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -76,7 +75,6 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
   useEffect(() => {
     setWeaveTypes(new Set(initialCategory && !isMasterCategory(initialCategory) && initialCategory !== 'All' ? [initialCategory] : []));
     setColors(new Set());
-    setOrigins(new Set());
     setPriceBrackets(new Set());
   }, [initialCategory, initialSubCategory]);
 
@@ -104,11 +102,6 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
     return Array.from(s).sort();
   }, [products]);
 
-  const allOrigins = useMemo(
-    () => Array.from(new Set((products ?? []).map(f => f.origin.split(',')[0].trim()))).sort(),
-    [products]
-  );
-
   const toggleSet = (setter: React.Dispatch<React.SetStateAction<Set<string>>>, v: string) =>
     setter(prev => {
       const n = new Set(prev);
@@ -121,7 +114,6 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
     let list: Fabric[] = source.filter(f => {
       if (weaveTypes.size > 0 && !weaveTypes.has(f.category)) return false;
       if (colors.size > 0 && !(f.colors ?? []).some(c => colors.has(c.name))) return false;
-      if (origins.size > 0 && !origins.has(f.origin.split(',')[0].trim())) return false;
       if (priceBrackets.size > 0) {
         const ok = PRICE_BRACKETS.some(b => priceBrackets.has(b.id) && f.price >= b.min && f.price < b.max);
         if (!ok) return false;
@@ -137,7 +129,7 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
       case 'newest': list = [...list].reverse(); break;
     }
     return list;
-  }, [products, weaveTypes, colors, origins, priceBrackets, sort]);
+  }, [products, weaveTypes, colors, priceBrackets, sort]);
 
   const masterTile = activeMaster ? MASTER_CATEGORY_TILES.find(t => t.name === activeMaster) : null;
   const subOptions = activeMaster ? MASTER_CATEGORY_TREE[activeMaster] : [];
@@ -148,7 +140,6 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
   const activeChips: { label: string; clear: () => void }[] = [];
   weaveTypes.forEach(c => activeChips.push({ label: c, clear: () => toggleSet(setWeaveTypes, c) }));
   colors.forEach(c => activeChips.push({ label: c, clear: () => toggleSet(setColors, c) }));
-  origins.forEach(o => activeChips.push({ label: o, clear: () => toggleSet(setOrigins, o) }));
   priceBrackets.forEach(id => {
     const b = PRICE_BRACKETS.find(p => p.id === id);
     if (b) activeChips.push({ label: b.label, clear: () => toggleSet(setPriceBrackets, id) });
@@ -157,7 +148,6 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
   const clearAll = () => {
     setWeaveTypes(new Set());
     setColors(new Set());
-    setOrigins(new Set());
     setPriceBrackets(new Set());
   };
 
@@ -238,11 +228,6 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
         </div>
       </Section>
 
-      <Section title="Origin" defaultOpen={false}>
-        {allOrigins.map(o => (
-          <Checkbox key={o} checked={origins.has(o)} onChange={() => toggleSet(setOrigins, o)} label={o} />
-        ))}
-      </Section>
     </aside>
   );
 

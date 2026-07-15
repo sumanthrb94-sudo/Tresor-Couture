@@ -419,7 +419,6 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
                       {key === 'specs' && (
                         <dl className="grid grid-cols-2 gap-x-6 gap-y-2">
                           <dt className="text-[color:var(--color-myntra-ink-soft)]">Fabric</dt><dd className="font-semibold">{fabric.weaveType ?? fabric.category}</dd>
-                          <dt className="text-[color:var(--color-myntra-ink-soft)]">Origin</dt><dd className="font-semibold">{fabric.origin}</dd>
                           <dt className="text-[color:var(--color-myntra-ink-soft)]">Category</dt><dd className="font-semibold">{fabric.category}</dd>
                           <dt className="text-[color:var(--color-myntra-ink-soft)]">In Stock</dt><dd className="font-semibold">{stock} {fabric.category === 'Laces' ? (fabric.unitType === 'bundle' ? `meters (${fabric.bundleSizeMeters ? Math.floor(stock / fabric.bundleSizeMeters) : stock} bundle${Math.floor(stock / (fabric.bundleSizeMeters ?? 1)) === 1 ? '' : 's'})` : 'meters') : (stock === 1 ? 'piece' : 'pieces')}</dd>
                           <dt className="text-[color:var(--color-myntra-ink-soft)]">Tags</dt><dd className="font-semibold">{fabric.tags.join(', ')}</dd>

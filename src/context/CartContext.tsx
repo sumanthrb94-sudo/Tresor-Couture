@@ -316,8 +316,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const subtotal = resolved.reduce((sum, { item, fabric }) => sum + item.quantity * fabric.price, 0);
     const shipping = subtotal === 0 || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FLAT_RATE;
-    const tax = Math.round(subtotal * TAX_RATE);
-    const total = subtotal + shipping + tax;
+    // Product prices are advertised and stored as tax-inclusive ("inclusive of all taxes").
+    // Report the GST component for disclosure/invoices, but do NOT add it on top again.
+    const tax = Math.round((subtotal * TAX_RATE) / (1 + TAX_RATE));
+    const total = subtotal + shipping;
     const itemCount = resolved.length;
     const unitCount = resolved.reduce((sum, { item }) => sum + item.quantity, 0);
 

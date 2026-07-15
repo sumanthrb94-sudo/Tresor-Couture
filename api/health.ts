@@ -64,12 +64,12 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
 
   res.status(ok ? 200 : 503);
   res.setHeader('Cache-Control', 'no-store, max-age=0');
+  // Detailed config status is intentionally omitted from the public response
+  // to avoid aiding reconnaissance. Uptime monitors only need `ok` + timestamp.
   res.json({
     ok,
     timestamp: new Date().toISOString(),
     region: header(req, 'x-vercel-id')?.split(':')[0] || 'unknown',
-    checks,
-    ...(missingRequired.length ? { missingRequired } : {}),
   });
 }
 

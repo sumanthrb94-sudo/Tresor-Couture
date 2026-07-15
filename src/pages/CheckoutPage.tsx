@@ -527,7 +527,7 @@ const CheckoutPage: React.FC = () => {
                     <div className="flex justify-between"><dt>Coupon</dt><dd className="text-[color:var(--color-myntra-green)]">- {formatINR(couponDiscount)}</dd></div>
                   )}
                   <div className="flex justify-between"><dt>Shipping</dt><dd className={shipping === 0 ? 'text-[color:var(--color-myntra-green)] font-bold' : ''}>{shipping === 0 ? 'FREE' : formatINR(shipping)}</dd></div>
-                  <div className="flex justify-between"><dt>GST</dt><dd>{formatINR(tax)}</dd></div>
+                  <div className="flex justify-between"><dt>GST (incl.)</dt><dd>{formatINR(tax)}</dd></div>
                 </dl>
 
                 <div className="flex justify-between mt-4 pt-3 border-t border-[color:var(--color-myntra-border)]">

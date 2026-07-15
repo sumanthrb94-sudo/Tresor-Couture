@@ -38,16 +38,19 @@ export interface BusinessProfile {
   policiesUpdatedAt: string;
 }
 
+// Read legal registrations from environment so real values are never
+// committed to source control. The fallbacks are intentionally invalid
+// placeholders; set VITE_LEGAL_NAME, VITE_GSTIN and VITE_PAN at build time.
+const env = typeof (import.meta as any).env !== 'undefined' ? (import.meta as any).env : {};
+
 export const BUSINESS: BusinessProfile = {
   brandName: 'Tresor Couture',
-  // CEO ACTION REQUIRED: replace with the registered legal entity name before
-  // going live. Invoices and policy pages use this value; placeholder text is
-  // not valid for GST invoices or Indian e-commerce disclosure rules.
-  legalName: 'Tresor Couture (Sole Proprietorship)',
-  // CEO ACTION REQUIRED: replace with the real 15-character GSTIN.
-  gstin: '36ABCDE1234F1Z5',
-  // CEO ACTION REQUIRED: replace with the real 10-character PAN.
-  pan: 'ABCDE1234F',
+  // CEO ACTION REQUIRED: set VITE_LEGAL_NAME before going live.
+  legalName: String(env.VITE_LEGAL_NAME || 'Tresor Couture (Sole Proprietorship)'),
+  // CEO ACTION REQUIRED: set VITE_GSTIN (15 chars) before going live.
+  gstin: String(env.VITE_GSTIN || '36ABCDE1234F1Z5'),
+  // CEO ACTION REQUIRED: set VITE_PAN (10 chars) before going live.
+  pan: String(env.VITE_PAN || 'ABCDE1234F'),
   cin: '', // proprietorship — no CIN
   // CEO ACTION REQUIRED: replace with the registered place of business.
   addressLines: [
@@ -73,5 +76,5 @@ export const PLACEHOLDER_PATTERNS = ['36ABCDE1234F1Z5', 'ABCDE1234F'];
  *  a sensible default for a heritage-weave catalogue. */
 export const DEFAULT_HSN = '5007';
 
-/** GST rate applied at checkout (see ordersApi.place — tax = 5% of taxable). */
+/** GST rate applied to the pre-tax value of tax-inclusive product prices. */
 export const GST_RATE = 0.05;

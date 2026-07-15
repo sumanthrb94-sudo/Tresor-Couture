@@ -14,6 +14,7 @@
 
 import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
 import { validateCsrfToken } from '../_lib/csrf.js';
+import { rateLimited, rateLimitHeaders } from '../_lib/rateLimit.js';
 
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'tresor-couture';
 const BREVO = 'https://api.brevo.com/v3';
@@ -56,6 +57,15 @@ export default async function handler(req: any, res: any) {
 
   const admin = await verifyAdmin(req.headers['authorization']);
   if (!admin) return res.status(403).json({ error: 'forbidden' });
+
+  // Limit bulk/campaign actions to 20 per admin per hour.
+  const bulkRateLimit = { window: 3600, max: 20 };
+  for (const [k, v] of Object.entries(rateLimitHeaders(bulkRateLimit))) {
+    res.setHeader(k, v);
+  }
+  if (await rateLimited(req, bulkRateLimit, `admin:${String(admin.uid)}`)) {
+    return res.status(429).json({ error: 'rate_limited' });
+  }
 
   const key = process.env.BREVO_API_KEY;
   if (!key) return res.status(200).json({ configured: false, error: 'BREVO_API_KEY not set' });

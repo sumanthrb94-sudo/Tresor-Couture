@@ -7,7 +7,6 @@ interface SwatchInput {
   secondary: string;
   accent: string;
   name: string;
-  origin: string;
   weave: 'satin' | 'brocade' | 'ikat' | 'jamdani' | 'tie-dye' | 'plain' | 'twill' | 'kalamkari' | 'kanjivaram';
 }
 
@@ -99,7 +98,6 @@ const weavePattern = (input: SwatchInput, size: number): string => {
 export const fabricSwatch = (input: SwatchInput, width = 800, height = 1000): string => {
   const pattern = weavePattern(input, width);
   const name = escapeXml(input.name);
-  const origin = escapeXml(input.origin.toUpperCase());
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid slice">
   <defs>
@@ -112,7 +110,6 @@ export const fabricSwatch = (input: SwatchInput, width = 800, height = 1000): st
   <rect width="100%" height="100%" fill="url(#p-${input.id})"/>
   <rect width="100%" height="100%" fill="url(#vignette-${input.id})"/>
   <g fill="#FFF" font-family="Georgia, 'Cormorant Garamond', serif">
-    <text x="40" y="${height - 80}" font-size="22" letter-spacing="6" opacity="0.75">${origin}</text>
     <text x="40" y="${height - 40}" font-size="44" font-style="italic">${name}</text>
   </g>
 </svg>`;

@@ -129,8 +129,11 @@ const h = () => page.locator('h1');
   let signedIn = false;
   await step('Sign in with demo credentials', async () => {
     await page.goto(`${BASE}/#/login`, { waitUntil: 'domcontentloaded' });
-    await page.locator('#login-email').fill('admin@tresor.test');
-    await page.locator('#login-password').fill('tresor-admin');
+    const adminEmail = process.env.E2E_ADMIN_EMAIL || 'admin@tresor.test';
+    const adminPassword = process.env.E2E_ADMIN_PASSWORD;
+    if (!adminPassword) throw new Error('E2E_ADMIN_PASSWORD is required for the signed-in flow.');
+    await page.locator('#login-email').fill(adminEmail);
+    await page.locator('#login-password').fill(adminPassword);
     await page.getByRole('button', { name: 'Login', exact: true }).click();
     // Success → redirect off /login (admin lands on /admin). Failure → red alert.
     const res = await Promise.race([

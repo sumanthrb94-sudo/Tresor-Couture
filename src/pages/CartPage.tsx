@@ -309,7 +309,7 @@ const CartPage: React.FC = () => {
                     </dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-[color:var(--color-myntra-ink)]">GST</dt>
+                    <dt className="text-[color:var(--color-myntra-ink)]">GST (incl.)</dt>
                     <dd>{formatINR(tax)}</dd>
                   </div>
                 </dl>

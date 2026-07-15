@@ -117,7 +117,7 @@ const TaxInvoice: React.FC<{ order: Order }> = ({ order }) => {
             <p className="italic">{rupeesInWords(order.total)}</p>
           </div>
           <dl className="text-[12px] space-y-1.5 sm:justify-self-end sm:min-w-[260px]">
-            <div className="flex justify-between gap-6"><dt>Taxable value</dt><dd>{formatINR(gst.taxableValue)}</dd></div>
+            <div className="flex justify-between gap-6"><dt>Subtotal (incl. GST)</dt><dd>{formatINR(gst.taxableValue)}</dd></div>
             {order.couponCode && (
               <div className="flex justify-between gap-6 text-[color:var(--color-myntra-green)]">
                 <dt>Discount · {order.couponCode}</dt><dd>- {formatINR(order.couponDiscount ?? 0)}</dd>

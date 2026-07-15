@@ -14,7 +14,8 @@ fs.rmSync(ART, { recursive: true, force: true });
 fs.mkdirSync(ART, { recursive: true });
 
 const EMAIL = `tresor.e2e+${Date.now()}@example.com`;
-const PASS = 'tresore2e123';
+const PASS = process.env.E2E_USER_PASSWORD;
+if (!PASS) throw new Error('E2E_USER_PASSWORD is required for the signed-in flow.');
 const results = [];
 let page, browser, shot = 0, bucket = [];
 

@@ -24,6 +24,16 @@
   --color-myntra-rating-bg: #6B7F4F;
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 @layer base {
   html, body { background: var(--color-myntra-bg); }
   body {
@@ -192,7 +202,14 @@
 .scrollbar-none::-webkit-scrollbar { display: none; }
 .scrollbar-none { scrollbar-width: none; }
 
-.no-tap-highlight { -webkit-tap-highlight-color: transparent; }
+.no-tap-highlight {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+.tap-scale {
+  @apply active:scale-90 transition-transform duration-100;
+}
 
 /* Logo blend — the master PNG has a cream backdrop; multiply blend with the
    surrounding cream chrome makes the rectangular edge disappear. */
