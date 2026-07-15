@@ -7,7 +7,7 @@
  * API calls) so it stays fast and cheap.
  */
 import { handleCorsPreflight, rejectDisallowedOrigin } from './_lib/cors.js';
-import { header, type ApiRequest, type ApiResponse } from './_lib/http.js';
+import { type ApiRequest, type ApiResponse } from './_lib/http.js';
 import { withSentry } from './_lib/sentry.js';
 
 interface HealthCheck {
@@ -69,7 +69,6 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
   res.json({
     ok,
     timestamp: new Date().toISOString(),
-    region: header(req, 'x-vercel-id')?.split(':')[0] || 'unknown',
   });
 }
 

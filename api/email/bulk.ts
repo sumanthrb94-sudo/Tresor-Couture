@@ -15,6 +15,7 @@
 import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
 import { validateCsrfToken } from '../_lib/csrf.js';
 import { rateLimited, rateLimitHeaders } from '../_lib/rateLimit.js';
+import { withSentry } from '../_lib/sentry.js';
 
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'tresor-couture';
 const BREVO = 'https://api.brevo.com/v3';
@@ -42,13 +43,36 @@ function brevoHeaders(key: string) {
   return { 'api-key': key, 'content-type': 'application/json', accept: 'application/json' };
 }
 
+/** Reject HTML that contains obvious active content. This is a defence-in-depth
+ *  control on top of the admin gate; Brevo also sanitises, but we never want to
+ *  relay script tags or event handlers from the composer. */
+function dangerousHtml(html: string): boolean {
+  const lowered = html.toLowerCase();
+  if (lowered.includes('<script')) return true;
+  if (lowered.includes('javascript:')) return true;
+  if (/\s(on\w+)\s*=/i.test(html)) return true;
+  if (lowered.includes('<iframe')) return true;
+  if (lowered.includes('<object')) return true;
+  if (lowered.includes('<embed')) return true;
+  return false;
+}
+
+interface HtmlValidationOk { ok: true; error?: undefined; }
+interface HtmlValidationError { ok: false; error: string; }
+type HtmlValidation = HtmlValidationOk | HtmlValidationError;
+function validateHtmlContent(html: string): HtmlValidation {
+  if (!html) return { ok: false, error: 'html_content_required' };
+  if (dangerousHtml(html)) return { ok: false, error: 'html_content_forbidden' };
+  return { ok: true };
+}
+
 async function brevoGet(path: string, key: string): Promise<any> {
   const r = await fetch(`${BREVO}${path}`, { headers: brevoHeaders(key) });
   if (!r.ok) throw new Error(`brevo GET ${path} ${r.status}: ${await r.text()}`);
   return r.json();
 }
 
-export default async function handler(req: any, res: any) {
+async function handler(req: any, res: any) {
   if (handleCorsPreflight(req, res, 'GET, POST, OPTIONS')) return;
   if (rejectDisallowedOrigin(req, res)) return;
   if (!validateCsrfToken(req, res)) {
@@ -118,6 +142,8 @@ export default async function handler(req: any, res: any) {
         const senderName = String(body.senderName || process.env.BREVO_SENDER_NAME || 'Tresor Couture').trim();
         if (!EMAIL_RE.test(to)) return res.status(400).json({ error: 'invalid_recipient' });
         if (!subject || !htmlContent) return res.status(400).json({ error: 'subject_and_body_required' });
+        const htmlCheck = validateHtmlContent(htmlContent);
+        if (!htmlCheck.ok) return res.status(400).json({ error: htmlCheck.error });
         if (!senderEmail) return res.status(400).json({ error: 'sender_required' });
         const r = await fetch(`${BREVO}/smtp/email`, {
           method: 'POST',
@@ -137,6 +163,8 @@ export default async function handler(req: any, res: any) {
       const campaignName = String(body.campaignName || `Campaign — ${subject}`).slice(0, 120);
 
       if (!subject || !htmlContent) return res.status(400).json({ error: 'subject_and_body_required' });
+      const htmlCheck = validateHtmlContent(htmlContent);
+      if (!htmlCheck.ok) return res.status(400).json({ error: htmlCheck.error });
       if (!senderEmail) return res.status(400).json({ error: 'sender_required' });
       if (!Number.isFinite(listId) || listId <= 0) return res.status(400).json({ error: 'list_required' });
 
@@ -176,3 +204,5 @@ export default async function handler(req: any, res: any) {
     return res.status(500).json({ error: 'internal_error' });
   }
 }
+
+export default withSentry(handler as any);

@@ -24,6 +24,7 @@ import type { IncomingMessage } from 'node:http';
 import { getDb, firebaseAdminConfigured } from '../_lib/firebaseAdmin.js';
 import { verifyWebhookSignature } from '../_lib/razorpay.js';
 import { header, type ApiRequest, type ApiResponse } from '../_lib/http.js';
+import { withSentry } from '../_lib/sentry.js';
 
 // Tell Vercel NOT to parse the body so we can verify the raw bytes.
 export const config = { api: { bodyParser: false } };
@@ -41,7 +42,7 @@ function readRawBody(req: ApiRequest): Promise<string> {
   });
 }
 
-export default async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
+async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'method_not_allowed' });
     return;
@@ -124,3 +125,5 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
     res.status(500).json({ error: 'webhook_failed' });
   }
 }
+
+export default withSentry(handler);

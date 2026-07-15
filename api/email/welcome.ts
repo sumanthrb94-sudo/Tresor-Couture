@@ -7,30 +7,11 @@
 
 import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
 import { validateCsrfToken } from '../_lib/csrf.js';
-
-const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'tresor-couture';
+import { verifyIdToken } from '../_lib/auth.js';
+import { withSentry } from '../_lib/sentry.js';
 
 function escapeHtml(s: string): string {
   return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
-}
-
-// Keyless: firebase-admin verifies the token against Google's public keys with
-// only a projectId — no service-account key (org policy blocks key creation).
-let _adminAuth: any = null;
-async function verifyIdToken(authHeader: string | undefined): Promise<any | null> {
-  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
-  if (!token) return null;
-  try {
-    if (!_adminAuth) {
-      const { getApps, initializeApp } = await import('firebase-admin/app');
-      const { getAuth } = await import('firebase-admin/auth');
-      const app = getApps()[0] ?? initializeApp({ projectId: PROJECT_ID });
-      _adminAuth = getAuth(app);
-    }
-    return await _adminAuth.verifyIdToken(token);
-  } catch {
-    return null;
-  }
 }
 
 async function brevoSendEmail(args: {
@@ -58,7 +39,7 @@ async function brevoSendEmail(args: {
   if (!r.ok) throw new Error(`brevo email ${r.status}: ${await r.text()}`);
 }
 
-export default async function handler(req: any, res: any) {
+async function handler(req: any, res: any) {
   if (handleCorsPreflight(req, res, 'POST, OPTIONS')) return;
   if (rejectDisallowedOrigin(req, res)) return;
   if (!validateCsrfToken(req, res)) {
@@ -71,7 +52,7 @@ export default async function handler(req: any, res: any) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
-    const name = String(body.name || decoded.name || decoded.email.split('@')[0]);
+    const name = String(body.name || decoded.email.split('@')[0]);
     const first = escapeHtml(name.split(' ')[0]);
     const templateId = process.env.BREVO_WELCOME_TEMPLATE_ID ? Number(process.env.BREVO_WELCOME_TEMPLATE_ID) : undefined;
 
@@ -97,6 +78,8 @@ export default async function handler(req: any, res: any) {
     return res.status(200).json({ ok: true });
   } catch (err) {
     console.error('[api/email/welcome]', (err as Error).message);
-    return res.status(200).json({ ok: false });
+    return res.status(502).json({ ok: false, error: 'email_failed' });
   }
 }
+
+export default withSentry(handler as any);

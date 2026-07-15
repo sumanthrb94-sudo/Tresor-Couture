@@ -8,8 +8,9 @@
 import { handleCorsPreflight, rejectDisallowedOrigin } from './_lib/cors.js';
 import { issueCsrfToken } from './_lib/csrf.js';
 import { header, type ApiRequest, type ApiResponse } from './_lib/http.js';
+import { withSentry } from './_lib/sentry.js';
 
-export default async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
+async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
   const origin = header(req, 'origin');
   if (handleCorsPreflight(req, res, 'GET, OPTIONS', true)) return;
   // Same-origin GET fetches may not send an Origin header. Only reject when an
@@ -25,3 +26,5 @@ export default async function handler(req: ApiRequest, res: ApiResponse): Promis
   const token = issueCsrfToken(req, res);
   res.status(200).json({ token });
 }
+
+export default withSentry(handler);
