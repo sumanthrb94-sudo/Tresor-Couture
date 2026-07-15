@@ -27,6 +27,7 @@ import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
 import { validateCsrfToken } from '../_lib/csrf.js';
 import { rateLimited, rateLimitHeaders } from '../_lib/rateLimit.js';
 import { readJson, header, type ApiRequest, type ApiResponse } from '../_lib/http.js';
+import { verifyIdToken } from '../_lib/auth.js';
 import { withSentry } from '../_lib/sentry.js';
 
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'tresor-couture';
@@ -42,32 +43,41 @@ function canWriteOrders(): boolean {
   );
 }
 
-let _adminAuth: { verifyIdToken(t: string): Promise<{ uid: string; email?: string }> } | null = null;
-async function verifyIdToken(authHeader: string | undefined): Promise<{ uid: string; email?: string } | null> {
-  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
-  if (!token) return null;
-  try {
-    if (!_adminAuth) {
-      const { getApps, initializeApp } = await import('firebase-admin/app');
-      const { getAuth } = await import('firebase-admin/auth');
-      // getDb() has already built the credentialed app by the time we get here,
-      // so getApps()[0] is the service-account app (full auth + Firestore).
-      const app = getApps()[0] ?? initializeApp({ projectId: PROJECT_ID });
-      _adminAuth = getAuth(app) as typeof _adminAuth;
-    }
-    return await _adminAuth!.verifyIdToken(token);
-  } catch {
-    return null;
-  }
-}
-
 interface Body {
   order?: {
     items?: { fabricId: string; quantity: number; color?: string }[];
     couponCode?: string;
-    paymentMethod?: 'card' | 'upi' | 'cod';
+    paymentMethod?: string;
     shippingAddress?: Record<string, unknown>;
   };
+}
+
+const ALLOWED_PAYMENT_METHODS = ['cod'] as const;
+
+const SHIPPING_FIELD_MAX: Record<string, number> = {
+  fullName: 128,
+  email: 254,
+  phone: 32,
+  line1: 256,
+  line2: 256,
+  city: 64,
+  state: 64,
+  postalCode: 16,
+  country: 64,
+};
+
+/** Sanitize the shipping address: keep only known string fields and cap length. */
+function sanitizeShippingAddress(raw: unknown): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!raw || typeof raw !== 'object') return out;
+  const input = raw as Record<string, unknown>;
+  for (const [key, max] of Object.entries(SHIPPING_FIELD_MAX)) {
+    const value = input[key];
+    if (typeof value === 'string') {
+      out[key] = value.trim().slice(0, max);
+    }
+  }
+  return out;
 }
 
 function readStock(data: Record<string, unknown>): number {
@@ -132,13 +142,20 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
     res.status(400).json({ error: 'empty_cart' });
     return;
   }
+  if (!ALLOWED_PAYMENT_METHODS.includes(order.paymentMethod as typeof ALLOWED_PAYMENT_METHODS[number])) {
+    res.status(400).json({ error: 'invalid_payment_method' });
+    return;
+  }
+
+  const shippingAddress = sanitizeShippingAddress(order.shippingAddress);
 
   try {
-    // Authoritative pricing. paymentMethod is intentionally omitted so no COD
-    // surcharge is added — keeps the charged total equal to the UI total.
+    // Authoritative pricing for COD. Pass paymentMethod so the ₹50 COD
+    // surcharge is included in the recorded total.
     const breakdown = await computeBreakdown(db, {
       items: order.items,
       couponCode: order.couponCode,
+      paymentMethod: 'cod',
     });
 
     // Self-contained line snapshots (mirror the client's fabricSnapshot so
@@ -182,8 +199,9 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
         tax: breakdown.tax,
         shipping: breakdown.shipping,
         total: breakdown.total,
-        shippingAddress: order.shippingAddress ?? {},
-        paymentMethod: order.paymentMethod ?? 'cod',
+        shippingAddress,
+        paymentMethod: 'cod',
+        ...(breakdown.codSurcharge ? { codSurcharge: breakdown.codSurcharge } : {}),
         placedAt: new Date().toISOString(),
         status: 'placed',
         paymentStatus: 'pending',

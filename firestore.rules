@@ -92,7 +92,7 @@ service cloud.firestore {
     // into 'pending' for admin moderation. Owner can delete their own;
     // admin can do anything.
     match /reviews/{reviewId} {
-      allow read: if true;
+      allow read: if resource.data.status == 'approved' || isAdmin();
       allow create: if isSignedIn()
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.status == 'pending'

@@ -161,8 +161,10 @@ function captureNewUser(user: FbUser, fullName?: string, phone?: string): void {
       const name = fullName ?? user.displayName ?? (email ? email.split('@')[0] : undefined);
 
       // Marketing-list capture (email contact, or SMS-only contact for a
-      // phone signup). The endpoint decides the identifier; we just pass both.
-      apiPost('/api/contact', { email, phone: phoneNumber, name, source: 'signup' }).catch(() => {});
+      // phone signup). Pass the ID token so the server can skip captcha.
+      const contactToken = await user.getIdToken().catch(() => null);
+      const contactHeaders = contactToken ? { authorization: `Bearer ${contactToken}` } : undefined;
+      apiPost('/api/contact', { email, phone: phoneNumber, name, source: 'signup' }, contactHeaders).catch(() => {});
 
       // Welcome email only when we have an address to send it to.
       if (email) {

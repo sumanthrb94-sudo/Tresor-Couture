@@ -6,6 +6,7 @@ coverage/
 *.log
 .venv-pptx/
 .env*
+.claude/
 !.env.example
 
 # Firebase

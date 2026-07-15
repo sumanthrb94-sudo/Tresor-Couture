@@ -14,6 +14,7 @@ import { handleCorsPreflight, rejectDisallowedOrigin, originAllowed } from './_l
 import { validateCsrfToken } from './_lib/csrf.js';
 import { rateLimited, rateLimitHeaders } from './_lib/rateLimit.js';
 import { verifyHcaptcha } from './_lib/captcha.js';
+import { verifyIdToken } from './_lib/auth.js';
 import { withSentry } from './_lib/sentry.js';
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -67,9 +68,15 @@ async function handler(req: any, res: any) {
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
 
-    const captcha = await verifyHcaptcha(body.captchaToken);
-    if (!captcha.ok) {
-      return res.status(403).json({ error: captcha.error || 'captcha_failed' });
+    // Authenticated callers (e.g. signup capture) are already verified by
+    // Firebase Auth, so skip hCaptcha. Anonymous captures still require it.
+    const decoded = await verifyIdToken(req.headers['authorization']);
+    const isAuthenticated = decoded?.uid != null;
+    if (!isAuthenticated) {
+      const captcha = await verifyHcaptcha(body.captchaToken);
+      if (!captcha.ok) {
+        return res.status(403).json({ error: captcha.error || 'captcha_failed' });
+      }
     }
 
     const email = String(body.email || '').trim().toLowerCase().slice(0, 254);

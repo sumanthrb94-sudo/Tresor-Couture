@@ -17,6 +17,7 @@
  */
 
 import { apiPost } from './csrf';
+import { auth } from './firebase';
 
 const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env ?? {};
 
@@ -64,13 +65,18 @@ export class PaymentsNotConfiguredError extends Error {
   }
 }
 
+async function authHeader(): Promise<Record<string, string>> {
+  const token = await auth.currentUser?.getIdToken().catch(() => null);
+  return token ? { authorization: `Bearer ${token}` } : {};
+}
+
 /** Ask the server to price the cart and open a Razorpay order. */
 export async function createPaymentOrder(input: {
   items: CartLine[];
   couponCode?: string;
   paymentMethod: 'card' | 'upi' | 'cod';
 }): Promise<CreatedOrder> {
-  const res = await apiPost('/api/payments/create-order', input);
+  const res = await apiPost('/api/payments/create-order', input, await authHeader());
   if (res.status === 503) throw new PaymentsNotConfiguredError();
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
   if (!res.ok) {
@@ -192,7 +198,7 @@ export async function verifyPayment(args: {
     razorpay_payment_id: args.success.razorpay_payment_id,
     razorpay_signature: args.success.razorpay_signature,
     order: args.order,
-  });
+  }, await authHeader());
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
   if (!res.ok || !data.ok) {
     throw new Error(typeof data.error === 'string' ? data.error : 'verify_failed');

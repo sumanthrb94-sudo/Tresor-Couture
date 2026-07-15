@@ -21,7 +21,8 @@ import { getRazorpay, razorpayConfigured } from '../_lib/razorpay.js';
 import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
 import { validateCsrfToken } from '../_lib/csrf.js';
 import { rateLimited, rateLimitHeaders } from '../_lib/rateLimit.js';
-import { readJson, type ApiRequest, type ApiResponse } from '../_lib/http.js';
+import { readJson, header, type ApiRequest, type ApiResponse } from '../_lib/http.js';
+import { verifyIdToken } from '../_lib/auth.js';
 import { withSentry } from '../_lib/sentry.js';
 
 interface Body {
@@ -39,6 +40,12 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
   }
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'method_not_allowed' });
+    return;
+  }
+
+  const decoded = await verifyIdToken(header(req, 'authorization'));
+  if (!decoded?.uid) {
+    res.status(401).json({ error: 'unauthorized' });
     return;
   }
 
@@ -99,6 +106,7 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
         itemCount: String(breakdown.lines.length),
         couponCode: breakdown.couponCode ?? '',
         paymentMethod: body.paymentMethod ?? '',
+        userId: decoded.uid,
       },
     });
 

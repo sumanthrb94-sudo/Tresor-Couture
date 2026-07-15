@@ -27,7 +27,8 @@ import { computeBreakdown } from '../_lib/pricing.js';
 import { getRazorpay, razorpayConfigured, verifyCheckoutSignature } from '../_lib/razorpay.js';
 import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
 import { validateCsrfToken } from '../_lib/csrf.js';
-import { readJson, type ApiRequest, type ApiResponse } from '../_lib/http.js';
+import { readJson, header, type ApiRequest, type ApiResponse } from '../_lib/http.js';
+import { verifyIdToken } from '../_lib/auth.js';
 import { withSentry } from '../_lib/sentry.js';
 
 interface VerifyBody {
@@ -54,6 +55,13 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
     res.status(405).json({ error: 'method_not_allowed' });
     return;
   }
+
+  const decoded = await verifyIdToken(header(req, 'authorization'));
+  if (!decoded?.uid) {
+    res.status(401).json({ error: 'unauthorized' });
+    return;
+  }
+
   if (!razorpayConfigured() || !firebaseAdminConfigured()) {
     res.status(503).json({ error: 'payments_not_configured' });
     return;
@@ -68,7 +76,7 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
   }
 
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature, order } = body;
-  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !order) {
     res.status(400).json({ error: 'missing_payment_fields' });
     return;
   }
@@ -149,7 +157,7 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
       }
 
       tx.set(orderRef, {
-        userId: order.userId ?? null,
+        userId: decoded.uid,
         items: itemsForDoc,
         subtotal: breakdown.subtotal,
         tax: breakdown.tax,

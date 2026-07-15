@@ -60,21 +60,33 @@ async function brevoSendEmail(args: {
   if (!r.ok) throw new Error(`brevo email ${r.status}: ${await r.text()}`);
 }
 
-function renderEmail(order: any, customerName: string): { subject: string; html: string; text: string } {
-  const items = Array.isArray(order.items) ? order.items : [];
-  const rows = items.map((it: any) => {
-    const name = escapeHtml(it.name || it.brand || 'Fabric');
-    const meta = [it.quantity ? `Qty ${it.quantity}` : '', it.color ? escapeHtml(it.color) : ''].filter(Boolean).join(' · ');
-    const line = (Number(it.price) || 0) * (Number(it.quantity) || 0);
+function renderEmail(order: Record<string, unknown>, customerName: string): { subject: string; html: string; text: string } {
+  const rawItems = Array.isArray(order.items) ? order.items : [];
+  const items = rawItems.map((it: any) => {
+    const snap = it.fabricSnapshot || {};
+    return {
+      name: escapeHtml(String(snap.name || snap.brand || 'Fabric')),
+      brand: escapeHtml(String(snap.brand || '')),
+      quantity: Number(it.quantity) || 0,
+      color: it.color ? escapeHtml(String(it.color)) : '',
+      price: Number(snap.price) || 0,
+    };
+  });
+  const rows = items.map((it) => {
+    const meta = [it.quantity ? `Qty ${it.quantity}` : '', it.color].filter(Boolean).join(' · ');
+    const line = it.price * it.quantity;
     return `<tr>
-      <td style="padding:8px 0;border-bottom:1px solid #EEE6D6;">${name}<br><span style="color:#8A7656;font-size:12px;">${meta}</span></td>
+      <td style="padding:8px 0;border-bottom:1px solid #EEE6D6;">${it.name}<br><span style="color:#8A7656;font-size:12px;">${meta}</span></td>
       <td style="padding:8px 0;border-bottom:1px solid #EEE6D6;text-align:right;white-space:nowrap;">${rupee(line)}</td>
     </tr>`;
   }).join('');
 
-  const a = order.shippingAddress || {};
-  const addr = [a.fullName, a.line1, a.line2, a.city, a.state, a.postalCode].filter(Boolean).map(escapeHtml).join(', ');
-  const id = escapeHtml(order.id || '');
+  const a = (order.shippingAddress || {}) as Record<string, unknown>;
+  const addr = [a.fullName, a.line1, a.line2, a.city, a.state, a.postalCode]
+    .filter((v): v is string => typeof v === 'string')
+    .map(escapeHtml)
+    .join(', ');
+  const id = escapeHtml(String(order.id || ''));
 
   const html = `<!doctype html><html><body style="margin:0;background:#FBF7EE;font-family:Georgia,'Times New Roman',serif;color:#2A1F12;">
   <div style="max-width:560px;margin:0 auto;padding:28px 22px;">
@@ -84,19 +96,19 @@ function renderEmail(order: any, customerName: string): { subject: string; html:
     <p style="font-size:13px;color:#5D4E36;">Order reference: <b>${id}</b></p>
     <table style="width:100%;border-collapse:collapse;margin:16px 0;font-family:Arial,sans-serif;font-size:14px;">${rows}</table>
     <table style="width:100%;font-family:Arial,sans-serif;font-size:14px;">
-      <tr><td>Subtotal</td><td style="text-align:right;">${rupee(order.subtotal)}</td></tr>
-      ${order.couponDiscount ? `<tr><td>Discount${order.couponCode ? ` (${escapeHtml(order.couponCode)})` : ''}</td><td style="text-align:right;color:#1F5D4F;">- ${rupee(order.couponDiscount)}</td></tr>` : ''}
-      <tr><td>Shipping</td><td style="text-align:right;">${Number(order.shipping) ? rupee(order.shipping) : 'FREE'}</td></tr>
-      <tr><td>GST</td><td style="text-align:right;">${rupee(order.tax)}</td></tr>
-      <tr><td style="padding-top:8px;font-weight:bold;">Total</td><td style="padding-top:8px;text-align:right;font-weight:bold;">${rupee(order.total)}</td></tr>
+      <tr><td>Subtotal</td><td style="text-align:right;">${rupee(Number(order.subtotal) || 0)}</td></tr>
+      ${Number(order.couponDiscount) ? `<tr><td>Discount${order.couponCode ? ` (${escapeHtml(String(order.couponCode))})` : ''}</td><td style="text-align:right;color:#1F5D4F;">- ${rupee(Number(order.couponDiscount))}</td></tr>` : ''}
+      <tr><td>Shipping</td><td style="text-align:right;">${Number(order.shipping) ? rupee(Number(order.shipping)) : 'FREE'}</td></tr>
+      <tr><td>GST</td><td style="text-align:right;">${rupee(Number(order.tax) || 0)}</td></tr>
+      <tr><td style="padding-top:8px;font-weight:bold;">Total</td><td style="padding-top:8px;text-align:right;font-weight:bold;">${rupee(Number(order.total) || 0)}</td></tr>
     </table>
     <p style="font-size:13px;color:#5D4E36;">Delivering to: ${addr}</p>
     <p style="font-size:13px;color:#5D4E36;">Payment: Cash on Delivery.</p>
     <p style="font-size:12px;color:#8A7656;margin-top:24px;">Dispatched within 48 hours · free shipping over ₹1,999.</p>
   </div></body></html>`;
 
-  const text = `TRESOR COUTURE — Order confirmed\nOrder ${order.id}\nTotal: ${rupee(order.total)}\nDelivering to: ${addr}\nPayment: Cash on Delivery.\nThank you for your order.`;
-  return { subject: `Your Tresor Couture order ${order.id} is confirmed`, html, text };
+  const text = `TRESOR COUTURE — Order confirmed\nOrder ${id}\nTotal: ${rupee(Number(order.total) || 0)}\nDelivering to: ${addr}\nPayment: Cash on Delivery.\nThank you for your order.`;
+  return { subject: `Your Tresor Couture order ${id} is confirmed`, html, text };
 }
 
 export default async function handler(req: any, res: any) {
@@ -123,7 +135,7 @@ export default async function handler(req: any, res: any) {
     if (orderData?.userId !== decoded.uid) return res.status(403).json({ error: 'forbidden' });
 
     const name = String(body.name || decoded.name || decoded.email.split('@')[0]);
-    const { subject, html, text } = renderEmail(submitted, name);
+    const { subject, html, text } = renderEmail(orderData, name);
     // Recipient is the authenticated user's verified email — no spoofing.
     await brevoSendEmail({ to: { email: decoded.email, name }, subject, htmlContent: html, textContent: text });
     return res.status(200).json({ ok: true });
