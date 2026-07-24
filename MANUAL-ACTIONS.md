@@ -116,18 +116,41 @@ This is weeks of work and gated on physical/operational setup, not code. Begin s
 
 ---
 
-## CRM, Returns, Chat & Call — deploy steps (one-time)
+## CRM, Returns, Chat & Call — production status
 
 The CRM, returns/refunds (RMA), live chat and callback features are enforced
-entirely by Firestore rules (free-tier model, no Cloud Functions), so the new
-rules and indexes **must be deployed** before the features work in production:
+entirely by Firestore rules (free-tier model, no Cloud Functions).
 
-```bash
-firebase deploy --only firestore:rules,firestore:indexes
-```
+- ✅ **Firestore rules are DEPLOYED to production** (`tresor-couture`), including
+  the returns delivered + 7-day-window enforcement and the customer-field
+  injection guards. To redeploy after future rule edits:
+  `firebase deploy --only firestore:rules` (or your CI).
+- ✅ **No composite indexes required.** The per-user "my returns / my callbacks"
+  queries sort client-side, so nothing needs `firestore:indexes` for these
+  features.
 
 New Firestore collections created at runtime (no manual setup):
 `returns`, `chats` (+ `chats/{uid}/messages`), `call_requests`, `crm`.
+
+### ⚠️ Security: rotate the service-account key
+
+The Firebase Admin service-account key shared during setup was used to deploy
+the rules and **must be rotated**: Google Cloud Console → IAM & Admin → Service
+Accounts → `firebase-adminsdk-fbsvc@tresor-couture.iam.gserviceaccount.com` →
+Keys → delete key `f585c04c79…`, create a fresh one. Put the new key ONLY in
+Vercel env (`FIREBASE_SERVICE_ACCOUNT`) and your local `set-admin` shell — never
+in the repo or a chat.
+
+### Remaining go-live config (not code — set these before launch)
+
+- **Vercel env** `FIREBASE_SERVICE_ACCOUNT` = the (rotated) service-account JSON,
+  so `/api/orders/place` and `/api/payments/*` can write server-side. Without it
+  those endpoints return 503 `orders_not_configured`.
+- **Legal/business values** (`src/lib/business.ts` placeholders): set
+  `VITE_LEGAL_NAME`, `VITE_GSTIN`, `VITE_PAN` and the registered address — GST
+  invoices currently carry placeholder values (`36ABCDE1234F1Z5`).
+- **Razorpay / Brevo / WhatsApp** keys per `docs/PAYMENTS-SETUP.md`,
+  `docs/EMAIL-SETUP.md`, `docs/WHATSAPP-SETUP.md`.
 
 - **Live chat** requires the customer to be signed in (conversations are keyed
   by uid). Guests are routed to WhatsApp / phone / a sign-in prompt.
