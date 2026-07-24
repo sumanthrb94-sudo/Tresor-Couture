@@ -10,6 +10,7 @@ import {
   LogOut,
   Mail,
   MapPin,
+  MessageCircle,
   Package,
   RotateCcw,
   RotateCw,
@@ -29,6 +30,7 @@ import OrderStatusTracker from '../components/OrderStatusTracker';
 import AddressBookEditor from '../components/AddressBookEditor';
 import LoginSecuritySection from '../components/LoginSecuritySection';
 import ReturnModal from '../components/ReturnModal';
+import OrderChatModal from '../components/OrderChatModal';
 import { auth, ordersApi } from '../lib/firebase';
 import { returnsApi } from '../lib/support';
 import type { Order, OrderStatus, ReturnRequest, ReturnStatus } from '../types';
@@ -470,6 +472,7 @@ const OrdersTab: React.FC = () => {
   const [returnFor, setReturnFor] = useState<Order | null>(null);
   const [returnExisting, setReturnExisting] = useState<ReturnRequest[]>([]);
   const [returnDone, setReturnDone] = useState<string | null>(null);
+  const [chatOrder, setChatOrder] = useState<Order | null>(null);
 
   const openReturn = async (order: Order) => {
     let existing: ReturnRequest[] = [];
@@ -633,6 +636,13 @@ const OrdersTab: React.FC = () => {
                       <RotateCw className="w-3.5 h-3.5" />
                       Reorder
                     </button>
+                    <button
+                      onClick={() => setChatOrder(order)}
+                      className="text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] inline-flex items-center gap-1 hover:text-[color:var(--color-myntra-pink)]"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      Chat
+                    </button>
                     {isDelivered && returnWindowOpen(order) && (
                       <button
                         onClick={() => void openReturn(order)}
@@ -794,6 +804,14 @@ const OrdersTab: React.FC = () => {
             navigate({ name: 'account', tab: 'returns' });
             window.setTimeout(() => setReturnDone(null), 6000);
           }}
+        />
+      )}
+
+      {chatOrder && (
+        <OrderChatModal
+          orderId={chatOrder.id}
+          orderLabel={shortOrderId(chatOrder.id)}
+          onClose={() => setChatOrder(null)}
         />
       )}
     </div>

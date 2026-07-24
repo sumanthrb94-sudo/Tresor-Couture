@@ -217,23 +217,38 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    /* ---------- live chat ---------- */
-    // One conversation doc per customer, keyed by uid; a messages subcollection
-    // under it. Owner and admin can read/write the conversation; guests have no
-    // chat (they are routed to callback/WhatsApp in the UI).
-    match /chats/{uid} {
-      allow read: if isOwner(uid) || isAdmin();
-      allow create: if (isOwner(uid) && request.resource.data.uid == uid) || isAdmin();
-      allow update: if isOwner(uid) || isAdmin();
+    /* ---------- live chat (per order) ---------- */
+    // One conversation doc per ORDER, keyed by orderId, with a messages
+    // subcollection. The customer opens it from their order, so support always
+    // has the order in context. The chat doc stores userId (the order owner);
+    // read/write is owner-or-admin, and creating a chat requires owning the
+    // referenced order. Guests have no chat (routed to call/WhatsApp).
+    function chatOwner(chatId) {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/chats/$(chatId)).data.userId == request.auth.uid;
+    }
+    match /chats/{orderId} {
+      // `resource == null` lets the owner's "does this chat exist yet?" read
+      // succeed before the conversation is created (otherwise ensureForOrder's
+      // getDoc is denied and the chat can never be started).
+      allow read: if isAdmin()
+        || (isSignedIn() && (resource == null || resource.data.userId == request.auth.uid));
+      allow create: if isAdmin()
+        || (isSignedIn()
+            && request.resource.data.userId == request.auth.uid
+            && request.resource.data.orderId == orderId
+            && exists(/databases/$(database)/documents/orders/$(orderId))
+            && get(/databases/$(database)/documents/orders/$(orderId)).data.userId == request.auth.uid);
+      allow update: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow delete: if isAdmin();
 
       match /messages/{messageId} {
-        allow read: if isOwner(uid) || isAdmin();
+        allow read: if isAdmin() || chatOwner(orderId);
         // Customer posts as themselves; admin posts as admin. Text is bounded.
         allow create: if (
-              (isOwner(uid)
+              (chatOwner(orderId)
                 && request.resource.data.senderRole == 'customer'
-                && request.resource.data.senderId == uid)
+                && request.resource.data.senderId == request.auth.uid)
               || (isAdmin() && request.resource.data.senderRole == 'admin'))
           && request.resource.data.text is string
           && request.resource.data.text.size() > 0

@@ -14,7 +14,6 @@ import LookbookRail from './components/LookbookRail';
 import Footer from './components/Footer';
 import BottomNav from './components/BottomNav';
 import ConsentBanner from './components/ConsentBanner';
-import SupportWidget from './components/SupportWidget';
 import ErrorBoundary from './components/ErrorBoundary';
 import ShopPage from './pages/ShopPage';
 import ProductPage from './pages/ProductPage';
@@ -179,7 +178,6 @@ const Chrome: React.FC = () => {
           behind it on phones (the bar is ~58px + safe-area). */}
       {!isAdmin && <div className="lg:hidden h-[58px]" aria-hidden />}
       {!isAdmin && <BottomNav />}
-      {!isAdmin && <SupportWidget />}
       {!isAdmin && <ConsentBanner />}
     </div>
   );
