@@ -609,13 +609,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "const b = pm.response.json();",
-                  "if (b.name) pm.environment.set('orderId', b.name.split('/').pop());",
-                  "pm.test('200 OK',           () => pm.response.to.have.status(200));",
-                  "pm.test('order doc returned',() => pm.expect(b.name).to.include('orders/'));",
-                  "pm.test('orderId captured', () => pm.expect(pm.environment.get('orderId')).to.have.length.greaterThan(0));",
-                  "pm.test('userId stamped',   () => pm.expect(b.fields.userId.stringValue).to.eql(pm.environment.get('uid')));",
-                  "pm.test('status = placed',  () => pm.expect(b.fields.status.stringValue).to.eql('placed'));"
+                  "// Orders are SERVER-ONLY: firestore.rules has `allow create: if false`.",
+                  "// Real orders are created by /api/orders/place (Admin SDK, which recomputes",
+                  "// pricing + decrements stock). A client writing straight to /orders MUST be denied.",
+                  "pm.test('client REST order-create denied (server-only via /api/orders/place)', () => pm.expect(pm.response.code).to.eql(403));"
                 ]
               }
             }
@@ -660,11 +657,18 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
-                  "const arr = pm.response.json();",
-                  "const docs = arr.filter(r => r.document);",
-                  "pm.test('at least one own order',() => pm.expect(docs.length).to.be.greaterThan(0));",
-                  "pm.test('all orders are mine',   () => docs.forEach(d => pm.expect(d.document.fields.userId.stringValue).to.eql(pm.environment.get('uid'))));"
+                  "// Orders are server-created (/api/orders/place), so a Postman-only run may",
+                  "// have none. The security assertion is that the query NEVER returns another",
+                  "// user's orders — whether it yields the caller's rows (200) or nothing.",
+                  "const code = pm.response.code;",
+                  "pm.test('own-orders query never leaks other users', () => {",
+                  "  if (code === 200) {",
+                  "    const docs = pm.response.json().filter(r => r.document);",
+                  "    docs.forEach(d => pm.expect(d.document.fields.userId.stringValue).to.eql(pm.environment.get('uid')));",
+                  "  } else {",
+                  "    pm.expect([403, 404]).to.include(code);",
+                  "  }",
+                  "});"
                 ]
               }
             }
@@ -685,13 +689,13 @@
               }
             ],
             "url": {
-              "raw": "{{fsBase}}/orders/{{orderId}}?updateMask.fieldPaths=status",
+              "raw": "{{fsBase}}/orders/any-server-created-order?updateMask.fieldPaths=status",
               "host": [
                 "{{fsBase}}"
               ],
               "path": [
                 "orders",
-                "{{orderId}}"
+                "any-server-created-order"
               ],
               "query": [
                 {
@@ -711,7 +715,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('rule denies non-admin update (403)', () => pm.expect(pm.response.code).to.eql(403));"
+                  "// Order status changes are admin-only (fulfilment). A non-admin token must be denied.",
+                  "pm.test('non-admin order status change denied', () => pm.expect([403, 404]).to.include(pm.response.code));"
                 ]
               }
             }
@@ -1287,6 +1292,70 @@
                   "pm.test('200 OK (public read allowed)', () => pm.response.to.have.status(200));",
                   "const b = pm.response.json();",
                   "pm.test('returns documents', () => pm.expect(b.documents).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Read CRM overlay (admin-only — expect 403/404)",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{idToken}}" } ],
+            "url": { "raw": "{{fsBase}}/crm/{{uid}}", "host": [ "{{fsBase}}" ], "path": [ "crm", "{{uid}}" ] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// CRM notes/tags/lifecycle are back-office data — never customer-readable.",
+                  "pm.test('CRM overlay is admin-only (customer denied)', () => pm.expect([403, 404]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create return without auth (expect 401/403)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{fsBase}}/returns", "host": [ "{{fsBase}}" ], "path": [ "returns" ] },
+            "body": { "mode": "raw", "raw": "{\n  \"fields\": {\n    \"userId\":     { \"stringValue\": \"anon\" },\n    \"orderId\":    { \"stringValue\": \"x\" },\n    \"status\":     { \"stringValue\": \"requested\" },\n    \"resolution\": { \"stringValue\": \"refund\" },\n    \"items\": { \"arrayValue\": { \"values\": [ { \"mapValue\": { \"fields\": { \"fabricId\": { \"stringValue\": \"x\" }, \"quantity\": { \"integerValue\": \"1\" } } } } ] } }\n  }\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('anonymous return create denied', () => pm.expect([401, 403]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create chat for an order you don't own (expect 403)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{idToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{fsBase}}/chats/not-your-order", "host": [ "{{fsBase}}" ], "path": [ "chats", "not-your-order" ] },
+            "body": { "mode": "raw", "raw": "{\n  \"fields\": {\n    \"orderId\": { \"stringValue\": \"not-your-order\" },\n    \"userId\":  { \"stringValue\": \"{{uid}}\" },\n    \"status\":  { \"stringValue\": \"open\" }\n  }\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Chat is per-order — creating one requires owning the referenced order.",
+                  "pm.test('chat create for non-owned order denied', () => pm.expect([403, 404]).to.include(pm.response.code));"
                 ]
               }
             }
