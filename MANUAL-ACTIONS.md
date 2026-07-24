@@ -154,12 +154,12 @@ in the repo or a chat.
   invoices currently carry placeholder values (`36ABCDE1234F1Z5`).
 - **Razorpay / Brevo / WhatsApp** keys per `docs/PAYMENTS-SETUP.md`,
   `docs/EMAIL-SETUP.md`, `docs/WHATSAPP-SETUP.md`.
-- **⚠️ Upstash Redis is REQUIRED in production, not optional.** `api/_lib/rateLimit.ts`
-  **fails closed** in prod: if `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`
-  are unset, every rate-limited POST (order placement, contact, Razorpay
-  create-order) returns `429`. Set both in Vercel before launch. (The launch
-  manual calls Upstash "optional" — that is misleading given the fail-closed
-  behaviour; treat it as mandatory.)
+- **Upstash Redis is OPTIONAL — no external service needed to launch.**
+  `api/_lib/rateLimit.ts` uses Upstash for *global* rate limiting when
+  `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` are set, and otherwise
+  falls back to a built-in **best-effort in-memory limiter** (per serverless
+  instance). Add Upstash later only if bot traffic becomes a problem; it needs
+  no code change.
 
 - **Live chat** is per-order and requires the customer to be signed in (keyed
   by uid). Guests are routed to WhatsApp / phone / a sign-in prompt.
