@@ -62,7 +62,7 @@ export const BUSINESS: BusinessProfile = {
   stateName: 'Telangana',
   stateCode: '36',
   email: 'concierge@tresorcouture.com',
-  phone: '+91 80 1234 5678',
+  phone: '+91 63042 11922',
   website: 'https://tresorcouture.in',
   policiesUpdatedAt: '2026-06-02',
 };
