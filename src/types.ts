@@ -278,10 +278,12 @@ export interface ReturnRequest {
 export type ChatStatus = 'open' | 'closed';
 export type ChatSenderRole = 'customer' | 'admin';
 
-/** One conversation per signed-in customer, keyed by uid. */
+/** One conversation per ORDER, keyed by orderId. */
 export interface ChatConversation {
-  id: string;            // == uid
-  uid: string;
+  id: string;            // == orderId
+  orderId: string;
+  /** Owner uid (the customer who placed the order). */
+  userId: string;
   customerName?: string;
   customerEmail?: string;
   status: ChatStatus;

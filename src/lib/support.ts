@@ -272,15 +272,22 @@ const MIN_CHAT_SEND_INTERVAL_MS = 900;
 let lastChatSendAt = 0;
 
 export const chatApi = {
-  /** Ensure the signed-in customer's conversation doc exists; returns its id (== uid). */
-  ensureMine: async (): Promise<string> => {
+  /**
+   * Ensure a conversation exists for a specific ORDER and return its id (== the
+   * orderId). Chat is scoped per order: the customer opens it from an order in
+   * their account, so support always has the order in context. The chat doc
+   * stores userId (owner) + orderId; the rules verify the caller owns that order.
+   */
+  ensureForOrder: async (orderId: string): Promise<string> => {
     const u = auth.currentUser;
     if (!u) throw new Error('not_signed_in');
-    const ref = doc(db, 'chats', u.uid);
+    if (!orderId) throw new Error('missing_order');
+    const ref = doc(db, 'chats', orderId);
     const snap = await getDoc(ref);
     if (!snap.exists()) {
       await setDoc(ref, {
-        uid: u.uid,
+        orderId,
+        userId: u.uid,
         customerName: u.displayName ?? u.email?.split('@')[0] ?? 'Customer',
         customerEmail: u.email ?? null,
         status: 'open' as const,
@@ -290,7 +297,7 @@ export const chatApi = {
         updatedAt: nowIso(),
       });
     }
-    return u.uid;
+    return orderId;
   },
 
   /**

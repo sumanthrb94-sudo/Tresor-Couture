@@ -130,8 +130,10 @@ entirely by Firestore rules (free-tier model, no Cloud Functions).
   features.
 
 New Firestore collections created at runtime (no manual setup):
-`returns`, `chats` (+ `chats/{uid}/messages`), `crm`. The Call option is just a
-`tel:` dialer link (+ WhatsApp) — no collection or backend.
+`returns`, `chats` (+ `chats/{orderId}/messages`), `crm`. Live chat is
+**per order** — the customer opens it from an order in their account, keyed by
+orderId, so the atelier always has the order in context. The Call option is just
+a `tel:` dialer link (+ WhatsApp) — no collection or backend.
 
 ### ⚠️ Security: rotate the service-account key
 
@@ -153,7 +155,7 @@ in the repo or a chat.
 - **Razorpay / Brevo / WhatsApp** keys per `docs/PAYMENTS-SETUP.md`,
   `docs/EMAIL-SETUP.md`, `docs/WHATSAPP-SETUP.md`.
 
-- **Live chat** requires the customer to be signed in (conversations are keyed
+- **Live chat** is per-order and requires the customer to be signed in (keyed
   by uid). Guests are routed to WhatsApp / phone / a sign-in prompt.
 - **Return status emails** reuse the existing `mail/` queue (Trigger Email
   extension) — no extra config beyond what order emails already use.

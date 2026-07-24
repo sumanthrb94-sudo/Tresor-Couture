@@ -44,8 +44,23 @@ async function ensureUser(email: string, fullName: string, admin: boolean) {
 
 async function main() {
   console.log('Seeding emulator users…');
-  await ensureUser('customer@test.local', 'Test Customer', false);
+  const customerUid = await ensureUser('customer@test.local', 'Test Customer', false);
   await ensureUser('admin@test.local', 'Atelier Admin', true);
+
+  // Seed a delivered order for the customer so the per-order chat (opened from
+  // an order in the account) has something to attach to. Fixed id for the test.
+  await db.collection('orders').doc('EMUTESTORDER1').set({
+    userId: customerUid,
+    status: 'placed',
+    total: 999,
+    subtotal: 999,
+    shipping: 0,
+    placedAt: new Date().toISOString(),
+    paymentMethod: 'cod',
+    shippingAddress: { fullName: 'Test Customer', line1: '1 Test St', city: 'Hyderabad', state: 'Telangana', postalCode: '500001', country: 'India' },
+    items: [{ fabricId: 'demo', quantity: 1, fabricSnapshot: { id: 'demo', name: 'Demo Lace', brand: 'TRESOR', price: 999, photo: '', image: '', masterCategory: 'Laces' } }],
+  }, { merge: true });
+  console.log('  ✓ order EMUTESTORDER1 for customer');
   console.log('Done.');
   process.exit(0);
 }

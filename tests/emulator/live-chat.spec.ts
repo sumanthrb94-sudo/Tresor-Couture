@@ -1,18 +1,11 @@
 import { test, expect, type Page, type Browser } from '@playwright/test';
 
 /**
- * End-to-end live-chat test against the Firebase Emulator Suite (Auth +
- * Firestore), which loads the real firestore.rules. Two independent browser
- * contexts — a signed-in customer and a signed-in admin — exchange messages
- * and assert real-time delivery in both directions with no page reload.
- *
- * Run sequence (see tests/emulator/README.md):
- *   1) npm run emulators            (Auth 9099 + Firestore 8080)
- *   2) FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \
- *      FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=demo-tresor \
- *      npm run seed:emulator
- *   3) VITE_USE_EMULATORS=1 <emulator firebase config> npm run build && npm run preview -- --port 4173
- *   4) npm run test:chat
+ * End-to-end per-order live-chat test against the Firebase Emulator Suite (Auth
+ * + Firestore), which loads the real firestore.rules. Two independent browser
+ * contexts (customer + admin) exchange messages in real time, both directions.
+ * The customer opens chat from an order in their account; the admin answers from
+ * the Support inbox. See tests/emulator/README.md to run.
  */
 
 const PASSWORD = 'Test1234!';
@@ -22,8 +15,8 @@ async function dismissConsent(page: Page) {
   if (await b.isVisible().catch(() => false)) await b.click().catch(() => {});
 }
 
-// NB: never wait for 'networkidle' — a live Firestore listener keeps a
-// connection open, so the page never reaches network idle. Wait for elements.
+// Avoid waitForLoadState('networkidle') — a live Firestore listener keeps a
+// connection open so the page never reaches network idle.
 async function signIn(page: Page, email: string) {
   await page.goto('/#/login', { waitUntil: 'domcontentloaded' });
   await page.locator('#login-email').waitFor({ state: 'visible', timeout: 20_000 });
@@ -34,34 +27,36 @@ async function signIn(page: Page, email: string) {
   await dismissConsent(page);
 }
 
-test('live chat: customer <-> admin real-time, both directions', async ({ browser }: { browser: Browser }) => {
+test('per-order live chat: customer <-> admin real-time, both directions', async ({ browser }: { browser: Browser }) => {
   const nonce = String(Date.now()).slice(-6);
   const custMsg1 = `PING1-${nonce}`;
   const custMsg2 = `PING2-${nonce}`;
   const admMsg = `PONG-${nonce}`;
 
-  // ---- Customer ----
+  // ---- Customer opens chat from their order ----
   const custCtx = await browser.newContext();
   const cust = await custCtx.newPage();
   await signIn(cust, 'customer@test.local');
-  await cust.getByRole('button', { name: /chat with us/i }).click();
+  await cust.goto('/#/account/orders', { waitUntil: 'domcontentloaded' });
+  await cust.getByRole('button', { name: /^chat$/i }).first().click();
   const custInput = cust.getByPlaceholder('Type a message…');
   await expect(custInput).toBeVisible({ timeout: 15_000 });
   await custInput.fill(custMsg1);
   await custInput.press('Enter');
   await expect(cust.getByText(custMsg1)).toBeVisible({ timeout: 10_000 });
 
-  // ---- Admin (opens AFTER the first customer message) ----
+  // ---- Admin opens the conversation from the Support inbox ----
   const admCtx = await browser.newContext();
   const adm = await admCtx.newPage();
   await signIn(adm, 'admin@test.local');
   await adm.goto('/#/admin/support', { waitUntil: 'domcontentloaded' });
   await expect(adm.getByRole('heading', { name: /support/i })).toBeVisible({ timeout: 20_000 });
+
   await expect(adm.getByText('Test Customer').first()).toBeVisible({ timeout: 20_000 });
   await adm.getByText('Test Customer').first().click();
   await expect(adm.getByText(custMsg1)).toBeVisible({ timeout: 15_000 });
 
-  // ---- Real-time customer -> admin (thread open on admin side) ----
+  // ---- Real-time customer -> admin ----
   await custInput.fill(custMsg2);
   await custInput.press('Enter');
   await expect(adm.getByText(custMsg2)).toBeVisible({ timeout: 15_000 });
