@@ -24,7 +24,10 @@
     "test:e2e:signed-in": "npx playwright test tests/e2e/signed-in --project=signed-in-chrome --workers=1",
     "test:e2e:signed-in:cdp": "set CDP_URL=http://localhost:9222 && npx playwright test tests/e2e/signed-in --project=signed-in-chrome --workers=1",
     "test:e2e:signed-in:smoke": "npx playwright test tests/e2e/signed-in/signed-in-smoke.spec.ts --project=signed-in-chrome --workers=1",
-    "test:e2e:signed-in:lifecycle": "npx playwright test tests/e2e/signed-in/signed-in-lifecycle.spec.ts --project=signed-in-chrome --workers=1"
+    "test:e2e:signed-in:lifecycle": "npx playwright test tests/e2e/signed-in/signed-in-lifecycle.spec.ts --project=signed-in-chrome --workers=1",
+    "emulators": "firebase emulators:start --only auth,firestore --project demo-tresor",
+    "seed:emulator": "tsx scripts/seed-emulator-users.ts",
+    "test:chat": "playwright test --config=playwright.emulator.config.ts"
   },
   "dependencies": {
     "@sentry/node": "^10.63.0",
@@ -54,6 +57,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.21",
+    "firebase-tools": "^15.24.0",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.22.0",
     "typescript": "~5.8.2"
