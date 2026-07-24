@@ -10,7 +10,9 @@ This suite is intentionally **not** part of the default Playwright run
 
 ## Prerequisites
 
-- Java (for the Firestore emulator) and `firebase-tools` (a devDependency).
+- Java (for the Firestore emulator). `firebase-tools` is **not** a committed
+  dependency (it's a large CLI); `npm run emulators` fetches it on demand via
+  `npx -y firebase-tools`, or install it yourself with `npm i -D firebase-tools`.
 - Playwright browsers installed (`npx playwright install chromium`), or set
   `PW_EXECUTABLE_PATH` to a prebuilt Chromium.
 
