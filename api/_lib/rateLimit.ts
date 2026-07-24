@@ -20,10 +20,6 @@ interface UpstashConfig {
   token: string;
 }
 
-function isProduction(): boolean {
-  return process.env.VERCEL_ENV === 'production' || process.env.NODE_ENV === 'production';
-}
-
 function getUpstashConfig(): UpstashConfig | null {
   const url = process.env.UPSTASH_REDIS_REST_URL?.trim();
   const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
@@ -75,10 +71,9 @@ async function upstashRateLimited(key: string, rule: RateLimitRule, cfg: Upstash
     return count > rule.max;
   } catch (err) {
     console.error('[rateLimit] Upstash failed:', (err as Error).message);
-    // In production a Redis outage must not disable rate limiting.
-    if (isProduction()) return true;
-    // Fail open in dev/preview so a missing Redis config doesn't block local work.
-    return false;
+    // Degrade gracefully to the in-memory limiter on an Upstash outage rather
+    // than blocking every request (or disabling limiting entirely).
+    return memRateLimited(key, rule);
   }
 }
 
@@ -96,11 +91,10 @@ export async function rateLimited(
 
   const cfg = getUpstashConfig();
   if (cfg) return upstashRateLimited(key, rule, cfg);
-  // In production we require Upstash for reliable rate limiting.
-  if (isProduction()) {
-    console.error('[rateLimit] Upstash Redis not configured in production; blocking request.');
-    return true;
-  }
+  // No Upstash configured — use the built-in in-memory limiter. It lives inside
+  // each serverless instance (Vercel may run several), so it is a best-effort
+  // soft guard, not a global guarantee. That is fine for launch; set
+  // UPSTASH_REDIS_REST_URL/TOKEN later for shared, global limiting at scale.
   return memRateLimited(key, rule);
 }
 
