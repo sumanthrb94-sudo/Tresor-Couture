@@ -4,12 +4,14 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
+  Clock,
   CreditCard,
   Heart,
   LogOut,
   Mail,
   MapPin,
   Package,
+  RotateCcw,
   RotateCw,
   ShoppingBag,
   Trash2,
@@ -26,10 +28,12 @@ import FabricImage from '../components/FabricImage';
 import OrderStatusTracker from '../components/OrderStatusTracker';
 import AddressBookEditor from '../components/AddressBookEditor';
 import LoginSecuritySection from '../components/LoginSecuritySection';
+import ReturnModal from '../components/ReturnModal';
 import { auth, ordersApi } from '../lib/firebase';
-import type { Order, OrderStatus } from '../types';
+import { returnsApi } from '../lib/support';
+import type { Order, OrderStatus, ReturnRequest, ReturnStatus } from '../types';
 
-type Tab = 'profile' | 'orders' | 'wishlist' | 'addresses';
+type Tab = 'profile' | 'orders' | 'returns' | 'wishlist' | 'addresses';
 
 interface Props {
   tab?: Tab;
@@ -38,6 +42,7 @@ interface Props {
 const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: 'profile', label: 'Profile', icon: UserIcon },
   { id: 'orders', label: 'Orders', icon: Package },
+  { id: 'returns', label: 'Returns', icon: RotateCcw },
   { id: 'wishlist', label: 'Wishlist', icon: Heart },
   { id: 'addresses', label: 'Addresses', icon: MapPin }
 ];
@@ -139,7 +144,7 @@ const AccountPage: React.FC<Props> = ({ tab = 'profile' }) => {
         {/* Mobile tab bar — 4-up grid so every tab (incl. Addresses) is visible
             without horizontal scrolling. Sign out sits on its own row below. */}
         <div className="md:hidden mb-4">
-          <nav className="grid grid-cols-4 border border-[color:var(--color-myntra-border-soft)] rounded overflow-hidden divide-x divide-[color:var(--color-myntra-border-soft)]">
+          <nav className="grid grid-cols-5 border border-[color:var(--color-myntra-border-soft)] rounded overflow-hidden divide-x divide-[color:var(--color-myntra-border-soft)]">
             {TABS.map(t => {
               const Icon = t.icon;
               const active = t.id === tab;
@@ -222,6 +227,7 @@ const AccountPage: React.FC<Props> = ({ tab = 'profile' }) => {
           <section>
             {tab === 'profile' && <ProfileTab />}
             {tab === 'orders' && <OrdersTab />}
+            {tab === 'returns' && <ReturnsTab />}
             {tab === 'wishlist' && <WishlistTab />}
             {tab === 'addresses' && <AddressBookEditor />}
           </section>
@@ -439,6 +445,16 @@ const OrdersTab: React.FC = () => {
   const [reordered, setReordered] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState<string | null>(null);
   const [cancelError, setCancelError] = useState<string | null>(null);
+  const [returnFor, setReturnFor] = useState<Order | null>(null);
+  const [returnExisting, setReturnExisting] = useState<ReturnRequest[]>([]);
+  const [returnDone, setReturnDone] = useState<string | null>(null);
+
+  const openReturn = async (order: Order) => {
+    let existing: ReturnRequest[] = [];
+    try { existing = await returnsApi.forOrder(order.id); } catch { /* best-effort */ }
+    setReturnExisting(existing);
+    setReturnFor(order);
+  };
 
   // ordersApi.mine() already filters/sorts server-side, so the rows arrive
   // ready to render — no client-side userId filter needed.
@@ -595,6 +611,15 @@ const OrdersTab: React.FC = () => {
                       <RotateCw className="w-3.5 h-3.5" />
                       Reorder
                     </button>
+                    {isDelivered && (
+                      <button
+                        onClick={() => void openReturn(order)}
+                        className="text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] inline-flex items-center gap-1 hover:text-[color:var(--color-myntra-pink)]"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        Return
+                      </button>
+                    )}
                     {canCancel && (
                       <button
                         onClick={() => void cancelOrder(order)}
@@ -719,6 +744,185 @@ const OrdersTab: React.FC = () => {
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+          </article>
+        );
+      })}
+
+      {returnDone && (
+        <p role="status" className="text-[12px] font-semibold text-[color:var(--color-myntra-green)] bg-white border border-[color:var(--color-myntra-border-soft)] px-3 py-2 rounded">
+          Return request submitted. Track it under the Returns tab — we've emailed you a confirmation.
+        </p>
+      )}
+
+      {returnFor && (
+        <ReturnModal
+          order={returnFor}
+          existingReturns={returnExisting}
+          onClose={() => setReturnFor(null)}
+          onSubmitted={() => {
+            setReturnFor(null);
+            setReturnDone('done');
+            navigate({ name: 'account', tab: 'returns' });
+            window.setTimeout(() => setReturnDone(null), 6000);
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+/* ─────────── Returns tab ─────────── */
+
+const RETURN_PILL: Record<ReturnStatus, string> = {
+  requested: 'bg-[color:var(--color-myntra-bg-sale)] text-[color:var(--color-myntra-pink-dark)]',
+  approved: 'bg-[color:var(--color-myntra-bg-sale)] text-[color:var(--color-myntra-pink-dark)]',
+  pickup_scheduled: 'bg-[color:var(--color-myntra-bg-sale)] text-[color:var(--color-myntra-pink-dark)]',
+  in_transit: 'bg-[color:var(--color-myntra-bg-sale)] text-[color:var(--color-myntra-pink-dark)]',
+  received: 'bg-[color:var(--color-myntra-green)] text-white',
+  refunded: 'bg-[color:var(--color-myntra-green)] text-white',
+  replaced: 'bg-[color:var(--color-myntra-green)] text-white',
+  rejected: 'bg-[color:var(--color-myntra-pink)] text-white',
+  cancelled: 'bg-[color:var(--color-myntra-ink-soft)] text-white',
+  closed: 'bg-[color:var(--color-myntra-ink-soft)] text-white',
+};
+
+const RETURN_LABEL: Record<ReturnStatus, string> = {
+  requested: 'Requested',
+  approved: 'Approved',
+  pickup_scheduled: 'Pickup scheduled',
+  in_transit: 'In transit',
+  received: 'Received',
+  refunded: 'Refunded',
+  replaced: 'Replaced',
+  rejected: 'Rejected',
+  cancelled: 'Cancelled',
+  closed: 'Closed',
+};
+
+const ReturnsTab: React.FC = () => {
+  const { user } = useAuth();
+  const { navigate } = useRouter();
+  const [returns, setReturns] = useState<ReturnRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const load = React.useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    setError(null);
+    try {
+      setReturns(await returnsApi.mine());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load your returns.');
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const cancel = async (r: ReturnRequest) => {
+    if (!window.confirm('Withdraw this return request?')) return;
+    setBusy(r.id);
+    try {
+      await returnsApi.cancel(r.id);
+      await load();
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        <OrderSkeleton />
+        <OrderSkeleton />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white border border-[color:var(--color-myntra-border-soft)] px-6 py-12 text-center">
+        <p className="text-[13px] font-semibold text-[color:var(--color-myntra-pink)] mb-4">{error}</p>
+        <button onClick={() => void load()} className="btn-outline">Try again</button>
+      </div>
+    );
+  }
+
+  if (returns.length === 0) {
+    return (
+      <div className="bg-white border border-[color:var(--color-myntra-border-soft)] px-6 py-12 text-center">
+        <RotateCcw className="w-12 h-12 mx-auto text-[color:var(--color-myntra-ink-mute)] mb-4" />
+        <h2 className="text-[16px] font-extrabold uppercase tracking-wider mb-1 text-[color:var(--color-myntra-navy)]">No returns yet</h2>
+        <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)] mb-5">
+          You can raise a return from any delivered order under the Orders tab.
+        </p>
+        <button onClick={() => navigate({ name: 'account', tab: 'orders' })} className="btn-primary">View orders</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <h2 className="text-[15px] font-extrabold uppercase tracking-wider mb-1 text-[color:var(--color-myntra-navy)]">
+        My Returns <span className="text-[12px] font-medium text-[color:var(--color-myntra-ink-mute)] ml-2">{returns.length}</span>
+      </h2>
+
+      {returns.map(r => {
+        const latest = r.history?.[r.history.length - 1];
+        const canWithdraw = r.status === 'requested';
+        return (
+          <article key={r.id} className="bg-white border border-[color:var(--color-myntra-border-soft)] p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-mute)]">Return</p>
+                <p className="text-[13px] font-bold text-[color:var(--color-myntra-navy)]">RET-{r.id.slice(-8).toUpperCase()}</p>
+                <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] mt-0.5">
+                  Order {shortOrderId(r.orderId)} · {r.resolution === 'refund' ? 'Refund' : 'Replacement'} · {formatDate(r.createdAt)}
+                </p>
+              </div>
+              <span className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 shrink-0 ${RETURN_PILL[r.status]}`}>
+                {RETURN_LABEL[r.status]}
+              </span>
+            </div>
+
+            <ul className="mt-3 space-y-1">
+              {r.items.map((it, i) => (
+                <li key={`${it.fabricId}-${i}`} className="text-[12px] text-[color:var(--color-myntra-ink-soft)]">
+                  {it.name} · Qty {it.quantity}
+                </li>
+              ))}
+            </ul>
+
+            <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mt-2">
+              <span className="font-semibold text-[color:var(--color-myntra-ink)]">Reason:</span> {r.reason}
+            </p>
+
+            {r.status === 'refunded' && r.refundAmount ? (
+              <p className="text-[12px] font-semibold text-[color:var(--color-myntra-green)] mt-1">
+                Refunded {formatINR(r.refundAmount)}{r.refundMethod ? ` · ${r.refundMethod}` : ''}
+              </p>
+            ) : null}
+
+            {latest && (
+              <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] mt-2 inline-flex items-center gap-1.5">
+                <Clock className="w-3 h-3" /> Last update {formatDate(latest.at)}{latest.note ? ` · ${latest.note}` : ''}
+              </p>
+            )}
+
+            {canWithdraw && (
+              <div className="mt-3">
+                <button
+                  onClick={() => void cancel(r)}
+                  disabled={busy === r.id}
+                  className="text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-pink)] inline-flex items-center gap-1 hover:underline disabled:opacity-50"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> {busy === r.id ? 'Withdrawing…' : 'Withdraw request'}
+                </button>
               </div>
             )}
           </article>

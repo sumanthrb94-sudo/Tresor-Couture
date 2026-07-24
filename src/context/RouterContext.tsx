@@ -57,7 +57,7 @@ const parseHash = (hash: string): Route => {
     case 'register':
       return { name: 'register' };
     case 'account': {
-      const tab = segments[1] as 'profile' | 'orders' | 'wishlist' | 'addresses' | undefined;
+      const tab = segments[1] as 'profile' | 'orders' | 'returns' | 'wishlist' | 'addresses' | undefined;
       return { name: 'account', tab };
     }
     case 'admin': {
@@ -69,8 +69,10 @@ const parseHash = (hash: string): Route => {
         | 'products'
         | 'inventory'
         | 'orders'
+        | 'returns'
         | 'billing'
         | 'customers'
+        | 'support'
         | 'coupons'
         | 'reviews'
         | 'compliance'
