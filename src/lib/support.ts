@@ -26,6 +26,7 @@ import {
   where,
   orderBy,
   limit as qLimit,
+  limitToLast,
   increment,
   type DocumentData,
   type Unsubscribe,
@@ -168,17 +169,20 @@ export const returnsApi = {
     return { id: ref.id, ...payload } as unknown as ReturnRequest;
   },
 
-  /** The signed-in customer's own returns (newest first). */
+  /** The signed-in customer's own returns (newest first). Sorted client-side so
+   *  no composite (userId + createdAt) index is required — the per-user list is
+   *  small and this keeps the feature deploy-free on the free tier. */
   mine: async (): Promise<ReturnRequest[]> => {
     const u = auth.currentUser;
     if (!u) return [];
     const snap = await getDocs(query(
       collection(db, 'returns'),
       where('userId', '==', u.uid),
-      orderBy('createdAt', 'desc'),
       qLimit(100),
     ));
-    return snap.docs.map(d => asReturn({ ...(d.data() as DocumentData), id: d.id }));
+    return snap.docs
+      .map(d => asReturn({ ...(d.data() as DocumentData), id: d.id }))
+      .sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
   },
 
   /** Returns raised against a specific order (customer-scoped by rules). */
@@ -266,6 +270,10 @@ export const returnsApi = {
 /*  Live chat                                                          */
 /* ------------------------------------------------------------------ */
 
+/** Minimum gap between chat sends from this client (flood guard). */
+const MIN_CHAT_SEND_INTERVAL_MS = 900;
+let lastChatSendAt = 0;
+
 export const chatApi = {
   /** Ensure the signed-in customer's conversation doc exists; returns its id (== uid). */
   ensureMine: async (): Promise<string> => {
@@ -288,9 +296,15 @@ export const chatApi = {
     return u.uid;
   },
 
-  /** Live-subscribe to messages in a conversation (ascending). */
+  /**
+   * Live-subscribe to a conversation's messages (ascending). Uses limitToLast so
+   * the window tracks the MOST RECENT messages — a plain `limit` with ascending
+   * order would pin to the oldest 500 and silently hide every new message once a
+   * conversation passed that many. History beyond the window isn't loaded (a
+   * boutique support thread realistically stays well under it).
+   */
   subscribeMessages: (uid: string, cb: (messages: ChatMessage[]) => void): Unsubscribe => {
-    const q = query(collection(db, 'chats', uid, 'messages'), orderBy('createdAt', 'asc'), qLimit(500));
+    const q = query(collection(db, 'chats', uid, 'messages'), orderBy('createdAt', 'asc'), limitToLast(500));
     return onSnapshot(q, snap => {
       cb(snap.docs.map(d => ({ ...(d.data() as DocumentData), id: d.id } as ChatMessage)));
     }, err => console.warn('[chat] messages listener', err.message));
@@ -317,6 +331,12 @@ export const chatApi = {
     if (!u) throw new Error('not_signed_in');
     const clean = text.trim().slice(0, 4000);
     if (!clean) return;
+    // Best-effort flood guard: throttle rapid-fire sends from this client. The
+    // rules-only model can't count writes server-side, so this bounds the common
+    // (UI/script) abuse case; callers restore the input on the thrown error.
+    const now = Date.now();
+    if (now - lastChatSendAt < MIN_CHAT_SEND_INTERVAL_MS) throw new Error('rate_limited');
+    lastChatSendAt = now;
     await addDoc(collection(db, 'chats', uid, 'messages'), {
       senderId: u.uid,
       senderRole: role,
@@ -373,11 +393,14 @@ export const callRequestsApi = {
     return { id: ref.id, ...payload } as unknown as CallRequest;
   },
 
+  // Sorted client-side (see returnsApi.mine) so no composite index is needed.
   mine: async (): Promise<CallRequest[]> => {
     const u = auth.currentUser;
     if (!u) return [];
-    const snap = await getDocs(query(collection(db, 'call_requests'), where('userId', '==', u.uid), orderBy('createdAt', 'desc'), qLimit(50)));
-    return snap.docs.map(d => asCall({ ...(d.data() as DocumentData), id: d.id }));
+    const snap = await getDocs(query(collection(db, 'call_requests'), where('userId', '==', u.uid), qLimit(50)));
+    return snap.docs
+      .map(d => asCall({ ...(d.data() as DocumentData), id: d.id }))
+      .sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
   },
 
   all: async (): Promise<CallRequest[]> => {

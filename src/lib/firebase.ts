@@ -33,12 +33,14 @@ import {
   type ConfirmationResult,
   signOut as fbSignOut,
   onAuthStateChanged,
+  connectAuthEmulator,
   updateProfile,
   type User as FbUser,
   type UserCredential
 } from 'firebase/auth';
 import {
   getFirestore,
+  connectFirestoreEmulator,
   enableIndexedDbPersistence,
   collection,
   doc,
@@ -123,12 +125,23 @@ export const app: FirebaseApp = getApps()[0] ?? initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-/* Persist Firestore data locally so repeat visits and category switches read
-   from IndexedDB first instead of making a fresh network round-trip. */
-try {
-  enableIndexedDbPersistence(db);
-} catch {
-  // Best-effort: some browsers / private modes don't allow persistence.
+/* Local Firebase Emulator Suite — TEST ONLY. Activated exclusively by the
+   build-time flag VITE_USE_EMULATORS, which is never set in production, staging
+   or preview. When on, Auth + Firestore point at the local emulators (so the
+   real firestore.rules are exercised offline) and IndexedDB persistence is
+   skipped to avoid a persistence/emulator conflict. Inert otherwise. */
+const USE_EMULATORS = env.VITE_USE_EMULATORS === '1' || env.VITE_USE_EMULATORS === 'true';
+if (USE_EMULATORS) {
+  try { connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true }); } catch { /* already connected */ }
+  try { connectFirestoreEmulator(db, '127.0.0.1', 8080); } catch { /* already connected */ }
+} else {
+  /* Persist Firestore data locally so repeat visits and category switches read
+     from IndexedDB first instead of making a fresh network round-trip. */
+  try {
+    enableIndexedDbPersistence(db);
+  } catch {
+    // Best-effort: some browsers / private modes don't allow persistence.
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -986,7 +999,12 @@ export const ordersApi = {
     return placed;
   },
   setStatus: async (id: string, status: 'placed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded') => {
-    await updateDoc(doc(db, 'orders', id), { status, updatedAt: serverTimestamp() });
+    // Stamp a server-authoritative deliveredAt on delivery. The returns rule
+    // (orderIsReturnable) reads this timestamp to enforce the 7-day window, so
+    // it must be set here rather than trusted from the client.
+    const patch: DocumentData = { status, updatedAt: serverTimestamp() };
+    if (status === 'delivered') patch.deliveredAt = serverTimestamp();
+    await updateDoc(doc(db, 'orders', id), patch);
     // Email the customer about the status change. Admin-only writes to
     // mail/ are allowed by the rules, so this works from the admin console.
     try {
