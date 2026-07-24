@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { LayoutDashboard, Package, Boxes, ShoppingBag, RotateCcw, ReceiptText, Users, Headphones, Tag, Star, Scale, Zap, Mail, Palette, LogOut, ExternalLink } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
+import { chatApi } from '../../lib/support';
 
 type Section =
   | 'dashboard'
@@ -38,6 +39,16 @@ const AdminLayout: React.FC<{ section: Section; children: React.ReactNode }> = (
   const { user, logout } = useAuth();
   const { navigate } = useRouter();
 
+  // Live count of chats with unread customer messages, so any admin page shows
+  // a Support badge without the admin having to open the inbox to notice.
+  const [chatUnread, setChatUnread] = useState(0);
+  useEffect(() => {
+    const unsub = chatApi.subscribeConversations(convs => {
+      setChatUnread(convs.reduce((n, c) => n + (c.unreadForAdmin ?? 0), 0));
+    });
+    return unsub;
+  }, []);
+
   return (
     <div className="min-h-screen bg-[color:var(--color-myntra-bg-soft)]">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 py-5 md:py-8">
@@ -67,7 +78,17 @@ const AdminLayout: React.FC<{ section: Section; children: React.ReactNode }> = (
                     }`}
                   >
                     <Icon className="w-4 h-4" />
-                    {label}
+                    <span className="flex-1 text-left">{label}</span>
+                    {id === 'support' && chatUnread > 0 && (
+                      <span
+                        className={`min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold inline-flex items-center justify-center ${
+                          active ? 'bg-white text-[color:var(--color-myntra-pink)]' : 'bg-[color:var(--color-myntra-pink)] text-white'
+                        }`}
+                        aria-label={`${chatUnread} unread chat${chatUnread === 1 ? '' : 's'}`}
+                      >
+                        {chatUnread}
+                      </span>
+                    )}
                   </button>
                 );
               })}

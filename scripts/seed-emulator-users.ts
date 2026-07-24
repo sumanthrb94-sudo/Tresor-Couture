@@ -25,6 +25,7 @@ async function ensureUser(email: string, fullName: string, admin: boolean) {
   try {
     const existing = await auth.getUserByEmail(email);
     uid = existing.uid;
+    await auth.updateUser(uid, { displayName: fullName });
   } catch {
     const created = await auth.createUser({ email, emailVerified: true, password: PASSWORD, displayName: fullName });
     uid = created.uid;

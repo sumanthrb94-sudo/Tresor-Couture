@@ -64,6 +64,28 @@ const formatShortDate = (d: Date) =>
 
 const SLOW_CATEGORIES = new Set(['Studios Prêt', 'Sarees']);
 
+// Returns are accepted within this many days of delivery. Enforced server-side
+// in firestore.rules (orderIsReturnable); mirrored here to gate the button.
+const RETURN_WINDOW_DAYS = 7;
+
+/** Coerce a Firestore Timestamp | ISO string | Date into a Date, or null. */
+const toDate = (v: unknown): Date | null => {
+  if (!v) return null;
+  if (typeof (v as { toDate?: () => Date }).toDate === 'function') return (v as { toDate: () => Date }).toDate();
+  if (typeof v === 'string' || typeof v === 'number') { const d = new Date(v); return Number.isNaN(d.getTime()) ? null : d; }
+  if (v instanceof Date) return v;
+  return null;
+};
+
+/** True while a delivered order is still inside the return window. Requires a
+ *  deliveredAt stamp (orders delivered before this was introduced can't be
+ *  returned from the UI — matching the rules, which require the timestamp). */
+const returnWindowOpen = (order: Order): boolean => {
+  const d = toDate(order.deliveredAt);
+  if (!d) return false;
+  return Date.now() - d.getTime() <= RETURN_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+};
+
 // Same-week SLA for in-stock pieces, multi-week SLA for stitched
 // pieces (Studios Prêt) and made-to-order sarees.
 const ETA_FAST_DAYS = 5;
@@ -611,7 +633,7 @@ const OrdersTab: React.FC = () => {
                       <RotateCw className="w-3.5 h-3.5" />
                       Reorder
                     </button>
-                    {isDelivered && (
+                    {isDelivered && returnWindowOpen(order) && (
                       <button
                         onClick={() => void openReturn(order)}
                         className="text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] inline-flex items-center gap-1 hover:text-[color:var(--color-myntra-pink)]"
@@ -619,6 +641,11 @@ const OrdersTab: React.FC = () => {
                         <RotateCcw className="w-3.5 h-3.5" />
                         Return
                       </button>
+                    )}
+                    {isDelivered && !returnWindowOpen(order) && (
+                      <span className="text-[11px] text-[color:var(--color-myntra-ink-mute)]">
+                        Return window closed
+                      </span>
                     )}
                     {canCancel && (
                       <button

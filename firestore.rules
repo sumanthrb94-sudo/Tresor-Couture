@@ -23,6 +23,16 @@ service cloud.firestore {
     function optionalString(data, field, maxLen) {
       return !(field in data) || (data[field] is string && data[field].size() <= maxLen);
     }
+    // A return may be raised only against an order the caller owns, that has been
+    // DELIVERED, and only within the 7-day return window measured from the
+    // server-stamped deliveredAt. (get() results are cached per evaluation, so the
+    // repeated get() below counts as a single document access.)
+    function orderIsReturnable(orderId) {
+      return get(/databases/$(database)/documents/orders/$(orderId)).data.userId == request.auth.uid
+        && get(/databases/$(database)/documents/orders/$(orderId)).data.status == 'delivered'
+        && get(/databases/$(database)/documents/orders/$(orderId)).data.deliveredAt is timestamp
+        && request.time < get(/databases/$(database)/documents/orders/$(orderId)).data.deliveredAt + duration.value(7, 'd');
+    }
 
     /* ---------- products ---------- */
     // Public read · admin write (UI gated to admins via the custom claim).
@@ -181,9 +191,10 @@ service cloud.firestore {
         && request.resource.data.status == 'requested'
         && request.resource.data.orderId is string
         && request.resource.data.orderId.size() > 0
-        // Must reference an order the customer actually owns.
+        // Must reference an order the customer owns, that is DELIVERED and still
+        // inside the 7-day return window (enforced server-side, not just in the UI).
         && exists(/databases/$(database)/documents/orders/$(request.resource.data.orderId))
-        && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.userId == request.auth.uid
+        && orderIsReturnable(request.resource.data.orderId)
         && request.resource.data.items is list
         && request.resource.data.items.size() > 0
         && request.resource.data.resolution in ['refund', 'replacement']

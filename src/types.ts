@@ -122,6 +122,9 @@ export interface Order {
    *  delivery confirms payment. Online gateway is not wired yet. */
   paymentStatus?: 'pending' | 'paid' | 'failed';
   placedAt: string;
+  /** Server-stamped delivery time (Firestore Timestamp at runtime). Drives the
+   *  7-day return window in both the UI and firestore.rules. */
+  deliveredAt?: unknown;
   status?: OrderStatus;
   /** Optional applied coupon code (uppercase). */
   couponCode?: string;

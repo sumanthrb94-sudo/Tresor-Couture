@@ -999,7 +999,12 @@ export const ordersApi = {
     return placed;
   },
   setStatus: async (id: string, status: 'placed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded') => {
-    await updateDoc(doc(db, 'orders', id), { status, updatedAt: serverTimestamp() });
+    // Stamp a server-authoritative deliveredAt on delivery. The returns rule
+    // (orderIsReturnable) reads this timestamp to enforce the 7-day window, so
+    // it must be set here rather than trusted from the client.
+    const patch: DocumentData = { status, updatedAt: serverTimestamp() };
+    if (status === 'delivered') patch.deliveredAt = serverTimestamp();
+    await updateDoc(doc(db, 'orders', id), patch);
     // Email the customer about the status change. Admin-only writes to
     // mail/ are allowed by the rules, so this works from the admin console.
     try {
