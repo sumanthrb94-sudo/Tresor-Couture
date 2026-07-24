@@ -169,17 +169,20 @@ export const returnsApi = {
     return { id: ref.id, ...payload } as unknown as ReturnRequest;
   },
 
-  /** The signed-in customer's own returns (newest first). */
+  /** The signed-in customer's own returns (newest first). Sorted client-side so
+   *  no composite (userId + createdAt) index is required — the per-user list is
+   *  small and this keeps the feature deploy-free on the free tier. */
   mine: async (): Promise<ReturnRequest[]> => {
     const u = auth.currentUser;
     if (!u) return [];
     const snap = await getDocs(query(
       collection(db, 'returns'),
       where('userId', '==', u.uid),
-      orderBy('createdAt', 'desc'),
       qLimit(100),
     ));
-    return snap.docs.map(d => asReturn({ ...(d.data() as DocumentData), id: d.id }));
+    return snap.docs
+      .map(d => asReturn({ ...(d.data() as DocumentData), id: d.id }))
+      .sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
   },
 
   /** Returns raised against a specific order (customer-scoped by rules). */
@@ -390,11 +393,14 @@ export const callRequestsApi = {
     return { id: ref.id, ...payload } as unknown as CallRequest;
   },
 
+  // Sorted client-side (see returnsApi.mine) so no composite index is needed.
   mine: async (): Promise<CallRequest[]> => {
     const u = auth.currentUser;
     if (!u) return [];
-    const snap = await getDocs(query(collection(db, 'call_requests'), where('userId', '==', u.uid), orderBy('createdAt', 'desc'), qLimit(50)));
-    return snap.docs.map(d => asCall({ ...(d.data() as DocumentData), id: d.id }));
+    const snap = await getDocs(query(collection(db, 'call_requests'), where('userId', '==', u.uid), qLimit(50)));
+    return snap.docs
+      .map(d => asCall({ ...(d.data() as DocumentData), id: d.id }))
+      .sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
   },
 
   all: async (): Promise<CallRequest[]> => {
