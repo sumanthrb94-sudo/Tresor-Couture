@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Tag, X, Plus, StickyNote, Activity, RotateCcw, PhoneCall, Trash2 } from 'lucide-react';
-import { crmApi, returnsApi, callRequestsApi } from '../../lib/support';
+import { Tag, X, Plus, StickyNote, Activity, RotateCcw, Trash2 } from 'lucide-react';
+import { crmApi, returnsApi } from '../../lib/support';
 import { useAuth } from '../../context/AuthContext';
-import type { CallRequest, CustomerCrm, CustomerLifecycle, ReturnRequest } from '../../types';
+import type { CustomerCrm, CustomerLifecycle, ReturnRequest } from '../../types';
 
 const LIFECYCLES: { value: CustomerLifecycle; label: string; color: string }[] = [
   { value: 'lead',    label: 'Lead',     color: '#1E4FAE' },
@@ -16,8 +16,8 @@ const fmt = (iso?: string) => (iso ? new Date(iso).toLocaleDateString('en-IN', {
 
 /**
  * Admin-only CRM overlay for a single customer: lifecycle stage, tags, internal
- * notes, and a support timeline (returns + callbacks). Self-contained — loads
- * its own data from the `crm`, `returns` and `call_requests` collections.
+ * notes, and a returns timeline. Self-contained — loads its own data from the
+ * `crm` and `returns` collections.
  */
 const AdminCustomerCrm: React.FC<{ uid: string; customerName: string }> = ({ uid, customerName }) => {
   const { user } = useAuth();
@@ -25,7 +25,6 @@ const AdminCustomerCrm: React.FC<{ uid: string; customerName: string }> = ({ uid
 
   const [crm, setCrm] = useState<CustomerCrm | null>(null);
   const [returns, setReturns] = useState<ReturnRequest[]>([]);
-  const [calls, setCalls] = useState<CallRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [tagInput, setTagInput] = useState('');
@@ -36,15 +35,13 @@ const AdminCustomerCrm: React.FC<{ uid: string; customerName: string }> = ({ uid
     let cancelled = false;
     setLoading(true);
     (async () => {
-      const [c, r, cl] = await Promise.all([
+      const [c, r] = await Promise.all([
         crmApi.get(uid).catch(() => null),
         returnsApi.forUser(uid).catch(() => [] as ReturnRequest[]),
-        callRequestsApi.forUser(uid).catch(() => [] as CallRequest[]),
       ]);
       if (cancelled) return;
       setCrm(c);
       setReturns(r);
-      setCalls(cl);
       setLoading(false);
     })();
     return () => { cancelled = true; };
@@ -179,23 +176,17 @@ const AdminCustomerCrm: React.FC<{ uid: string; customerName: string }> = ({ uid
         </ul>
       </div>
 
-      {/* Support timeline */}
+      {/* Returns timeline */}
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-2">Support activity</p>
-        {returns.length === 0 && calls.length === 0 ? (
-          <p className="text-[12px] text-[color:var(--color-myntra-ink-mute)]">No returns or callbacks.</p>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-2">Returns</p>
+        {returns.length === 0 ? (
+          <p className="text-[12px] text-[color:var(--color-myntra-ink-mute)]">No returns.</p>
         ) : (
           <ul className="space-y-1.5">
             {returns.map(r => (
               <li key={`r-${r.id}`} className="flex items-center gap-2 text-[12px] text-[color:var(--color-myntra-ink-soft)]">
                 <RotateCcw className="w-3.5 h-3.5 text-[color:var(--color-myntra-pink)] shrink-0" />
                 Return {r.id.slice(-6).toUpperCase()} · <span className="capitalize">{r.status.replace('_', ' ')}</span> · {fmt(r.createdAt)}
-              </li>
-            ))}
-            {calls.map(c => (
-              <li key={`c-${c.id}`} className="flex items-center gap-2 text-[12px] text-[color:var(--color-myntra-ink-soft)]">
-                <PhoneCall className="w-3.5 h-3.5 text-[color:var(--color-myntra-navy)] shrink-0" />
-                Callback · <span className="capitalize">{c.status}</span> · {fmt(c.createdAt)}
               </li>
             ))}
           </ul>

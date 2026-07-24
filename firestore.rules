@@ -242,24 +242,6 @@ service cloud.firestore {
       }
     }
 
-    /* ---------- call / callback requests ---------- */
-    // Signed-in customers request a callback about their account/orders. Read is
-    // owner-or-admin; only admins triage (contacted/closed + notes).
-    match /call_requests/{callId} {
-      allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
-      allow create: if isSignedIn()
-        && request.resource.data.userId == request.auth.uid
-        && request.resource.data.status == 'new'
-        && request.resource.data.name is string
-        && request.resource.data.name.size() > 0
-        && request.resource.data.phone is string
-        && request.resource.data.phone.size() >= 6
-        && request.resource.data.phone.size() <= 32
-        && optionalString(request.resource.data, 'topic', 500)
-        && optionalString(request.resource.data, 'preferredTime', 120);
-      allow update, delete: if isAdmin();
-    }
-
     /* ---------- CRM overlay (admin-only) ---------- */
     // Internal sales/support annotations (tags, lifecycle stage, notes) keyed by
     // the customer's uid. Never customer-readable — this is back-office data.

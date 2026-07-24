@@ -130,7 +130,8 @@ entirely by Firestore rules (free-tier model, no Cloud Functions).
   features.
 
 New Firestore collections created at runtime (no manual setup):
-`returns`, `chats` (+ `chats/{uid}/messages`), `call_requests`, `crm`.
+`returns`, `chats` (+ `chats/{uid}/messages`), `crm`. The Call option is just a
+`tel:` dialer link (+ WhatsApp) — no collection or backend.
 
 ### ⚠️ Security: rotate the service-account key
 

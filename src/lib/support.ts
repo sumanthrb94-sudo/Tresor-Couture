@@ -20,7 +20,6 @@ import {
   addDoc,
   setDoc,
   updateDoc,
-  deleteDoc,
   onSnapshot,
   query,
   where,
@@ -33,8 +32,6 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from './firebase';
 import type {
-  CallRequest,
-  CallStatus,
   ChatConversation,
   ChatMessage,
   ChatSenderRole,
@@ -365,61 +362,6 @@ export const chatApi = {
   setStatus: async (uid: string, status: 'open' | 'closed'): Promise<void> => {
     await setDoc(doc(db, 'chats', uid), { status, updatedAt: nowIso() }, { merge: true });
   },
-};
-
-/* ------------------------------------------------------------------ */
-/*  Call / callback requests                                           */
-/* ------------------------------------------------------------------ */
-
-const asCall = (raw: DocumentData & { id: string }): CallRequest => raw as unknown as CallRequest;
-
-export const callRequestsApi = {
-  create: async (input: { name: string; phone: string; email?: string; topic?: string; preferredTime?: string; orderId?: string }): Promise<CallRequest> => {
-    const u = auth.currentUser;
-    if (!u) throw new Error('not_signed_in');
-    const payload = {
-      userId: u.uid,
-      name: input.name.trim().slice(0, 128),
-      phone: input.phone.trim().slice(0, 32),
-      email: (input.email ?? u.email ?? '').trim().slice(0, 254) || null,
-      topic: input.topic?.trim().slice(0, 500) ?? null,
-      preferredTime: input.preferredTime?.trim().slice(0, 120) ?? null,
-      orderId: input.orderId ?? null,
-      status: 'new' as CallStatus,
-      createdAt: nowIso(),
-      updatedAt: nowIso(),
-    };
-    const ref = await addDoc(collection(db, 'call_requests'), payload);
-    return { id: ref.id, ...payload } as unknown as CallRequest;
-  },
-
-  // Sorted client-side (see returnsApi.mine) so no composite index is needed.
-  mine: async (): Promise<CallRequest[]> => {
-    const u = auth.currentUser;
-    if (!u) return [];
-    const snap = await getDocs(query(collection(db, 'call_requests'), where('userId', '==', u.uid), qLimit(50)));
-    return snap.docs
-      .map(d => asCall({ ...(d.data() as DocumentData), id: d.id }))
-      .sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
-  },
-
-  all: async (): Promise<CallRequest[]> => {
-    const snap = await getDocs(query(collection(db, 'call_requests'), orderBy('createdAt', 'desc'), qLimit(300)));
-    return snap.docs.map(d => asCall({ ...(d.data() as DocumentData), id: d.id }));
-  },
-
-  forUser: async (uid: string): Promise<CallRequest[]> => {
-    const snap = await getDocs(query(collection(db, 'call_requests'), where('userId', '==', uid), qLimit(100)));
-    return snap.docs.map(d => asCall({ ...(d.data() as DocumentData), id: d.id }));
-  },
-
-  setStatus: async (id: string, status: CallStatus, adminNote?: string): Promise<void> => {
-    const patch: DocumentData = { status, updatedAt: nowIso() };
-    if (adminNote !== undefined) patch.adminNote = adminNote;
-    await updateDoc(doc(db, 'call_requests', id), patch);
-  },
-
-  remove: (id: string) => deleteDoc(doc(db, 'call_requests', id)),
 };
 
 /* ------------------------------------------------------------------ */
