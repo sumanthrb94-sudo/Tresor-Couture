@@ -168,6 +168,89 @@ service cloud.firestore {
         && request.resource.data.policyVersion is string;
     }
 
+    /* ---------- returns (RMA) ---------- */
+    // A customer raises a return/replacement against one of THEIR OWN delivered
+    // orders. It is created strictly in `requested`; the customer may only push
+    // it to `cancelled` while still `requested`. Every other transition
+    // (approve/reject/pickup/received/refunded/replaced/closed) is admin-only.
+    match /returns/{returnId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'requested'
+        && request.resource.data.orderId is string
+        && request.resource.data.orderId.size() > 0
+        // Must reference an order the customer actually owns.
+        && exists(/databases/$(database)/documents/orders/$(request.resource.data.orderId))
+        && get(/databases/$(database)/documents/orders/$(request.resource.data.orderId)).data.userId == request.auth.uid
+        && request.resource.data.items is list
+        && request.resource.data.items.size() > 0
+        && request.resource.data.resolution in ['refund', 'replacement']
+        && optionalString(request.resource.data, 'reason', 2000);
+
+      // Owner may only withdraw a still-pending request; everything else is admin.
+      allow update: if isAdmin()
+        || (isSignedIn()
+            && resource.data.userId == request.auth.uid
+            && resource.data.status == 'requested'
+            && request.resource.data.status == 'cancelled'
+            && !fieldChanged('userId')
+            && !fieldChanged('orderId'));
+
+      allow delete: if isAdmin();
+    }
+
+    /* ---------- live chat ---------- */
+    // One conversation doc per customer, keyed by uid; a messages subcollection
+    // under it. Owner and admin can read/write the conversation; guests have no
+    // chat (they are routed to callback/WhatsApp in the UI).
+    match /chats/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if (isOwner(uid) && request.resource.data.uid == uid) || isAdmin();
+      allow update: if isOwner(uid) || isAdmin();
+      allow delete: if isAdmin();
+
+      match /messages/{messageId} {
+        allow read: if isOwner(uid) || isAdmin();
+        // Customer posts as themselves; admin posts as admin. Text is bounded.
+        allow create: if (
+              (isOwner(uid)
+                && request.resource.data.senderRole == 'customer'
+                && request.resource.data.senderId == uid)
+              || (isAdmin() && request.resource.data.senderRole == 'admin'))
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 4000;
+        allow update, delete: if isAdmin();
+      }
+    }
+
+    /* ---------- call / callback requests ---------- */
+    // Signed-in customers request a callback about their account/orders. Read is
+    // owner-or-admin; only admins triage (contacted/closed + notes).
+    match /call_requests/{callId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'new'
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() >= 6
+        && request.resource.data.phone.size() <= 32
+        && optionalString(request.resource.data, 'topic', 500)
+        && optionalString(request.resource.data, 'preferredTime', 120);
+      allow update, delete: if isAdmin();
+    }
+
+    /* ---------- CRM overlay (admin-only) ---------- */
+    // Internal sales/support annotations (tags, lifecycle stage, notes) keyed by
+    // the customer's uid. Never customer-readable — this is back-office data.
+    match /crm/{uid} {
+      allow read, write: if isAdmin();
+    }
+
     /* ---------- deny everything else ---------- */
     match /{document=**} {
       allow read, write: if false;

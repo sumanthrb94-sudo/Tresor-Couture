@@ -3,6 +3,7 @@ import { Users, Search, Filter, Download, X, ShieldCheck, Trash2, FileDown, Mail
 import { usersApi, ordersApi } from '../../lib/firebase';
 import { formatINR } from '../../constants';
 import { toCsv, downloadCsv, downloadJson } from '../../lib/csv';
+import AdminCustomerCrm from './AdminCustomerCrm';
 import type { Order } from '../../types';
 
 interface UserDoc {
@@ -247,6 +248,12 @@ const AdminCustomers: React.FC = () => {
                 </li>
               ))}
             </ul>
+
+            {/* CRM overlay: lifecycle, tags, notes, support timeline */}
+            <div className="border-t border-[color:var(--color-myntra-border-soft)] pt-4 mb-5">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] mb-3">CRM</p>
+              <AdminCustomerCrm uid={selected.user.uid ?? selected.user.id} customerName={selected.user.fullName ?? selected.user.email ?? 'this customer'} />
+            </div>
 
             {/* DPDP data rights */}
             <div className="border-t border-[color:var(--color-myntra-border-soft)] pt-4">

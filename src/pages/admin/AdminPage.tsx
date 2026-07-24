@@ -5,8 +5,10 @@ import AdminDashboard from './AdminDashboard';
 import AdminProducts from './AdminProducts';
 import AdminInventory from './AdminInventory';
 import AdminOrders from './AdminOrders';
+import AdminReturns from './AdminReturns';
 import AdminBilling from './AdminBilling';
 import AdminCustomers from './AdminCustomers';
+import AdminSupport from './AdminSupport';
 import AdminCoupons from './AdminCoupons';
 import AdminReviews from './AdminReviews';
 import AdminCompliance from './AdminCompliance';
@@ -18,8 +20,10 @@ type Section =
   | 'products'
   | 'inventory'
   | 'orders'
+  | 'returns'
   | 'billing'
   | 'customers'
+  | 'support'
   | 'coupons'
   | 'reviews'
   | 'compliance'
@@ -37,8 +41,10 @@ const AdminPage: React.FC<Props> = ({ section = 'dashboard' }) => (
       {section === 'products' && <AdminProducts />}
       {section === 'inventory' && <AdminInventory />}
       {section === 'orders' && <AdminOrders />}
+      {section === 'returns' && <AdminReturns />}
       {section === 'billing' && <AdminBilling />}
       {section === 'customers' && <AdminCustomers />}
+      {section === 'support' && <AdminSupport />}
       {section === 'coupons' && <AdminCoupons />}
       {section === 'reviews' && <AdminReviews />}
       {section === 'compliance' && <AdminCompliance />}

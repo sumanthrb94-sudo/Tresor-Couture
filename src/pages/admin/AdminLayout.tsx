@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Package, Boxes, ShoppingBag, ReceiptText, Users, Tag, Star, Scale, Zap, Mail, Palette, LogOut, ExternalLink } from 'lucide-react';
+import { LayoutDashboard, Package, Boxes, ShoppingBag, RotateCcw, ReceiptText, Users, Headphones, Tag, Star, Scale, Zap, Mail, Palette, LogOut, ExternalLink } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
 
@@ -8,8 +8,10 @@ type Section =
   | 'products'
   | 'inventory'
   | 'orders'
+  | 'returns'
   | 'billing'
   | 'customers'
+  | 'support'
   | 'coupons'
   | 'reviews'
   | 'compliance'
@@ -21,8 +23,10 @@ const NAV: { id: Section; label: string; Icon: React.ComponentType<{ className?:
   { id: 'products', label: 'Products', Icon: Package },
   { id: 'inventory', label: 'Inventory', Icon: Boxes },
   { id: 'orders', label: 'Orders', Icon: ShoppingBag },
+  { id: 'returns', label: 'Returns', Icon: RotateCcw },
   { id: 'billing', label: 'Billing', Icon: ReceiptText },
   { id: 'customers', label: 'Customers', Icon: Users },
+  { id: 'support', label: 'Support', Icon: Headphones },
   { id: 'coupons', label: 'Coupons', Icon: Tag },
   { id: 'reviews', label: 'Reviews', Icon: Star },
   { id: 'compliance', label: 'Compliance', Icon: Scale },

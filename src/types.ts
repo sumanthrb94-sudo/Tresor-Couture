@@ -204,6 +204,144 @@ export interface Review {
   status: 'pending' | 'approved' | 'rejected';
 }
 
+/* ─────────── returns & refunds (RMA) ─────────── */
+
+/**
+ * Return / replacement request lifecycle. Every state transition is admin-driven
+ * (the customer only ever creates one in `requested`, and may `cancelled` it while
+ * still `requested`). Each transition emails the customer via the mail/ queue.
+ */
+export type ReturnStatus =
+  | 'requested'       // customer raised it; awaiting admin review
+  | 'approved'        // admin accepted; pickup being arranged
+  | 'rejected'        // admin declined (with a reason)
+  | 'pickup_scheduled'// courier pickup arranged
+  | 'in_transit'      // item on its way back to the atelier
+  | 'received'        // item back + inspected
+  | 'refunded'        // money returned (refund resolution)
+  | 'replaced'        // replacement dispatched (replacement resolution)
+  | 'cancelled'       // customer withdrew before approval
+  | 'closed';         // terminal / archived
+
+export type ReturnResolution = 'refund' | 'replacement';
+
+export interface ReturnLineItem {
+  fabricId: string;
+  name: string;
+  /** Units being returned (≤ the quantity that was ordered). */
+  quantity: number;
+  /** Per-item reason chosen from a fixed vocabulary + free text. */
+  reason: string;
+}
+
+export interface ReturnEvent {
+  status: ReturnStatus;
+  at: string;
+  /** Optional admin/customer note attached to the transition. */
+  note?: string;
+  /** 'admin' | 'customer' | 'system'. */
+  by?: string;
+}
+
+export interface ReturnRequest {
+  id: string;
+  orderId: string;
+  /** Owner uid — taken from the signed-in customer, never the client body. */
+  userId: string;
+  /** Snapshot of the customer's email so admin can act without a join. */
+  customerEmail?: string;
+  customerName?: string;
+  items: ReturnLineItem[];
+  resolution: ReturnResolution;
+  /** Overall reason summary. */
+  reason: string;
+  status: ReturnStatus;
+  /** Refund amount (₹) once decided by admin. */
+  refundAmount?: number;
+  /** e.g. 'Original payment method', 'Store credit', 'UPI'. */
+  refundMethod?: string;
+  /** Courier / AWB reference for the reverse pickup. */
+  trackingRef?: string;
+  /** Internal admin-only note (not emailed). */
+  adminNote?: string;
+  /** Full transition timeline for audit + customer tracking. */
+  history: ReturnEvent[];
+  createdAt: string;
+  updatedAt?: string;
+}
+
+/* ─────────── live chat ─────────── */
+
+export type ChatStatus = 'open' | 'closed';
+export type ChatSenderRole = 'customer' | 'admin';
+
+/** One conversation per signed-in customer, keyed by uid. */
+export interface ChatConversation {
+  id: string;            // == uid
+  uid: string;
+  customerName?: string;
+  customerEmail?: string;
+  status: ChatStatus;
+  lastMessage?: string;
+  lastSenderRole?: ChatSenderRole;
+  /** Unread counters, incremented on send and cleared on open. */
+  unreadForAdmin?: number;
+  unreadForCustomer?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  senderId: string;
+  senderRole: ChatSenderRole;
+  text: string;
+  createdAt: string;
+}
+
+/* ─────────── call / callback requests ─────────── */
+
+export type CallStatus = 'new' | 'contacted' | 'closed';
+
+export interface CallRequest {
+  id: string;
+  /** Owner uid — callback requests require sign-in (anti-spam in the rules-only model). */
+  userId: string;
+  name: string;
+  phone: string;
+  email?: string;
+  /** Free-text subject the customer wants to discuss. */
+  topic?: string;
+  /** Optional preferred window, e.g. 'Today evening'. */
+  preferredTime?: string;
+  /** Optional order this callback is about. */
+  orderId?: string;
+  status: CallStatus;
+  adminNote?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+/* ─────────── CRM (admin-only) ─────────── */
+
+export type CustomerLifecycle = 'lead' | 'active' | 'vip' | 'at_risk' | 'churned';
+
+export interface CrmNote {
+  id: string;
+  text: string;
+  author: string;
+  at: string;
+}
+
+/** Admin-only CRM overlay for a customer, keyed by uid (collection `crm`). */
+export interface CustomerCrm {
+  uid: string;
+  tags: string[];
+  lifecycle: CustomerLifecycle;
+  notes: CrmNote[];
+  updatedAt?: string;
+}
+
 export type Route =
   | { name: 'home' }
   | { name: 'shop'; category?: string; subCategory?: string }
@@ -214,8 +352,8 @@ export type Route =
   | { name: 'confirmation'; orderId: string }
   | { name: 'login' }
   | { name: 'register' }
-  | { name: 'account'; tab?: 'profile' | 'orders' | 'wishlist' | 'addresses' }
-  | { name: 'admin'; section?: 'dashboard' | 'products' | 'inventory' | 'orders' | 'billing' | 'customers' | 'coupons' | 'reviews' | 'compliance' | 'delivery' | 'bulk-email' }
+  | { name: 'account'; tab?: 'profile' | 'orders' | 'returns' | 'wishlist' | 'addresses' }
+  | { name: 'admin'; section?: 'dashboard' | 'products' | 'inventory' | 'orders' | 'returns' | 'billing' | 'customers' | 'support' | 'coupons' | 'reviews' | 'compliance' | 'delivery' | 'bulk-email' }
   | { name: 'admin-brand-kit'; section?: string }
   | { name: 'policy'; policy: PolicyKey }
   | { name: 'auth-action'; mode: string; oobCode: string; apiKey?: string; continueUrl?: string }

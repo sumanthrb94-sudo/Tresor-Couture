@@ -116,6 +116,44 @@ This is weeks of work and gated on physical/operational setup, not code. Begin s
 
 ---
 
+## CRM, Returns, Chat & Call — deploy steps (one-time)
+
+The CRM, returns/refunds (RMA), live chat and callback features are enforced
+entirely by Firestore rules (free-tier model, no Cloud Functions), so the new
+rules and indexes **must be deployed** before the features work in production:
+
+```bash
+firebase deploy --only firestore:rules,firestore:indexes
+```
+
+New Firestore collections created at runtime (no manual setup):
+`returns`, `chats` (+ `chats/{uid}/messages`), `call_requests`, `crm`.
+
+- **Live chat** requires the customer to be signed in (conversations are keyed
+  by uid). Guests are routed to WhatsApp / phone / a sign-in prompt.
+- **Return status emails** reuse the existing `mail/` queue (Trigger Email
+  extension) — no extra config beyond what order emails already use.
+- **Refund money movement stays manual**: marking a return "Refunded" records
+  the amount and emails the customer; issue the actual refund in the Razorpay
+  dashboard (or bank). A gateway auto-refund can be wired later.
+- **Support phone / WhatsApp** number is set in `src/components/SupportWidget.tsx`
+  (`SUPPORT_PHONE_*` / `SUPPORT_WA`) — update it if the atelier number changes.
+
+### Becoming an admin (CRM / Returns / Support consoles)
+
+Admin access is the Firebase `admin: true` custom claim (unchanged). After the
+target user has signed up once, run with a service-account credential:
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/serviceAccount.json
+npm run set-admin -- you@email.com          # grant
+npm run set-admin -- --list                 # who is admin
+```
+
+The user must **sign out and back in** for the new claim to take effect. The
+new admin sidebar sections (**Returns**, **Support**) and the CRM panel in
+**Customers** are all gated by this same claim + the Firestore rules.
+
 ## Testing note (Playwright / E2E)
 
 The CEO is adding Playwright MCP for manual/automated testing. The key flows to test, and the staging env needed, are in `docs/PRODUCTION-CHECKLIST.md` → "End-to-end test flows". In short, on a **staging deployment with Razorpay in TEST mode**, walk: browse → product → cart → checkout (demo + a real test-card charge) → order confirmation; newsletter/WhatsApp signup capture; admin login → change order status → confirm the customer email fires.
