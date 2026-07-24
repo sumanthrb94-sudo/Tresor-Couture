@@ -198,16 +198,21 @@ service cloud.firestore {
         && request.resource.data.items is list
         && request.resource.data.items.size() > 0
         && request.resource.data.resolution in ['refund', 'replacement']
-        && optionalString(request.resource.data, 'reason', 2000);
+        && optionalString(request.resource.data, 'reason', 2000)
+        // Financial / triage fields are admin-only — a customer must not be able
+        // to pre-seed a refund amount (or a fake admin note) on their request.
+        && !request.resource.data.keys().hasAny(['refundAmount', 'refundMethod', 'adminNote', 'trackingRef']);
 
       // Owner may only withdraw a still-pending request; everything else is admin.
+      // The customer may not touch financial/triage fields on the way out either.
       allow update: if isAdmin()
         || (isSignedIn()
             && resource.data.userId == request.auth.uid
             && resource.data.status == 'requested'
             && request.resource.data.status == 'cancelled'
             && !fieldChanged('userId')
-            && !fieldChanged('orderId'));
+            && !fieldChanged('orderId')
+            && !request.resource.data.keys().hasAny(['refundAmount', 'refundMethod', 'adminNote', 'trackingRef']));
 
       allow delete: if isAdmin();
     }
