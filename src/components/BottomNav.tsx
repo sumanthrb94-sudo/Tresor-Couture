@@ -243,11 +243,13 @@ const BottomNav: React.FC = () => {
         </ul>
       </nav>
 
-      {/* Floating Cart FAB — bottom right, above the nav */}
+      {/* Floating Cart FAB — bottom right, clearly clearing the nav + safe area.
+          The offset adds env(safe-area-inset-bottom) so it rides above the home
+          indicator instead of touching the bottom nav on notched phones. */}
       {cartCount > 0 && (
         <button
           onClick={() => navigate({ name: 'cart' })}
-          className="lg:hidden fixed bottom-[72px] right-3 z-[45] w-12 h-12 bg-[color:var(--color-myntra-pink)] text-white rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+          className="lg:hidden fixed bottom-[calc(env(safe-area-inset-bottom)+82px)] right-3 z-[45] w-12 h-12 bg-[color:var(--color-myntra-pink)] text-white rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform"
           aria-label={`Cart with ${cartCount} item${cartCount > 1 ? 's' : ''}`}
         >
           <ShoppingBag className="w-5 h-5" />
