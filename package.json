@@ -43,7 +43,9 @@
     "vite": "^6.2.0"
   },
   "overrides": {
-    "uuid": "^11.1.1"
+    "uuid": "^11.1.1",
+    "axios": "^1.18.1",
+    "websocket-driver": "^0.7.5"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
