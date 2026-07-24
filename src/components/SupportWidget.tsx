@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MessageCircle, X, Phone, Send, PhoneCall, Check } from 'lucide-react';
+import { MessageCircle, X, Phone, Send } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
-import { chatApi, callRequestsApi } from '../lib/support';
+import { chatApi } from '../lib/support';
 import type { ChatConversation, ChatMessage } from '../types';
 
 // Single source of truth for the atelier's contact channels (mirrors the footer).
@@ -69,7 +69,7 @@ const SupportWidget: React.FC = () => {
           <div className="flex-1 min-h-0 flex flex-col">
             {tab === 'chat'
               ? (user ? <ChatPanel /> : <SignInPrompt onSignIn={() => { setOpen(false); navigate({ name: 'login' }); }} />)
-              : <CallPanel signedIn={!!user} onSignIn={() => { setOpen(false); navigate({ name: 'login' }); }} />}
+              : <CallPanel />}
           </div>
         </div>
       )}
@@ -197,82 +197,39 @@ const SignInPrompt: React.FC<{ onSignIn: () => void }> = ({ onSignIn }) => (
   </div>
 );
 
-/* ─────────── Call / callback ─────────── */
+/* ─────────── Call ─────────── */
 
-const CallPanel: React.FC<{ signedIn: boolean; onSignIn: () => void }> = ({ signedIn, onSignIn }) => {
-  const { user } = useAuth();
-  const [name, setName] = useState(user?.fullName ?? '');
-  const [phone, setPhone] = useState(user?.phone ?? '');
-  const [topic, setTopic] = useState('');
-  const [preferredTime, setPreferredTime] = useState('');
-  const [state, setState] = useState<'idle' | 'busy' | 'done' | 'error'>('idle');
-  const [error, setError] = useState<string | null>(null);
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    if (name.trim().length < 2) { setError('Please enter your name.'); return; }
-    if (phone.trim().length < 6) { setError('Please enter a valid phone number.'); return; }
-    setState('busy');
-    try {
-      await callRequestsApi.create({ name: name.trim(), phone: phone.trim(), topic: topic.trim() || undefined, preferredTime: preferredTime.trim() || undefined });
-      setState('done');
-    } catch {
-      setState('error');
-      setError('Could not submit. Please try again or call us directly.');
-    }
-  };
-
-  return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-      {/* Direct channels — always available */}
-      <div className="space-y-2">
-        <a href={`tel:${SUPPORT_PHONE_TEL}`} className="flex items-center gap-3 border border-[color:var(--color-myntra-border-soft)] rounded p-3 hover:border-[color:var(--color-myntra-pink)]">
-          <span className="w-9 h-9 rounded-full bg-[color:var(--color-myntra-bg-sale)] text-[color:var(--color-myntra-pink)] flex items-center justify-center shrink-0"><Phone className="w-4 h-4" /></span>
-          <span className="min-w-0">
-            <span className="block text-[13px] font-bold text-[color:var(--color-myntra-navy)]">Call the atelier</span>
-            <span className="block text-[12px] text-[color:var(--color-myntra-ink-soft)]">{SUPPORT_PHONE_DISPLAY}</span>
-          </span>
-        </a>
-        <a href={`https://wa.me/${SUPPORT_WA}`} target="_blank" rel="noreferrer" className="flex items-center gap-3 border border-[color:var(--color-myntra-border-soft)] rounded p-3 hover:border-[color:var(--color-myntra-green)]">
-          <span className="w-9 h-9 rounded-full bg-[#E7F7EC] text-[color:var(--color-myntra-green)] flex items-center justify-center shrink-0"><WhatsAppIcon className="w-4 h-4" /></span>
-          <span className="min-w-0">
-            <span className="block text-[13px] font-bold text-[color:var(--color-myntra-navy)]">WhatsApp us</span>
-            <span className="block text-[12px] text-[color:var(--color-myntra-ink-soft)]">Quick replies, share photos</span>
-          </span>
-        </a>
-      </div>
-
-      <div className="relative text-center">
-        <span className="relative bg-white px-2 text-[11px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-mute)]">or request a callback</span>
-        <div className="absolute inset-x-0 top-1/2 border-t border-[color:var(--color-myntra-border-soft)] -z-0" />
-      </div>
-
-      {!signedIn ? (
-        <div className="text-center px-2">
-          <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)] mb-3">Sign in to request a callback and we'll ring you back.</p>
-          <button onClick={onSignIn} className="btn-outline">Sign in</button>
-        </div>
-      ) : state === 'done' ? (
-        <div className="text-center py-4">
-          <span className="w-11 h-11 mx-auto mb-3 rounded-full bg-[#E7F7EC] text-[color:var(--color-myntra-green)] flex items-center justify-center"><Check className="w-6 h-6" strokeWidth={3} /></span>
-          <p className="text-[14px] font-bold text-[color:var(--color-myntra-navy)]">Callback requested</p>
-          <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] mt-1">Our team will call you back shortly.</p>
-        </div>
-      ) : (
-        <form onSubmit={submit} className="space-y-2.5" noValidate>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" className="input-box !py-2" aria-label="Your name" />
-          <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone number" className="input-box !py-2" aria-label="Phone number" type="tel" />
-          <input value={topic} onChange={e => setTopic(e.target.value)} placeholder="What's it about? (optional)" className="input-box !py-2" aria-label="Topic" />
-          <input value={preferredTime} onChange={e => setPreferredTime(e.target.value)} placeholder="Preferred time, e.g. today evening (optional)" className="input-box !py-2" aria-label="Preferred time" />
-          {error && <p role="alert" className="text-[12px] font-semibold text-[color:var(--color-myntra-pink)]">{error}</p>}
-          <button type="submit" disabled={state === 'busy'} className="btn-primary w-full inline-flex items-center justify-center gap-2 disabled:opacity-60">
-            <PhoneCall className="w-4 h-4" /> {state === 'busy' ? 'Requesting…' : 'Request callback'}
-          </button>
-        </form>
-      )}
-    </div>
-  );
-};
+// Just the direct channels: tapping "Call" opens the phone's native dialer with
+// our number (a real cellular call, logged in the phone's own call history — no
+// app or extra software). WhatsApp is offered as a secondary channel.
+const CallPanel: React.FC = () => (
+  <div className="flex-1 overflow-y-auto p-4 space-y-3">
+    <a
+      href={`tel:${SUPPORT_PHONE_TEL}`}
+      className="flex items-center gap-3 border border-[color:var(--color-myntra-border-soft)] rounded p-4 hover:border-[color:var(--color-myntra-pink)]"
+    >
+      <span className="w-11 h-11 rounded-full bg-[color:var(--color-myntra-bg-sale)] text-[color:var(--color-myntra-pink)] flex items-center justify-center shrink-0"><Phone className="w-5 h-5" /></span>
+      <span className="min-w-0">
+        <span className="block text-[14px] font-bold text-[color:var(--color-myntra-navy)]">Call the atelier</span>
+        <span className="block text-[13px] text-[color:var(--color-myntra-ink-soft)]">{SUPPORT_PHONE_DISPLAY}</span>
+      </span>
+    </a>
+    <a
+      href={`https://wa.me/${SUPPORT_WA}`}
+      target="_blank"
+      rel="noreferrer"
+      className="flex items-center gap-3 border border-[color:var(--color-myntra-border-soft)] rounded p-4 hover:border-[color:var(--color-myntra-green)]"
+    >
+      <span className="w-11 h-11 rounded-full bg-[#E7F7EC] text-[color:var(--color-myntra-green)] flex items-center justify-center shrink-0"><WhatsAppIcon className="w-5 h-5" /></span>
+      <span className="min-w-0">
+        <span className="block text-[14px] font-bold text-[color:var(--color-myntra-navy)]">WhatsApp us</span>
+        <span className="block text-[13px] text-[color:var(--color-myntra-ink-soft)]">Quick replies, share photos</span>
+      </span>
+    </a>
+    <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] text-center pt-1">
+      Tapping call opens your phone dialer with our number.
+    </p>
+  </div>
+);
 
 export default SupportWidget;

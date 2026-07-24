@@ -302,29 +302,6 @@ export interface ChatMessage {
   createdAt: string;
 }
 
-/* ─────────── call / callback requests ─────────── */
-
-export type CallStatus = 'new' | 'contacted' | 'closed';
-
-export interface CallRequest {
-  id: string;
-  /** Owner uid — callback requests require sign-in (anti-spam in the rules-only model). */
-  userId: string;
-  name: string;
-  phone: string;
-  email?: string;
-  /** Free-text subject the customer wants to discuss. */
-  topic?: string;
-  /** Optional preferred window, e.g. 'Today evening'. */
-  preferredTime?: string;
-  /** Optional order this callback is about. */
-  orderId?: string;
-  status: CallStatus;
-  adminNote?: string;
-  createdAt: string;
-  updatedAt?: string;
-}
-
 /* ─────────── CRM (admin-only) ─────────── */
 
 export type CustomerLifecycle = 'lead' | 'active' | 'vip' | 'at_risk' | 'churned';
