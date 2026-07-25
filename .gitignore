@@ -42,3 +42,6 @@ e2e/otp.txt
 /blob-report/
 /playwright/.cache/
 .playwright-mcp/
+
+# E2E screenshot output (generated)
+tests/emulator/screens/
