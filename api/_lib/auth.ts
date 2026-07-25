@@ -1,21 +1,23 @@
 /**
  * Shared Firebase ID-token verification for Vercel API functions.
  *
- * Reuses the already-initialized firebase-admin app from `getDb()` so there
- * is no risk of creating a second, un-credentialed app. Returns the decoded
- * token (uid + email) or null when the token is missing/invalid.
+ * Routes through the shared credentialed app (getAdminApp) so it can never
+ * create a second, un-credentialed app. This matters because both this module
+ * and getDb() lazily initialise Admin and reuse getApps()[0]: whichever runs
+ * first wins. If this module initialised a keyless projectId-only app and a
+ * handler verified the token BEFORE calling getDb() (e.g. /api/email/order),
+ * getDb() would inherit the keyless app and every Firestore call would fail
+ * with "Could not load the default credentials". Using getAdminApp() here
+ * guarantees the credentialed app regardless of call order.
  */
-import { getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth, type DecodedIdToken } from 'firebase-admin/auth';
-
-const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'tresor-couture';
+import { getAdminApp } from './firebaseAdmin.js';
 
 let _adminAuth: ReturnType<typeof getAuth> | null = null;
 
 function getAdminAuth(): ReturnType<typeof getAuth> {
   if (!_adminAuth) {
-    const app = getApps()[0] ?? initializeApp({ projectId: PROJECT_ID });
-    _adminAuth = getAuth(app);
+    _adminAuth = getAuth(getAdminApp());
   }
   return _adminAuth;
 }

@@ -59,6 +59,18 @@ function buildApp(): App {
   return initializeApp({ credential: applicationDefault() });
 }
 
+/**
+ * The single, credentialed Admin app for this serverless instance. Every module
+ * that needs Admin (Firestore via getDb, Auth via auth.ts) MUST route through
+ * this so the FIRST initializer wins with real credentials. Previously auth.ts
+ * initialised a keyless projectId-only app; if token verification ran before
+ * getDb() (as in /api/email/order), getDb() reused that keyless app and every
+ * Firestore call failed with "Could not load the default credentials".
+ */
+export function getAdminApp(): App {
+  return buildApp();
+}
+
 export function getDb(): Firestore {
   if (cachedDb) return cachedDb;
   const app = buildApp();
