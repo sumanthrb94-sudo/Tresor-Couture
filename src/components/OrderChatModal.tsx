@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { X, Send, MessageCircle } from 'lucide-react';
 import { chatApi } from '../lib/support';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 import type { ChatMessage } from '../types';
 
 interface Props {
@@ -21,6 +22,8 @@ const OrderChatModal: React.FC<Props> = ({ orderId, orderLabel, onClose }) => {
   const [ready, setReady] = useState(false);
   const [sending, setSending] = useState(false);
   const endRef = useRef<HTMLDivElement | null>(null);
+
+  useBodyScrollLock();
 
   useEffect(() => {
     let unsub: (() => void) | undefined;
@@ -123,8 +126,18 @@ const OrderChatModal: React.FC<Props> = ({ orderId, orderLabel, onClose }) => {
             className="input-box flex-1 !py-2"
             aria-label="Message"
           />
-          <button type="submit" disabled={sending || !text.trim()} className="w-10 h-10 shrink-0 rounded-full bg-[color:var(--color-myntra-pink)] text-white flex items-center justify-center disabled:opacity-50">
-            <Send className="w-4 h-4" />
+          <button
+            type="submit"
+            disabled={sending || !text.trim()}
+            aria-label={sending ? 'Sending…' : 'Send message'}
+            aria-busy={sending}
+            className="w-10 h-10 shrink-0 rounded-full bg-[color:var(--color-myntra-pink)] text-white flex items-center justify-center disabled:opacity-50"
+          >
+            {/* Spinner while in flight — the send path is throttled, so without
+                this the button just looks unresponsive for a moment. */}
+            {sending
+              ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              : <Send className="w-4 h-4" />}
           </button>
         </form>
       </div>

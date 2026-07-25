@@ -38,7 +38,7 @@ test('per-order live chat: customer <-> admin real-time, both directions', async
   const cust = await custCtx.newPage();
   await signIn(cust, 'customer@test.local');
   await cust.goto('/#/account/orders', { waitUntil: 'domcontentloaded' });
-  await cust.getByRole('button', { name: /^chat$/i }).first().click();
+  await cust.getByRole('button', { name: /^chat\b/i }).first().click();
   const custInput = cust.getByPlaceholder('Type a message…');
   await expect(custInput).toBeVisible({ timeout: 15_000 });
   await custInput.fill(custMsg1);

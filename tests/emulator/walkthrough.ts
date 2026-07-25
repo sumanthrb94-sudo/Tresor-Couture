@@ -90,7 +90,7 @@ export async function runWalkthrough(browser: Browser, opts: WalkthroughOpts): P
   await shot(cust, 'customer-orders');
 
   // Per-order chat: customer sends
-  await cust.getByRole('button', { name: /^chat$/i }).first().click();
+  await cust.getByRole('button', { name: /^chat\b/i }).first().click();
   const custInput = cust.getByPlaceholder('Type a message…');
   await expect(custInput).toBeVisible({ timeout: 15_000 });
   await custInput.fill(custMsg);
@@ -153,7 +153,7 @@ export async function runWalkthrough(browser: Browser, opts: WalkthroughOpts): P
   // Customer receives the reply in real time
   await cust.goto('/#/account/orders', { waitUntil: 'domcontentloaded' });
   await cust.waitForTimeout(800);
-  await cust.getByRole('button', { name: /^chat$/i }).first().click();
+  await cust.getByRole('button', { name: /^chat\b/i }).first().click();
   await expect(cust.getByText(admReply)).toBeVisible({ timeout: 15_000 });
   await shot(cust, 'customer-received-reply-realtime');
 

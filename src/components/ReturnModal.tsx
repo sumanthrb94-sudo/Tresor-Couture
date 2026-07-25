@@ -3,6 +3,7 @@ import { X, RotateCcw, PackageCheck, AlertCircle } from 'lucide-react';
 import { returnsApi } from '../lib/support';
 import { formatINR } from '../constants';
 import FabricImage from './FabricImage';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 import type { Order, ReturnLineItem, ReturnRequest, ReturnResolution } from '../types';
 
 const REASONS = [
@@ -32,6 +33,8 @@ interface Selection {
 const ACTIVE_STATUSES = new Set(['requested', 'approved', 'pickup_scheduled', 'in_transit', 'received', 'refunded', 'replaced', 'closed']);
 
 const ReturnModal: React.FC<Props> = ({ order, existingReturns = [], onClose, onSubmitted }) => {
+  useBodyScrollLock();
+
   // Units already tied up in an active return, per fabricId, so a customer can't
   // return the same piece twice.
   const alreadyReturned = useMemo(() => {

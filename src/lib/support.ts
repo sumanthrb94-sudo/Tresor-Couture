@@ -321,6 +321,25 @@ export const chatApi = {
     }, err => console.warn('[chat] conversation listener', err.message));
   },
 
+  /**
+   * Customer: live-subscribe to all of MY conversations, so the account page can
+   * badge the orders whose chat has an unread reply from the atelier.
+   *
+   * Deliberately filters on userId only and sorts client-side: adding an
+   * orderBy('updatedAt') to a where() would require a composite index, and this
+   * project runs without any.
+   */
+  subscribeMine: (cb: (conversations: ChatConversation[]) => void): Unsubscribe => {
+    const u = auth.currentUser;
+    if (!u) { cb([]); return () => {}; }
+    const q = query(collection(db, 'chats'), where('userId', '==', u.uid), qLimit(200));
+    return onSnapshot(q, snap => {
+      const list = snap.docs.map(d => ({ ...(d.data() as DocumentData), id: d.id } as ChatConversation));
+      list.sort((a, b) => String(b.updatedAt ?? '').localeCompare(String(a.updatedAt ?? '')));
+      cb(list);
+    }, err => console.warn('[chat] my-conversations listener', err.message));
+  },
+
   /** Admin: live-subscribe to all conversations, most-recent first. */
   subscribeConversations: (cb: (conversations: ChatConversation[]) => void): Unsubscribe => {
     const q = query(collection(db, 'chats'), orderBy('updatedAt', 'desc'), qLimit(200));
