@@ -84,8 +84,20 @@ async function seedCoupons(): Promise<void> {
   console.log(`  ✓ ${coupons.length} coupons`);
 }
 
-function snapshot(fabricId: string, name: string, price: number) {
-  return { id: fabricId, name, brand: 'TRESOR', price, photo: '', image: '', masterCategory: 'Fabrics' };
+/** Build an order line snapshot from the real catalogue entry so thumbnails
+ *  render (FabricImage falls back photo -> image; empty strings would show a
+ *  broken image). */
+function snapshot(fabricId: string) {
+  const f = FABRICS.find((x) => String(x.id) === fabricId);
+  return {
+    id: fabricId,
+    name: f?.name ?? 'Fabric',
+    brand: f?.brand ?? 'TRESOR',
+    price: f?.price ?? 0,
+    photo: f?.photo ?? '',
+    image: f?.image ?? '',
+    masterCategory: f?.masterCategory ?? 'Fabrics',
+  };
 }
 
 async function seedOrders(customerUid: string): Promise<void> {
@@ -97,7 +109,7 @@ async function seedOrders(customerUid: string): Promise<void> {
     subtotal: 4500, shipping: 0, tax: 0, total: 4500,
     placedAt: new Date().toISOString(),
     shippingAddress: addr,
-    items: [{ fabricId: '1', quantity: 1, fabricSnapshot: snapshot('1', 'Mashru Silk-Satin Fabric', 4500) }],
+    items: [{ fabricId: '1', quantity: 1, fabricSnapshot: snapshot('1') }],
   }, { merge: true });
 
   // Delivered order within the 7-day window → return should be allowed.
@@ -107,7 +119,7 @@ async function seedOrders(customerUid: string): Promise<void> {
     placedAt: new Date(Date.now() - 3 * 864e5).toISOString(),
     deliveredAt: FieldValue.serverTimestamp(),
     shippingAddress: addr,
-    items: [{ fabricId: '2', quantity: 1, fabricSnapshot: snapshot('2', 'Real Zari Banarasi Bridal Fabric', 6999) }],
+    items: [{ fabricId: '2', quantity: 1, fabricSnapshot: snapshot('2') }],
   }, { merge: true });
 
   console.log('  ✓ orders ORD-CHAT (placed), ORD-RETURN (delivered, window open)');

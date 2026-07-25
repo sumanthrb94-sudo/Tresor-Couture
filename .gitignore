@@ -45,3 +45,5 @@ e2e/otp.txt
 
 # E2E screenshot output (generated)
 tests/emulator/screens/
+tests/emulator/screens-mobile/
+test-results/
