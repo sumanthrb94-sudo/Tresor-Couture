@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { LayoutDashboard, Package, Boxes, ShoppingBag, RotateCcw, ReceiptText, Users, Headphones, Tag, Star, Scale, Zap, Mail, Palette, LogOut, ExternalLink } from 'lucide-react';
+import { LayoutDashboard, Package, Boxes, ShoppingBag, RotateCcw, ReceiptText, Users, Headphones, Tag, Star, Scale, Zap, Mail, Palette, LogOut, ExternalLink, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
 import { chatApi } from '../../lib/support';
@@ -49,6 +49,14 @@ const AdminLayout: React.FC<{ section: Section; children: React.ReactNode }> = (
     return unsub;
   }, []);
 
+  // On phones the 13 sections previously sat in a horizontally-scrolling strip
+  // that clipped mid-word with no affordance, so Returns/Support/Customers were
+  // effectively undiscoverable. Collapse them behind a disclosure instead, which
+  // also names the section you're currently on. Desktop keeps the full sidebar.
+  const [navOpen, setNavOpen] = useState(false);
+  const current = NAV.find(n => n.id === section);
+  useEffect(() => { setNavOpen(false); }, [section]);
+
   return (
     <div className="min-h-screen bg-[color:var(--color-myntra-bg-soft)]">
       <div className="max-w-[1400px] mx-auto px-4 md:px-8 lg:px-10 py-5 md:py-8">
@@ -64,7 +72,29 @@ const AdminLayout: React.FC<{ section: Section; children: React.ReactNode }> = (
               </p>
               <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] truncate">{user?.email}</p>
             </div>
-            <nav className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible">
+            {/* Mobile-only section switcher. Shows where you are and, when
+                collapsed, still surfaces the Support unread count. */}
+            <button
+              type="button"
+              onClick={() => setNavOpen(o => !o)}
+              aria-expanded={navOpen}
+              aria-controls="admin-sections"
+              className="md:hidden w-full flex items-center gap-2.5 px-3 py-2.5 rounded border border-[color:var(--color-myntra-border-soft)] text-[13px] font-bold text-[color:var(--color-myntra-navy)]"
+            >
+              {current ? <current.Icon className="w-4 h-4" /> : <LayoutDashboard className="w-4 h-4" />}
+              <span className="flex-1 text-left">{current?.label ?? 'Sections'}</span>
+              {!navOpen && chatUnread > 0 && section !== 'support' && (
+                <span className="min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold inline-flex items-center justify-center bg-[color:var(--color-myntra-pink)] text-white">
+                  {chatUnread}
+                </span>
+              )}
+              <ChevronDown className={`w-4 h-4 transition-transform ${navOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            <nav
+              id="admin-sections"
+              className={`${navOpen ? 'grid grid-cols-2 mt-2' : 'hidden'} md:flex md:flex-col md:mt-0 gap-1`}
+            >
               {NAV.map(({ id, label, Icon }) => {
                 const active = section === id;
                 return (

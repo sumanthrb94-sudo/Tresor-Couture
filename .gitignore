@@ -47,3 +47,4 @@ e2e/otp.txt
 tests/emulator/screens/
 tests/emulator/screens-mobile/
 test-results/
+tests/emulator/screens-ui/

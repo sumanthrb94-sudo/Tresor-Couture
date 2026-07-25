@@ -32,7 +32,7 @@ import LoginSecuritySection from '../components/LoginSecuritySection';
 import ReturnModal from '../components/ReturnModal';
 import OrderChatModal from '../components/OrderChatModal';
 import { auth, ordersApi } from '../lib/firebase';
-import { returnsApi } from '../lib/support';
+import { returnsApi, chatApi } from '../lib/support';
 import type { Order, OrderStatus, ReturnRequest, ReturnStatus } from '../types';
 
 type Tab = 'profile' | 'orders' | 'returns' | 'wishlist' | 'addresses';
@@ -158,7 +158,10 @@ const AccountPage: React.FC<Props> = ({ tab = 'profile' }) => {
   };
 
   return (
-    <main className="pt-[100px] md:pt-[112px] pb-12 md:pb-16 bg-[color:var(--color-myntra-bg-soft)] min-h-screen">
+    // min-h-[60vh] rather than min-h-screen: a short tab (say two orders) left a
+    // tall band of empty background before the footer. 60vh still stops the
+    // footer riding up on nearly-empty tabs.
+    <main className="pt-[100px] md:pt-[112px] pb-12 md:pb-16 bg-[color:var(--color-myntra-bg-soft)] min-h-[60vh]">
       <div className="max-w-[1100px] mx-auto px-4 md:px-8 lg:px-10">
         <p className="section-eyebrow mb-2">My Tresor</p>
         <h1 className="text-xl md:text-2xl font-extrabold mb-4 text-[color:var(--color-myntra-navy)]">
@@ -474,6 +477,19 @@ const OrdersTab: React.FC = () => {
   const [returnDone, setReturnDone] = useState<string | null>(null);
   const [chatOrder, setChatOrder] = useState<Order | null>(null);
 
+  // Unread atelier replies per order, so a customer who closed the chat still
+  // sees that support answered. One listener for all of my conversations.
+  const [chatUnread, setChatUnread] = useState<Record<string, number>>({});
+  useEffect(() => {
+    if (!user) { setChatUnread({}); return; }
+    const unsub = chatApi.subscribeMine(convs => {
+      const map: Record<string, number> = {};
+      for (const c of convs) if ((c.unreadForCustomer ?? 0) > 0) map[c.orderId] = c.unreadForCustomer!;
+      setChatUnread(map);
+    });
+    return unsub;
+  }, [user]);
+
   const openReturn = async (order: Order) => {
     let existing: ReturnRequest[] = [];
     try { existing = await returnsApi.forOrder(order.id); } catch { /* best-effort */ }
@@ -636,13 +652,26 @@ const OrdersTab: React.FC = () => {
                       <RotateCw className="w-3.5 h-3.5" />
                       Reorder
                     </button>
-                    <button
-                      onClick={() => setChatOrder(order)}
-                      className="text-[12px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] inline-flex items-center gap-1 hover:text-[color:var(--color-myntra-pink)]"
-                    >
-                      <MessageCircle className="w-3.5 h-3.5" />
-                      Chat
-                    </button>
+                    {(() => {
+                      const unread = chatUnread[order.id] ?? 0;
+                      return (
+                        <button
+                          onClick={() => setChatOrder(order)}
+                          aria-label={unread > 0 ? `Chat — ${unread} new repl${unread === 1 ? 'y' : 'ies'}` : 'Chat about this order'}
+                          className={`text-[12px] font-bold uppercase tracking-wider inline-flex items-center gap-1 hover:text-[color:var(--color-myntra-pink)] ${
+                            unread > 0 ? 'text-[color:var(--color-myntra-pink)]' : 'text-[color:var(--color-myntra-ink-soft)]'
+                          }`}
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          Chat
+                          {unread > 0 && (
+                            <span className="min-w-[16px] h-[16px] px-1 rounded-full bg-[color:var(--color-myntra-pink)] text-white text-[9px] font-bold inline-flex items-center justify-center">
+                              {unread > 9 ? '9+' : unread}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })()}
                     {isDelivered && returnWindowOpen(order) && (
                       <button
                         onClick={() => void openReturn(order)}
