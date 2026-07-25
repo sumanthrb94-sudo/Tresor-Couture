@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Scale, Check, AlertCircle, ExternalLink, ShieldCheck, FileText, ArrowRight } from 'lucide-react';
 import { consentsApi } from '../../lib/firebase';
-import { BUSINESS } from '../../lib/business';
+import { BUSINESS, legalChecks, panEntityType } from '../../lib/business';
 import { POLICIES } from '../../content/policies';
 import { useRouter } from '../../context/RouterContext';
 import type { Consent, PolicyKey } from '../../types';
@@ -40,9 +40,13 @@ const AdminCompliance: React.FC = () => {
     return () => { cancelled = true; };
   }, []);
 
-  const gstinSet = !BUSINESS.gstin.includes('ABCDE'); // placeholder check
+  // Validates PAN + GSTIN format, flags placeholders, and cross-checks that the
+  // GSTIN actually embeds the PAN and the right state code — a typo in either
+  // would otherwise only surface on a customer's invoice.
+  const legal = legalChecks();
+  const legalOk = legal.every(c => c.ok);
   const checklist: { ok: boolean; label: string; note?: string }[] = [
-    { ok: gstinSet, label: 'GSTIN configured', note: gstinSet ? BUSINESS.gstin : 'Placeholder GSTIN — set the real value in src/lib/business.ts' },
+    ...legal,
     { ok: true, label: 'Tax invoices generated for every order', note: 'CGST/SGST + IGST split, HSN, place of supply' },
     { ok: true, label: 'Policy pages published', note: 'Privacy, Terms, Refund, Shipping, Cookies, Contact' },
     { ok: true, label: 'Cookie / marketing consent captured', note: 'Banner live; records below' },
@@ -66,9 +70,17 @@ const AdminCompliance: React.FC = () => {
             <div className="flex justify-between gap-4"><dt className="text-[color:var(--color-myntra-ink-soft)]">Registered address</dt><dd className="text-right">{BUSINESS.addressLines.join(', ')}</dd></div>
             <div className="flex justify-between gap-4"><dt className="text-[color:var(--color-myntra-ink-soft)]">Contact</dt><dd className="text-right">{BUSINESS.email} · {BUSINESS.phone}</dd></div>
           </dl>
-          {!gstinSet && (
+          {BUSINESS.pan && panEntityType(BUSINESS.pan) && (
+            <p className="mt-2 text-[12px] text-[color:var(--color-myntra-ink-soft)]">
+              PAN entity type: <span className="font-semibold">{panEntityType(BUSINESS.pan)}</span> — the legal name above must match this.
+            </p>
+          )}
+          {!legalOk && (
             <p className="mt-3 text-[12px] text-[#9A5B12] bg-[#FDF0E1] border border-[#F0D9B5] rounded p-2 inline-flex items-start gap-1.5">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" /> These are placeholder values. Update <span className="font-mono">src/lib/business.ts</span> with the real registration before going live.
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              Legal registration incomplete — see the checklist. These come from
+              <span className="font-mono mx-1">VITE_LEGAL_NAME</span>/<span className="font-mono mx-1">VITE_GSTIN</span>/<span className="font-mono mx-1">VITE_PAN</span>
+              in the deployment environment (never committed to source), and a rebuild is required after changing them.
             </p>
           )}
         </Card>
