@@ -36,6 +36,27 @@ self-contained — screenshots are embedded, so nothing else is needed to read i
 | [`admin-w5-compliance-validation.pdf`](./admin-w5-compliance-validation.pdf) | Legal validation refuses to pass placeholders |
 | [`admin-w6-realtime-chat.pdf`](./admin-w6-realtime-chat.pdf) | **Customer and admin live concurrently**, messaging in real time both ways |
 
+### Security & configuration (2)
+
+| Report | Verifies |
+|---|---|
+| [`bulk-email-html-safety.pdf`](./bulk-email-html-safety.pdf) | The bulk-email composer refuses script tags, `javascript:` URLs, inline event handlers, iframes/objects/embeds — 9 attack payloads blocked, 3 legitimate ones allowed |
+| [`checkout-payment-methods.pdf`](./checkout-payment-methods.pdf) | UPI/Card unlock **iff** `VITE_RAZORPAY_KEY_ID` is set; verified in both directions |
+
+## Known gaps
+
+Deliberately **not** automated:
+
+- **Sending a bulk email campaign.** It would deliver real marketing mail to
+  real contacts via Brevo. The HTML safety guard in front of it is tested; the
+  dispatch itself is a manual step against a Brevo list containing only your own
+  address.
+- **Completing a Razorpay payment.** Requires the hosted modal and a real card.
+  The gating and the server-side verification path are covered; the charge is not.
+- **The `/api/*` serverless functions.** They do not run under the static
+  emulator preview. They are covered separately by the Postman/newman suite in
+  `postman/` against a deployed environment.
+
 The customer journey (storefront → cart → account → chat → returns) is covered
 separately at desktop and mobile viewports by `full-e2e.spec.ts` /
 `full-e2e-mobile.spec.ts`, which capture 22 screenshots each.
