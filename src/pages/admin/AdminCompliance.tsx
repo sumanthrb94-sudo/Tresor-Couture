@@ -73,6 +73,9 @@ const AdminCompliance: React.FC = () => {
           {BUSINESS.pan && panEntityType(BUSINESS.pan) && (
             <p className="mt-2 text-[12px] text-[color:var(--color-myntra-ink-soft)]">
               PAN entity type: <span className="font-semibold">{panEntityType(BUSINESS.pan)}</span> — the legal name above must match this.
+              {BUSINESS.pan[3] === 'F' && !BUSINESS.cin && (
+                <> If this entity is an <strong>LLP</strong> rather than a partnership firm, set <span className="font-mono">VITE_CIN</span> to its LLPIN; a firm has none.</>
+              )}
             </p>
           )}
           {!legalOk && (
