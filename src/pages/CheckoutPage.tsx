@@ -9,6 +9,7 @@ import { PaymentMethod, ShippingAddress } from '../types';
 import { couponsApi } from '../lib/firebase';
 import { analytics } from '../lib/analytics';
 import { sendOrderEmail, sendOrderWhatsApp } from '../lib/notify';
+import { paymentsConfigured, runRazorpayPayment, PaymentsNotConfiguredError } from '../lib/payments';
 import FabricImage from '../components/FabricImage';
 
 type Step = 'login' | 'address' | 'payment';
@@ -268,9 +269,28 @@ const CheckoutPage: React.FC = () => {
     setPlaceError(null);
     setPlacing(true);
     try {
-      analytics.addPaymentInfo(payable, 'cod');
+      analytics.addPaymentInfo(payable, payment);
+      const items = resolved.map(({ item }) => ({ fabricId: item.fabricId, quantity: item.quantity, color: item.color }));
+
+      if (payment !== 'cod') {
+        // Online payment. The server creates the Razorpay order (recomputing the
+        // amount), the gateway collects, and /api/payments/verify checks the
+        // signature and amount before it writes the order — so the order only
+        // exists once payment actually succeeded.
+        const { orderId } = await runRazorpayPayment({
+          items,
+          couponCode: couponCode ?? undefined,
+          paymentMethod: payment,
+          shippingAddress: address as unknown as Record<string, unknown>,
+          userId: user.id,
+          prefill: { name: address.fullName, email: address.email, contact: address.phone },
+        });
+        finishOrder(orderId, address);
+        return;
+      }
+
       const placed = await placeOrder({
-        items: resolved.map(({ item }) => ({ fabricId: item.fabricId, quantity: item.quantity, color: item.color })),
+        items,
         shippingAddress: address,
         paymentMethod: 'cod',
         couponCode: couponCode ?? undefined,
@@ -282,7 +302,13 @@ const CheckoutPage: React.FC = () => {
       setPlacing(false);
       const raw = err instanceof Error ? err.message : 'Could not place your order. Please try again.';
       const friendly =
-        raw === 'orders_not_configured'
+        err instanceof PaymentsNotConfiguredError
+          ? 'Online payment is not available right now. Please choose Cash on Delivery, or try again shortly.'
+          : raw === 'payment_cancelled'
+          ? 'Payment was cancelled — your card has not been charged and no order was placed.'
+          : raw === 'signature_mismatch' || raw === 'amount_mismatch'
+          ? 'We could not verify that payment. If money has left your account it will be reversed automatically; please contact us before retrying.'
+          : raw === 'orders_not_configured'
           ? 'Checkout is not fully configured yet. Please try again in a moment or contact us for help.'
           : raw.startsWith('insufficient_stock:')
           ? 'One or more items in your bag just went out of stock. Please review your cart and try again.'
@@ -411,14 +437,22 @@ const CheckoutPage: React.FC = () => {
             <StepBlock id="payment" index={3} title="Payment Method" currentStep={step} setStep={setStep}>
               <div className="flex items-center gap-3 mb-4 text-[color:var(--color-myntra-ink-soft)]">
                 <Lock className="w-4 h-4" />
-                <p className="text-[13px]">Online payment is launching soon. For now, pay securely on delivery.</p>
+                <p className="text-[13px]">
+                  {paymentsConfigured
+                    ? 'Pay securely by UPI or card, or choose cash on delivery.'
+                    : 'Online payment is launching soon. For now, pay securely on delivery.'}
+                </p>
               </div>
 
+              {/* UPI/Card unlock automatically once VITE_RAZORPAY_KEY_ID is set,
+                  so enabling online payment is an environment change and needs no
+                  code edit. Without the key they stay disabled rather than
+                  failing at the gateway. */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
                 {([
                   { id: 'cod',  label: 'Cash on Delivery', sub: 'Pay when you receive', icon: Truck, enabled: true },
-                  { id: 'upi',  label: 'UPI',               sub: 'Coming soon',          icon: Smartphone, enabled: false },
-                  { id: 'card', label: 'Card',              sub: 'Coming soon',          icon: CreditCard, enabled: false },
+                  { id: 'upi',  label: 'UPI',  sub: paymentsConfigured ? 'GPay, PhonePe, Paytm' : 'Coming soon', icon: Smartphone, enabled: paymentsConfigured },
+                  { id: 'card', label: 'Card', sub: paymentsConfigured ? 'Credit or debit'      : 'Coming soon', icon: CreditCard, enabled: paymentsConfigured },
                 ] as const).map(opt => {
                   const Icon = opt.icon;
                   const active = payment === opt.id;
@@ -445,8 +479,9 @@ const CheckoutPage: React.FC = () => {
               </div>
 
               <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)]">
-                Pay in cash when our courier arrives. Available across India for orders below ₹50,000.
-                Online card &amp; UPI payment will be enabled shortly.
+                {payment === 'cod'
+                  ? 'Pay in cash when our courier arrives. Available across India for orders below ₹50,000.'
+                  : 'You will be redirected to our payment partner to complete the payment securely. Your order is confirmed only once the payment succeeds.'}
               </p>
 
               {placeError && (
