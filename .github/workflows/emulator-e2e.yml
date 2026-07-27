@@ -49,11 +49,12 @@ jobs:
           node-version: 22
           cache: npm
 
-      # The Firestore emulator is a Java process.
+      # The Firestore emulator is a Java process. firebase-tools requires JDK 21+
+      # ("no longer supports Java version before 21") — do not lower this.
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
       - name: Install dependencies
         run: npm ci
