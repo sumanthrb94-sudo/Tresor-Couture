@@ -53,9 +53,23 @@ Deliberately **not** automated:
   address.
 - **Completing a Razorpay payment.** Requires the hosted modal and a real card.
   The gating and the server-side verification path are covered; the charge is not.
-- **The `/api/*` serverless functions.** They do not run under the static
-  emulator preview. They are covered separately by the Postman/newman suite in
-  `postman/` against a deployed environment.
+- **The `/api/*` serverless functions' happy paths.** They do not run under the
+  static emulator preview. Their SECURITY contract is now covered by the
+  "Serverless API (/api/*)" folder in `postman/` — 12 requests, 22 assertions,
+  every one of them negative (no request in that folder may ever succeed), so it
+  is safe to run against production:
+
+  ```bash
+  npx newman run postman/tresor-couture.postman_collection.json \
+    -e postman/tresor-couture.postman_environment.json \
+    --folder "Serverless API (/api/*)"
+  ```
+
+  Set `apiBase` to the deployment origin. It asserts, among other things, that a
+  forged Razorpay signature never yields a paid order, that an unsigned webhook
+  is rejected, that a non-admin cannot send bulk email, and that a foreign origin
+  is refused. Note: `newman` currently crashes on Node 22 inside `object-hash`;
+  run it on Node 20 or via the Postman app.
 
 The customer journey (storefront → cart → account → chat → returns) is covered
 separately at desktop and mobile viewports by `full-e2e.spec.ts` /
