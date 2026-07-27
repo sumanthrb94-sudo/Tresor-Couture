@@ -43,6 +43,10 @@ export interface BusinessProfile {
 // placeholders; set VITE_LEGAL_NAME, VITE_GSTIN and VITE_PAN at build time.
 const env = typeof (import.meta as any).env !== 'undefined' ? (import.meta as any).env : {};
 
+/** Fallback registered address — deliberately obvious placeholder text so the
+ *  compliance screen can detect that it was never replaced. */
+const PLACEHOLDER_ADDRESS = 'Tresor Atelier|Road No. 12, Banjara Hills|Hyderabad, Telangana 500034|India';
+
 export const BUSINESS: BusinessProfile = {
   brandName: 'Tresor Couture',
   // CEO ACTION REQUIRED: set VITE_LEGAL_NAME before going live.
@@ -51,17 +55,24 @@ export const BUSINESS: BusinessProfile = {
   gstin: String(env.VITE_GSTIN || '36ABCDE1234F1Z5'),
   // CEO ACTION REQUIRED: set VITE_PAN (10 chars) before going live.
   pan: String(env.VITE_PAN || 'ABCDE1234F'),
-  cin: '', // proprietorship — no CIN
-  // CEO ACTION REQUIRED: replace with the registered place of business.
-  addressLines: [
-    'Tresor Atelier',
-    'Road No. 12, Banjara Hills',
-    'Hyderabad, Telangana 500034',
-    'India',
-  ],
+  // Companies have a CIN and LLPs an LLPIN; a partnership firm or sole
+  // proprietorship has neither, so empty is legitimate for those. Set VITE_CIN
+  // when the entity has one.
+  cin: String(env.VITE_CIN || ''),
+  // Registered place of business, printed on every GST invoice. Set
+  // VITE_BUSINESS_ADDRESS as pipe-separated lines, e.g.
+  //   "Tresor Atelier|12-3-45 Some Road|Hyderabad, Telangana 500034|India"
+  // (pipe, not comma — commas appear inside the lines themselves).
+  addressLines: String(env.VITE_BUSINESS_ADDRESS || PLACEHOLDER_ADDRESS)
+    .split('|')
+    .map(s => s.trim())
+    .filter(Boolean),
   stateName: 'Telangana',
   stateCode: '36',
-  email: 'concierge@tresorcouture.com',
+  // Was concierge@tresorcouture.com — a domain the business does not own (it is
+  // still unregistered), so mail to it bounced. The site publishes
+  // hello@tresorcouture.in everywhere else; that is the default now.
+  email: String(env.VITE_BUSINESS_EMAIL || 'hello@tresorcouture.in'),
   phone: '+91 63042 11922',
   website: 'https://tresorcouture.in',
   policiesUpdatedAt: '2026-06-02',
@@ -120,6 +131,7 @@ export function legalChecks(b: BusinessProfile = BUSINESS): LegalCheck[] {
   const panValid = PAN_RE.test(pan) && !panIsPlaceholder;
   const gstinValid = GSTIN_RE.test(gstin) && !gstinIsPlaceholder;
   const legalNameSet = !/sole proprietorship\)$/i.test(b.legalName.trim());
+  const addressSet = b.addressLines.join('|') !== PLACEHOLDER_ADDRESS;
   const entity = panEntityType(pan);
 
   const checks: LegalCheck[] = [
@@ -148,7 +160,32 @@ export function legalChecks(b: BusinessProfile = BUSINESS): LegalCheck[] {
         ? b.legalName
         : 'Still the default — set VITE_LEGAL_NAME to the registered entity name.',
     },
+    {
+      ok: addressSet,
+      label: 'Registered place of business set',
+      note: addressSet
+        ? b.addressLines.join(', ')
+        : 'Still the placeholder address — set VITE_BUSINESS_ADDRESS (pipe-separated lines). It is printed on every GST invoice.',
+    },
+    {
+      ok: Boolean(b.email) && !/@tresorcouture\.com$/i.test(b.email),
+      label: 'Contact email deliverable',
+      note: /@tresorcouture\.com$/i.test(b.email)
+        ? `${b.email} — tresorcouture.com is not a domain this business owns, so this address bounces. Use the .in domain.`
+        : b.email,
+    },
   ];
+
+  // A company must carry a CIN; an LLP an LLPIN. A partnership firm or sole
+  // proprietor has neither, so we only make this a hard requirement where the
+  // PAN tells us unambiguously that it is a company.
+  if (pan[3] === 'C') {
+    checks.push({
+      ok: Boolean(b.cin.trim()),
+      label: 'CIN set (entity is a company)',
+      note: b.cin.trim() || 'The PAN identifies a company — set VITE_CIN to the CIN.',
+    });
+  }
 
   // Cross-checks only make sense once both identifiers are individually valid.
   if (panValid && gstinValid) {
