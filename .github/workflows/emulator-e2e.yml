@@ -1,0 +1,133 @@
+name: Emulator E2E (rules + flows)
+
+# The suite that guards behaviour on every PR.
+#
+# Unlike e2e.yml (which points Playwright at a LIVE deployment and therefore
+# needs one to exist), this runs entirely self-contained against the Firebase
+# Emulator Suite — which loads the real firestore.rules. That means a change
+# that weakens authorization, breaks the return window, or lets one customer
+# read another's chat fails HERE, before it can merge.
+#
+# Covers, at desktop and mobile viewports:
+#   storefront -> cart -> login -> orders -> per-order chat -> returns
+#   -> admin dashboard / support / returns / orders / CRM
+#   -> cross-customer isolation
+# plus the two-party real-time chat spec and the mobile-nav/unread-badge checks.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: emulator-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  emulator-e2e:
+    name: Playwright vs Firebase Emulator
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    env:
+      # Demo project id — the emulators run fully offline with it and never
+      # touch the real Firebase project.
+      GCLOUD_PROJECT: demo-tresor
+      FIREBASE_AUTH_EMULATOR_HOST: 127.0.0.1:9099
+      FIRESTORE_EMULATOR_HOST: 127.0.0.1:8080
+      BASE_URL: http://127.0.0.1:4173
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # The Firestore emulator is a Java process.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Start Firebase emulators (Auth + Firestore)
+        run: |
+          npx -y firebase-tools emulators:start \
+            --only auth,firestore --project demo-tresor > emulators.log 2>&1 &
+          for i in $(seq 1 90); do
+            if grep -q "All emulators ready" emulators.log; then
+              echo "Emulators ready after ${i}s"; exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::Emulators failed to start within 90s"; cat emulators.log; exit 1
+
+      - name: Seed emulator dataset
+        run: npm run seed:emulator:full
+
+      - name: Build against the emulators
+        run: |
+          # Demo Firebase config: the SDK needs well-formed values, but with
+          # VITE_USE_EMULATORS=1 every call is routed to localhost. No real
+          # credentials are involved.
+          cat > .env.local <<'ENV'
+          VITE_FIREBASE_API_KEY=demo-key
+          VITE_FIREBASE_PROJECT_ID=demo-tresor
+          VITE_FIREBASE_STORAGE_BUCKET=demo-tresor.appspot.com
+          VITE_FIREBASE_MESSAGING_SENDER_ID=1234567890
+          VITE_FIREBASE_APP_ID=1:1234567890:web:abcdef1234567890
+          VITE_FIREBASE_AUTH_DOMAIN=demo-tresor.firebaseapp.com
+          VITE_USE_EMULATORS=1
+          ENV
+          npm run build
+
+      - name: Serve the build
+        run: |
+          npm run preview -- --port 4173 --host 127.0.0.1 > preview.log 2>&1 &
+          for i in $(seq 1 30); do
+            if [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:4173/)" = "200" ]; then
+              echo "Preview ready after ${i}s"; exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::Preview server did not come up"; cat preview.log; exit 1
+
+      - name: Run emulator E2E suites
+        run: npm run test:emulator
+
+      - name: Upload step-by-step screenshots
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: emulator-screens
+          path: |
+            tests/emulator/screens/
+            tests/emulator/screens-mobile/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Upload Playwright report and traces
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Emulator log (on failure)
+        if: ${{ failure() }}
+        run: tail -100 emulators.log || true
