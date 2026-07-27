@@ -27,7 +27,11 @@
     "test:e2e:signed-in:lifecycle": "npx playwright test tests/e2e/signed-in/signed-in-lifecycle.spec.ts --project=signed-in-chrome --workers=1",
     "emulators": "npx -y firebase-tools emulators:start --only auth,firestore --project demo-tresor",
     "seed:emulator": "tsx scripts/seed-emulator-users.ts",
-    "test:chat": "playwright test --config=playwright.emulator.config.ts"
+    "seed:emulator:full": "tsx scripts/seed-emulator-full.ts",
+    "test:emulator": "playwright test --config=playwright.emulator.config.ts",
+    "test:emulator:desktop": "playwright test --config=playwright.emulator.config.ts tests/emulator/full-e2e.spec.ts",
+    "test:emulator:mobile": "playwright test --config=playwright.emulator.config.ts tests/emulator/full-e2e-mobile.spec.ts",
+    "test:chat": "playwright test --config=playwright.emulator.config.ts tests/emulator/live-chat.spec.ts"
   },
   "dependencies": {
     "@sentry/node": "^10.63.0",
