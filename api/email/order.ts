@@ -32,7 +32,10 @@ async function brevoSendEmail(args: {
   const key = process.env.BREVO_API_KEY;
   if (!key) throw new Error('BREVO_API_KEY is not configured');
   const sender = {
-    email: process.env.BREVO_SENDER_EMAIL || 'no-reply@tresorcouture.in',
+    // A real, monitored mailbox — not a no-reply. Customers DO reply to order
+    // confirmations, and no-reply@/orders@ are not provisioned on the domain, so
+    // those replies vanished silently.
+    email: process.env.BREVO_SENDER_EMAIL || 'care@tresorcouture.in',
     name: process.env.BREVO_SENDER_NAME || 'Tresor Couture',
   };
   const r = await fetch('https://api.brevo.com/v3/smtp/email', {
