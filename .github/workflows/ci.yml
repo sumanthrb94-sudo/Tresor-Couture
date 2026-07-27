@@ -47,7 +47,9 @@ jobs:
           fi
           echo "OK — no server SDK/secret in dist/assets."
 
-      - name: Dependency audit (fail on high/critical)
-        run: npm audit --audit-level=high
-        # Moderate findings are transitive through firebase-admin and are tracked
-        # separately; only high/critical findings block the build.
+      - name: Dependency audit (fail on un-allowlisted high/critical)
+        run: node scripts/audit-gate.mjs
+        # `npm audit --audit-level=high` is all-or-nothing: one unfixable
+        # transitive advisory turns CI permanently red, which trains everyone to
+        # ignore it. The gate fails on every high/critical EXCEPT advisories
+        # explicitly allowlisted with a written reason in scripts/audit-gate.mjs.

@@ -54,19 +54,24 @@ test('per-order live chat: customer <-> admin real-time, both directions', async
 
   await expect(adm.getByText('Test Customer').first()).toBeVisible({ timeout: 20_000 });
   await adm.getByText('Test Customer').first().click();
-  await expect(adm.getByText(custMsg1)).toBeVisible({ timeout: 15_000 });
+  // Message text renders BOTH as the inbox list-preview snippet and as the
+  // thread bubble, so an unscoped match is a strict-mode violation. .last()
+  // targets the bubble (rendered after the list in DOM order). Whether the
+  // preview has caught up is a race, which made this intermittently pass alone
+  // and fail in a full-suite run.
+  await expect(adm.getByText(custMsg1).last()).toBeVisible({ timeout: 15_000 });
 
   // ---- Real-time customer -> admin ----
   await custInput.fill(custMsg2);
   await custInput.press('Enter');
-  await expect(adm.getByText(custMsg2)).toBeVisible({ timeout: 15_000 });
+  await expect(adm.getByText(custMsg2).last()).toBeVisible({ timeout: 15_000 });
 
   // ---- Real-time admin -> customer ----
   const admInput = adm.getByPlaceholder('Type your reply…');
   await expect(admInput).toBeVisible();
   await admInput.fill(admMsg);
   await admInput.press('Enter');
-  await expect(adm.getByText(admMsg)).toBeVisible({ timeout: 10_000 });
+  await expect(adm.getByText(admMsg).last()).toBeVisible({ timeout: 10_000 });
   await expect(cust.getByText(admMsg)).toBeVisible({ timeout: 15_000 });
 
   await custCtx.close();
