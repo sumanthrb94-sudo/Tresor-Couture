@@ -1,7 +1,7 @@
 import React from 'react';
 import { Printer } from 'lucide-react';
 import { formatINR } from '../constants';
-import { BUSINESS, DEFAULT_HSN } from '../lib/business';
+import { BUSINESS, DEFAULT_HSN, gstinConfigured, panConfigured } from '../lib/business';
 import { gstBreakdown, invoiceNumber, rupeesInWords } from '../lib/invoice';
 import type { Order } from '../types';
 
@@ -52,8 +52,10 @@ const TaxInvoice: React.FC<{ order: Order }> = ({ order }) => {
             <address className="not-italic leading-relaxed text-[color:var(--color-myntra-ink-soft)]">
               {BUSINESS.addressLines.map((l, i) => <React.Fragment key={i}>{l}<br /></React.Fragment>)}
             </address>
-            <p className="mt-1"><span className="font-semibold">GSTIN:</span> {BUSINESS.gstin}</p>
-            <p><span className="font-semibold">PAN:</span> {BUSINESS.pan}</p>
+            {/* Omitted entirely when unconfigured: printing the placeholder
+                would assert a registration the business does not hold. */}
+            {gstinConfigured() && <p className="mt-1"><span className="font-semibold">GSTIN:</span> {BUSINESS.gstin}</p>}
+            {panConfigured() && <p><span className="font-semibold">PAN:</span> {BUSINESS.pan}</p>}
           </div>
           <div className="sm:text-right">
             <p><span className="font-semibold">Invoice No:</span> <span className="font-mono">{invNo}</span></p>

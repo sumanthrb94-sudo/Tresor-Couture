@@ -110,6 +110,25 @@ export function panEntityType(pan: string): string | null {
   return PAN_ENTITY[pan[3]] ?? null;
 }
 
+/**
+ * True when the GSTIN is a real, well-formed registration rather than the
+ * built-in placeholder.
+ *
+ * Customer-facing surfaces MUST gate on this. Printing the fallback
+ * `36ABCDE1234F1Z5` on a tax invoice states a GST registration the business does
+ * not hold — materially worse than showing no GSTIN at all, which is merely
+ * incomplete. Same reasoning for the PAN.
+ */
+export function gstinConfigured(b: BusinessProfile = BUSINESS): boolean {
+  const g = b.gstin.trim().toUpperCase();
+  return GSTIN_RE.test(g) && !PLACEHOLDER_PATTERNS.includes(g);
+}
+
+export function panConfigured(b: BusinessProfile = BUSINESS): boolean {
+  const p = b.pan.trim().toUpperCase();
+  return PAN_RE.test(p) && !PLACEHOLDER_PATTERNS.includes(p);
+}
+
 export interface LegalCheck {
   ok: boolean;
   label: string;
