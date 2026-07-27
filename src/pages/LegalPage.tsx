@@ -2,7 +2,7 @@ import React from 'react';
 import { ChevronRight } from 'lucide-react';
 import { useRouter } from '../context/RouterContext';
 import { POLICIES } from '../content/policies';
-import { BUSINESS } from '../lib/business';
+import { BUSINESS, gstinConfigured } from '../lib/business';
 import type { PolicyKey } from '../types';
 
 type Block = { type: 'list'; items: string[] } | { type: 'para'; text: string };
@@ -68,7 +68,9 @@ const LegalPage: React.FC<{ policy: PolicyKey }> = ({ policy }) => {
           </div>
 
           <div className="mt-10 pt-5 border-t border-[color:var(--color-myntra-border-soft)] text-[12px] text-[color:var(--color-myntra-ink-mute)]">
-            {BUSINESS.legalName} · GSTIN {BUSINESS.gstin} · {BUSINESS.email}
+            {BUSINESS.legalName}
+            {gstinConfigured() && <> · GSTIN {BUSINESS.gstin}</>}
+            {' · '}{BUSINESS.email}
           </div>
         </article>
       </div>
