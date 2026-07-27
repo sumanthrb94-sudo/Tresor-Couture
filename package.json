@@ -31,7 +31,9 @@
     "test:emulator": "playwright test --config=playwright.emulator.config.ts",
     "test:emulator:desktop": "playwright test --config=playwright.emulator.config.ts tests/emulator/full-e2e.spec.ts",
     "test:emulator:mobile": "playwright test --config=playwright.emulator.config.ts tests/emulator/full-e2e-mobile.spec.ts",
-    "test:chat": "playwright test --config=playwright.emulator.config.ts tests/emulator/live-chat.spec.ts"
+    "test:chat": "playwright test --config=playwright.emulator.config.ts tests/emulator/live-chat.spec.ts",
+    "report:pdf": "tsx scripts/build-test-report.ts",
+    "test:emulator:admin": "playwright test --config=playwright.emulator.config.ts tests/emulator/admin-sections.spec.ts tests/emulator/admin-workflows.spec.ts"
   },
   "dependencies": {
     "@sentry/node": "^10.63.0",
