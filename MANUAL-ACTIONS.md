@@ -149,11 +149,37 @@ in the repo or a chat.
 - **Vercel env** `FIREBASE_SERVICE_ACCOUNT` = the (rotated) service-account JSON,
   so `/api/orders/place` and `/api/payments/*` can write server-side. Without it
   those endpoints return 503 `orders_not_configured`.
-- **Legal/business values** (`src/lib/business.ts` placeholders): set
-  `VITE_LEGAL_NAME`, `VITE_GSTIN`, `VITE_PAN` and the registered address — GST
-  invoices currently carry placeholder values (`36ABCDE1234F1Z5`).
-- **Razorpay / Brevo / WhatsApp** keys per `docs/PAYMENTS-SETUP.md`,
-  `docs/EMAIL-SETUP.md`, `docs/WHATSAPP-SETUP.md`.
+- **Legal/business values.** All of these are now environment-driven (real
+  registrations are never committed — the repo is public) and validated at
+  **Admin → Compliance**, which checks each format, flags leftover placeholders,
+  and cross-checks that the GSTIN embeds the PAN and carries the right state
+  code. A single wrong digit is caught there rather than on a customer invoice.
+
+  Values are **deliberately not listed here** — this file is committed to a
+  public repository. Take them from the PAN card, the GST certificate, and the
+  registered address, and enter them in Vercel only.
+
+  | Var | Source / expected shape | Status |
+  |---|---|---|
+  | `VITE_LEGAL_NAME` | Name exactly as printed on the PAN card | confirmed |
+  | `VITE_PAN` | 10 chars, from the PAN card. 4th char encodes entity type — here `F` (partnership firm), so the legal name carries no "LLP" suffix | confirmed |
+  | `VITE_BUSINESS_ADDRESS` | Registered place of business, **pipe-separated** lines (commas occur inside the lines) | confirmed — matches the registered address |
+  | `VITE_BUSINESS_EMAIL` | A real mailbox on the domain — `care@`, `hello@` and `studio@` exist | set to `care@` |
+  | `VITE_CIN` | Blank — a partnership firm has no CIN/LLPIN | correct as blank |
+  | `VITE_GSTIN` | 15 chars from the GST certificate: `36` + the PAN + entity digit + `Z` + checksum | **STILL NEEDED** |
+
+  These are `VITE_*`, so they are baked in at **build time** — set them in Vercel
+  and **redeploy**, or nothing changes.
+- **Brevo is CONFIRMED WORKING** — a live order produced a confirmation email.
+  Mail now sends from `care@tresorcouture.in` by default. It previously defaulted
+  to `no-reply@tresorcouture.in`, and `.env.example` suggested
+  `orders@tresorcouture.in`; **neither mailbox exists** on the domain (only
+  `care@`, `hello@`, `studio@` do). Sending still worked because Brevo
+  authenticates the *domain*, so the fault was invisible — but every customer who
+  replied to an order confirmation was replying into a void. Override with
+  `BREVO_SENDER_EMAIL` only if you want a different real mailbox.
+- **Razorpay / WhatsApp** keys per `docs/PAYMENTS-SETUP.md`,
+  `docs/WHATSAPP-SETUP.md`. Both remain dormant by design — the store is COD-only.
 - **Upstash Redis is OPTIONAL — no external service needed to launch.**
   `api/_lib/rateLimit.ts` uses Upstash for *global* rate limiting when
   `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` are set, and otherwise
@@ -185,6 +211,20 @@ npm run set-admin -- --list                 # who is admin
 The user must **sign out and back in** for the new claim to take effect. The
 new admin sidebar sections (**Returns**, **Support**) and the CRM panel in
 **Customers** are all gated by this same claim + the Firestore rules.
+
+## Automated testing (CI)
+
+Every push and pull request runs two workflows:
+
+- **CI** — typecheck, production build, a guard that no server SDK or secret name
+  leaked into the client bundle, and a dependency-audit gate.
+- **Emulator E2E** — the full Playwright suite against the Firebase Emulator
+  Suite, which loads the **real `firestore.rules`**. A change that weakens
+  authorization, breaks the 7-day return window, or leaks one customer's chat to
+  another fails *before* it can merge. Each run uploads step-by-step screenshots
+  at desktop and mobile viewports as a build artifact.
+
+To run the same suite locally, see the Tests section of `README.md`.
 
 ## Testing note (Playwright / E2E)
 
