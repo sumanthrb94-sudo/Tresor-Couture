@@ -48,3 +48,4 @@ tests/emulator/screens/
 tests/emulator/screens-mobile/
 test-results/
 tests/emulator/screens-ui/
+tests/emulator/artifacts/

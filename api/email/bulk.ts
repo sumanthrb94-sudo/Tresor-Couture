@@ -16,6 +16,7 @@ import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
 import { validateCsrfToken } from '../_lib/csrf.js';
 import { rateLimited, rateLimitHeaders } from '../_lib/rateLimit.js';
 import { withSentry } from '../_lib/sentry.js';
+import { validateHtmlContent } from '../_lib/htmlSafety.js';
 
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'tresor-couture';
 const BREVO = 'https://api.brevo.com/v3';
@@ -41,29 +42,6 @@ async function verifyAdmin(authHeader: string | undefined): Promise<any | null> 
 
 function brevoHeaders(key: string) {
   return { 'api-key': key, 'content-type': 'application/json', accept: 'application/json' };
-}
-
-/** Reject HTML that contains obvious active content. This is a defence-in-depth
- *  control on top of the admin gate; Brevo also sanitises, but we never want to
- *  relay script tags or event handlers from the composer. */
-function dangerousHtml(html: string): boolean {
-  const lowered = html.toLowerCase();
-  if (lowered.includes('<script')) return true;
-  if (lowered.includes('javascript:')) return true;
-  if (/\s(on\w+)\s*=/i.test(html)) return true;
-  if (lowered.includes('<iframe')) return true;
-  if (lowered.includes('<object')) return true;
-  if (lowered.includes('<embed')) return true;
-  return false;
-}
-
-interface HtmlValidationOk { ok: true; error?: undefined; }
-interface HtmlValidationError { ok: false; error: string; }
-type HtmlValidation = HtmlValidationOk | HtmlValidationError;
-function validateHtmlContent(html: string): HtmlValidation {
-  if (!html) return { ok: false, error: 'html_content_required' };
-  if (dangerousHtml(html)) return { ok: false, error: 'html_content_forbidden' };
-  return { ok: true };
 }
 
 async function brevoGet(path: string, key: string): Promise<any> {
