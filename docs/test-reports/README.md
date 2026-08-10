@@ -36,6 +36,12 @@ self-contained — screenshots are embedded, so nothing else is needed to read i
 | [`admin-w5-compliance-validation.pdf`](./admin-w5-compliance-validation.pdf) | Legal validation refuses to pass placeholders |
 | [`admin-w6-realtime-chat.pdf`](./admin-w6-realtime-chat.pdf) | **Customer and admin live concurrently**, messaging in real time both ways |
 
+### Storefront (1)
+
+| Report | Verifies |
+|---|---|
+| [`stock-visibility.pdf`](./stock-visibility.pdf) | A sold-out product is greyed and badged "Sold out", its marketing sticker is suppressed, add-to-bag is disabled, it never appears on a home rail, it sorts below every in-stock piece, and its own URL still resolves |
+
 ### Security & configuration (2)
 
 | Report | Verifies |

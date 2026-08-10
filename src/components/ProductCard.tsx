@@ -7,6 +7,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
 import FabricImage from './FabricImage';
 import QuickAddModal from './QuickAddModal';
+import { inStock } from '../lib/availability';
 
 interface Props {
   fabric: Fabric;
@@ -19,6 +20,7 @@ const ProductCard: React.FC<Props> = ({ fabric, compact = false }) => {
   const { has, toggle } = useWishlist();
   const { addItem } = useCart();
   const wished = has(fabric.id);
+  const soldOut = !inStock(fabric);
 
   const [justAdded, setJustAdded] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -32,6 +34,7 @@ const ProductCard: React.FC<Props> = ({ fabric, compact = false }) => {
 
   const openModal = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (soldOut) return;
     setModalOpen(true);
   };
 
@@ -58,9 +61,18 @@ const ProductCard: React.FC<Props> = ({ fabric, compact = false }) => {
             photo={fabric.photo}
             fallback={fabric.image}
             alt={fabric.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            className={`w-full h-full object-cover transition-transform duration-700 ${
+              soldOut ? 'opacity-45 grayscale' : 'group-hover:scale-105'
+            }`}
           />
-          {fabric.sticker && (
+          {soldOut && (
+            <span className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-[11px] font-extrabold uppercase tracking-[0.14em] text-[color:var(--color-myntra-navy)] bg-white/85 py-1.5">
+              Sold out
+            </span>
+          )}
+          {/* A stock-out outranks a marketing sticker: don't badge a piece
+              "Trending" on a card the customer cannot buy from. */}
+          {fabric.sticker && !soldOut && (
             <span className="badge-trending">{fabric.sticker}</span>
           )}
           {fabric.rating !== undefined && (
@@ -106,14 +118,18 @@ const ProductCard: React.FC<Props> = ({ fabric, compact = false }) => {
       <button
         type="button"
         onClick={openModal}
-        aria-label="Add to bag"
-        className={`absolute bottom-3 right-2 w-9 h-9 rounded-full flex items-center justify-center shadow-sm tap-scale no-tap-highlight ${
-          justAdded
-            ? 'bg-[color:var(--color-myntra-green)] text-white border border-[color:var(--color-myntra-green)]'
-            : 'bg-[color:var(--color-myntra-navy)] text-white border border-[color:var(--color-myntra-navy)]'
+        disabled={soldOut}
+        aria-label={soldOut ? `${fabric.name} is sold out` : 'Add to bag'}
+        title={soldOut ? 'Sold out' : 'Add to bag'}
+        className={`absolute bottom-3 right-2 w-9 h-9 rounded-full flex items-center justify-center shadow-sm no-tap-highlight ${
+          soldOut
+            ? 'bg-[color:var(--color-myntra-bg-soft)] text-[color:var(--color-myntra-ink-mute)] border border-[color:var(--color-myntra-border-soft)] cursor-not-allowed'
+            : justAdded
+            ? 'bg-[color:var(--color-myntra-green)] text-white border border-[color:var(--color-myntra-green)] tap-scale'
+            : 'bg-[color:var(--color-myntra-navy)] text-white border border-[color:var(--color-myntra-navy)] tap-scale'
         }`}
       >
-        {justAdded ? <Check className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />}
+        {justAdded && !soldOut ? <Check className="w-4 h-4" /> : <ShoppingBag className="w-4 h-4" />}
       </button>
 
       <button

@@ -19,6 +19,7 @@ import ShopPage from './pages/ShopPage';
 import ProductPage from './pages/ProductPage';
 import CartPage from './pages/CartPage';
 import { CatalogProvider, useCatalog } from './context/CatalogContext';
+import { inStock } from './lib/availability';
 
 // Routes that aren't on the critical home/shop path are lazy-loaded so they
 // don't bloat the initial bundle. React.lazy splits each into its own chunk.
@@ -47,7 +48,10 @@ const Home: React.FC = () => {
   // when there are enough; otherwise falls back to silk/satin fabrics so the rail
   // doesn't collapse on a catalogue weighted toward yardage.
   const { trending, newIn, bridal, summer } = useMemo(() => {
-    const list = products ?? [];
+    // Home rails are merchandising, not a catalogue: only advertise pieces we
+    // can actually ship. Sold-out product stays discoverable in Shop and via
+    // its own URL, where it is clearly badged.
+    const list = (products ?? []).filter(inStock);
     const byMaster = list.filter(f => f.masterCategory === 'Sarees' || f.masterCategory === 'Lehenga Cholis');
     const byCategory = list.filter(f => f.materialType === 'Silk' || f.materialType === 'Satin');
     return {
@@ -59,7 +63,7 @@ const Home: React.FC = () => {
   }, [products]);
 
   const bridalUsesMaster = useMemo(() => {
-    const list = products ?? [];
+    const list = (products ?? []).filter(inStock);
     return list.filter(f => f.masterCategory === 'Sarees' || f.masterCategory === 'Lehenga Cholis').length >= 3;
   }, [products]);
 

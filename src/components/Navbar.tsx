@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
 import { useCatalog } from '../context/CatalogContext';
 import { FABRICS, MASTER_CATEGORIES, MASTER_CATEGORY_TREE, OFFER_TICKER } from '../constants';
+import { sellableFirst } from '../lib/availability';
 import type { MasterCategory } from '../types';
 
 type NavEntry =
@@ -61,12 +62,14 @@ const Navbar: React.FC = () => {
   const suggestions = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return [];
-    return searchPool.filter(f =>
+    const hits = searchPool.filter(f =>
       f.name.toLowerCase().includes(q) ||
       f.category.toLowerCase().includes(q) ||
       f.masterCategory.toLowerCase().includes(q) ||
       (f.tags ?? []).some(t => t.toLowerCase().includes(q))
-    ).slice(0, 6);
+    );
+    // Only six rows fit — spend them on pieces the customer can buy.
+    return sellableFirst(hits).slice(0, 6);
   }, [search, searchPool]);
 
   const activeCat = route.name === 'shop' ? route.category : undefined;

@@ -75,6 +75,27 @@ async function seedProducts(): Promise<void> {
   console.log(`  ✓ ${written} products`);
 }
 
+/**
+ * A deliberately sold-out product, so the storefront's stock-out treatment has
+ * something to assert against. Written unconditionally (merge) rather than
+ * behind the "already seeded" guard, so re-seeding an existing emulator still
+ * produces it. `sticker` is set on purpose: the card must suppress the
+ * marketing badge in favour of "Sold out".
+ */
+async function seedSoldOutFixture(): Promise<void> {
+  const base = FABRICS[0];
+  await db.collection('products').doc('e2e-sold-out').set({
+    ...base,
+    id: 'e2e-sold-out',
+    name: 'E2E Sold Out Fixture',
+    sticker: 'Bestseller',
+    stock: 0,
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  }, { merge: true });
+  console.log('  ✓ sold-out fixture (e2e-sold-out)');
+}
+
 async function seedCoupons(): Promise<void> {
   const coupons = [
     { code: 'WEDDING50', description: 'Extra 10% off bridal silks', kind: 'percent', value: 10, maxDiscount: 10000, minSubtotal: 0, active: true },
@@ -131,6 +152,7 @@ async function main(): Promise<void> {
   await ensureUser('customer2@test.local', 'Second Customer', false);
   await ensureUser('admin@test.local', 'Atelier Admin', true);
   await seedProducts();
+  await seedSoldOutFixture();
   await seedCoupons();
   await seedOrders(customerUid);
   console.log('Done.');

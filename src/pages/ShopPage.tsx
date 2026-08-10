@@ -10,6 +10,7 @@ import { Fabric, MasterCategory } from '../types';
 import ProductCard from '../components/ProductCard';
 import { useRouter } from '../context/RouterContext';
 import { useCatalog } from '../context/CatalogContext';
+import { sellableFirst } from '../lib/availability';
 
 type SortKey = 'recommended' | 'popularity' | 'price-asc' | 'price-desc' | 'rating' | 'newest';
 
@@ -128,7 +129,11 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
       case 'popularity': list = [...list].sort((a, b) => (b.reviewCount ?? 0) - (a.reviewCount ?? 0)); break;
       case 'newest': list = [...list].reverse(); break;
     }
-    return list;
+    // Applied last, so it outranks every sort: nobody wants "price low to high"
+    // to open on a row of pieces they cannot buy. Sold-out stays in the grid —
+    // hiding it would collapse thin categories and 404 links already shared —
+    // but always below what is in stock.
+    return sellableFirst(list);
   }, [products, weaveTypes, colors, priceBrackets, sort]);
 
   const masterTile = activeMaster ? MASTER_CATEGORY_TILES.find(t => t.name === activeMaster) : null;
