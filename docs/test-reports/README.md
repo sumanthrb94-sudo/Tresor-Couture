@@ -7,7 +7,7 @@ self-contained — screenshots are embedded, so nothing else is needed to read i
 
 ## Coverage
 
-### Admin console — every section (13)
+### Admin console — every section (14)
 
 | Report | Section |
 |---|---|
@@ -24,6 +24,7 @@ self-contained — screenshots are embedded, so nothing else is needed to read i
 | [`admin-11-compliance.pdf`](./admin-11-compliance.pdf) | Legal & compliance |
 | [`admin-12-delivery.pdf`](./admin-12-delivery.pdf) | Delivery settings |
 | [`admin-13-bulk-email.pdf`](./admin-13-bulk-email.pdf) | Bulk email composer |
+| [`admin-14-seo.pdf`](./admin-14-seo.pdf) | Catalogue SEO audit |
 
 ### Admin workflows — operations that change data (6)
 
@@ -41,6 +42,12 @@ self-contained — screenshots are embedded, so nothing else is needed to read i
 | Report | Verifies |
 |---|---|
 | [`stock-visibility.pdf`](./stock-visibility.pdf) | A sold-out product is greyed and badged "Sold out", its marketing sticker is suppressed, add-to-bag is disabled, it never appears on a home rail, it sorts below every in-stock piece, and its own URL still resolves |
+
+### SEO (1)
+
+| Report | Verifies |
+|---|---|
+| [`seo-catalogue-audit.pdf`](./seo-catalogue-audit.pdf) | The catalogue SEO audit rules fire on the right products — duplicate descriptions across differing prices, SKU-code names, leaked importer notes, computed `price ÷ 0.7` MRPs, base64 images vs missing images — and a clean catalogue scores 100 |
 
 ### Security & configuration (2)
 

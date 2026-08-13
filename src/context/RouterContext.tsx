@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { Route, PolicyKey } from '../types';
+import { Route, PolicyKey, ADMIN_SECTIONS } from '../types';
 import { trackPageView } from '../lib/analytics';
 
 const parseLocation = (): Route => {
@@ -64,19 +64,11 @@ const parseHash = (hash: string): Route => {
       if (segments[1] === 'brand-kit') {
         return { name: 'admin-brand-kit', section: params.get('section') ?? undefined };
       }
-      const section = segments[1] as
-        | 'dashboard'
-        | 'products'
-        | 'inventory'
-        | 'orders'
-        | 'returns'
-        | 'billing'
-        | 'customers'
-        | 'support'
-        | 'coupons'
-        | 'reviews'
-        | 'compliance'
-        | undefined;
+      // Validate against the shared list rather than casting: an unknown
+      // segment used to slip through as a "valid" section and render a blank
+      // console instead of falling back to the dashboard.
+      const raw = segments[1];
+      const section = ADMIN_SECTIONS.find(s => s === raw);
       return { name: 'admin', section };
     }
     case 'privacy':

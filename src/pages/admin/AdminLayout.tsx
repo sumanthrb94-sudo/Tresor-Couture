@@ -1,25 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { LayoutDashboard, Package, Boxes, ShoppingBag, RotateCcw, ReceiptText, Users, Headphones, Tag, Star, Scale, Zap, Mail, Palette, LogOut, ExternalLink, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, Package, Boxes, ShoppingBag, RotateCcw, ReceiptText, Users, Headphones, Tag, Star, Scale, Zap, Mail, Palette, LogOut, ExternalLink, ChevronDown, Search } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
 import { chatApi } from '../../lib/support';
+import type { AdminSection } from '../../types';
 
-type Section =
-  | 'dashboard'
-  | 'products'
-  | 'inventory'
-  | 'orders'
-  | 'returns'
-  | 'billing'
-  | 'customers'
-  | 'support'
-  | 'coupons'
-  | 'reviews'
-  | 'compliance'
-  | 'delivery'
-  | 'bulk-email';
 
-const NAV: { id: Section; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
+const NAV: { id: AdminSection; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
   { id: 'dashboard', label: 'Dashboard', Icon: LayoutDashboard },
   { id: 'products', label: 'Products', Icon: Package },
   { id: 'inventory', label: 'Inventory', Icon: Boxes },
@@ -32,10 +19,11 @@ const NAV: { id: Section; label: string; Icon: React.ComponentType<{ className?:
   { id: 'reviews', label: 'Reviews', Icon: Star },
   { id: 'compliance', label: 'Compliance', Icon: Scale },
   { id: 'delivery', label: 'Delivery', Icon: Zap },
-  { id: 'bulk-email', label: 'Bulk Email', Icon: Mail }
+  { id: 'bulk-email', label: 'Bulk Email', Icon: Mail },
+  { id: 'seo', label: 'Catalogue SEO', Icon: Search }
 ];
 
-const AdminLayout: React.FC<{ section: Section; children: React.ReactNode }> = ({ section, children }) => {
+const AdminLayout: React.FC<{ section: AdminSection; children: React.ReactNode }> = ({ section, children }) => {
   const { user, logout } = useAuth();
   const { navigate } = useRouter();
 

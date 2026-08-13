@@ -324,6 +324,34 @@ export interface CustomerCrm {
   updatedAt?: string;
 }
 
+/**
+ * Admin console sections. Single source of truth: the URL parser, the nav and
+ * the section switch all derive from this, so adding a section cannot leave one
+ * of them silently stale (which is how `delivery` and `bulk-email` ended up
+ * routable at runtime but absent from the parser's type).
+ */
+export type AdminSection =
+  | 'dashboard'
+  | 'products'
+  | 'inventory'
+  | 'orders'
+  | 'returns'
+  | 'billing'
+  | 'customers'
+  | 'support'
+  | 'coupons'
+  | 'reviews'
+  | 'compliance'
+  | 'delivery'
+  | 'bulk-email'
+  | 'seo';
+
+export const ADMIN_SECTIONS: AdminSection[] = [
+  'dashboard', 'products', 'inventory', 'orders', 'returns', 'billing',
+  'customers', 'support', 'coupons', 'reviews', 'compliance', 'delivery',
+  'bulk-email', 'seo',
+];
+
 export type Route =
   | { name: 'home' }
   | { name: 'shop'; category?: string; subCategory?: string }
@@ -335,7 +363,7 @@ export type Route =
   | { name: 'login' }
   | { name: 'register' }
   | { name: 'account'; tab?: 'profile' | 'orders' | 'returns' | 'wishlist' | 'addresses' }
-  | { name: 'admin'; section?: 'dashboard' | 'products' | 'inventory' | 'orders' | 'returns' | 'billing' | 'customers' | 'support' | 'coupons' | 'reviews' | 'compliance' | 'delivery' | 'bulk-email' }
+  | { name: 'admin'; section?: AdminSection }
   | { name: 'admin-brand-kit'; section?: string }
   | { name: 'policy'; policy: PolicyKey }
   | { name: 'auth-action'; mode: string; oobCode: string; apiKey?: string; continueUrl?: string }
