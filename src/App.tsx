@@ -20,6 +20,7 @@ import ProductPage from './pages/ProductPage';
 import CartPage from './pages/CartPage';
 import { CatalogProvider, useCatalog } from './context/CatalogContext';
 import { inStock } from './lib/availability';
+import { useRouteMeta, useStoreJsonLd } from './lib/seoMeta';
 
 // Routes that aren't on the critical home/shop path are lazy-loaded so they
 // don't bloat the initial bundle. React.lazy splits each into its own chunk.
@@ -43,6 +44,7 @@ import AdminGuard from './pages/admin/AdminGuard';
 
 const Home: React.FC = () => {
   const { products, loading, error: loadError, refresh } = useCatalog();
+  useStoreJsonLd(true);
 
   // Rails defined by spec. Bridal prefers master categories (Sarees, Lehenga Cholis)
   // when there are enough; otherwise falls back to silk/satin fabrics so the rail
@@ -118,6 +120,8 @@ const Home: React.FC = () => {
 
 const RoutedView: React.FC = () => {
   const { route } = useRouter();
+  // Title/description/canonical/robots for every non-product route.
+  useRouteMeta(route);
   switch (route.name) {
     case 'home':
       return <Home />;
