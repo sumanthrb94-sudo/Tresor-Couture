@@ -1,0 +1,342 @@
+{
+ "6343": {
+  "name": "Lace 6343",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹7000. Perfect for premium couture and bridal projects.",
+  "price": 7000,
+  "mrp": 10000,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": 1200
+ },
+ "6988": {
+  "name": "6988",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹999. Perfect for premium couture and bridal projects.",
+  "price": 999,
+  "mrp": 1427.14,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": null
+ },
+ "HA3858": {
+  "name": "HA3858",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹1299. Perfect for premium couture and bridal projects.",
+  "price": 1299,
+  "mrp": 1855.71,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": 380
+ },
+ "HA4536": {
+  "name": "HA4536",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 3 meters at ₹3800. Perfect for premium couture and bridal projects.",
+  "price": 3800,
+  "mrp": 5428.57,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 3,
+  "perM": null
+ },
+ "HA6293": {
+  "name": "HA6293",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 8 meters at ₹4800. Perfect for premium couture and bridal projects.",
+  "price": 4800,
+  "mrp": 6857.14,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 8,
+  "perM": null
+ },
+ "HA6320": {
+  "name": "HA6320",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 3 meters at ₹4800. Perfect for premium couture and bridal projects.",
+  "price": 4800,
+  "mrp": 6857.14,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 3,
+  "perM": null
+ },
+ "HA6378": {
+  "name": "HA6378",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 10 meters at ₹4999. Perfect for premium couture and bridal projects.",
+  "price": 4999,
+  "mrp": 7141.43,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 10,
+  "perM": null
+ },
+ "HA6387": {
+  "name": "HA6387",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 10 meters at ₹4800. Perfect for premium couture and bridal projects.",
+  "price": 4800,
+  "mrp": 6857.14,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 10,
+  "perM": null
+ },
+ "HA6674": {
+  "name": "HA6674",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹2899. Perfect for premium couture and bridal projects.",
+  "price": 2899,
+  "mrp": 4141.43,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9.5,
+  "perM": null
+ },
+ "HA6758": {
+  "name": "Lace",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹4200. Perfect for premium couture and bridal projects. Colour: D-PURPLE.",
+  "price": 4200,
+  "mrp": 6000,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": null
+ },
+ "HA6767": {
+  "name": "HA6767",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹700. Perfect for premium couture and bridal projects.",
+  "price": 700,
+  "mrp": 1000,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": 80
+ },
+ "HA6790": {
+  "name": "HA6790",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹985. Perfect for premium couture and bridal projects. Colour: GREEN.",
+  "price": 985,
+  "mrp": 1407.14,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": null
+ },
+ "HA6979": {
+  "name": "HA6979",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹450. Perfect for premium couture and bridal projects.",
+  "price": 450,
+  "mrp": 642.86,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": 135
+ },
+ "HA6988": {
+  "name": "HA6988",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹890. Perfect for premium couture and bridal projects. Colour: WINE.",
+  "price": 890,
+  "mrp": 1271.43,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": null
+ },
+ "HA7018": {
+  "name": "HA7018",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹1350. Perfect for premium couture and bridal projects. Colour: PINK.",
+  "price": 1350,
+  "mrp": 1928.57,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": null
+ },
+ "MI263": {
+  "name": "MI263",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 18 meters at ₹450. Perfect for premium couture and bridal projects.",
+  "price": 450,
+  "mrp": 642.86,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 18,
+  "perM": 120
+ },
+ "MO2029": {
+  "name": "MO2029",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹2000. Perfect for premium couture and bridal projects.",
+  "price": 2000,
+  "mrp": 2857.14,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": 380
+ },
+ "MO3188": {
+  "name": "MO3188",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 18 meters at ₹960. Perfect for premium couture and bridal projects.",
+  "price": 960,
+  "mrp": 1371.43,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 18,
+  "perM": null
+ },
+ "MO3392": {
+  "name": "MO3392",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹1599. Perfect for premium couture and bridal projects.",
+  "price": 1599,
+  "mrp": 2284.29,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 7,
+  "perM": null
+ },
+ "MO3650": {
+  "name": "MO3650",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹2400. Perfect for premium couture and bridal projects.",
+  "price": 2400,
+  "mrp": 3428.57,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": 450
+ },
+ "MO3857": {
+  "name": "MO3857",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹2300. Perfect for premium couture and bridal projects.",
+  "price": 2300,
+  "mrp": 3285.71,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": 440
+ },
+ "NE1386": {
+  "name": "NE1386",
+  "desc": "Elegant patch / embellishment from TRESOR. Sold as a complete bundle at ₹1200. Perfect for premium couture and bridal projects.",
+  "price": 1200,
+  "mrp": 1714.29,
+  "sub": "Patch",
+  "unit": "bundle",
+  "bundle": null,
+  "perM": null
+ },
+ "NE1386-S31": {
+  "name": "NE1386-S31",
+  "desc": "Elegant patch / embellishment from TRESOR. Sold as a complete bundle at ₹1200. Perfect for premium couture and bridal projects.",
+  "price": 1200,
+  "mrp": 1714.29,
+  "sub": "Patch",
+  "unit": "bundle",
+  "bundle": null,
+  "perM": null
+ },
+ "NE1386-S32": {
+  "name": "NE1386-S32",
+  "desc": "Elegant patch / embellishment from TRESOR. Sold as a complete bundle at ₹1200. Perfect for premium couture and bridal projects.",
+  "price": 1200,
+  "mrp": 1714.29,
+  "sub": "Patch",
+  "unit": "bundle",
+  "bundle": null,
+  "perM": null
+ },
+ "NE1386-S33": {
+  "name": "NE1386-S33",
+  "desc": "Elegant patch / embellishment from TRESOR. Sold as a complete bundle at ₹1200. Perfect for premium couture and bridal projects.",
+  "price": 1200,
+  "mrp": 1714.29,
+  "sub": "Patch",
+  "unit": "bundle",
+  "bundle": null,
+  "perM": null
+ },
+ "NE1386-S34": {
+  "name": "NE1386-S34",
+  "desc": "Elegant patch / embellishment from TRESOR. Sold as a complete bundle at ₹1200. Perfect for premium couture and bridal projects.",
+  "price": 1200,
+  "mrp": 1714.29,
+  "sub": "Patch",
+  "unit": "bundle",
+  "bundle": null,
+  "perM": null
+ },
+ "NE1386-S35": {
+  "name": "NE1386-S35",
+  "desc": "Elegant patch / embellishment from TRESOR. Sold as a complete bundle at ₹1200. Perfect for premium couture and bridal projects.",
+  "price": 1200,
+  "mrp": 1714.29,
+  "sub": "Patch",
+  "unit": "bundle",
+  "bundle": null,
+  "perM": null
+ },
+ "NO-CODE-S23": {
+  "name": "NO-CODE-S23",
+  "desc": "Elegant patch / embellishment from TRESOR. Available at ₹480. Perfect for premium couture and bridal projects. Note: Code not found in slide text; using generated code",
+  "price": 480,
+  "mrp": 685.71,
+  "sub": "Patch",
+  "unit": "unit",
+  "bundle": null,
+  "perM": 480
+ },
+ "RI280": {
+  "name": "RI280",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹250. Perfect for premium couture and bridal projects.",
+  "price": 250,
+  "mrp": 357.14,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": 50
+ },
+ "RI4680": {
+  "name": "RI4680",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹300. Perfect for premium couture and bridal projects.",
+  "price": 300,
+  "mrp": 428.57,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": 65
+ },
+ "RI5687": {
+  "name": "RI5687",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 45 meters at ₹280. Perfect for premium couture and bridal projects.",
+  "price": 280,
+  "mrp": 400,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 30,
+  "perM": 30
+ },
+ "RI5839": {
+  "name": "RI5839",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 18 meters at ₹230. Perfect for premium couture and bridal projects.",
+  "price": 230,
+  "mrp": 328.57,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 18,
+  "perM": 85
+ },
+ "ST3382": {
+  "name": "ST3382",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 9 meters at ₹1599. Perfect for premium couture and bridal projects.",
+  "price": 1599,
+  "mrp": 2284.29,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": 400
+ },
+ "ST987": {
+  "name": "ST987",
+  "desc": "Elegant lace from TRESOR. Sold as a complete bundle of 18 meters at ₹280. Perfect for premium couture and bridal projects.",
+  "price": 280,
+  "mrp": 400,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 18,
+  "perM": 80
+ }
+}
