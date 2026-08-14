@@ -12,6 +12,7 @@ import StickyAddToCart from '../components/StickyAddToCart';
 import DeliveryChecker from '../components/DeliveryChecker';
 import { productsApi } from '../lib/firebase';
 import { useCatalog } from '../context/CatalogContext';
+import { useProductMeta } from '../lib/seoMeta';
 import { analytics } from '../lib/analytics';
 import type { Fabric } from '../types';
 
@@ -27,6 +28,9 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
   const { products: catalogProducts, loading: catalogLoading } = useCatalog();
 
   const [fabric, setFabric] = useState<Fabric | null | undefined>(undefined);
+  // Per-product title, description, canonical and Product JSON-LD — with real
+  // URLs each product page is its own indexable document.
+  useProductMeta(fabric ?? undefined);
   const [similar, setSimilar] = useState<Fabric[]>([]);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);

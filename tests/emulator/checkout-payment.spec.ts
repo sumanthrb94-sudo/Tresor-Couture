@@ -34,14 +34,14 @@ test('Checkout · Payment methods reflect Razorpay configuration', async ({ brow
   try {
     const cust = await customerPage(browser);
 
-    await cust.goto('/#/product/1', { waitUntil: 'domcontentloaded' });
+    await cust.goto('/product/1', { waitUntil: 'domcontentloaded' });
     await cust.waitForTimeout(1500);
     const add = cust.getByRole('button', { name: /add to (bag|cart)/i });
     if (await add.first().isVisible().catch(() => false)) await add.first().click();
     await cust.waitForTimeout(800);
     await rec.step(cust, 'Added an item to the bag');
 
-    await cust.goto('/#/checkout', { waitUntil: 'domcontentloaded' });
+    await cust.goto('/checkout', { waitUntil: 'domcontentloaded' });
     await cust.waitForTimeout(2500);
     await rec.step(cust, 'Opened checkout');
 

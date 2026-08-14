@@ -7,6 +7,7 @@ import { useRouter } from '../context/RouterContext';
 import { useCatalog } from '../context/CatalogContext';
 import { FABRICS, FREE_SHIPPING_THRESHOLD, formatINR } from '../constants';
 import { couponsApi } from '../lib/firebase';
+import { inStock } from '../lib/availability';
 import type { Fabric } from '../types';
 import FabricImage from '../components/FabricImage';
 import ProductCard from '../components/ProductCard';
@@ -133,7 +134,11 @@ const CartPage: React.FC = () => {
     }
   };
 
-  const youMightLike = (catalog ?? FABRICS).filter(f => !resolved.some(r => r.fabric.id === f.id)).slice(0, 5);
+  // Never cross-sell something we cannot ship — this rail sits directly above
+  // the checkout button.
+  const youMightLike = (catalog ?? FABRICS)
+    .filter(f => inStock(f) && !resolved.some(r => r.fabric.id === f.id))
+    .slice(0, 5);
 
   return (
     <main className="pt-[100px] md:pt-[112px] pb-12 md:pb-16 bg-[color:var(--color-myntra-bg-soft)] min-h-screen">

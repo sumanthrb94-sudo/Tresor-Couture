@@ -1,35 +1,27 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { Route, PolicyKey } from '../types';
+import { Route, PolicyKey, ADMIN_SECTIONS } from '../types';
 import { trackPageView } from '../lib/analytics';
 
-const parseLocation = (): Route => {
-  // Firebase's email-action handler redirects to a path-based URL with the
-  // action mode + oobCode in the query string. It cannot put them after the
-  // hash because email clients (and Firebase) don't speak hash routing. So
-  // we special-case this BEFORE the regular hash parser runs.
-  if (typeof window !== 'undefined' && window.location.pathname === '/auth/action') {
-    const sp = new URLSearchParams(window.location.search);
-    const mode = sp.get('mode');
-    const oobCode = sp.get('oobCode');
-    if (mode && oobCode) {
-      return {
-        name: 'auth-action',
-        mode,
-        oobCode,
-        apiKey: sp.get('apiKey') ?? undefined,
-        continueUrl: sp.get('continueUrl') ?? undefined,
-      };
-    }
-  }
-  return parseHash(window.location.hash);
-};
+/**
+ * History (path-based) router. Every route is a REAL URL — /shop, /product/id
+ * — so search engines index each page separately and Merchant Center can be
+ * fed per-product URLs. The previous hash router collapsed the whole site into
+ * one indexable URL, which made all 50 products invisible to Google.
+ *
+ * Legacy links keep working: any inbound #/x hash (old shares, bookmarks,
+ * WhatsApp previews) is converted once, with replaceState, to its canonical
+ * path — the visitor never sees a 404 and the URL bar ends up canonical.
+ */
 
-const parseHash = (hash: string): Route => {
-  const cleaned = hash.replace(/^#\/?/, '');
+/** Parse a "path?query" string (no leading '#'). Shared by the pathname
+ *  parser and the legacy-hash converter so both speak the same URL scheme. */
+const parsePath = (raw: string): Route => {
+  const cleaned = raw.replace(/^\/+/, '');
   if (!cleaned) return { name: 'home' };
   const [path, query = ''] = cleaned.split('?');
   const segments = path.split('/').filter(Boolean);
   const params = new URLSearchParams(query);
+  if (!segments.length) return { name: 'home' };
 
   switch (segments[0]) {
     case 'shop': {
@@ -43,7 +35,7 @@ const parseHash = (hash: string): Route => {
       return { name: 'search', q };
     }
     case 'product':
-      if (segments[1]) return { name: 'product', id: segments[1] };
+      if (segments[1]) return { name: 'product', id: decodeURIComponent(segments[1]) };
       return { name: 'shop' };
     case 'cart':
       return { name: 'cart' };
@@ -64,19 +56,11 @@ const parseHash = (hash: string): Route => {
       if (segments[1] === 'brand-kit') {
         return { name: 'admin-brand-kit', section: params.get('section') ?? undefined };
       }
-      const section = segments[1] as
-        | 'dashboard'
-        | 'products'
-        | 'inventory'
-        | 'orders'
-        | 'returns'
-        | 'billing'
-        | 'customers'
-        | 'support'
-        | 'coupons'
-        | 'reviews'
-        | 'compliance'
-        | undefined;
+      // Validate against the shared list rather than casting: an unknown
+      // segment used to slip through as a "valid" section and render a blank
+      // console instead of falling back to the dashboard.
+      const raw = segments[1];
+      const section = ADMIN_SECTIONS.find(s => s === raw);
       return { name: 'admin', section };
     }
     case 'privacy':
@@ -91,46 +75,76 @@ const parseHash = (hash: string): Route => {
   }
 };
 
-const buildHash = (route: Route): string => {
+export const buildPath = (route: Route): string => {
   switch (route.name) {
     case 'home':
-      return '#/';
+      return '/';
     case 'shop': {
       const parts: string[] = [];
       if (route.category) parts.push(`category=${encodeURIComponent(route.category)}`);
       if (route.subCategory) parts.push(`subcategory=${encodeURIComponent(route.subCategory)}`);
-      return parts.length ? `#/shop?${parts.join('&')}` : '#/shop';
+      return parts.length ? `/shop?${parts.join('&')}` : '/shop';
     }
     case 'search':
-      return `#/search?q=${encodeURIComponent(route.q)}`;
+      return `/search?q=${encodeURIComponent(route.q)}`;
     case 'product':
-      return `#/product/${route.id}`;
+      return `/product/${encodeURIComponent(route.id)}`;
     case 'cart':
-      return '#/cart';
+      return '/cart';
     case 'checkout':
-      return '#/checkout';
+      return '/checkout';
     case 'confirmation':
-      return `#/confirmation/${route.orderId}`;
+      return `/confirmation/${route.orderId}`;
     case 'login':
-      return '#/login';
+      return '/login';
     case 'register':
-      return '#/register';
+      return '/register';
     case 'account':
-      return route.tab ? `#/account/${route.tab}` : '#/account';
+      return route.tab ? `/account/${route.tab}` : '/account';
     case 'admin':
-      return route.section ? `#/admin/${route.section}` : '#/admin';
+      return route.section ? `/admin/${route.section}` : '/admin';
     case 'admin-brand-kit':
-      return route.section ? `#/admin/brand-kit?section=${encodeURIComponent(route.section)}` : '#/admin/brand-kit';
+      return route.section ? `/admin/brand-kit?section=${encodeURIComponent(route.section)}` : '/admin/brand-kit';
     case 'policy':
-      return `#/${route.policy}`;
+      return `/${route.policy}`;
     case 'auth-action':
       // Internal nav never builds this — Firebase redirects to /auth/action
-      // directly. Returning '#/' means in-app links never accidentally land
+      // directly. Returning '/' means in-app links never accidentally land
       // on the handler.
-      return '#/';
+      return '/';
     case 'not-found':
-      return route.path ? `#/${route.path}` : '#/404';
+      return route.path ? `/${route.path}` : '/404';
   }
+};
+
+/** A legacy '#/x?y' hash, or null when the hash is not a route (anchors). */
+const legacyHashPath = (): string | null => {
+  const h = window.location.hash;
+  return h.startsWith('#/') ? h.slice(1) : null;
+};
+
+const parseLocation = (): Route => {
+  // Firebase's email-action handler redirects to /auth/action with the action
+  // mode + oobCode in the query string — handled before the app router runs.
+  if (typeof window !== 'undefined' && window.location.pathname === '/auth/action') {
+    const sp = new URLSearchParams(window.location.search);
+    const mode = sp.get('mode');
+    const oobCode = sp.get('oobCode');
+    if (mode && oobCode) {
+      return {
+        name: 'auth-action',
+        mode,
+        oobCode,
+        apiKey: sp.get('apiKey') ?? undefined,
+        continueUrl: sp.get('continueUrl') ?? undefined,
+      };
+    }
+  }
+  // Legacy #/x link: parse the hash content; the URL bar is canonicalised by
+  // the effect in RouterProvider (replaceState, so Back isn't polluted).
+  const legacy = legacyHashPath();
+  if (legacy) return parsePath(legacy);
+  return parsePath(window.location.pathname + window.location.search);
 };
 
 interface RouterContextValue {
@@ -146,26 +160,37 @@ export const RouterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   useEffect(() => {
     // Own the scroll position ourselves. Without this the browser tries to
-    // restore the previous page's scroll on hash/back navigation, so a new
-    // page (e.g. the order confirmation after checkout) opens scrolled
-    // half-way down on mobile instead of at the top.
+    // restore the previous page's scroll on back navigation, so a new page
+    // (e.g. the order confirmation after checkout) opens scrolled half-way
+    // down on mobile instead of at the top.
     if ('scrollRestoration' in window.history) {
       try { window.history.scrollRestoration = 'manual'; } catch { /* ignore */ }
     }
-    const handler = () => setRoute(parseLocation());
-    window.addEventListener('hashchange', handler);
-    window.addEventListener('popstate', handler);
+    // Canonicalise a legacy hash link once on load: /#/product/x → /product/x.
+    const legacy = legacyHashPath();
+    if (legacy) window.history.replaceState(null, '', legacy);
+
+    const onPop = () => setRoute(parseLocation());
+    // hashchange still fires if something sets a legacy '#/x' at runtime
+    // (old bookmarklets, the odd external link) — convert and re-parse.
+    const onHash = () => {
+      const l = legacyHashPath();
+      if (l) window.history.replaceState(null, '', l);
+      setRoute(parseLocation());
+    };
+    window.addEventListener('popstate', onPop);
+    window.addEventListener('hashchange', onHash);
     return () => {
-      window.removeEventListener('hashchange', handler);
-      window.removeEventListener('popstate', handler);
+      window.removeEventListener('popstate', onPop);
+      window.removeEventListener('hashchange', onHash);
     };
   }, []);
 
   // Scroll to the top on EVERY route change — whether triggered by navigate(),
-  // an <a href="#/…"> link (hashchange), or back/forward (popstate). Instant,
-  // not smooth: a new screen should appear at the top immediately, and smooth
-  // scrolling is unreliable mid-transition on mobile. Runs after paint so it
-  // wins against any layout the freshly-mounted (lazy) page performs.
+  // a converted legacy link, or back/forward (popstate). Instant, not smooth:
+  // a new screen should appear at the top immediately, and smooth scrolling is
+  // unreliable mid-transition on mobile. Runs after paint so it wins against
+  // any layout the freshly-mounted (lazy) page performs.
   useEffect(() => {
     const toTop = () => window.scrollTo(0, 0);
     toTop();
@@ -175,28 +200,20 @@ export const RouterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // SPA page_view on every route change (incl. initial). No-ops without GA4 id.
   useEffect(() => {
-    trackPageView(window.location.pathname + window.location.hash);
+    trackPageView(window.location.pathname + window.location.search);
   }, [route]);
 
   const navigate = useCallback((next: Route) => {
-    // If the current URL is a path-based route (e.g. /auth/action after a
-    // Firebase email link), we need to switch back to the hash-routed root
-    // before applying the new hash — otherwise the path persists and the
-    // hash router is bypassed on the next page-load.
-    if (window.location.pathname !== '/' && window.location.pathname !== '/index.html') {
-      window.history.replaceState(null, '', '/' + buildHash(next));
-    } else {
-      const hash = buildHash(next);
-      if (window.location.hash !== hash) {
-        window.location.hash = hash;
-      }
+    const path = buildPath(next);
+    if (window.location.pathname + window.location.search !== path) {
+      window.history.pushState(null, '', path);
     }
     setRoute(next);
     // Scroll reset is handled centrally by the route-change effect above, so
-    // it also covers anchor-link and back/forward navigation.
+    // it also covers converted-link and back/forward navigation.
   }, []);
 
-  const hrefFor = useCallback((r: Route) => buildHash(r), []);
+  const hrefFor = useCallback((r: Route) => buildPath(r), []);
 
   return (
     <RouterContext.Provider value={{ route, navigate, hrefFor }}>{children}</RouterContext.Provider>

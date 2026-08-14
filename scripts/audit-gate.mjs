@@ -22,17 +22,12 @@ import { execSync } from 'node:child_process';
  * dependency bump.
  */
 const ALLOWLIST = {
-  'GHSA-mh99-v99m-4gvg': {
-    package: 'brace-expansion',
-    reason:
-      'DoS in a glob-pattern expander, reached only via ' +
-      'firebase-admin -> google-gax -> rimraf -> glob -> minimatch, plus build ' +
-      'tooling. No request path passes attacker-controlled brace patterns to it. ' +
-      'The published fix (brace-expansion >= 5.0.8) breaks minimatch@9 at runtime ' +
-      '("brace_expansion_1.default is not a function") while the build still ' +
-      'passes, so forcing it trades a theoretical DoS for a real breakage. ' +
-      'Revisit when google-gax/rimraf re-pin. See PR #23.',
-  },
+  // Empty — npm audit is clean. GHSA-mh99-v99m-4gvg (brace-expansion) was
+  // accepted here while the only published fix broke minimatch@9 at runtime
+  // (PR #23); patched releases now exist on BOTH major lines, applied as
+  // scoped overrides in package.json ("brace-expansion@2": 2.1.4,
+  // "brace-expansion@5": 5.0.9), so the acceptance is no longer needed.
+  // Add entries only after assessing real exploitability, with a written reason.
 };
 
 const BLOCKING = new Set(['high', 'critical']);

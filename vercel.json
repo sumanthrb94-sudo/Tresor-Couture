@@ -15,6 +15,10 @@
     {
       "source": "/auth/action",
       "destination": "/index.html"
+    },
+    {
+      "source": "/((?!api/|__/|assets/).*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
@@ -61,6 +65,9 @@
     }
   ],
   "regions": ["bom1"],
+  "crons": [
+    { "path": "/api/cron/review-request", "schedule": "30 4 * * *" }
+  ],
   "functions": {
     "api/**/*.ts": { "maxDuration": 10 }
   }

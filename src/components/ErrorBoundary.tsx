@@ -60,7 +60,7 @@ class ErrorBoundary extends React.Component<Props, State> {
               <RefreshCw className="w-4 h-4" /> Reload
             </button>
             <button
-              onClick={() => { sessionStorage.removeItem('tresor-chunk-reload'); window.location.hash = '#/'; this.setState({ error: null }); }}
+              onClick={() => { sessionStorage.removeItem('tresor-chunk-reload'); window.history.replaceState(null, '', '/'); this.setState({ error: null }); }}
               className="px-6 py-3 border-2 border-[#2A1F12] text-[#2A1F12] text-[12px] font-bold uppercase tracking-[0.14em] rounded"
             >
               Back to storefront

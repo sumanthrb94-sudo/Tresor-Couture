@@ -10,7 +10,7 @@
  */
 
 import type { PolicyKey } from '../types';
-import { BUSINESS } from '../lib/business';
+import { BUSINESS, gstinConfigured } from '../lib/business';
 
 export interface PolicySection {
   heading: string;
@@ -66,7 +66,12 @@ export const POLICIES: Record<PolicyKey, Policy> = {
         'Placing an order is an offer to buy. We may accept or decline it (e.g. stock or pricing errors). A contract forms when we confirm the order.',
       ]},
       { heading: 'Pricing & GST', body: [
-        `All prices are in Indian Rupees and inclusive of applicable taxes unless stated. A GST tax invoice is issued for every order under GSTIN ${BUSINESS.gstin}.`,
+        // Never state a GSTIN we cannot stand behind: quoting a placeholder
+        // registration number in the Terms is a misrepresentation, where
+        // omitting it is merely incomplete.
+        gstinConfigured()
+          ? `All prices are in Indian Rupees and inclusive of applicable taxes unless stated. A GST tax invoice is issued for every order under GSTIN ${BUSINESS.gstin}.`
+          : 'All prices are in Indian Rupees and inclusive of applicable taxes unless stated. A GST tax invoice is issued for every order.',
       ]},
       { heading: 'Products', body: [
         'Our goods are hand-woven; slight variation in colour, weave and finish is inherent and not a defect. Photographs are indicative.',
@@ -143,7 +148,7 @@ export const POLICIES: Record<PolicyKey, Policy> = {
       ]},
       { heading: 'Business details', body: [
         `• Legal entity: ${BUSINESS.legalName}`,
-        `• GSTIN: ${BUSINESS.gstin}`,
+        ...(gstinConfigured() ? [`• GSTIN: ${BUSINESS.gstin}`] : []),
       ]},
       { heading: 'Grievance officer', body: [
         `For privacy or data-rights requests under DPDP, and for consumer grievances under the Consumer Protection (E-Commerce) Rules, 2020, contact our Grievance Officer at ${BUSINESS.email}.`,

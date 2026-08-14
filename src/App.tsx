@@ -19,6 +19,8 @@ import ShopPage from './pages/ShopPage';
 import ProductPage from './pages/ProductPage';
 import CartPage from './pages/CartPage';
 import { CatalogProvider, useCatalog } from './context/CatalogContext';
+import { inStock } from './lib/availability';
+import { useRouteMeta, useStoreJsonLd } from './lib/seoMeta';
 
 // Routes that aren't on the critical home/shop path are lazy-loaded so they
 // don't bloat the initial bundle. React.lazy splits each into its own chunk.
@@ -42,12 +44,16 @@ import AdminGuard from './pages/admin/AdminGuard';
 
 const Home: React.FC = () => {
   const { products, loading, error: loadError, refresh } = useCatalog();
+  useStoreJsonLd(true);
 
   // Rails defined by spec. Bridal prefers master categories (Sarees, Lehenga Cholis)
   // when there are enough; otherwise falls back to silk/satin fabrics so the rail
   // doesn't collapse on a catalogue weighted toward yardage.
   const { trending, newIn, bridal, summer } = useMemo(() => {
-    const list = products ?? [];
+    // Home rails are merchandising, not a catalogue: only advertise pieces we
+    // can actually ship. Sold-out product stays discoverable in Shop and via
+    // its own URL, where it is clearly badged.
+    const list = (products ?? []).filter(inStock);
     const byMaster = list.filter(f => f.masterCategory === 'Sarees' || f.masterCategory === 'Lehenga Cholis');
     const byCategory = list.filter(f => f.materialType === 'Silk' || f.materialType === 'Satin');
     return {
@@ -59,7 +65,7 @@ const Home: React.FC = () => {
   }, [products]);
 
   const bridalUsesMaster = useMemo(() => {
-    const list = products ?? [];
+    const list = (products ?? []).filter(inStock);
     return list.filter(f => f.masterCategory === 'Sarees' || f.masterCategory === 'Lehenga Cholis').length >= 3;
   }, [products]);
 
@@ -114,6 +120,8 @@ const Home: React.FC = () => {
 
 const RoutedView: React.FC = () => {
   const { route } = useRouter();
+  // Title/description/canonical/robots for every non-product route.
+  useRouteMeta(route);
   switch (route.name) {
     case 'home':
       return <Home />;

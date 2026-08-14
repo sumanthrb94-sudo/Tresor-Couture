@@ -16,13 +16,13 @@ export async function dismissConsent(page: Page): Promise<void> {
 }
 
 export async function signIn(page: Page, email: string): Promise<void> {
-  await page.goto('/#/login', { waitUntil: 'domcontentloaded' });
+  await page.goto('/login', { waitUntil: 'domcontentloaded' });
   await page.locator('#login-email').waitFor({ state: 'visible', timeout: 20_000 });
   await page.locator('#login-email').fill(email);
   await page.locator('#login-password').fill(PASSWORD);
   // Scoped to the form: the mobile bottom nav also exposes a "Login" control.
   await page.getByRole('main').getByRole('button', { name: /^login$/i }).click();
-  await page.waitForFunction(() => !location.hash.includes('login'), null, { timeout: 25_000 });
+  await page.waitForFunction(() => !location.pathname.includes('login'), null, { timeout: 25_000 });
   await dismissConsent(page);
 }
 

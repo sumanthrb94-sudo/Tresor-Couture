@@ -4,6 +4,7 @@ import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../context/AuthContext';
 import { subscribeContact } from '../lib/notify';
 import Captcha, { captchaConfigured } from './Captcha';
+import { BUSINESS, gstinConfigured } from '../lib/business';
 import type { Route } from '../types';
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -174,8 +175,15 @@ const Footer: React.FC = () => {
             <span className="inline-flex items-center gap-1.5"><Truck className="w-4 h-4 text-[color:var(--color-myntra-pink)]" /> Free shipping over ₹1,999</span>
             <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-[color:var(--color-myntra-pink)]" /> 100% authentic weaves</span>
           </div>
-          <p className="flex items-center gap-4">
-            <span>© {new Date().getFullYear()} Tresor Couture · All rights reserved.</span>
+          <p className="flex items-center gap-4 flex-wrap">
+            <span>
+              © {new Date().getFullYear()} {BUSINESS.legalName} · All rights reserved.
+              {/* GSTIN is the disclosure a buyer looks for to confirm a seller is
+                  a real registered business. Gated on the same check as the tax
+                  invoice, so it appears only once a genuine registration is
+                  configured — never as a placeholder. */}
+              {gstinConfigured() && <> · GSTIN {BUSINESS.gstin}</>}
+            </span>
             <button
               onClick={() => navigate({ name: 'admin' })}
               className="text-[11px] tracking-[0.18em] uppercase hover:text-[color:var(--color-myntra-pink)] transition-colors"

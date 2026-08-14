@@ -67,6 +67,9 @@ const SECTIONS: Section[] = [
   { slug: 'admin-13-bulk-email', section: 'bulk-email', title: 'Admin · Bulk Email',
     purpose: 'The bulk email composer renders with subject and recipient controls.',
     heading: /bulk email/i },
+  { slug: 'admin-14-seo', section: 'seo', title: 'Admin · Catalogue SEO',
+    purpose: 'The catalogue SEO audit renders its summary and the issues it found across the seeded catalogue, using only local product data — no external SEO service is called.',
+    heading: /catalogue seo/i },
 ];
 
 for (const s of SECTIONS) {
