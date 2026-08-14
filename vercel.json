@@ -65,6 +65,9 @@
     }
   ],
   "regions": ["bom1"],
+  "crons": [
+    { "path": "/api/cron/review-request", "schedule": "30 4 * * *" }
+  ],
   "functions": {
     "api/**/*.ts": { "maxDuration": 10 }
   }

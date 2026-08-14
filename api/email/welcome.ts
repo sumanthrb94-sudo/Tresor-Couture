@@ -8,6 +8,7 @@
 import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
 import { validateCsrfToken } from '../_lib/csrf.js';
 import { verifyIdToken } from '../_lib/auth.js';
+import { rateLimited, rateLimitHeaders } from '../_lib/rateLimit.js';
 import { withSentry } from '../_lib/sentry.js';
 
 function escapeHtml(s: string): string {
@@ -50,6 +51,16 @@ async function handler(req: any, res: any) {
 
   const decoded = await verifyIdToken(req.headers['authorization']);
   if (!decoded?.email) return res.status(401).json({ error: 'unauthorized' });
+
+  // A signup triggers this exactly once; anything past a small allowance is a
+  // retry loop or abuse, and Brevo quota is shared.
+  const WELCOME_RATE_LIMIT = { window: 3600, max: 3 };
+  for (const [k, v] of Object.entries(rateLimitHeaders(WELCOME_RATE_LIMIT))) {
+    res.setHeader(k, v);
+  }
+  if (await rateLimited(req, WELCOME_RATE_LIMIT, `welcome:${decoded.uid}`)) {
+    return res.status(429).json({ error: 'rate_limited' });
+  }
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});

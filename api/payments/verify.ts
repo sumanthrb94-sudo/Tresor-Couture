@@ -29,6 +29,7 @@ import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
 import { validateCsrfToken } from '../_lib/csrf.js';
 import { readJson, header, type ApiRequest, type ApiResponse } from '../_lib/http.js';
 import { verifyIdToken } from '../_lib/auth.js';
+import { rateLimited, rateLimitHeaders } from '../_lib/rateLimit.js';
 import { withSentry } from '../_lib/sentry.js';
 
 interface VerifyBody {
@@ -59,6 +60,17 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
   const decoded = await verifyIdToken(header(req, 'authorization'));
   if (!decoded?.uid) {
     res.status(401).json({ error: 'unauthorized' });
+    return;
+  }
+
+  // The HMAC check is the security boundary; this bounds how fast anyone can
+  // ATTEMPT forgeries (or hammer the endpoint after a real payment).
+  const VERIFY_RATE_LIMIT = { window: 60, max: 10 };
+  for (const [k, v] of Object.entries(rateLimitHeaders(VERIFY_RATE_LIMIT))) {
+    res.setHeader(k, v);
+  }
+  if (await rateLimited(req, VERIFY_RATE_LIMIT, decoded.uid)) {
+    res.status(429).json({ error: 'rate_limited' });
     return;
   }
 

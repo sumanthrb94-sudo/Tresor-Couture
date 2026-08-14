@@ -14,6 +14,7 @@ import { validateCsrfToken } from '../_lib/csrf.js';
 import { sellerGstin, sellerLegalName } from '../_lib/sellerLegal.js';
 import { getDb } from '../_lib/firebaseAdmin.js';
 import { verifyIdToken } from '../_lib/auth.js';
+import { rateLimited, rateLimitHeaders } from '../_lib/rateLimit.js';
 import { withSentry } from '../_lib/sentry.js';
 
 function rupee(n: number): string {
@@ -112,6 +113,16 @@ async function handler(req: any, res: any) {
 
   const decoded = await verifyIdToken(req.headers['authorization']);
   if (!decoded?.email) return res.status(401).json({ error: 'unauthorized' });
+
+  // Bounds how much transactional mail one account can trigger (Brevo quota
+  // is a shared resource; a stuck client retry-loop must not drain it).
+  const EMAIL_RATE_LIMIT = { window: 3600, max: 10 };
+  for (const [k, v] of Object.entries(rateLimitHeaders(EMAIL_RATE_LIMIT))) {
+    res.setHeader(k, v);
+  }
+  if (await rateLimited(req, EMAIL_RATE_LIMIT, `order-email:${decoded.uid}`)) {
+    return res.status(429).json({ error: 'rate_limited' });
+  }
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
