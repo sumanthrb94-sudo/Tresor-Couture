@@ -13,6 +13,24 @@
 
     <link rel="canonical" href="https://tresorcouture.in/" />
 
+    <!-- Fonts, loaded WITHOUT render-blocking. The old @import at the top of
+         the bundled CSS made every full document load wait on
+         fonts.googleapis.com before first paint (and before DOMContentLoaded,
+         since module scripts wait on blocking stylesheets). The print-media
+         swap loads the same stylesheet asynchronously; text renders in the
+         fallback face and swaps when the fonts arrive. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" />
+    </noscript>
+
     <link rel="icon" href="/branding/favicons/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" sizes="32x32" href="/branding/favicons/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/branding/favicons/favicon-16x16.png" />
