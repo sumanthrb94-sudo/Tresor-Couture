@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tresor Couture — Production Readiness</title>
+<style>
+  :root {
+    --ink: #1A1D26; --soft: #4A4F5E; --mute: #7A7F8E;
+    --rule: #D8DBE4; --firm: #A9AEBE;
+    --accent: #33468A; --brass: #96621F; --good: #2F6B4F; --bad: #A2352E;
+    --paper: #FFFFFF; --sunk: #F1F2F6;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: Georgia, 'Times New Roman', serif; color: var(--ink); font-size: 10.5pt; line-height: 1.55; margin: 0; background: var(--paper); }
+  .mono { font-family: 'SF Mono', Menlo, Consolas, monospace; }
+  h1, h2, h3, th, .k { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+  h1 { font-size: 26pt; letter-spacing: -0.02em; margin: 0 0 4pt; }
+  h2 { font-size: 14pt; letter-spacing: -0.01em; margin: 0 0 8pt; border-bottom: 2px solid var(--ink); padding-bottom: 4pt; }
+  h3 { font-size: 10.5pt; margin: 0 0 3pt; }
+  p { margin: 0 0 7pt; }
+  section { margin-bottom: 20pt; }
+  .page-break { page-break-before: always; }
+  .eyebrow { font-family: Menlo, Consolas, monospace; font-size: 7.5pt; letter-spacing: .18em; text-transform: uppercase; color: var(--mute); margin: 0 0 8pt; }
+  .lede { font-size: 12pt; color: var(--soft); margin-bottom: 12pt; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 9.5pt; margin-bottom: 8pt; }
+  th { font-size: 7.5pt; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); text-align: left; font-weight: 600; border-bottom: 1.5px solid var(--firm); padding: 4pt 8pt 4pt 0; }
+  td { border-bottom: 0.75px solid var(--rule); padding: 5pt 8pt 5pt 0; vertical-align: top; }
+  td.k { font-weight: 700; white-space: nowrap; }
+
+  .grade { display: inline-block; font-family: 'Helvetica Neue', Arial, sans-serif; font-weight: 800; font-size: 10pt; min-width: 22pt; text-align: center; padding: 1pt 4pt; border-radius: 2pt; }
+  .gA { background: #E2EEE8; color: var(--good); }
+  .gB { background: #E4E8F5; color: var(--accent); }
+  .gC { background: #F5EBDA; color: var(--brass); }
+  .gD { background: #F6E2E0; color: var(--bad); }
+
+  .verdict { border: 2px solid var(--ink); padding: 12pt 14pt; margin: 12pt 0; }
+  .verdict .score { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 30pt; font-weight: 800; letter-spacing: -0.03em; }
+  .verdict p { margin: 4pt 0 0; }
+
+  .cols2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18pt; }
+  ul { margin: 0 0 8pt; padding-left: 14pt; }
+  li { margin-bottom: 4pt; }
+  .risk { border-left: 3px solid var(--bad); padding-left: 8pt; margin-bottom: 8pt; }
+  .risk.amber { border-color: var(--brass); }
+  .risk h3 { margin-bottom: 1pt; }
+  .risk p { font-size: 9.5pt; color: var(--soft); margin: 0; }
+  .note { font-size: 8.5pt; color: var(--mute); }
+  .stat { text-align: center; padding: 8pt 4pt; border: 0.75px solid var(--rule); }
+  .stat .n { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 20pt; font-weight: 800; letter-spacing: -0.02em; display: block; }
+  .stat .l { font-size: 7pt; letter-spacing: .1em; text-transform: uppercase; color: var(--mute); }
+  .stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6pt; margin: 10pt 0; }
+  .footer { font-size: 8pt; color: var(--mute); border-top: 0.75px solid var(--rule); padding-top: 6pt; margin-top: 16pt; }
+</style>
+</head>
+<body>
+
+<p class="eyebrow">Tresor Couture · tresorcouture.in · Production readiness review · 14 August 2026</p>
+<h1>Production Readiness Report</h1>
+<p class="lede">Written the way a CEO should read it: what is verified working, what is not, what it costs us, and the cheapest path to scale. Every claim in Section 2 is backed by an automated test that ran today; nothing is aspirational.</p>
+
+<div class="stats">
+  <div class="stat"><span class="n">30/30</span><span class="l">E2E tests green</span></div>
+  <div class="stat"><span class="n">11.9m</span><span class="l">Full-suite runtime</span></div>
+  <div class="stat"><span class="n">25</span><span class="l">PDF evidence docs</span></div>
+  <div class="stat"><span class="n">14</span><span class="l">Admin sections</span></div>
+  <div class="stat"><span class="n">50</span><span class="l">Live products</span></div>
+  <div class="stat"><span class="n">22</span><span class="l">Negative API checks</span></div>
+</div>
+
+<div class="verdict">
+  <span class="score">7.5 / 10</span>&nbsp;&nbsp;<span class="k" style="font-size:12pt;font-weight:700;">READY FOR A CONTROLLED LAUNCH — NOT YET READY FOR PAID SCALE</span>
+  <p>The commerce engine, support operation and admin console are genuinely production-grade and better tested than most funded startups at this stage. What holds the score down is not software quality — it is three business exposures: an unresolved GST rate on the flagship product, a storefront invisible to Google, and two leaked credentials awaiting rotation. All three are fixable within days; only one requires writing code.</p>
+</div>
+
+<section>
+<h2>1 · Scorecard</h2>
+<table>
+  <tr><th style="width:26%">Area</th><th style="width:8%">Grade</th><th>Assessment</th></tr>
+  <tr><td class="k">Commerce core</td><td><span class="grade gA">A−</span></td><td>Catalogue, cart, wishlist, coupons, 3-step checkout, COD orders, stock decremented in a transaction so overselling is impossible. Sold-out product is badged, unbuyable and de-merchandised — verified end to end today.</td></tr>
+  <tr><td class="k">Payments</td><td><span class="grade gB">B+</span></td><td>Razorpay wired with server-side amount recomputation and HMAC signature verification; a forged signature cannot yield a paid order (tested). Held back one notch: no live-card transaction has completed yet, and the exposed live Key Secret must be revoked first.</td></tr>
+  <tr><td class="k">CRM, chat &amp; support</td><td><span class="grade gA">A</span></td><td>Per-order real-time chat proven with customer and admin in two concurrent browsers, unread badges both sides, consolidated CRM records, support inbox. The strongest subsystem.</td></tr>
+  <tr><td class="k">Returns &amp; refunds</td><td><span class="grade gA">A−</span></td><td>Full RMA lifecycle; the 7-day window and delivered-only rule enforced in Firestore security rules, so they hold even against a crafted request. Money movement is manual by explicit choice.</td></tr>
+  <tr><td class="k">Compliance</td><td><span class="grade gB">B</span></td><td>GST registration issued and cross-validated against PAN; invoices carry HSN and CGST/SGST split; placeholder identifiers can no longer reach any customer surface (fixed and regression-tested this week). Open: VITE_GSTIN not yet pasted into Vercel, and the garment GST rate question below.</td></tr>
+  <tr><td class="k">Security</td><td><span class="grade gB">B+</span></td><td>Every state-changing endpoint runs origin allowlist → CSRF → method → rate-limit → token auth. 22 negative assertions prove the contract. Deductions: rate limiting is per-instance without Redis, and two credentials were exposed in transit and await rotation.</td></tr>
+  <tr><td class="k">Testing &amp; CI</td><td><span class="grade gA">A</span></td><td>30 e2e tests against the real security rules, 25 self-contained PDF evidence documents, typecheck + build + audit gate on every push. This is the moat that makes everything else safe to change.</td></tr>
+  <tr><td class="k">Discoverability (SEO)</td><td><span class="grade gD">D</span></td><td>The hash router collapses every page into one URL: 50 products, none indexable. Google Business Profile is verified but has zero reviews and a description that sells a fabric wholesaler. In-house catalogue audit finds 48 of 50 products with a critical content defect.</td></tr>
+  <tr><td class="k">Marketing automation</td><td><span class="grade gC">C+</span></td><td>Welcome email fires on signup; order confirmation delivers (verified live); admin bulk-email composer with an XSS guard. Missing the three automations that print money in fashion e-commerce: abandoned-cart, post-purchase review request, win-back.</td></tr>
+  <tr><td class="k">Observability</td><td><span class="grade gB">B−</span></td><td>GA4 e-commerce events wired; Sentry hooks on all 12 API functions but inert until SENTRY_DSN is set. No uptime alerting.</td></tr>
+</table>
+</section>
+
+<section>
+<h2>2 · Verified working today — the evidence</h2>
+<p>The full simulation ran this morning: <b>30 of 30 tests passed in 11.9 minutes</b> against the Firebase Emulator Suite loading the production security rules. Coverage, each with a downloadable PDF containing screenshots and manual reproduction steps:</p>
+<div class="cols2">
+<ul>
+  <li>All 14 admin sections render and operate against seeded data</li>
+  <li>6 mutating workflows: coupon creation, stock adjustment, order search, CRM detail, compliance validation, live two-party chat</li>
+  <li>Full customer journey, desktop and mobile: browse → cart → account → chat → return request (22 screenshots each)</li>
+  <li>Cross-customer isolation: a second customer cannot see the first's orders, chats or returns</li>
+</ul>
+<ul>
+  <li>Sold-out stock: badged, sticker suppressed, unbuyable, off the home rails, sorted last</li>
+  <li>Bulk-email guard: 9 attack payloads blocked, 3 legitimate campaigns allowed</li>
+  <li>Payment-method gating in both directions; forged Razorpay signatures rejected</li>
+  <li>Placeholder GSTIN/PAN can never print on invoice, Terms, Contact, footer or email</li>
+  <li>Catalogue SEO audit engine: 7 rule assertions, clean catalogue scores 100</li>
+</ul>
+</div>
+<p class="note">Evidence: docs/test-reports/ (25 PDFs, regenerated today) · postman/ (22 negative assertions, safe to run against production).</p>
+</section>
+
+<section class="page-break">
+<h2>3 · Risk register — what I would fix before spending a rupee on ads</h2>
+
+<div class="risk">
+  <h3>R1 · GST rate on the flagship product — financial, accumulating per sale</h3>
+  <p>The app charges a flat 5% GST. Since the Sept-2025 reform, garments above ₹2,500/piece attract 18%. If that applies to the ₹35,999 lehengas, each sale under-collects ≈ ₹3,777 that the firm still owes — ≈ ₹53,000 across the current 14-piece drop. Every invoice line also prints HSN 5007 (silk fabric), wrong for stitched garments. <b>Status: awaiting CA confirmation by the owner's decision; code change is ready to start the moment rates are confirmed.</b></p>
+</div>
+<div class="risk">
+  <h3>R2 · Exposed credentials — security, one bad actor from catastrophic</h3>
+  <p>The Firebase service-account key (full database access) was shared into a chat transcript after rotation, and a live Razorpay Key Secret appeared in a screenshot. Rotating both is ~15 minutes in two dashboards. <b>Nothing else on this list matters if these leak.</b></p>
+</div>
+<div class="risk amber">
+  <h3>R3 · Invisible storefront — growth, compounding daily</h3>
+  <p>One indexable URL means zero organic product traffic and, critically, <b>no Google Shopping / Performance Max campaigns</b> — Merchant Center requires real per-product URLs. The routing migration is the single engineering investment that unlocks both organic and paid product distribution.</p>
+</div>
+<div class="risk amber">
+  <h3>R4 · Catalogue content — conversion, silent</h3>
+  <p>48 of 50 products carry a critical defect: 43 share a description, 31 are named after stock codes ("HA3858"), 34 show a computed fake discount, 34 embed images as base64 (uncacheable, invisible to image search). A ₹35,999 purchase decision deserves better copy than a SKU.</p>
+</div>
+<div class="risk amber">
+  <h3>R5 · Config not yet applied — 10 minutes of owner action</h3>
+  <p>VITE_GSTIN (certificate issued 08/08/2026) and the full registered address (Gachibowli · 500046) are not yet in Vercel; Sentry DSN unset; Upstash rate-limit store unset. All are paste-and-redeploy.</p>
+</div>
+</section>
+
+<section>
+<h2>4 · Growth plan — cheapest reach first (verified August 2026)</h2>
+
+<h3>Tier 0 · Free, this week</h3>
+<ul>
+  <li><b>Google Business Profile reviews.</b> Currently zero — the dominant local-pack ranking factor. Ask every buyer at handover; put the review link in the order-confirmation email (template change, Brevo already live). Target: 15–25 genuine reviews in 60 days. Never incentivise or gate reviews — that risks suspension.</li>
+  <li><b>Fix the GBP description and categories</b> (drafted earlier): it currently sells a "global fabric house", which excludes the profile from "fashion store near me" queries. Add In-store shopping under Service options; complete the address with PIN 500046.</li>
+  <li><b>Finish the profile:</b> logo, cover, 15–25 photos, hours, Products section with the ₹35,999 pieces.</li>
+</ul>
+
+<h3>Tier 1 · Email automation — highest ROI paid tooling, mostly free tier</h3>
+<ul>
+  <li>Implemented today: welcome on signup, order confirmation, admin bulk campaigns (XSS-guarded).</li>
+  <li>Build next, in order: <b>abandoned-cart</b> (fires 2–24h after an authenticated cart stalls; industry-typical recovery is meaningful at this price point), <b>post-purchase review request</b> (doubles as the GBP review engine), <b>win-back</b> at 90 days. All three run on the existing Brevo account; free tier is 300 emails/day, ample at current volume.</li>
+</ul>
+
+<h3>Tier 2 · Google Ads with the new-advertiser credit</h3>
+<ul>
+  <li><b>The offer, precisely:</b> India's current new-advertiser promotion is spend-matched — typically <b>spend ₹20,000 within 60 days, receive ₹20,000 in credit</b> (tiers up to ₹60k exist). It is not free money up front; it halves the effective cost of your first two months. New Ads accounts only, promo applied at signup.</li>
+  <li><b>Where to point it:</b> Search campaigns on high-intent local queries — "bridal lehenga Hyderabad", "designer lehenga Gachibowli", "pre-draped saree Hyderabad" — landing on the shop. At a ₹35,999 order value, one conversion pays for the entire matched spend.</li>
+  <li><b>Prerequisites before the first rupee:</b> revoke/replace the exposed Razorpay secret (you are about to drive real buyers), import GA4 purchase events as Ads conversions (events are already wired — this is configuration, not code), and accept that Shopping/PMax stays locked until R3 (real product URLs) is done.</li>
+  <li><b>Sequencing:</b> run ads only after Tier 0 and the abandoned-cart email exist — paid traffic into a store with no reviews and no recovery loop is buying leaks.</li>
+</ul>
+
+<h3>Tier 3 · After the routing migration</h3>
+<ul>
+  <li>Merchant Center + free Shopping listings + Performance Max; product schema for rich results; Instagram Shopping catalogue from the same feed.</li>
+</ul>
+</section>
+
+<section class="page-break">
+<h2>5 · 30 / 60 / 90 days</h2>
+<table>
+  <tr><th style="width:14%">Horizon</th><th>Do</th><th style="width:34%">Exit criteria</th></tr>
+  <tr><td class="k">Days 1–30</td><td>Rotate both credentials · paste VITE_GSTIN + full address into Vercel and redeploy · CA confirms GST rates → implement per-product HSN/rate · one live ₹1 → full-price Razorpay transaction · GBP overhaul + first review asks · rewrite the 31 SKU-named products</td><td>A real paid order end to end · correct GST on every invoice · 10+ reviews · zero placeholder content</td></tr>
+  <tr><td class="k">Days 31–60</td><td>Abandoned-cart + review-request automations · open Google Ads account with credit, Search-only, conversion import verified · Sentry DSN + Upstash on</td><td>₹20k spend matched · first attributable ad-driven sale · recovery emails sending</td></tr>
+  <tr><td class="k">Days 61–90</td><td>Routing migration (hash → history + prerender) · sitemap of real URLs · Merchant Center + PMax · win-back automation</td><td>Product pages indexed · Shopping ads live · organic impressions in Search Console</td></tr>
+</table>
+</section>
+
+<section>
+<h2>6 · CEO's closing view</h2>
+<p>This platform is over-built in exactly the right place — trust. The security rules are the boundary and they are tested like it; the returns promise is enforced in the database; a fake discount or a fake tax number cannot reach a customer. That is what lets a two-person atelier take five-figure orders without an ops team, and it is why the engineering grade is honest, not generous.</p>
+<p>The gap is entirely on the demand side. Today the store is a beautifully run shop on a street nobody walks down: one indexable URL, zero reviews, no recovery emails. The next ninety days should spend almost nothing on new features and everything on being found — reviews first because they are free, email automation second because it compounds, the ads credit third because it halves the cost of learning which queries convert, and the routing migration as the one real engineering project, because it unlocks every product-level channel at once.</p>
+<p><b>Rating: 7.5/10 — launch, take real orders in a controlled way, fix R1 and R2 this week, and do not scale paid traffic until the ads prerequisites are met.</b></p>
+</section>
+
+<p class="footer">Prepared 14 August 2026 · Evidence: 30/30 Playwright e2e (11.9 min, production Firestore rules via emulator) · 25 PDF test reports in docs/test-reports/ · 22 negative API assertions in postman/ · Catalogue figures from the live production database (50 products) · Google Ads promotion terms as published for India, August 2026 — verify the exact tier shown at account signup.</p>
+
+</body>
+</html>
