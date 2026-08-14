@@ -49,10 +49,11 @@ self-contained — screenshots are embedded, so nothing else is needed to read i
 |---|---|
 | [`seo-catalogue-audit.pdf`](./seo-catalogue-audit.pdf) | The catalogue SEO audit rules fire on the right products — duplicate descriptions across differing prices, SKU-code names, leaked importer notes, computed `price ÷ 0.7` MRPs, base64 images vs missing images — and a clean catalogue scores 100 |
 
-### Security & configuration (2)
+### Security & configuration (3)
 
 | Report | Verifies |
 |---|---|
+| [`legal-disclosure-gating.pdf`](./legal-disclosure-gating.pdf) | A placeholder or malformed GSTIN/PAN is omitted rather than printed — on the tax invoice, Terms, Contact page, storefront footer and order-confirmation email, client and server gates both |
 | [`bulk-email-html-safety.pdf`](./bulk-email-html-safety.pdf) | The bulk-email composer refuses script tags, `javascript:` URLs, inline event handlers, iframes/objects/embeds — 9 attack payloads blocked, 3 legitimate ones allowed |
 | [`checkout-payment-methods.pdf`](./checkout-payment-methods.pdf) | UPI/Card unlock **iff** `VITE_RAZORPAY_KEY_ID` is set; verified in both directions |
 

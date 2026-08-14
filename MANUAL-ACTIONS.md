@@ -166,7 +166,15 @@ in the repo or a chat.
   | `VITE_BUSINESS_ADDRESS` | Registered place of business, **pipe-separated** lines (commas occur inside the lines) | confirmed — matches the registered address |
   | `VITE_BUSINESS_EMAIL` | A real mailbox on the domain — `care@`, `hello@` and `studio@` exist | set to `care@` |
   | `VITE_CIN` | Blank — a partnership firm has no CIN/LLPIN | correct as blank |
-  | `VITE_GSTIN` | 15 chars from the GST certificate: `36` + the PAN + entity digit + `Z` + checksum | **STILL NEEDED** |
+  | `VITE_GSTIN` | 15 chars from the GST certificate (Form GST REG-06, "Registration Number"): `36` + the PAN + entity digit + `Z` + checksum | certificate issued — **paste it into Vercel and redeploy** |
+
+  The GST registration certificate has been issued and its number cross-checks
+  against the PAN on file: state code `36` (Telangana), the embedded PAN matches,
+  and the PAN's 4th character `F` agrees with the certificate's "Constitution of
+  Business: Partnership". Until `VITE_GSTIN` is set in Vercel **and the project
+  is redeployed**, the tax invoice, Terms, Contact page, storefront footer and
+  order-confirmation email all omit the GSTIN by design rather than print a
+  placeholder.
 
   These are `VITE_*`, so they are baked in at **build time** — set them in Vercel
   and **redeploy**, or nothing changes.

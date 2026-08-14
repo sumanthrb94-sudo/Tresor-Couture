@@ -11,6 +11,7 @@
 //
 import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
 import { validateCsrfToken } from '../_lib/csrf.js';
+import { sellerGstin, sellerLegalName } from '../_lib/sellerLegal.js';
 import { getDb } from '../_lib/firebaseAdmin.js';
 import { verifyIdToken } from '../_lib/auth.js';
 import { withSentry } from '../_lib/sentry.js';
@@ -73,6 +74,7 @@ function renderEmail(order: Record<string, unknown>, customerName: string): { su
     .map(escapeHtml)
     .join(', ');
   const id = escapeHtml(String(order.id || ''));
+  const gstin = sellerGstin();
 
   const html = `<!doctype html><html><body style="margin:0;background:#FBF7EE;font-family:Georgia,'Times New Roman',serif;color:#2A1F12;">
   <div style="max-width:560px;margin:0 auto;padding:28px 22px;">
@@ -91,9 +93,12 @@ function renderEmail(order: Record<string, unknown>, customerName: string): { su
     <p style="font-size:13px;color:#5D4E36;">Delivering to: ${addr}</p>
     <p style="font-size:13px;color:#5D4E36;">Payment: Cash on Delivery.</p>
     <p style="font-size:12px;color:#8A7656;margin-top:24px;">Dispatched within 48 hours · free shipping over ₹1,999.</p>
+    <p style="font-size:11px;color:#A2917A;margin-top:16px;border-top:1px solid #EEE6D6;padding-top:12px;">
+      ${escapeHtml(sellerLegalName())}${gstin ? ` · GSTIN ${escapeHtml(gstin)}` : ''}
+    </p>
   </div></body></html>`;
 
-  const text = `TRESOR COUTURE — Order confirmed\nOrder ${id}\nTotal: ${rupee(Number(order.total) || 0)}\nDelivering to: ${addr}\nPayment: Cash on Delivery.\nThank you for your order.`;
+  const text = `TRESOR COUTURE — Order confirmed\nOrder ${id}\nTotal: ${rupee(Number(order.total) || 0)}\nDelivering to: ${addr}\nPayment: Cash on Delivery.\nThank you for your order.\n\n${sellerLegalName()}${gstin ? ` · GSTIN ${gstin}` : ''}`;
   return { subject: `Your Tresor Couture order ${id} is confirmed`, html, text };
 }
 
