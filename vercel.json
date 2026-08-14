@@ -15,6 +15,10 @@
     {
       "source": "/auth/action",
       "destination": "/index.html"
+    },
+    {
+      "source": "/((?!api/|__/|assets/).*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [

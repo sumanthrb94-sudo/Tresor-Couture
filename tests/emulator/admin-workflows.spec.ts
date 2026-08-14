@@ -243,7 +243,7 @@ test('Admin ↔ Customer · Concurrent real-time support chat', async ({ browser
     await rec.step(cust, 'Customer session signed in');
     await rec.step(adm, 'Admin session signed in — both live concurrently');
 
-    await cust.goto('/#/account/orders', { waitUntil: 'domcontentloaded' });
+    await cust.goto('/account/orders', { waitUntil: 'domcontentloaded' });
     await cust.waitForTimeout(1200);
     await cust.getByRole('button', { name: /^chat\b/i }).first().click();
     const input = cust.getByPlaceholder('Type a message…');

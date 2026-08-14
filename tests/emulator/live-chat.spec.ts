@@ -18,12 +18,12 @@ async function dismissConsent(page: Page) {
 // Avoid waitForLoadState('networkidle') — a live Firestore listener keeps a
 // connection open so the page never reaches network idle.
 async function signIn(page: Page, email: string) {
-  await page.goto('/#/login', { waitUntil: 'domcontentloaded' });
+  await page.goto('/login', { waitUntil: 'domcontentloaded' });
   await page.locator('#login-email').waitFor({ state: 'visible', timeout: 20_000 });
   await page.locator('#login-email').fill(email);
   await page.locator('#login-password').fill(PASSWORD);
   await page.getByRole('button', { name: /^login$/i }).click();
-  await page.waitForFunction(() => !location.hash.includes('login'), null, { timeout: 25_000 });
+  await page.waitForFunction(() => !location.pathname.includes('login'), null, { timeout: 25_000 });
   await dismissConsent(page);
 }
 
@@ -37,7 +37,7 @@ test('per-order live chat: customer <-> admin real-time, both directions', async
   const custCtx = await browser.newContext();
   const cust = await custCtx.newPage();
   await signIn(cust, 'customer@test.local');
-  await cust.goto('/#/account/orders', { waitUntil: 'domcontentloaded' });
+  await cust.goto('/account/orders', { waitUntil: 'domcontentloaded' });
   await cust.getByRole('button', { name: /^chat\b/i }).first().click();
   const custInput = cust.getByPlaceholder('Type a message…');
   await expect(custInput).toBeVisible({ timeout: 15_000 });
@@ -49,7 +49,7 @@ test('per-order live chat: customer <-> admin real-time, both directions', async
   const admCtx = await browser.newContext();
   const adm = await admCtx.newPage();
   await signIn(adm, 'admin@test.local');
-  await adm.goto('/#/admin/support', { waitUntil: 'domcontentloaded' });
+  await adm.goto('/admin/support', { waitUntil: 'domcontentloaded' });
   await expect(adm.getByRole('heading', { name: /support/i })).toBeVisible({ timeout: 20_000 });
 
   await expect(adm.getByText('Test Customer').first()).toBeVisible({ timeout: 20_000 });

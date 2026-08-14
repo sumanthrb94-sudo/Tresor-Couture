@@ -13,12 +13,12 @@ const OUT = path.resolve(process.cwd(), 'tests/emulator/screens-ui');
 fs.mkdirSync(OUT, { recursive: true });
 
 async function signIn(page: Page, email: string) {
-  await page.goto('/#/login', { waitUntil: 'domcontentloaded' });
+  await page.goto('/login', { waitUntil: 'domcontentloaded' });
   await page.locator('#login-email').waitFor({ state: 'visible', timeout: 20_000 });
   await page.locator('#login-email').fill(email);
   await page.locator('#login-password').fill(PASSWORD);
   await page.getByRole('main').getByRole('button', { name: /^login$/i }).click();
-  await page.waitForFunction(() => !location.hash.includes('login'), null, { timeout: 25_000 });
+  await page.waitForFunction(() => !location.pathname.includes('login'), null, { timeout: 25_000 });
   const c = page.getByRole('button', { name: /essential only|accept/i });
   if (await c.first().isVisible().catch(() => false)) await c.first().click().catch(() => {});
 }
@@ -28,7 +28,7 @@ test('admin section nav expands on mobile', async ({ browser }: { browser: Brows
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const adm = await ctx.newPage();
   await signIn(adm, 'admin@test.local');
-  await adm.goto('/#/admin/returns', { waitUntil: 'domcontentloaded' });
+  await adm.goto('/admin/returns', { waitUntil: 'domcontentloaded' });
   await adm.waitForTimeout(1500);
 
   // Collapsed: the disclosure names the current section.
@@ -54,7 +54,7 @@ test('customer sees an unread badge after the atelier replies', async ({ browser
   const custCtx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const cust = await custCtx.newPage();
   await signIn(cust, 'customer@test.local');
-  await cust.goto('/#/account/orders', { waitUntil: 'domcontentloaded' });
+  await cust.goto('/account/orders', { waitUntil: 'domcontentloaded' });
   await cust.getByRole('button', { name: /^chat\b/i }).first().click();
   const input = cust.getByPlaceholder('Type a message…');
   await expect(input).toBeVisible({ timeout: 15_000 });
@@ -62,14 +62,14 @@ test('customer sees an unread badge after the atelier replies', async ({ browser
   await input.press('Enter');
   await cust.waitForTimeout(1200);
   // Leave the account page entirely so the chat is closed and unread can accrue.
-  await cust.goto('/#/', { waitUntil: 'domcontentloaded' });
+  await cust.goto('/', { waitUntil: 'domcontentloaded' });
   await cust.waitForTimeout(500);
 
   // Admin replies.
   const admCtx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const adm = await admCtx.newPage();
   await signIn(adm, 'admin@test.local');
-  await adm.goto('/#/admin/support', { waitUntil: 'domcontentloaded' });
+  await adm.goto('/admin/support', { waitUntil: 'domcontentloaded' });
   await adm.getByText('Test Customer').first().click({ timeout: 20_000 });
   const admInput = adm.getByPlaceholder('Type your reply…');
   await expect(admInput).toBeVisible({ timeout: 15_000 });
@@ -78,7 +78,7 @@ test('customer sees an unread badge after the atelier replies', async ({ browser
   await adm.waitForTimeout(1500);
 
   // Customer returns to Orders — the Chat button should now carry the badge.
-  await cust.goto('/#/account/orders', { waitUntil: 'domcontentloaded' });
+  await cust.goto('/account/orders', { waitUntil: 'domcontentloaded' });
   const badged = cust.getByRole('button', { name: /chat — \d+ new repl/i }).first();
   await expect(badged).toBeVisible({ timeout: 20_000 });
   await cust.screenshot({ path: path.join(OUT, 'customer-chat-unread-badge.png'), fullPage: false });

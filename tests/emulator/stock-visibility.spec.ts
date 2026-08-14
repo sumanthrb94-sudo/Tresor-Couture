@@ -39,15 +39,17 @@ test('Storefront · sold-out product is badged, unbuyable, and off the home rail
   try {
     // --- Home page: stock-outs are not merchandised -------------------------
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    // Wait on content, not networkidle: the Firestore listener keeps a
+    // long-poll channel open, so the network never goes idle.
+    await page.locator('.card-product').first().waitFor({ timeout: 30_000 });
     await rec.step(page, 'Home page', 'Rails advertise only pieces that can be shipped.');
     await expect(page.getByText(SOLD_OUT)).toHaveCount(0);
     rec.note('Sold-out product absent from every home rail',
       'Home rails are merchandising, so they filter on availability.');
 
     // --- Shop grid: still discoverable, clearly marked -----------------------
-    await page.goto('/#/shop');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/shop');
+    await page.locator('.card-product').first().waitFor({ timeout: 30_000 });
     const card = page.locator('.card-product').filter({ hasText: SOLD_OUT });
     await expect(card).toHaveCount(1);
     await card.scrollIntoViewIfNeeded();
@@ -88,8 +90,8 @@ test('Storefront · sold-out product is badged, unbuyable, and off the home rail
       `${total} cards; the first sold-out is at position ${firstSoldOut + 1} and everything after it is also sold out.`);
 
     // --- Product page: reachable, but not purchasable ------------------------
-    await page.goto('/#/product/e2e-sold-out');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/product/e2e-sold-out');
+    await page.locator('#pdp-add-to-bag').waitFor({ timeout: 30_000 });
     await rec.step(page, 'Product page', 'The URL still resolves, so shared links do not 404.');
     await expect(page.getByText(/out of stock — currently unavailable/i)).toBeVisible();
     // Target the PDP's own CTA by id: the "you might also like" rail below it
