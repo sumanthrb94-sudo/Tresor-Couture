@@ -3,6 +3,8 @@ import { Cookie } from 'lucide-react';
 import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../context/AuthContext';
 import { consentsApi } from '../lib/firebase';
+import { initAnalytics } from '../lib/analytics';
+import { initClarity } from '../lib/clarity';
 
 /**
  * Cookie / marketing consent banner (DPDP). Shows on first visit; the choice is
@@ -33,6 +35,12 @@ const ConsentBanner: React.FC = () => {
     // Best-effort server record for signed-in users (no-op for guests / on failure).
     if (user) {
       consentsApi.setMine({ analytics, marketing, policyVersion: POLICY_VERSION }).catch(() => {});
+    }
+    // Start the consent-gated trackers immediately on opt-in rather than on
+    // the next page load. Both no-op if already initialised or unconfigured.
+    if (analytics) {
+      initAnalytics(true);
+      initClarity(true);
     }
     setVisible(false);
   };

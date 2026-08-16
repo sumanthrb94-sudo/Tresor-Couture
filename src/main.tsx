@@ -5,6 +5,7 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 import App from './App.tsx';
 import './index.css';
 import { initAnalytics } from './lib/analytics';
+import { initClarity } from './lib/clarity';
 import { initSentry } from './lib/sentry';
 
 // Initialize Sentry first so it captures any errors during app startup.
@@ -23,6 +24,7 @@ function readAnalyticsConsent(): boolean {
 }
 const analyticsConsent = readAnalyticsConsent();
 initAnalytics(analyticsConsent);
+initClarity(analyticsConsent);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
