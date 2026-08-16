@@ -53,8 +53,16 @@ LISTS = {
     'Live on Site': ['Yes', 'No'],
     'Listing Status': ['Active', 'Draft', 'Retired'],
     'Sticker': ['New In', 'Bestseller', 'Trending', 'Limited'],
-    'Movement': ['Opening', 'Received', 'Sold', 'Returned', 'Adjustment'],
+    'Movement': ['Opening stock', 'Received (new stock)', 'Sold - Online', 'Sold - In Store',
+                 'Sold - Export', 'Returned (back to stock)', 'Damaged / Write-off',
+                 'Sample / Gift', 'Count correction'],
     'Supplier': ['Supplier A (rename me)', 'Supplier B (rename me)', 'Atelier — own production'],
+    'Channel': ['Website - COD', 'Website - Prepaid', 'In Store', 'WhatsApp / DM', 'Export'],
+    'Payment': ['COD - to collect', 'COD - collected', 'Prepaid - paid', 'Refunded', 'Partly refunded'],
+    'Fulfilment': ['Placed', 'Packed', 'Shipped', 'Delivered', 'Cancelled'],
+    'Return Status': ['Requested', 'Approved', 'Pickup arranged', 'Received back', 'Refunded', 'Replaced', 'Rejected'],
+    'Task Area': ['Marketing', 'SEO', 'Compliance', 'Finance', 'Catalogue', 'Security', 'Operations'],
+    'Task Status': ['Pending', 'In progress', 'Blocked', 'Done'],
 }
 
 MAX_ROWS = 200   # validations + prefilled formulas reach down to here
@@ -92,6 +100,7 @@ def build(path: str, with_data: bool) -> None:
         ws.column_dimensions[get_column_letter(i)].width = width
     ws.row_dimensions[1].height = 28
     ws.freeze_panes = 'E2'
+    ws.auto_filter.ref = f'A1:AC{MAX_ROWS}'
 
     def formulas_for(r: int) -> dict:
         return {
@@ -129,20 +138,20 @@ def build(path: str, with_data: bool) -> None:
         for p in CAT:
             received = '2026-07-31' if p['master'] in ('Lehenga Cholis', 'Sarees') else '2026-07-09'
             if p['master'] in ('Lehenga Cholis', 'Sarees'):
-                log_entries.append((received, p['id'], 'Received', p['stock'], 'PO-DROP-01', 'Bridal drop intake'))
+                log_entries.append((received, p['id'], 'Received (new stock)', p['stock'], 'PO-DROP-01', 'Bridal drop intake'))
                 if p['id'] == 'lc-zf-rose':
-                    log_entries.append(('2026-08-05', p['id'], 'Sold', -1, 'ORD-8L4R', 'COD order'))
-                    log_entries.append(('2026-08-12', p['id'], 'Returned', 1, 'RET-8L4R', 'Size exchange requested; restocked after inspection'))
+                    log_entries.append(('2026-08-05', p['id'], 'Sold - Online', -1, 'ORD-8L4R', 'Prepaid order'))
+                    log_entries.append(('2026-08-12', p['id'], 'Returned (back to stock)', 1, 'RET-8L4R', 'Size exchange requested; restocked after inspection'))
             else:
                 sold = 1 if p['id'] in SOLD else 0
                 adj = -1 if p['id'] == 'RI280' else 0
                 opening = p['stock'] + sold - adj
-                log_entries.append((received, p['id'], 'Opening', opening, 'IMPORT-0709', 'Opening stock from supplier import'))
+                log_entries.append((received, p['id'], 'Opening stock', opening, 'IMPORT-0709', 'Stock on hand when this sheet was started'))
                 if sold:
                     d, ref = SOLD[p['id']]
-                    log_entries.append((d, p['id'], 'Sold', -1, ref, 'COD order'))
+                    log_entries.append((d, p['id'], 'Sold - Online', -1, ref, 'COD order'))
                 if adj:
-                    log_entries.append(('2026-08-02', p['id'], 'Adjustment', -1, 'ADJ-001', '1 reel water-damaged — written off'))
+                    log_entries.append(('2026-08-02', p['id'], 'Damaged / Write-off', -1, 'ADJ-001', '1 reel water-damaged'))
 
         for r, p in enumerate(CAT, start=2):
             reorder = 2 if p['master'] in ('Lehenga Cholis', 'Sarees') else 1
@@ -232,8 +241,8 @@ def build(path: str, with_data: bool) -> None:
 
     # ── Stock Log sheet ──────────────────────────────────────────────────────
     ws_s = wb.create_sheet('Stock Log')
-    log_cols = [('Date', 12), ('Product ID', 16), ('Movement', 12), ('Qty (+in / −out)', 14),
-                ('Reference (PO / Order)', 20), ('Notes', 44)]
+    log_cols = [('Date', 12), ('Product ID', 16), ('What Happened', 22), ('Qty  (+ in / − out)', 14),
+                ('Stock After', 11), ('Reference (PO / Order no.)', 22), ('Notes', 44)]
     for i, (name, width) in enumerate(log_cols, start=1):
         cell = ws_s.cell(row=1, column=i, value=name)
         cell.font = HDR_FONT
@@ -242,10 +251,11 @@ def build(path: str, with_data: bool) -> None:
     ws_s.freeze_panes = 'A2'
 
     entries = sorted(log_entries) if with_data else [
-        ('2026-08-01', 'lc-example-1', 'Received', 3, 'PO-001', 'EXAMPLE ROW — first stock intake'),
+        ('2026-08-01', 'lc-example-1', 'Received (new stock)', 3, 'PO-001', 'EXAMPLE ROW — first stock intake'),
     ]
     for r, (d, sku, mv, qty, ref, note) in enumerate(entries, start=2):
-        for i, v in enumerate([d, sku, mv, qty, ref, note], start=1):
+        balance = f'=IF($B{r}="","",SUMIFS($D$2:$D{r},$B$2:$B{r},$B{r}))'
+        for i, v in enumerate([d, sku, mv, qty, balance, ref, note], start=1):
             cell = ws_s.cell(row=r, column=i, value=v)
             cell.font = BASE
             cell.border = THIN
@@ -254,47 +264,165 @@ def build(path: str, with_data: bool) -> None:
             for i in range(1, 7):
                 ws_s.cell(row=r, column=i).fill = GREY_FILL
 
+    for r in range(len(entries) + 2, LOG_ROWS + 1):
+        ws_s[f'E{r}'] = f'=IF($B{r}="","",SUMIFS($D$2:$D{r},$B$2:$B{r},$B{r}))'
+        ws_s[f'E{r}'].font = BASE
+    ws_s.auto_filter.ref = f'A1:G{LOG_ROWS}'
+
     dv_mv = DataValidation(type='list', formula1=list_ranges['Movement'], allow_blank=True)
     ws_s.add_data_validation(dv_mv)
     dv_mv.add(f'C2:C{LOG_ROWS}')
+
+
+    # ── Orders & Returns sheet ───────────────────────────────────────────────
+    ws_o = wb.create_sheet('Orders & Returns')
+    o_cols = [('Order Date', 12), ('Order No.', 14), ('Channel', 16), ('Customer', 18),
+              ('City / Country', 14), ('Product ID', 16), ('Qty', 6), ('Order Value (₹)', 13),
+              ('Payment', 15), ('Fulfilment', 12), ('Return Status', 14), ('Refund (₹)', 11),
+              ('Refund Date', 12), ('Notes', 40)]
+    for i, (name, width) in enumerate(o_cols, start=1):
+        cell = ws_o.cell(row=1, column=i, value=name)
+        cell.font = HDR_FONT
+        cell.fill = HDR_FILL
+        ws_o.column_dimensions[get_column_letter(i)].width = width
+    ws_o.freeze_panes = 'A2'
+    ws_o.auto_filter.ref = 'A1:N400'
+
+    if with_data:
+        orders = [
+            ('2026-08-02', 'ORD-8H2K', 'Website - COD', 'Customer 1', 'Hyderabad', '6343', 1, 7000,
+             'COD - collected', 'Delivered', None, None, None, ''),
+            ('2026-08-04', 'ORD-8J7Q', 'Website - COD', 'Customer 2', 'Secunderabad', '6988', 1, 999,
+             'COD - collected', 'Delivered', None, None, None, ''),
+            ('2026-08-05', 'ORD-8L4R', 'Website - Prepaid', 'Customer 3', 'Hyderabad', 'lc-zf-rose', 1, 35999,
+             'Refunded', 'Delivered', 'Refunded', 35999, '2026-08-14',
+             'Size exchange requested; piece restocked after inspection — see Stock Log RET-8L4R'),
+            ('2026-08-07', 'ORD-8N1D', 'Website - COD', 'Customer 4', 'Warangal', 'HA4536', 1, 3800,
+             'COD - collected', 'Delivered', None, None, None, ''),
+            ('2026-08-09', 'ORD-8Q5S', 'In Store', 'Walk-in', 'Hyderabad', 'HA6320', 1, 4800,
+             'Prepaid - paid', 'Delivered', None, None, None, 'Studio walk-in'),
+            ('2026-08-11', 'ORD-8T3M', 'Website - COD', 'Customer 5', 'Vijayawada', 'HA3858', 1, 1299,
+             'COD - to collect', 'Shipped', None, None, None, ''),
+            ('2026-08-13', 'ORD-8V9A', 'WhatsApp / DM', 'Customer 6', 'Hyderabad', 'MI263', 1, 450,
+             'Prepaid - paid', 'Delivered', None, None, None, 'Instagram DM enquiry'),
+        ]
+    else:
+        orders = [('2026-08-01', 'ORD-0001', 'Website - COD', 'EXAMPLE — delete', 'Hyderabad',
+                   'lc-example-1', 1, 1299, 'COD - to collect', 'Placed', None, None, None,
+                   'EXAMPLE ROW — one row per order; fill Return/Refund columns only if a return happens')]
+    for r, row in enumerate(orders, start=2):
+        for i, v in enumerate(row, start=1):
+            cell = ws_o.cell(row=r, column=i, value=v)
+            cell.font = BASE
+            cell.border = THIN
+        ws_o.cell(row=r, column=1).number_format = 'yyyy-mm-dd'
+        ws_o.cell(row=r, column=8).number_format = '"₹"#,##0'
+        ws_o.cell(row=r, column=12).number_format = '"₹"#,##0'
+        ws_o.cell(row=r, column=13).number_format = 'yyyy-mm-dd'
+        if not with_data:
+            for i in range(1, 15):
+                ws_o.cell(row=r, column=i).fill = GREY_FILL
+    for name, col in [('Channel', 'C'), ('Payment', 'I'), ('Fulfilment', 'J'), ('Return Status', 'K')]:
+        dv = DataValidation(type='list', formula1=list_ranges[name], allow_blank=True)
+        ws_o.add_data_validation(dv)
+        dv.add(f'{col}2:{col}400')
+
+    # ── Action Tracker sheet (the pending checklist) ─────────────────────────
+    ws_t = wb.create_sheet('Action Tracker')
+    t_cols = [('#', 4), ('Task', 62), ('Area', 12), ('Status', 12), ('Owner', 14),
+              ('Done Date', 11), ('Notes', 46)]
+    for i, (name, width) in enumerate(t_cols, start=1):
+        cell = ws_t.cell(row=1, column=i, value=name)
+        cell.font = HDR_FONT
+        cell.fill = HDR_FILL
+        ws_t.column_dimensions[get_column_letter(i)].width = width
+    ws_t.freeze_panes = 'A2'
+    ws_t.auto_filter.ref = 'A1:G120'
+
+    TASKS = [
+        ('Rotate the Firebase service-account key (Firebase Console → Project settings → Service accounts → generate new, delete old)', 'Security', 'Pending', 'You', 'Current key was shared in chat — treat as exposed'),
+        ('Regenerate the live Razorpay Key Secret; update RAZORPAY_KEY_SECRET in Vercel', 'Security', 'Pending', 'You', 'Old secret appeared in a screenshot'),
+        ('Paste VITE_GSTIN (from the GST certificate) into Vercel and redeploy', 'Compliance', 'Pending', 'You', 'Until then invoices/footer omit the GSTIN by design'),
+        ('Update VITE_BUSINESS_ADDRESS in Vercel to the full registered address (Gachibowli · 500046)', 'Compliance', 'Pending', 'You', 'Must match the GST certificate on invoices'),
+        ('Add CRON_SECRET + GOOGLE_REVIEW_URL in Vercel to switch on the review-request emails', 'Marketing', 'Pending', 'You', 'Cron is deployed and waiting on these two values'),
+        ('Create the free Microsoft Clarity project; paste VITE_CLARITY_PROJECT_ID into Vercel; redeploy', 'Marketing', 'Pending', 'You', 'Heatmaps + session recordings, consent-gated'),
+        ('Connect Google Search Console (Domain property, DNS TXT) and submit sitemap.xml', 'SEO', 'Pending', 'You', '62 real URLs are live and waiting to be indexed'),
+        ('Request indexing for home, Lehenga Cholis category, and 2–3 product pages (URL Inspection)', 'SEO', 'Pending', 'You', 'After Search Console verifies'),
+        ('Google Business Profile: rewrite description (boutique, not fabric house), add secondary categories, In-store shopping, full address + PIN', 'Marketing', 'Pending', 'You', 'Draft description was provided in chat'),
+        ('Google Business Profile: upload logo, cover photo, 15–25 real photos; set hours; add Products', 'Marketing', 'Pending', 'You', 'Profile strength currently 64%'),
+        ('Collect the first 15–25 Google reviews (ask at handover + review-request email)', 'Marketing', 'Pending', 'You', 'Zero reviews today — the #1 local ranking factor'),
+        ('CA: confirm GST rates (5% vs 18% over ₹2,500/piece) and HSN codes per category', 'Finance', 'Pending', 'CA', 'Then per-product rates get wired into checkout + invoices'),
+        ('Replace illustrative buying prices in this workbook with real PO costs', 'Finance', 'Pending', 'You', 'Blue cells on the Catalogue sheet'),
+        ('Reshoot 3 product photos: HA6378, MI263, RI5687 (warehouse snapshots today)', 'Catalogue', 'Pending', 'You', 'Flagged in Photo Quality column'),
+        ('One live low-value Razorpay test payment after the key rotation', 'Finance', 'Pending', 'You', 'Proves the full prepaid path end to end'),
+        ('Open Google Ads account with the new-advertiser spend-match credit (Search only)', 'Marketing', 'Blocked', 'You', 'Do AFTER reviews exist + GA4 conversions imported'),
+        ('Set SENTRY_DSN in Vercel for server error alerting', 'Operations', 'Pending', 'You', 'Hooks are wired on all 12 API functions, currently inert'),
+        ('If exporting: IEC registration + LUT filing (zero-rated exports without paying IGST)', 'Finance', 'Pending', 'CA', 'Only when international orders start'),
+    ]
+    for r, (task, area, status, owner, note) in enumerate(TASKS, start=2):
+        for i, v in enumerate([r - 1, task, area, status, owner, None, note], start=1):
+            cell = ws_t.cell(row=r, column=i, value=v)
+            cell.font = BASE
+            cell.border = THIN
+            cell.alignment = Alignment(wrap_text=(i in (2, 7)), vertical='top')
+        ws_t.row_dimensions[r].height = 30
+    for name, col in [('Task Area', 'C'), ('Task Status', 'D')]:
+        dv = DataValidation(type='list', formula1=list_ranges[name], allow_blank=True)
+        ws_t.add_data_validation(dv)
+        dv.add(f'{col}2:{col}120')
+    green = PatternFill('solid', fgColor='D8EFDD')
+    amber2 = PatternFill('solid', fgColor='FBEAC9')
+    red2 = PatternFill('solid', fgColor='F8D3D0')
+    ws_t.conditional_formatting.add('D2:D120', FormulaRule(formula=['$D2="Done"'], fill=green))
+    ws_t.conditional_formatting.add('D2:D120', FormulaRule(formula=['$D2="Pending"'], fill=amber2))
+    ws_t.conditional_formatting.add('D2:D120', FormulaRule(formula=['$D2="Blocked"'], fill=red2))
 
     # ── How To Use sheet ─────────────────────────────────────────────────────
     ws_h = wb.create_sheet('How To Use')
     ws_h.column_dimensions['A'].width = 4
     ws_h.column_dimensions['B'].width = 120
     lines = [
-        ('TRESOR COUTURE — MASTER CATALOGUE', True),
+        ('TRESOR COUTURE — MASTER CATALOGUE (read this page first)', True),
         ('', False),
-        ('ONE ROW = ONE SELLABLE SKU. Each colourway is its own row because it is separately purchasable stock '
-         '(this mirrors the website database: the Product ID column is the site id, so the two always reconcile).', False),
+        ('WHAT EACH SHEET IS FOR', True),
+        ('Catalogue = your products. One row per item you sell. This is where prices, stock and photos live.', False),
+        ('Stock Log = a diary of stock. Every time stock moves — in or out — you add ONE line at the bottom. You never edit old lines.', False),
+        ('Orders & Returns = your orders. One row per customer order. Refunds and return progress are tracked HERE, because a refund is about money, not stock.', False),
+        ('Action Tracker = your to-do list. Filter the Status column to "Pending" to see everything left to do; set it to "Done" with a date when finished.', False),
+        ('Lists = the options inside every dropdown. Add a new supplier or category here once and every dropdown learns it.', False),
         ('', False),
-        ('SHEETS', True),
-        ('Catalogue — the single unified sheet: identity, category, pricing, tax, stock, photo and listing state per SKU.', False),
-        ('Stock Log — every stock movement, one row per event: Opening / Received / Sold / Returned / Adjustment. '
-         'This answers "when did the stock come" permanently — never edit old rows, only add new ones.', False),
-        ('Lists — the dropdown sources. Add a supplier or category here and every dropdown picks it up.', False),
+        ('THE STOCK LOG, EXPLAINED SIMPLY', True),
+        ('Think of it as a bank passbook, but for stock instead of money. Stock coming in = deposit (+). Stock going out = withdrawal (−). '
+         'The "Stock After" column is the balance after each line — watch it go 5 → 4 → 5 for a lehenga that was sold and then returned.', False),
+        ('You only ever ADD a line at the bottom. The Catalogue compares this diary against the Stock Qty column and shows a red CHECK if they ever disagree — that is how you catch a movement nobody wrote down.', False),
         ('', False),
-        ('HOW STOCK RECONCILES', True),
-        ('"Stock per Log" sums the Stock Log for that Product ID. "Log Match" turns red (CHECK) whenever the log and '
-         'the Stock Qty column disagree — that is how you catch untracked movements. Keep Stock Qty as the live truth '
-         'and record every change in the log, and the two stay green.', False),
+        ('WHICH LINE DO I ADD WHEN… (every scenario)', True),
+        ('New stock arrives from a supplier  →  "Received (new stock)", qty +N, reference = PO number.', False),
+        ('Someone buys on the website  →  "Sold - Online", qty −1, reference = order number. Also add the order on the Orders & Returns sheet.', False),
+        ('Someone buys at the studio  →  "Sold - In Store", qty −1.', False),
+        ('An export / international order ships  →  "Sold - Export", qty −1. (GST is zero-rated on exports — flag it to your CA.)', False),
+        ('A customer returns an item and it is resellable  →  "Returned (back to stock)", qty +1. The REFUND goes on the Orders & Returns sheet, not here.', False),
+        ('A customer returns an item and it is damaged  →  add NOTHING here (stock is not coming back); record the refund on Orders & Returns; optionally "Damaged / Write-off" if it was restocked first.', False),
+        ('An item is damaged / lost in the studio  →  "Damaged / Write-off", qty −1.', False),
+        ('You gift a piece or send a sample  →  "Sample / Gift", qty −1.', False),
+        ('A physical count finds the sheet is wrong  →  "Count correction", qty +/− the difference, note why.', False),
+        ('', False),
+        ('REFUNDS IN ONE SENTENCE', True),
+        ('Money out = Orders & Returns sheet (Refund column). Item back on the shelf = one "+1 Returned" line in the Stock Log. A refund with no restockable item touches ONLY the Orders sheet.', False),
+        ('', False),
+        ('HOW TO FILTER', True),
+        ('Every sheet already has filter arrows in row 1. Examples: Action Tracker → Status arrow → tick "Pending" = everything still to do. '
+         'Stock Log → Product ID arrow → one product = that product\'s full history. Orders & Returns → Return Status arrow = all open returns.', False),
         ('', False),
         ('CELL COLOURS', True),
-        ('Blue text = a number you typed (e.g. Buying Price). Black = calculated, do not overwrite '
-         '(Margin %, Stock Status, Stock per Log, Log Match).', False),
-        ('Red fill = OUT OF STOCK or a log mismatch. Amber fill = at/below reorder level.', False),
+        ('Blue text = numbers you typed (e.g. Buying Price). Black = calculated for you — do not overwrite (Margin %, Stock Status, Stock After, Log Match).', False),
+        ('Red fill = out of stock, or the log disagrees with the stock column. Amber = at/below reorder level, or a Pending task. Green = a Done task.', False),
         ('', False),
         ('ASSUMPTIONS IN THE SAMPLE FILE', True),
-        ('Buying prices are ILLUSTRATIVE (≈58–62% of selling price) — the database does not store cost prices yet. '
-         'Replace them with real purchase-order costs. Source: generated from the live site database on 2026-08-16.', False),
-        ('GST Rate defaults to 5% and HSN is left blank pending your CA\'s confirmation. Note: garments above ₹2,500 '
-         'per piece attract 18% under the Sept-2025 rate structure — confirm before relying on the 5% default.', False),
-        ('The Stock Log sample month (9 Jul – 16 Aug 2026) uses real products and current stock levels; the individual '
-         'sale/return events are illustrative examples in the correct format.', False),
-        ('', False),
-        ('PHOTOS', True),
-        ('The Photo column holds a thumbnail (sample file) and Image URL holds the live site image. For new products, '
-         'paste the image URL; add the thumbnail with Insert → Picture → Place in Cell if you want it inline.', False),
+        ('Buying prices are ILLUSTRATIVE (the website database stores no cost prices yet) — replace with real PO costs. '
+         'GST is left at 5% with HSN blank pending your CA; garments above ₹2,500/piece likely attract 18%. '
+         'The orders and stock movements are format examples using your real products and current stock levels. '
+         'Generated from the live site database on 2026-08-16.', False),
     ]
     for r, (text, bold) in enumerate(lines, start=2):
         cell = ws_h[f'B{r}']
@@ -303,7 +431,8 @@ def build(path: str, with_data: bool) -> None:
         cell.alignment = Alignment(wrap_text=True, vertical='top')
         ws_h.row_dimensions[r].height = 15 if bold or not text else 30
 
-    wb.move_sheet('Lists', offset=3)   # order: Catalogue, Stock Log, How To Use, Lists
+    order = ['Catalogue', 'Stock Log', 'Orders & Returns', 'Action Tracker', 'How To Use', 'Lists']
+    wb._sheets = [wb[t] for t in order]
     wb.save(path)
     print('wrote', path)
 
