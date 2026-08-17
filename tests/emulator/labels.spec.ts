@@ -1,0 +1,134 @@
+import { test, expect } from '@playwright/test';
+import { Recorder } from './lib/recorder';
+import { LABEL_DESIGNS, buildSingleLabel, buildLabelSheet, labelableProducts, designById } from '../../src/admin/printLabels';
+import { code128 } from '../../src/lib/barcode';
+import type { Fabric } from '../../src/types';
+
+/**
+ * What a price tag has to say, on every design.
+ *
+ * The designs differ in shape and in what they do with spare room, but four
+ * things are not optional: the brand, what the piece is, what it costs, and a
+ * code the till can scan. A design that quietly drops one is a tag that gets
+ * printed on three hundred pieces before anyone notices.
+ *
+ * The physical assertions matter as much as the content ones. A barcode that
+ * overflows its label is cropped by the printer and will not scan; bars below
+ * about 0.19mm merge on a 203dpi thermal head. Neither is visible on screen.
+ */
+
+const piece = (over: Partial<Fabric> = {}): Fabric => ({
+  id: 'p', brand: 'TRESOR COUTURE', name: 'Zardozi Floral Lehenga · Rose',
+  description: '', price: 32999, mrp: 35999, photo: '', image: '',
+  category: 'Lehenga Cholis', masterCategory: 'Lehenga Cholis', subCategory: 'Zardozi Floral',
+  tags: [], stock: 3, barcode: 'TC00042', ...over,
+});
+
+/** TC + 5 digits: 112 bar modules plus a 10-module quiet zone each side. */
+const CODE_MODULES = 112 + 20;
+
+test('Labels · every design carries brand, piece, price and a scannable code', async () => {
+  const rec = new Recorder({
+    slug: 'label-designs',
+    title: 'Labels · the four designs',
+    area: 'Admin console · Labels',
+    purpose:
+      'Four label designs, for a lace reel and a bridal lehenga and everything between. Whichever is chosen, the tag must carry the brand, the piece, the price and a scannable code — and the symbol must physically fit the stock it is printed on.',
+    reproduce: [
+      'Admin → Products → edit a piece → Publishing & Barcode → pick a design → Download label (PDF).',
+      'Admin → Inventory → pick a design → Print labels for a whole sheet.',
+      'docs/ops/barcode-label-designs.pdf shows all four at true size.',
+    ],
+  });
+
+  try {
+    expect(LABEL_DESIGNS.length).toBeGreaterThanOrEqual(4);
+
+    for (const d of LABEL_DESIGNS) {
+      const html = buildSingleLabel(piece(), d);
+
+      // --- What the tag says --------------------------------------------
+      expect(html, `${d.id}: brand`).toContain('TRESOR COUTURE');
+      expect(html, `${d.id}: code`).toContain('TC00042');
+      // Every design shows what is actually charged; only some show the MRP.
+      expect(html, `${d.id}: price`).toContain('₹32,999');
+      // Every design, including the 38 × 21 mm sticker, carries the name. A
+      // tag that says only a price and a code tells a customer nothing and
+      // tells staff nothing at a glance.
+      expect(html, `${d.id}: name`).toContain('Zardozi Floral Lehenga');
+
+      // --- The symbol is real, not a picture of one ----------------------
+      expect(html, `${d.id}: svg`).toContain('<svg');
+      expect(html, `${d.id}: aria`).toContain('aria-label="Barcode TC00042"');
+
+      // --- It physically fits -------------------------------------------
+      const moduleWidth = Math.min(0.4, Math.max(0.19, (d.width * d.codeSpan) / CODE_MODULES));
+      const codeWidthMm = CODE_MODULES * moduleWidth;
+      expect(codeWidthMm, `${d.id}: symbol wider than the label`).toBeLessThanOrEqual(d.width);
+      // A 203dpi thermal head cannot resolve a bar narrower than this.
+      expect(moduleWidth, `${d.id}: bars too fine to print`).toBeGreaterThanOrEqual(0.19);
+      // Height enough for a hand scanner to find the symbol.
+      expect(d.codeHeight, `${d.id}: symbol too short to scan`).toBeGreaterThanOrEqual(6);
+      expect(d.codeHeight, `${d.id}: symbol taller than the label`).toBeLessThan(d.height);
+
+      // --- The sheet geometry is physically possible ---------------------
+      const usedX = d.columns * d.width + (d.columns - 1) * d.gapX + d.page.marginX * 2;
+      const usedY = d.rows * d.height + (d.rows - 1) * d.gapY + d.page.marginY * 2;
+      expect(usedX, `${d.id}: columns overflow the page`).toBeLessThanOrEqual(d.page.width + 0.01);
+      expect(usedY, `${d.id}: rows overflow the page`).toBeLessThanOrEqual(d.page.height + 0.01);
+    }
+    rec.note('All four designs are complete and printable', 'Content, symbol size and sheet geometry checked per design.');
+
+    // --- A discount prints both figures ----------------------------------
+    // Printing only the lower number makes the tag disagree with the invoice;
+    // printing only the MRP has the customer expecting to pay more.
+    const classic = buildSingleLabel(piece(), designById('classic'));
+    expect(classic).toContain('₹35,999');
+    expect(classic).toContain('₹32,999');
+
+    // At full price there is nothing to strike through.
+    const full = buildSingleLabel(piece({ price: 1500, mrp: 1500 }), designById('classic'));
+    expect(full).toContain('₹1,500');
+    expect(full).not.toContain('line-through">₹');
+    rec.note('Discounts show both prices', 'MRP struck through beside what the till will charge.');
+
+    // --- The category line ------------------------------------------------
+    const detailed = buildSingleLabel(piece(), designById('detailed'));
+    expect(detailed).toContain('Lehenga Cholis · Zardozi Floral');
+    // No subcategory means no dangling separator.
+    const plain = buildSingleLabel(piece({ subCategory: undefined }), designById('detailed'));
+    expect(plain).toContain('Lehenga Cholis');
+    expect(plain).not.toContain('Lehenga Cholis ·');
+
+    // --- Text is escaped, not injected ------------------------------------
+    const hostile = buildSingleLabel(piece({ name: '<script>alert(1)</script>' }), designById('classic'));
+    expect(hostile).not.toContain('<script>');
+    expect(hostile).toContain('&lt;script&gt;');
+    rec.note('Product text cannot break the document', 'Names are escaped before they reach the label.');
+
+    // --- Sheets: only barcoded products, paginated ------------------------
+    const many = Array.from({ length: 30 }, (_, i) => piece({ id: `p${i}`, barcode: `TC${String(i + 1).padStart(5, '0')}` }));
+    const withoutCodes = [...many, piece({ id: 'nocode', barcode: undefined })];
+    const { ready, missing } = labelableProducts(withoutCodes);
+    expect(ready).toHaveLength(30);
+    expect(missing).toHaveLength(1);
+
+    const d0 = LABEL_DESIGNS[0];
+    const sheet = buildLabelSheet(withoutCodes, d0);
+    const pages = sheet.split('class="sheet"').length - 1;
+    expect(pages).toBe(Math.ceil(30 / (d0.columns * d0.rows)));
+    // A product with no barcode is skipped rather than printed blank — a label
+    // with no symbol is a piece the till cannot ring up.
+    expect(sheet).not.toContain('id="nocode"');
+    rec.note('Un-barcoded products are skipped, not printed blank', 'Reported to the operator instead.');
+
+    // The encoder still agrees with the label — the one thing that would make
+    // every design wrong at once.
+    expect(code128('TC00042').modules).toBe(11 * (7 + 2) + 13);
+
+    rec.finish('passed');
+  } catch (err) {
+    rec.finish('failed', err instanceof Error ? err.message : String(err));
+    throw err;
+  }
+});

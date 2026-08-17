@@ -320,6 +320,17 @@ test('Admin · Create a product before it has been photographed', async ({ brows
     await expect(adm.getByText(/no shopper sees it/i).first()).toBeVisible({ timeout: 10_000 });
     await rec.step(adm, 'Defaults to Draft', 'A product with no photo cannot be published, and the form says so plainly.', 'assert');
 
+    // --- The barcode, before the save and without a photograph -------------
+    // A barcode needs a number and nothing else. Making the operator save
+    // first meant a piece could not be tagged and shelved in one pass.
+    await adm.getByRole('button', { name: /generate barcode/i }).click({ timeout: 10_000 });
+    await expect(adm.getByText(/^TC\d{5}$/).filter({ visible: true }).first()).toBeVisible({ timeout: 15_000 });
+    await rec.step(adm, 'Barcode generated before saving', 'Allocated on click, with no photograph and nothing yet written to the catalogue — the label can be printed and stuck on before the form is submitted.', 'assert');
+
+    // The label download unlocks with the code, not with the save.
+    await expect(adm.getByRole('button', { name: /download label/i })).toBeEnabled({ timeout: 5_000 });
+    await rec.step(adm, 'Label download available immediately', 'Brand, piece, category and price on the chosen design.', 'assert');
+
     await adm.getByRole('button', { name: /^create product$/i }).last().click({ timeout: 10_000 });
     await adm.waitForTimeout(3000);
     await rec.step(adm, 'Saved without a photograph');

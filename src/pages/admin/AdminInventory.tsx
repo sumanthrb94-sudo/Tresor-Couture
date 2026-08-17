@@ -3,7 +3,7 @@ import { Boxes, Minus, Plus, Search, Filter, Download, AlertCircle, Check, Packa
 import { productsApi } from '../../lib/firebase';
 import { CATEGORIES, formatINR } from '../../constants';
 import { toCsv, downloadCsv } from '../../lib/csv';
-import { printLabels, labelableProducts } from '../../admin/printLabels';
+import { printLabels, labelableProducts, LABEL_DESIGNS, defaultDesign, designById } from '../../admin/printLabels';
 import { awaitingPhoto } from '../../lib/availability';
 import { reserveBarcode } from '../../lib/barcodeAssign';
 import FabricImage from '../../components/FabricImage';
@@ -62,6 +62,7 @@ const AdminInventory: React.FC = () => {
   const [stockFilter, setStockFilter] = useState<StockFilter>('all');
   const [catFilter, setCatFilter] = useState<CatFilter>('all');
   const [listingFilter, setListingFilter] = useState<ListingFilter>('all');
+  const [labelDesignId, setLabelDesignId] = useState<string>(() => defaultDesign().id);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
 
@@ -204,7 +205,7 @@ const AdminInventory: React.FC = () => {
       if (!ok) return;
     }
     try {
-      await printLabels(labelable.ready);
+      await printLabels(labelable.ready, designById(labelDesignId));
     } catch (err) {
       window.alert(err instanceof Error ? err.message : 'Could not open the print dialog.');
     }
@@ -305,6 +306,15 @@ const AdminInventory: React.FC = () => {
               {barcoding ? `Generating ${barcoding.done}/${barcoding.total}…` : `Generate barcodes (${labelable.missing.length})`}
             </button>
           )}
+          <select
+            value={labelDesignId}
+            onChange={e => setLabelDesignId(e.target.value)}
+            aria-label="Label design"
+            title={designById(labelDesignId).blurb}
+            className="input-box w-full sm:w-[170px]"
+          >
+            {LABEL_DESIGNS.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+          </select>
           <button
             onClick={handlePrintLabels}
             disabled={!labelable.ready.length}

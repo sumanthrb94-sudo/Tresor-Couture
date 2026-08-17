@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   Ruler,
   Download,
+  Barcode,
   Check
 } from 'lucide-react';
 import { productsApi } from '../../lib/firebase';
@@ -21,6 +22,12 @@ import { placeholderSwatch } from '../../lib/swatch';
 import { awaitingPhoto } from '../../lib/availability';
 import { code128Svg } from '../../lib/barcode';
 import { reserveBarcode } from '../../lib/barcodeAssign';
+import {
+  LABEL_DESIGNS,
+  defaultDesign,
+  designById,
+  printSingleLabel,
+} from '../../admin/printLabels';
 import { CATEGORIES, formatINR } from '../../constants';
 import { toCsv, downloadCsv } from '../../lib/csv';
 import LACE_SEED from '../../../inventory-from-pptx/inventory_full_seed.json';
@@ -578,6 +585,42 @@ interface EditorProps {
 }
 
 const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange, onCancel, onSave }) => {
+  const [barcoding, setBarcoding] = useState(false);
+  const [labelDesignId, setLabelDesignId] = useState<string>(() => defaultDesign().id);
+
+  /**
+   * Allocate the barcode now, not on save.
+   *
+   * A barcode needs a number and nothing else — not a photograph, not a saved
+   * document. Making the operator save first meant a piece could not be tagged
+   * and put on the shelf in one pass, which is the whole job. The number is
+   * reserved from the shared counter the moment this is clicked, so the label
+   * can be printed and stuck on before the form is even submitted.
+   *
+   * It is never re-generated: once a code is on a printed label, changing it
+   * would make the shelf and the till disagree.
+   */
+  const onGenerateBarcode = async () => {
+    if (draft.barcode || barcoding) return;
+    setBarcoding(true);
+    try {
+      onChange({ ...draft, barcode: await reserveBarcode() });
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Could not allocate a barcode.');
+    } finally {
+      setBarcoding(false);
+    }
+  };
+
+  /** One label for this piece, sized to itself. "Save as PDF" downloads it. */
+  const onDownloadLabel = async () => {
+    try {
+      await printSingleLabel(draftToFabric(draft), designById(labelDesignId));
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Could not open the print dialog.');
+    }
+  };
+
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     onChange({ ...draft, [key]: value });
 
@@ -930,7 +973,7 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
               </label>
               {draft.barcode ? (
                 <div className="border border-[color:var(--color-myntra-border-soft)] rounded p-3 bg-white">
-                  {/* The real encoder, so what is previewed is what prints. */}
+                  {/* The real encoder, so what is previewed is exactly what prints. */}
                   <div
                     className="[&>svg]:block [&>svg]:w-full [&>svg]:h-auto"
                     dangerouslySetInnerHTML={{ __html: code128Svg(draft.barcode, { height: 34 }) }}
@@ -941,10 +984,46 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
                 </div>
               ) : (
                 <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] border border-dashed border-[color:var(--color-myntra-border-soft)] rounded p-3">
-                  A barcode is allocated automatically when you save. Print it from
-                  Inventory → Print labels.
+                  No barcode yet. Generate one now — it needs nothing but the name and price,
+                  and it is allocated automatically if you save without it.
                 </p>
               )}
+
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={onGenerateBarcode}
+                  disabled={Boolean(draft.barcode) || barcoding}
+                  title={draft.barcode ? 'This piece already has a barcode — a code never changes once printed.' : 'Allocate the next code'}
+                  className="btn-outline !py-1.5 !px-3 text-[12px] inline-flex items-center gap-1.5 disabled:opacity-40"
+                >
+                  <Barcode className="w-3.5 h-3.5" /> {barcoding ? 'Generating…' : 'Generate barcode'}
+                </button>
+
+                <select
+                  aria-label="Label design"
+                  value={labelDesignId}
+                  onChange={e => setLabelDesignId(e.target.value)}
+                  className="input-box !py-1.5 text-[12px] flex-1 min-w-[140px]"
+                >
+                  {LABEL_DESIGNS.map(d => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+
+                <button
+                  type="button"
+                  onClick={onDownloadLabel}
+                  disabled={!draft.barcode}
+                  title={draft.barcode ? 'Opens the print dialog — choose "Save as PDF" to download' : 'Generate a barcode first'}
+                  className="btn-outline !py-1.5 !px-3 text-[12px] inline-flex items-center gap-1.5 disabled:opacity-40"
+                >
+                  <Download className="w-3.5 h-3.5" /> Download label (PDF)
+                </button>
+              </div>
+              <p className="mt-1.5 text-[11px] text-[color:var(--color-myntra-ink-soft)]">
+                {designById(labelDesignId).blurb}
+              </p>
             </div>
           </div>
         </section>

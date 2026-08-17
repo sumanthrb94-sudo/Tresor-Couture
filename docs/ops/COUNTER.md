@@ -32,11 +32,25 @@ whether it actually bothers you.
    Both draw from a single counter, so no two pieces can ever carry the same
    code. For a catalogue that predates all this, run
    `npx tsx scripts/assign-barcodes.ts --prod` once to fill the gaps.
-2. **Print ONE label and scan it.** Do this before printing the rest. The
+2. **Pick a label design.** Four of them, shown at true size in
+   `docs/ops/barcode-label-designs.pdf` — print that at 100% (not "fit to
+   page") and hold the labels against your sheet stock:
+
+   | Design | Size | Per A4 | For |
+   |---|---|---|---|
+   | Classic price tag | 63.5 × 38.1 mm | 21 | The everyday label |
+   | Detailed tag | 63.5 × 38.1 mm | 21 | Adds the category line |
+   | Garment hang tag | 50 × 70 mm | 12 | Lehengas and sarees on a rail |
+   | Small reel sticker | 38 × 21 mm | 65 | Lace reels and trims |
+
+   Every design carries the brand, the piece, its category, the price and the
+   code. Choose it in the dropdown beside **Print labels** (whole sheets) or
+   beside **Download label (PDF)** in the product editor (one piece).
+3. **Print ONE label and scan it.** Do this before printing the rest. The
    barcodes are generated in-house — Code 128-B, no third-party library — and a
    scanner disagreeing with the encoder is the one failure that unit tests
    cannot rule out. Admin → Inventory → **Print labels**.
-3. Confirm the Counter finds the piece when you scan it. Then print the others.
+4. Confirm the Counter finds the piece when you scan it. Then print the others.
 
 ---
 
@@ -131,7 +145,8 @@ counter. Worth raising with the CA.
 | `src/pages/admin/AdminCounter.tsx` | The till. |
 | `src/lib/pos.ts` | Barcode lookup and the sale call. |
 | `src/lib/barcode.ts` | The Code 128-B encoder. |
-| `src/admin/printLabels.ts` | Label sheets. |
+| `src/admin/printLabels.ts` | The four label designs, single labels and sheets. |
+| `tests/emulator/labels.spec.ts` | What every design must say, and that it physically fits the page. |
 | `tests/emulator/pos-sale.spec.ts` | Pricing, security and idempotency, against the real handler. |
 
 ---
