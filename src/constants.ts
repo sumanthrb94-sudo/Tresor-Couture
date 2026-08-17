@@ -961,12 +961,22 @@ export const MASTER_CATEGORIES: MasterCategory[] = [
  * surface as a second-tier filter (Half Sarees under Sarees, weave types
  * under Fabrics, etc.).
  */
+/**
+ * The curated subcategory vocabulary: what the admin dropdown offers, and the
+ * order those names appear in when they have stock.
+ *
+ * It is NOT the navigation menu. Shopper-facing menus are derived from the
+ * catalogue by `subcategoriesFor()` (src/lib/subcategories.ts) so a name with
+ * no products is never offered and a name the catalogue invented is never
+ * hidden. Adding an aspirational entry here is therefore free — it surfaces the
+ * day the first product uses it.
+ */
 export const MASTER_CATEGORY_TREE: Record<MasterCategory, string[]> = {
   Fabrics: ['Silk', 'Cotton', 'Wool', 'Linen', 'Satin', 'Mixed'],
   'Dyeable Fabrics': ['Cotton', 'Silk', 'Linen', 'Mixed'],
-  Laces: ['Trim & Edging'],
-  Sarees: ['Half Sarees', 'Banarasi', 'Kanjivaram', 'Patola', 'Bandhani', 'Jamdani', 'Mashru'],
-  'Lehenga Cholis': ['Bridal', 'Festive', 'Contemporary'],
+  Laces: ['Trim & Edging', 'Patch'],
+  Sarees: ['Half Sarees', 'Banarasi', 'Kanjivaram', 'Patola', 'Bandhani', 'Jamdani', 'Mashru', 'Pre-draped Saree'],
+  'Lehenga Cholis': ['Bridal', 'Festive', 'Contemporary', 'Zardozi Floral', 'Threadwork', 'Pearl Strand', 'Ivory Heritage'],
   Anarkalis: ['Floor-length', 'Knee-length', 'Embroidered'],
   'Western Wear': ['Dresses', 'Tops', 'Co-ords', 'Jumpsuits'],
   'Studios Prêt': ['Ready-to-Wear', 'Capsule Drops', 'Atelier Edits']

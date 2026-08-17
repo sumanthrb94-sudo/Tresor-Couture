@@ -11,6 +11,16 @@ const LOW_STOCK = 10;
 
 type StockFilter = 'all' | 'low' | 'out' | 'in';
 type CatFilter = Fabric['category'] | 'all';
+type ListingFilter = 'all' | 'Active' | 'Draft' | 'Retired';
+
+/** Absent means Active — every product written before the field existed is live. */
+const listingOf = (f: Fabric): NonNullable<Fabric['listingStatus']> => f.listingStatus ?? 'Active';
+
+const LISTING_CLS: Record<NonNullable<Fabric['listingStatus']>, string> = {
+  Active: 'bg-[#E8F2E8] text-[#2F6E2F] border-[#C9DFC9]',
+  Draft: 'bg-[#FDF0E1] text-[#9A5B12] border-[#F0D9B5]',
+  Retired: 'bg-[#EFEFEF] text-[#5A5A5A] border-[#D8D8D8]',
+};
 
 const stockStatus = (n: number): { label: string; cls: string } => {
   if (n <= 0) return { label: 'Out of stock', cls: 'bg-[#FBE6E6] text-[#A12626] border-[#F0C7C7]' };
@@ -49,6 +59,7 @@ const AdminInventory: React.FC = () => {
   const [query, setQuery] = useState('');
   const [stockFilter, setStockFilter] = useState<StockFilter>('all');
   const [catFilter, setCatFilter] = useState<CatFilter>('all');
+  const [listingFilter, setListingFilter] = useState<ListingFilter>('all');
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
 
@@ -85,13 +96,14 @@ const AdminInventory: React.FC = () => {
     return rows.filter(f => {
       const s = f.stock ?? 0;
       if (catFilter !== 'all' && f.category !== catFilter) return false;
+      if (listingFilter !== 'all' && listingOf(f) !== listingFilter) return false;
       if (stockFilter === 'out' && s > 0) return false;
       if (stockFilter === 'low' && !(s > 0 && s < LOW_STOCK)) return false;
       if (stockFilter === 'in' && s < LOW_STOCK) return false;
       if (!q) return true;
       return f.name.toLowerCase().includes(q) || f.brand.toLowerCase().includes(q);
     });
-  }, [rows, query, stockFilter, catFilter]);
+  }, [rows, query, stockFilter, catFilter, listingFilter]);
 
   /* Persist a new stock value (optimistic; reverts on failure). */
   const setStock = async (f: Fabric, next: number) => {
@@ -105,6 +117,30 @@ const AdminInventory: React.FC = () => {
       setTimeout(() => setSavedId(id => (id === f.id ? null : id)), 1200);
     } catch {
       setReloadKey(k => k + 1); // reload truth on failure
+    } finally {
+      setSavingId(id => (id === f.id ? null : id));
+    }
+  };
+
+  /**
+   * Publish or unpublish a product.
+   *
+   * This is the other half of the bulk import: a spreadsheet row with no
+   * photograph lands as a Draft, and this is where it goes live once the photo
+   * is up — without a second import round-trip. It sits in Inventory rather
+   * than in the product editor because publishing a shelf of newly-photographed
+   * pieces is a list operation, not a per-product edit.
+   */
+  const setListing = async (f: Fabric, next: NonNullable<Fabric['listingStatus']>) => {
+    if (next === listingOf(f)) return;
+    setSavingId(f.id);
+    setRows(prev => prev.map(r => (r.id === f.id ? { ...r, listingStatus: next } : r)));
+    try {
+      await productsApi.update(f.id, { listingStatus: next });
+      setSavedId(f.id);
+      setTimeout(() => setSavedId(id => (id === f.id ? null : id)), 1200);
+    } catch {
+      setReloadKey(k => k + 1);
     } finally {
       setSavingId(id => (id === f.id ? null : id));
     }
@@ -146,7 +182,9 @@ const AdminInventory: React.FC = () => {
       'Price (₹)',
       'Stock',
       'Stock Value (₹)',
-      'Status'
+      'Status',
+      'Barcode',
+      'Listing'
     ];
     const data = filtered.map(f => {
       const s = f.stock ?? 0;
@@ -163,7 +201,9 @@ const AdminInventory: React.FC = () => {
         f.price,
         s,
         s * (f.price ?? 0),
-        stockStatus(s).label
+        stockStatus(s).label,
+        f.barcode ?? '',
+        listingOf(f)
       ];
     });
     downloadCsv(`tresor-inventory-${new Date().toISOString().slice(0, 10)}`, toCsv(headers, data));
@@ -201,6 +241,17 @@ const AdminInventory: React.FC = () => {
             <option value="all">All categories</option>
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
+          <select
+            value={listingFilter}
+            onChange={e => setListingFilter(e.target.value as ListingFilter)}
+            title="Drafts are in the system — stock, barcodes and counter billing all work — but are not on the website."
+            className="input-box w-full sm:w-[150px]"
+          >
+            <option value="all">All listings</option>
+            <option value="Active">On the website</option>
+            <option value="Draft">Drafts</option>
+            <option value="Retired">Retired</option>
+          </select>
           <button
             onClick={handlePrintLabels}
             disabled={!labelable.ready.length}
@@ -236,6 +287,7 @@ const AdminInventory: React.FC = () => {
                   <th className="px-3 py-2.5 text-center">Stock</th>
                   <th className="px-3 py-2.5 text-right">Stock value</th>
                   <th className="px-3 py-2.5">Status</th>
+                  <th className="px-3 py-2.5">Listing</th>
                 </tr>
               </thead>
               <tbody>
@@ -296,6 +348,22 @@ const AdminInventory: React.FC = () => {
                       <td className="px-3 py-2.5 text-right font-semibold">{formatINR(s * (f.price ?? 0))}</td>
                       <td className="px-3 py-2.5">
                         <span className={`inline-block px-2 py-0.5 rounded-full border text-[11px] font-bold ${st.cls}`}>{st.label}</span>
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <select
+                          value={listingOf(f)}
+                          onChange={e => setListing(f, e.target.value as NonNullable<Fabric['listingStatus']>)}
+                          disabled={savingId === f.id}
+                          aria-label={`Listing status for ${f.name}`}
+                          className={`text-[11px] font-bold rounded-full border px-2 py-1 ${LISTING_CLS[listingOf(f)]}`}
+                        >
+                          <option value="Active">On the website</option>
+                          <option value="Draft">Draft</option>
+                          <option value="Retired">Retired</option>
+                        </select>
+                        {listingOf(f) === 'Draft' && !f.photo?.startsWith('http') && (
+                          <div className="text-[10px] text-[color:var(--color-myntra-ink-mute)] mt-1">Needs a photo</div>
+                        )}
                       </td>
                     </tr>
                   );

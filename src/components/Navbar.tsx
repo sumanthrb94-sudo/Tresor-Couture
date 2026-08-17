@@ -7,7 +7,8 @@ import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
 import { useCatalog } from '../context/CatalogContext';
-import { FABRICS, MASTER_CATEGORIES, MASTER_CATEGORY_TREE, OFFER_TICKER } from '../constants';
+import { FABRICS, MASTER_CATEGORIES, OFFER_TICKER } from '../constants';
+import { subcategoriesFor } from '../lib/subcategories';
 import { sellableFirst } from '../lib/availability';
 import type { MasterCategory } from '../types';
 
@@ -104,7 +105,7 @@ const Navbar: React.FC = () => {
   }, [searchOpen]);
 
   const megaPanel = (label: MasterCategory) => {
-    const subs = MASTER_CATEGORY_TREE[label] ?? [];
+    const subs = subcategoriesFor(label, searchPool);
     const items = searchPool.filter(f => f.masterCategory === label).slice(0, 4);
     return (
       <div
@@ -243,7 +244,7 @@ const Navbar: React.FC = () => {
                 );
               }
               const expanded = mobileExpanded === n.label;
-              const subs = MASTER_CATEGORY_TREE[n.label] ?? [];
+              const subs = subcategoriesFor(n.label, searchPool);
               const isPremium = n.tone === 'premium';
               return (
                 <div key={n.label} className={`border-b border-[color:var(--color-myntra-border-soft)] ${isPremium ? 'bg-[#FBF7EE] -mx-5 px-5' : ''}`}>

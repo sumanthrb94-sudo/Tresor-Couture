@@ -30,3 +30,21 @@ export const inStock = (f: HasStock): boolean => unitsAvailable(f) > 0;
  */
 export const sellableFirst = <T extends HasStock>(list: T[]): T[] =>
   [...list].sort((a, b) => Number(inStock(b)) - Number(inStock(a)));
+
+/**
+ * Whether a product belongs on the public storefront.
+ *
+ * Separate from stock on purpose: a sold-out piece is still *listed* (its page
+ * stays up, links keep working, it just cannot be added to a bag), whereas a
+ * Draft has never been published at all. Bulk imports create Drafts — a whole
+ * store can be registered for inventory, barcodes and counter billing long
+ * before any of it has been photographed, and each piece goes live the day its
+ * photo does.
+ *
+ * A missing `listingStatus` means "published" so every product that predates
+ * the field keeps behaving exactly as it did.
+ */
+type HasListing = Pick<Fabric, 'listingStatus'>;
+
+export const isListed = (f: HasListing): boolean =>
+  f.listingStatus === undefined || f.listingStatus === 'Active';

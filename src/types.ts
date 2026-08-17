@@ -1,6 +1,8 @@
 /**
  * Top-level catalogue sections surfaced in the Navbar, CategoryStrip and
- * mobile drawer. Subcategories live in `MASTER_CATEGORY_TREE` in constants.ts.
+ * mobile drawer. The curated subcategory vocabulary lives in
+ * `MASTER_CATEGORY_TREE` (constants.ts); the menus a shopper actually sees are
+ * derived from the catalogue by `subcategoriesFor()` (lib/subcategories.ts).
  */
 export type MasterCategory =
   | 'Fabrics'
@@ -52,6 +54,29 @@ export interface Fabric {
   barcode?: string;
   /** How the product is sold: per unit, per meter, or as a bundle of meters (laces). */
   unitType?: 'unit' | 'per meter' | 'bundle';
+  /** Whether the product is published to the storefront. Absent means Active —
+   *  every product written before this field existed stays visible. `Draft` is
+   *  what a bulk import assigns to a piece with no photograph yet: it counts for
+   *  stock, barcodes and counter billing, but no shopper sees it. See
+   *  `isListed()` in lib/availability.ts. */
+  listingStatus?: 'Active' | 'Draft' | 'Retired';
+  /** Back-office photo grading, straight from the catalogue workbook. Drives
+   *  the reshoot queue; has no effect on the storefront. */
+  photoQuality?: 'Studio' | 'Acceptable' | 'Needs reshoot';
+  /** HSN code for GST invoicing. Carried from the workbook so it is ready when
+   *  the CA confirms per-category rates; nothing reads it yet. */
+  hsnCode?: string;
+  /** GST rate for this piece, as a fraction (0.05, 0.12, 0.18).
+   *  RECORDED BUT NOT YET APPLIED: checkout and the tax invoice still use the
+   *  site-wide GST_RATE. Wiring it through `computeBreakdown` is deliberately
+   *  held until the CA confirms the rate per category, because a wrong rate on
+   *  a customer's invoice is a compliance problem, not a display bug. The
+   *  importer warns on every row whose rate differs from the site-wide one. */
+  gstRate?: number;
+  /** Stock level at which to reorder — reporting only, never blocks a sale. */
+  reorderLevel?: number;
+  /** Where the piece was bought. Back-office only, never shown to customers. */
+  supplier?: string;
   /** Buying / cost price for margin reporting. */
   costPrice?: number;
   /** Selling price per meter when unitType is 'per meter' or 'bundle'. */

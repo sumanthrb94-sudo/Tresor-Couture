@@ -38,7 +38,12 @@ async function main(): Promise<void> {
   }
   const db = getFirestore();
   const snap = await db.collection('products').get();
-  const ids = snap.docs.map(d => d.id).sort();
+  // Only published products belong in a sitemap. A Draft (bulk-imported, not yet
+  // photographed) or a Retired piece has no public page, and listing one would
+  // hand Search Console a soft-404. Missing field = published, as everywhere.
+  const all = snap.docs.map(d => ({ id: d.id, status: d.data().listingStatus as string | undefined }));
+  const ids = all.filter(p => p.status === undefined || p.status === 'Active').map(p => p.id).sort();
+  const hidden = all.length - ids.length;
 
   const urls = [
     ...STATIC.map(u =>
@@ -49,7 +54,8 @@ async function main(): Promise<void> {
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`;
   fs.writeFileSync('public/sitemap.xml', xml);
-  console.log(`sitemap.xml: ${STATIC.length} static + ${ids.length} product URLs`);
+  console.log(`sitemap.xml: ${STATIC.length} static + ${ids.length} product URLs`
+    + (hidden ? ` (${hidden} draft/retired product${hidden === 1 ? '' : 's'} excluded)` : ''));
 }
 
 main().then(() => process.exit(0)).catch((err) => { console.error(err); process.exit(1); });

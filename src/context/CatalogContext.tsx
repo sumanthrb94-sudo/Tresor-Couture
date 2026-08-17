@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { productsApi } from '../lib/firebase';
+import { isListed } from '../lib/availability';
 import type { Fabric, MasterCategory } from '../types';
 
 interface CatalogContextValue {
@@ -26,8 +27,13 @@ export const CatalogProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setError(null);
     (async () => {
       try {
-        const rows = (await productsApi.list({ limit: 500 })) as unknown as Fabric[];
-        if (!cancelled) setProducts(rows);
+        const rows = (await productsApi.list({ limit: 1000 })) as unknown as Fabric[];
+        // Drafts and retired pieces are filtered HERE rather than in the query:
+        // a `where('listingStatus','==','Active')` would need a composite index
+        // for every category/subcategory combination, and would also exclude
+        // every product written before the field existed. Filtering in JS keeps
+        // one query and treats a missing field as published.
+        if (!cancelled) setProducts(rows.filter(isListed));
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : 'Could not load catalogue');

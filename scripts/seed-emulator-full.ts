@@ -96,6 +96,29 @@ async function seedSoldOutFixture(): Promise<void> {
   console.log('  ✓ sold-out fixture (e2e-sold-out)');
 }
 
+/**
+ * A product registered but not published — what a bulk import creates for a
+ * piece that has no photograph yet. It has stock and a barcode, so the counter
+ * can sell it and Inventory can label it, but no shopper may see it.
+ *
+ * Stock is deliberately non-zero: this must fail for a different reason than
+ * `e2e-sold-out` does, or the test would pass on the wrong mechanism.
+ */
+async function seedDraftFixture(): Promise<void> {
+  const base = FABRICS[0];
+  await db.collection('products').doc('e2e-draft').set({
+    ...base,
+    id: 'e2e-draft',
+    name: 'E2E Draft Fixture',
+    listingStatus: 'Draft',
+    barcode: 'TC99001',
+    stock: 7,
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  }, { merge: true });
+  console.log('  ✓ draft fixture (e2e-draft)');
+}
+
 async function seedCoupons(): Promise<void> {
   const coupons = [
     { code: 'WEDDING50', description: 'Extra 10% off bridal silks', kind: 'percent', value: 10, maxDiscount: 10000, minSubtotal: 0, active: true },
@@ -153,6 +176,7 @@ async function main(): Promise<void> {
   await ensureUser('admin@test.local', 'Atelier Admin', true);
   await seedProducts();
   await seedSoldOutFixture();
+  await seedDraftFixture();
   await seedCoupons();
   await seedOrders(customerUid);
   console.log('Done.');

@@ -3,9 +3,9 @@ import { ChevronDown, ChevronUp, Filter, X } from 'lucide-react';
 import {
   CATEGORIES,
   MASTER_CATEGORIES,
-  MASTER_CATEGORY_TILES,
-  MASTER_CATEGORY_TREE
+  MASTER_CATEGORY_TILES
 } from '../constants';
+import { subcategoriesFor } from '../lib/subcategories';
 import { Fabric, MasterCategory } from '../types';
 import ProductCard from '../components/ProductCard';
 import { useRouter } from '../context/RouterContext';
@@ -137,7 +137,7 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
   }, [products, weaveTypes, colors, priceBrackets, sort]);
 
   const masterTile = activeMaster ? MASTER_CATEGORY_TILES.find(t => t.name === activeMaster) : null;
-  const subOptions = activeMaster ? MASTER_CATEGORY_TREE[activeMaster] : [];
+  const subOptions = activeMaster ? subcategoriesFor(activeMaster, products) : [];
 
   const headerTitle = activeMaster ?? 'All Products';
   const itemCountText = `${filtered.length} ${filtered.length === 1 ? 'item' : 'items'}`;

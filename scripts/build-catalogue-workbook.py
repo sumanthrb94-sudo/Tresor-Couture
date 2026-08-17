@@ -38,7 +38,7 @@ COLS = [
     ('Stock Qty', 9), ('Reorder Lvl', 9), ('Stock Status', 13), ('Stock per Log', 11),
     ('Log Match', 9), ('First Received', 12), ('Supplier', 16), ('Image URL', 40),
     ('Photo Quality', 13), ('Live on Site', 10), ('Listing Status', 12), ('Sticker', 11),
-    ('Notes', 40),
+    ('Description', 60), ('Notes', 40),
 ]
 C = {name: get_column_letter(i + 1) for i, (name, _) in enumerate(COLS)}
 
@@ -100,7 +100,7 @@ def build(path: str, with_data: bool) -> None:
         ws.column_dimensions[get_column_letter(i)].width = width
     ws.row_dimensions[1].height = 28
     ws.freeze_panes = 'E2'
-    ws.auto_filter.ref = f'A1:AC{MAX_ROWS}'
+    ws.auto_filter.ref = f'A1:{get_column_letter(len(COLS))}{MAX_ROWS}'
 
     def formulas_for(r: int) -> dict:
         return {
@@ -124,6 +124,8 @@ def build(path: str, with_data: bool) -> None:
                           ('MRP (₹)', '"₹"#,##0'), ('Margin %', '0.0%'), ('GST Rate', '0%'),
                           ('First Received', 'yyyy-mm-dd')]:
             ws[f'{C[name]}{r}'].number_format = fmt
+        for name in ('Description', 'Notes'):
+            ws[f'{C[name]}{r}'].alignment = Alignment(wrap_text=True, vertical='top')
 
     # illustrative buying prices (BLUE input; documented in How To Use)
     def est_cost(p: dict) -> int:
@@ -167,6 +169,7 @@ def build(path: str, with_data: bool) -> None:
                 'Image URL': f"https://tresorcouture.in{p['photo']}" if p['photo'].startswith('/') else '',
                 'Photo Quality': 'Needs reshoot' if needs_reshoot else 'Studio',
                 'Live on Site': 'Yes', 'Listing Status': 'Active', 'Sticker': p['sticker'] or None,
+                'Description': p.get('desc') or None,
                 'Notes': 'Reshoot flagged — warehouse snapshot' if needs_reshoot else None,
             }
             for name, v in vals.items():
@@ -196,7 +199,12 @@ def build(path: str, with_data: bool) -> None:
             'Stock Qty': 3, 'Reorder Lvl': 1, 'First Received': '2026-08-01',
             'Supplier': 'Supplier A (rename me)', 'Image URL': 'https://tresorcouture.in/products/lace/HA0000.jpg',
             'Photo Quality': 'Studio', 'Live on Site': 'Yes', 'Listing Status': 'Active',
-            'Sticker': 'New In', 'Notes': 'EXAMPLE ROW — replace with your first product',
+            'Sticker': 'New In',
+            'Description': 'Two or three sentences describing the piece — material, work, '
+                           'width/length, what it is for. This is what the customer reads on the '
+                           'product page and what Google indexes. Leave blank and the importer '
+                           'keeps whatever the website already has.',
+            'Notes': 'EXAMPLE ROW — replace with your first product',
         }
         for name, v in example.items():
             cell = ws[f'{C[name]}{r}']
@@ -390,6 +398,17 @@ def build(path: str, with_data: bool) -> None:
         ('Orders & Returns = your orders. One row per customer order. Refunds and return progress are tracked HERE, because a refund is about money, not stock.', False),
         ('Action Tracker = your to-do list. Filter the Status column to "Pending" to see everything left to do; set it to "Done" with a date when finished.', False),
         ('Lists = the options inside every dropdown. Add a new supplier or category here once and every dropdown learns it.', False),
+        ('', False),
+        ('UPLOADING THIS SHEET TO THE WEBSITE', True),
+        ('This workbook is not just a record — the Catalogue sheet can be imported straight into the website. '
+         'Product ID is the key: a new ID creates a product, an existing ID updates it. Nothing is ever deleted by an import.', False),
+        ('Every product you import gets its own barcode (TC00001, TC00002, …) automatically, and you can print the labels '
+         'from Admin → Inventory → Print labels. A product keeps the same barcode forever, so re-importing is safe.', False),
+        ('Description = what the customer reads on the product page and what Google indexes. Two or three real sentences per product. '
+         'Leave it blank and the import keeps whatever the site already has — a blank cell never wipes existing copy.', False),
+        ('Listing Status decides what shoppers see. "Active" = on the website. "Draft" = in the system (stock, barcode, counter billing) '
+         'but NOT on the website. "Retired" = taken down. No photo yet? Leave Image URL blank — the import files it as Draft on its own, '
+         'so you can register the whole store now and publish each piece the day it is photographed.', False),
         ('', False),
         ('THE STOCK LOG, EXPLAINED SIMPLY', True),
         ('Think of it as a bank passbook, but for stock instead of money. Stock coming in = deposit (+). Stock going out = withdrawal (−). '
