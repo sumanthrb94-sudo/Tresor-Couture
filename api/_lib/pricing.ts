@@ -61,7 +61,13 @@ function readStock(data: Record<string, unknown>): number | undefined {
 
 /**
  * Compute the authoritative breakdown. `paymentMethod` only affects the COD
- * surcharge. Throws on unknown product, bad quantity, or unreadable price.
+ * surcharge; `channel` distinguishes a web order from a counter sale. Throws on
+ * unknown product, bad quantity, or unreadable price.
+ *
+ * `channel` is a PARAMETER rather than an adjustment the caller makes
+ * afterwards, because the invariant `total = taxable + shipping + codSurcharge`
+ * — and `amountMinor` derived from it — has to hold in one file. A handler that
+ * zeroed shipping on its own would be a second, silent pricing implementation.
  */
 export async function computeBreakdown(
   db: Firestore,
@@ -69,6 +75,10 @@ export async function computeBreakdown(
     items: CartLineInput[];
     couponCode?: string;
     paymentMethod?: 'card' | 'upi' | 'cod';
+    /** 'in-store' is a counter sale: nothing is shipped and nothing is
+     *  collected on delivery, so both charges are zero. Defaults to 'web', so
+     *  every existing caller keeps its behaviour byte for byte. */
+    channel?: 'web' | 'in-store';
   },
 ): Promise<PriceBreakdown> {
   if (!Array.isArray(input.items) || input.items.length === 0) {
@@ -129,8 +139,11 @@ export async function computeBreakdown(
   const taxable = Math.max(0, subtotal - couponDiscount);
   // Tax-inclusive pricing: report the GST component, do not add it again.
   const tax = Math.round((taxable * GST_RATE) / (1 + GST_RATE));
-  const shipping = taxable >= FREE_SHIPPING_THRESHOLD ? 0 : FLAT_SHIPPING;
-  const codSurcharge = input.paymentMethod === 'cod' ? COD_SURCHARGE : 0;
+  // A counter sale is handed over across the counter: no carriage, and no
+  // cash-on-delivery to surcharge.
+  const inStore = input.channel === 'in-store';
+  const shipping = inStore ? 0 : taxable >= FREE_SHIPPING_THRESHOLD ? 0 : FLAT_SHIPPING;
+  const codSurcharge = !inStore && input.paymentMethod === 'cod' ? COD_SURCHARGE : 0;
   const total = taxable + shipping + codSurcharge;
 
   return {

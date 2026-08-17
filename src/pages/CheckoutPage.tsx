@@ -5,7 +5,7 @@ import { useRouter } from '../context/RouterContext';
 import { useAuth } from '../context/AuthContext';
 import { useOrders } from '../context/OrderContext';
 import { formatINR } from '../constants';
-import { PaymentMethod, ShippingAddress } from '../types';
+import { WebPaymentMethod, ShippingAddress } from '../types';
 import { couponsApi } from '../lib/firebase';
 import { analytics } from '../lib/analytics';
 import { sendOrderEmail, sendOrderWhatsApp } from '../lib/notify';
@@ -113,7 +113,7 @@ const CheckoutPage: React.FC = () => {
   const [saveAddress, setSaveAddress] = useState<boolean>(!!user && !user?.defaultAddress);
 
   // Cash on Delivery is the only live method until the Cashfree gateway lands.
-  const [payment, setPayment] = useState<PaymentMethod>('cod');
+  const [payment, setPayment] = useState<WebPaymentMethod>('cod');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [placeError, setPlaceError] = useState<string | null>(null);
   const [placing, setPlacing] = useState(false);

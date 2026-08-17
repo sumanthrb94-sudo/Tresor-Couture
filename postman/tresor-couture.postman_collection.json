@@ -1971,6 +1971,232 @@
           ]
         },
         {
+          "name": "Counter · POST /api/pos/sale as a NON-admin (expect 403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              },
+              {
+                "key": "Cookie",
+                "value": "tresor_csrf={{csrfToken}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{idToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{apiBase}}/api/pos/sale",
+              "host": [
+                "{{apiBase}}"
+              ],
+              "path": [
+                "api",
+                "pos",
+                "sale"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sale\": {\n    \"items\": [\n      {\n        \"fabricId\": \"1\",\n        \"quantity\": 1\n      }\n    ],\n    \"paymentMethod\": \"cash\",\n    \"saleKey\": \"postman-negative\"\n  }\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// THE most important negative in the suite: the counter mints PAID orders",
+                  "// and moves stock, so a customer token must never get through.",
+                  "pm.test('a customer cannot ring up a sale', () =>",
+                  "  pm.expect([401,403,503]).to.include(pm.response.code));",
+                  "pm.test('no order id returned', () => pm.expect(pm.response.text()).to.not.include('orderId'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Counter · POST /api/pos/sale anonymously (expect 401/403/503)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              },
+              {
+                "key": "Cookie",
+                "value": "tresor_csrf={{csrfToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{apiBase}}/api/pos/sale",
+              "host": [
+                "{{apiBase}}"
+              ],
+              "path": [
+                "api",
+                "pos",
+                "sale"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sale\": {\n    \"items\": [\n      {\n        \"fabricId\": \"1\",\n        \"quantity\": 1\n      }\n    ],\n    \"paymentMethod\": \"cash\",\n    \"saleKey\": \"postman-anon\"\n  }\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('never sells anonymously', () => pm.expect([401,403,503]).to.include(pm.response.code));",
+                  "pm.test('no order id returned', () => pm.expect(pm.response.text()).to.not.include('orderId'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Counter · POST /api/pos/sale without CSRF (expect 403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{idToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{apiBase}}/api/pos/sale",
+              "host": [
+                "{{apiBase}}"
+              ],
+              "path": [
+                "api",
+                "pos",
+                "sale"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sale\": {\n    \"items\": [\n      {\n        \"fabricId\": \"1\",\n        \"quantity\": 1\n      }\n    ],\n    \"paymentMethod\": \"cash\",\n    \"saleKey\": \"postman-nocsrf\"\n  }\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('rejected without a CSRF token', () => pm.expect([403]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Counter · GET /api/pos/sale (expect 405)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{apiBase}}/api/pos/sale",
+              "host": [
+                "{{apiBase}}"
+              ],
+              "path": [
+                "api",
+                "pos",
+                "sale"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('method not allowed', () => pm.expect([403,405]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Counter · body carrying userId / total / paymentStatus is ignored (expect no order)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              },
+              {
+                "key": "Cookie",
+                "value": "tresor_csrf={{csrfToken}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{idToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{apiBase}}/api/pos/sale",
+              "host": [
+                "{{apiBase}}"
+              ],
+              "path": [
+                "api",
+                "pos",
+                "sale"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sale\": {\n    \"items\": [\n      {\n        \"fabricId\": \"1\",\n        \"quantity\": 1\n      }\n    ],\n    \"paymentMethod\": \"cash\",\n    \"saleKey\": \"postman-smuggle\",\n    \"userId\": \"attacker\",\n    \"total\": 1,\n    \"paymentStatus\": \"paid\"\n  }\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Identity, money and settlement state are the server's to set. With a",
+                  "// non-admin token this is refused outright; the assertion that matters is",
+                  "// that no order is ever reported back.",
+                  "pm.test('no order created', () => pm.expect([400,401,403,503]).to.include(pm.response.code));",
+                  "pm.test('no order id returned', () => pm.expect(pm.response.text()).to.not.include('orderId'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "CORS · POST from a disallowed origin (expect 403)",
           "request": {
             "method": "POST",

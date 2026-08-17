@@ -11,8 +11,12 @@ interface Props {
 const paymentLabel = (m: Order['paymentMethod']): string => {
   switch (m) {
     case 'cod': return 'Cash on Delivery';
+    case 'cash': return 'Cash';
     case 'upi': return 'UPI';
     case 'card': return 'Card';
+    // A receipt must never render "undefined" where the payment method goes,
+    // whatever an older or newer order happens to carry.
+    default: return String(m ?? '—');
   }
 };
 

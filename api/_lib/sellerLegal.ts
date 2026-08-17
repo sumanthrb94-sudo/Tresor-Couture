@@ -31,3 +31,21 @@ export function sellerGstin(): string | null {
 export function sellerLegalName(): string {
   return String(process.env.VITE_LEGAL_NAME || 'Tresor Couture').trim();
 }
+
+/**
+ * Place of supply for a counter sale: the seller's own premises.
+ *
+ * Goods handed across the counter are supplied where the counter is, so the
+ * sale is intra-state and attracts CGST+SGST rather than IGST. That follows
+ * from where the studio is, not from anything the operator or the customer
+ * says, which is why the server composes it and the request body cannot
+ * override it. Mirrors `BUSINESS.stateName` in src/lib/business.ts — see the
+ * note at the top of this file for why `api/` keeps its own copy.
+ */
+export function counterPlaceOfSupply(): { city: string; state: string; country: string } {
+  return {
+    city: String(process.env.VITE_BUSINESS_CITY || 'Hyderabad').trim(),
+    state: String(process.env.VITE_BUSINESS_STATE || 'Telangana').trim(),
+    country: 'India',
+  };
+}

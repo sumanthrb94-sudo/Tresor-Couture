@@ -1,12 +1,12 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { Order, PaymentMethod, ShippingAddress } from '../types';
+import { Order, WebPaymentMethod, ShippingAddress } from '../types';
 import { ordersApi } from '../lib/firebase';
 import { useAuth } from './AuthContext';
 
 export interface PlaceOrderInput {
   items: { fabricId: string; quantity: number; color?: string }[];
   shippingAddress: ShippingAddress;
-  paymentMethod: PaymentMethod;
+  paymentMethod: WebPaymentMethod;
   couponCode?: string;
 }
 

@@ -162,6 +162,65 @@ const items = [
     )],
   },
   {
+    name: 'Counter · POST /api/pos/sale as a NON-admin (expect 403)',
+    request: req('POST', '/api/pos/sale', {
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '{{csrfToken}}', Cookie: 'tresor_csrf={{csrfToken}}' },
+      auth: 'Bearer {{idToken}}',
+      body: JSON.stringify({ sale: { items: [{ fabricId: '1', quantity: 1 }], paymentMethod: 'cash', saleKey: 'postman-negative' } }, null, 2),
+    }),
+    event: [t(
+      "// THE most important negative in the suite: the counter mints PAID orders",
+      "// and moves stock, so a customer token must never get through.",
+      "pm.test('a customer cannot ring up a sale', () =>",
+      "  pm.expect([401,403,503]).to.include(pm.response.code));",
+      "pm.test('no order id returned', () => pm.expect(pm.response.text()).to.not.include('orderId'));",
+    )],
+  },
+  {
+    name: 'Counter · POST /api/pos/sale anonymously (expect 401/403/503)',
+    request: req('POST', '/api/pos/sale', {
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '{{csrfToken}}', Cookie: 'tresor_csrf={{csrfToken}}' },
+      body: JSON.stringify({ sale: { items: [{ fabricId: '1', quantity: 1 }], paymentMethod: 'cash', saleKey: 'postman-anon' } }, null, 2),
+    }),
+    event: [t(
+      "pm.test('never sells anonymously', () => pm.expect([401,403,503]).to.include(pm.response.code));",
+      "pm.test('no order id returned', () => pm.expect(pm.response.text()).to.not.include('orderId'));",
+    )],
+  },
+  {
+    name: 'Counter · POST /api/pos/sale without CSRF (expect 403)',
+    request: req('POST', '/api/pos/sale', {
+      headers: { 'Content-Type': 'application/json' },
+      auth: 'Bearer {{idToken}}',
+      body: JSON.stringify({ sale: { items: [{ fabricId: '1', quantity: 1 }], paymentMethod: 'cash', saleKey: 'postman-nocsrf' } }, null, 2),
+    }),
+    event: [t(
+      "pm.test('rejected without a CSRF token', () => pm.expect([403]).to.include(pm.response.code));",
+    )],
+  },
+  {
+    name: 'Counter · GET /api/pos/sale (expect 405)',
+    request: req('GET', '/api/pos/sale'),
+    event: [t(
+      "pm.test('method not allowed', () => pm.expect([403,405]).to.include(pm.response.code));",
+    )],
+  },
+  {
+    name: 'Counter · body carrying userId / total / paymentStatus is ignored (expect no order)',
+    request: req('POST', '/api/pos/sale', {
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '{{csrfToken}}', Cookie: 'tresor_csrf={{csrfToken}}' },
+      auth: 'Bearer {{idToken}}',
+      body: JSON.stringify({ sale: { items: [{ fabricId: '1', quantity: 1 }], paymentMethod: 'cash', saleKey: 'postman-smuggle', userId: 'attacker', total: 1, paymentStatus: 'paid' } }, null, 2),
+    }),
+    event: [t(
+      "// Identity, money and settlement state are the server's to set. With a",
+      "// non-admin token this is refused outright; the assertion that matters is",
+      "// that no order is ever reported back.",
+      "pm.test('no order created', () => pm.expect([400,401,403,503]).to.include(pm.response.code));",
+      "pm.test('no order id returned', () => pm.expect(pm.response.text()).to.not.include('orderId'));",
+    )],
+  },
+  {
     name: 'CORS · POST from a disallowed origin (expect 403)',
     request: req('POST', '/api/orders/place', {
       headers: { 'Content-Type': 'application/json', Origin: 'https://evil.example' },
@@ -173,13 +232,19 @@ const items = [
   },
 ];
 
-c.item.push({
+const folder = {
   name: FOLDER,
   description:
     'Security contract for the Vercel serverless endpoints. These are NOT covered by the Firebase emulator suite (the static preview serves no /api), so they run against a DEPLOYED environment: set apiBase to the deployment origin, e.g. https://tresorcouture.in. ' +
     'Every assertion here is a negative one — none of these requests may ever succeed — so the suite is safe to run against production.',
   item: items,
-});
+};
+
+// Idempotent: replace an existing folder rather than appending a second copy,
+// so this can be re-run every time an endpoint is added.
+const at = c.item.findIndex((i) => i.name === FOLDER);
+if (at >= 0) c.item[at] = folder;
+else c.item.push(folder);
 
 fs.writeFileSync(FILE, JSON.stringify(c, null, 2) + '\n');
 console.log(`Added "${FOLDER}" with ${items.length} requests.`);

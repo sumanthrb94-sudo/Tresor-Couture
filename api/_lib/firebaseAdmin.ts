@@ -85,6 +85,11 @@ export function getDb(): Firestore {
 export function firebaseAdminConfigured(): boolean {
   return Boolean(
     (process.env.FIREBASE_SERVICE_ACCOUNT && process.env.FIREBASE_SERVICE_ACCOUNT.trim()) ||
-      process.env.GOOGLE_APPLICATION_CREDENTIALS,
+      process.env.GOOGLE_APPLICATION_CREDENTIALS ||
+      // The Firestore emulator accepts any credentials, so a projectId-only app
+      // really can write when this is set. Vercel never sets it; setting it is
+      // an explicit choice to point at a local emulator. Without this allowance
+      // no state-changing endpoint could be tested at all.
+      process.env.FIRESTORE_EMULATOR_HOST,
   );
 }

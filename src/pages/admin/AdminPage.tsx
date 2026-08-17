@@ -2,6 +2,7 @@ import React from 'react';
 import AdminGuard from './AdminGuard';
 import AdminLayout from './AdminLayout';
 import AdminDashboard from './AdminDashboard';
+import AdminCounter from './AdminCounter';
 import AdminProducts from './AdminProducts';
 import AdminInventory from './AdminInventory';
 import AdminOrders from './AdminOrders';
@@ -26,6 +27,7 @@ const AdminPage: React.FC<Props> = ({ section = 'dashboard' }) => (
   <AdminGuard>
     <AdminLayout section={section}>
       {section === 'dashboard' && <AdminDashboard />}
+      {section === 'counter' && <AdminCounter />}
       {section === 'products' && <AdminProducts />}
       {section === 'inventory' && <AdminInventory />}
       {section === 'orders' && <AdminOrders />}

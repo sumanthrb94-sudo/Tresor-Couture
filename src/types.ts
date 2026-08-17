@@ -127,7 +127,17 @@ export interface ShippingAddress {
   country: string;
 }
 
-export type PaymentMethod = 'card' | 'upi' | 'cod';
+/** What a customer may choose at web checkout. */
+export type WebPaymentMethod = 'card' | 'upi' | 'cod';
+
+/** What an operator may take across the counter. No COD — the piece is handed
+ *  over as it is paid for, so there is nothing to collect on delivery. */
+export type CounterPaymentMethod = 'cash' | 'upi' | 'card';
+
+/** Anything an order may have been settled with, from either channel. Web
+ *  checkout must narrow to `WebPaymentMethod`: widening the checkout to accept
+ *  this union would let a browser claim a sale was paid in cash. */
+export type PaymentMethod = WebPaymentMethod | CounterPaymentMethod;
 
 export type OrderStatus =
   | 'placed'
@@ -160,6 +170,14 @@ export interface Order {
   couponCode?: string;
   /** Discount amount applied via coupon (₹). */
   couponDiscount?: number;
+  /** Where the sale happened. Absent means 'web' — every order placed before
+   *  the counter existed. An 'in-store' order carries no `userId` (it belongs
+   *  to no account) and is created only by /api/pos/sale. */
+  channel?: 'web' | 'in-store';
+  /** Admin uid that rang up a counter sale. Audit trail only — deliberately
+   *  NOT `userId`, which would put the sale in that admin's order history and
+   *  make it returnable by their account. */
+  counterStaffUid?: string;
   /** Soft-delete marker. Set when the unit is returned to the supplier — row
    *  stays in the DB for reporting (sales report shows it in red) but is
    *  excluded from realised-revenue figures. */
@@ -362,6 +380,7 @@ export interface CustomerCrm {
  */
 export type AdminSection =
   | 'dashboard'
+  | 'counter'
   | 'products'
   | 'inventory'
   | 'orders'
@@ -377,7 +396,7 @@ export type AdminSection =
   | 'seo';
 
 export const ADMIN_SECTIONS: AdminSection[] = [
-  'dashboard', 'products', 'inventory', 'orders', 'returns', 'billing',
+  'dashboard', 'counter', 'products', 'inventory', 'orders', 'returns', 'billing',
   'customers', 'support', 'coupons', 'reviews', 'compliance', 'delivery',
   'bulk-email', 'seo',
 ];

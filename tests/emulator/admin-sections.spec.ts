@@ -70,6 +70,9 @@ const SECTIONS: Section[] = [
   { slug: 'admin-14-seo', section: 'seo', title: 'Admin · Catalogue SEO',
     purpose: 'The catalogue SEO audit renders its summary and the issues it found across the seeded catalogue, using only local product data — no external SEO service is called.',
     heading: /catalogue seo/i },
+  { slug: 'admin-15-counter', section: 'counter', title: 'Admin · Counter',
+    purpose: 'The counter till renders with its scan field focused and ready. A USB barcode scanner is a keyboard, so an always-focused input is the entire hardware integration — nothing here needs a driver or an SDK.',
+    heading: /^counter$/i, control: { kind: 'placeholder', value: 'Scan barcode…' } },
 ];
 
 for (const s of SECTIONS) {

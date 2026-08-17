@@ -64,7 +64,8 @@ const DATE_RANGES: { value: DateRange; label: string }[] = [
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   card: 'Card',
   upi: 'UPI',
-  cod: 'Cash on delivery'
+  cod: 'Cash on delivery',
+  cash: 'Cash'
 };
 
 const statusOf = (o: Order): OrderStatus => o.status ?? 'placed';
@@ -346,7 +347,9 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
             <div className="flex items-center justify-between">
               <span className="text-[color:var(--color-myntra-ink-soft)]">Customer ID</span>
               <span className="text-[color:var(--color-myntra-navy)] truncate max-w-[160px]">
-                {order.userId ?? 'Guest'}
+                {/* A counter sale belongs to no account by design — saying
+                    "Guest" would imply a customer who failed to sign in. */}
+                {order.userId ?? (order.channel === 'in-store' ? 'Counter sale' : 'Guest')}
               </span>
             </div>
             {order.couponCode && (

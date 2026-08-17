@@ -97,6 +97,18 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    /* ---------- posSales (counter idempotency locks) ---------- */
+    // Written only by /api/pos/sale through the Admin SDK, which bypasses these
+    // rules entirely. The catch-all at the bottom would already deny this, but
+    // an explicit block is worth the six lines: someone reading the rules to
+    // find out who can touch counter sales should find the answer here, next to
+    // the orders block, rather than inferring it from the absence of a rule.
+    // Reading them would leak the takings; writing one would let a client
+    // suppress a real sale by pre-claiming its key.
+    match /posSales/{lockId} {
+      allow read, write: if false;
+    }
+
     /* ---------- reviews ---------- */
     // Anyone signed-in can submit a review for any product. Reviews go
     // into 'pending' for admin moderation. Owner can delete their own;
