@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { Recorder } from './lib/recorder';
 import { LABEL_DESIGNS, buildSingleLabel, buildLabelSheet, labelableProducts, designById } from '../../src/admin/printLabels';
 import { code128 } from '../../src/lib/barcode';
+import { THERMAL_SIZES, isThermal, thermalById } from '../../src/admin/thermalLabel';
 import type { Fabric } from '../../src/types';
 
 /**
@@ -121,6 +122,38 @@ test('Labels · every design carries brand, piece, price and a scannable code', 
     // with no symbol is a piece the till cannot ring up.
     expect(sheet).not.toContain('id="nocode"');
     rec.note('Un-barcoded products are skipped, not printed blank', 'Reported to the operator instead.');
+
+    // --- Thermal rolls -----------------------------------------------------
+    // A thermal head is one bit per dot at 203dpi. These numbers are the
+    // difference between a symbol that scans and one that does not, and none
+    // of them is visible on screen.
+    const QUIET = 10;
+    for (const t of THERMAL_SIZES) {
+      // Whole dots only: a module 2.9 dots wide is anti-aliased into greys,
+      // and a head that can only burn or not burn turns those into bar widths
+      // the symbol never encoded.
+      expect(Number.isInteger(t.moduleDots), `${t.id}: fractional module`).toBe(true);
+      // One dot per module is too fine for these printers to hold apart.
+      expect(t.moduleDots, `${t.id}: module too fine`).toBeGreaterThanOrEqual(2);
+
+      const symbolDots = (code128('TC00042').modules + QUIET * 2) * t.moduleDots;
+      expect(symbolDots, `${t.id}: symbol wider than the head`).toBeLessThanOrEqual(t.dots);
+      // Worth having at all: a symbol under half the roll wastes the width and
+      // gives a cheap scanner less to find.
+      expect(symbolDots, `${t.id}: symbol too narrow to bother`).toBeGreaterThan(t.dots * 0.5);
+
+      // 203dpi is 8 dots/mm, and the head never reaches the full roll width.
+      expect(t.dots / 8, `${t.id}: head wider than the roll`).toBeLessThan(t.rollMm);
+    }
+
+    // The picker has to be able to tell the two kinds apart — a thermal id
+    // routed to the A4 print dialog is exactly the bug this fixes.
+    expect(isThermal('thermal-58')).toBe(true);
+    expect(isThermal('classic')).toBe(false);
+    expect(isThermal(undefined)).toBe(false);
+    expect(thermalById('thermal-80').dots).toBe(576);
+    expect(thermalById('nonsense').dots).toBe(384);   // falls back to 58mm
+    rec.note('Thermal labels are sized in dots, not millimetres', 'These printers take a bitmap the width of the head; an A4 page gets scaled onto the roll and the barcode becomes unscannable.');
 
     // The encoder still agrees with the label — the one thing that would make
     // every design wrong at once.

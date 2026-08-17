@@ -22,12 +22,8 @@ import { placeholderSwatch } from '../../lib/swatch';
 import { awaitingPhoto } from '../../lib/availability';
 import { code128Svg } from '../../lib/barcode';
 import { reserveBarcode } from '../../lib/barcodeAssign';
-import {
-  LABEL_DESIGNS,
-  defaultDesign,
-  designById,
-  printSingleLabel,
-} from '../../admin/printLabels';
+import { LABEL_DESIGNS, designById, printSingleLabel } from '../../admin/printLabels';
+import { THERMAL_SIZES, downloadThermalLabel, isThermal, thermalById } from '../../admin/thermalLabel';
 import { CATEGORIES, formatINR } from '../../constants';
 import { toCsv, downloadCsv } from '../../lib/csv';
 import LACE_SEED from '../../../inventory-from-pptx/inventory_full_seed.json';
@@ -586,7 +582,7 @@ interface EditorProps {
 
 const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange, onCancel, onSave }) => {
   const [barcoding, setBarcoding] = useState(false);
-  const [labelDesignId, setLabelDesignId] = useState<string>(() => defaultDesign().id);
+  const [labelDesignId, setLabelDesignId] = useState<string>(() => THERMAL_SIZES[0].id);
 
   /**
    * Allocate the barcode now, not on save.
@@ -620,12 +616,25 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
     }
   };
 
-  /** One label for this piece, sized to itself. "Save as PDF" downloads it. */
+  /**
+   * One label for this piece.
+   *
+   * A thermal roll gets a PNG at the print head's exact dot width, because
+   * these printers take a bitmap and feed it — hand one an A4 page and its app
+   * shrinks the whole sheet onto the roll, which is how a barcode ends up a
+   * few millimetres wide and unscannable. Sheet stock gets the print dialog,
+   * where "Save as PDF" is the download.
+   */
   const onDownloadLabel = async () => {
     try {
-      await printSingleLabel(draftToFabric(draft), designById(labelDesignId));
+      const product = draftToFabric(draft);
+      if (isThermal(labelDesignId)) {
+        await downloadThermalLabel(product, { size: thermalById(labelDesignId) });
+      } else {
+        await printSingleLabel(product, designById(labelDesignId));
+      }
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : 'Could not open the print dialog.');
+      window.alert(err instanceof Error ? err.message : 'Could not produce the label.');
     }
   };
 
@@ -1014,9 +1023,16 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
                   onChange={e => setLabelDesignId(e.target.value)}
                   className="input-box !py-1.5 text-[12px] flex-1 min-w-[140px]"
                 >
-                  {LABEL_DESIGNS.map(d => (
-                    <option key={d.id} value={d.id}>{d.name}</option>
-                  ))}
+                  <optgroup label="Thermal printer">
+                    {THERMAL_SIZES.map(t => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Sheet labels (A4)">
+                    {LABEL_DESIGNS.map(d => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </optgroup>
                 </select>
 
                 <button
@@ -1026,11 +1042,13 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
                   title={draft.barcode ? 'Opens the print dialog — choose "Save as PDF" to download' : 'Generate a barcode first'}
                   className="btn-outline !py-1.5 !px-3 text-[12px] inline-flex items-center gap-1.5 disabled:opacity-40"
                 >
-                  <Download className="w-3.5 h-3.5" /> Download label (PDF)
+                  <Download className="w-3.5 h-3.5" /> Download label {isThermal(labelDesignId) ? '(PNG)' : '(PDF)'}
                 </button>
               </div>
               <p className="mt-1.5 text-[11px] text-[color:var(--color-myntra-ink-soft)]">
-                {designById(labelDesignId).blurb}
+                {isThermal(labelDesignId)
+                  ? `Saves a ${thermalById(labelDesignId).dots}-pixel image — exactly the width of a ${thermalById(labelDesignId).rollMm}mm print head. Open it from your printer's app and print at 100%, no scaling.`
+                  : designById(labelDesignId).blurb}
               </p>
             </div>
           </div>

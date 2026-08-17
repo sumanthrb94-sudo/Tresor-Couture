@@ -12,7 +12,7 @@ and the sale lands in Orders and Billing beside the website's.
 | Item | Cost |
 |---|---|
 | USB barcode scanner, wired | ₹1,200–2,500 |
-| A4 label sheets, 63.5 × 38.1 mm, 24 per sheet | ~₹200 per pack |
+| Thermal roll, 58 mm (or A4 label sheets) | ~₹40 a roll |
 | Software | none — no library, no subscription |
 
 A USB scanner is a **keyboard**. It types the code and presses Enter. There is
@@ -20,8 +20,9 @@ no driver to install and no app to pair. That is why the whole till is one
 always-focused input, and why typing a code by hand works exactly the same when
 a label is scuffed.
 
-A thermal printer (₹8–15k) is a later decision. Print on paper first and see
-whether it actually bothers you.
+A portable 58 mm thermal printer prints one label at a time from a phone and
+needs an image, not a page — see "Printing on a portable thermal printer" below.
+A4 sheet stock still works if you would rather batch a shelf at once.
 
 ---
 
@@ -145,7 +146,8 @@ counter. Worth raising with the CA.
 | `src/pages/admin/AdminCounter.tsx` | The till. |
 | `src/lib/pos.ts` | Barcode lookup and the sale call. |
 | `src/lib/barcode.ts` | The Code 128-B encoder. |
-| `src/admin/printLabels.ts` | The four label designs, single labels and sheets. |
+| `src/admin/printLabels.ts` | The four A4 label designs, single labels and sheets. |
+| `src/admin/thermalLabel.ts` | Thermal-roll labels, drawn dot by dot for the print head. |
 | `tests/emulator/labels.spec.ts` | What every design must say, and that it physically fits the page. |
 | `tests/emulator/pos-sale.spec.ts` | Pricing, security and idempotency, against the real handler. |
 
@@ -174,3 +176,27 @@ security postures. The three payment endpoints stay separate because the
 webhook is signature-verified with no CSRF check while the other two are
 token-authenticated, and one dispatcher over three guard chains is how the
 wrong one ends up running.
+
+
+---
+
+## Printing on a portable thermal printer
+
+These printers do not understand paper sizes. They take a **bitmap exactly as
+wide as the print head** and feed it out: 384 dots on a 58 mm roll, 576 on an
+80 mm one. Hand one an A4 page and its app scales the whole sheet down onto the
+roll — which is how a label comes back with a barcode a few millimetres wide
+that no scanner can read.
+
+So pick a **Thermal roll** size in the label dropdown (it is the default). The
+button then saves a **PNG at the head's exact width** instead of opening the
+print dialog. Open it from your printer's own app and print at 100% with no
+scaling or "fit to page".
+
+The bars are drawn on whole dots. A module two-and-a-bit dots wide gets
+anti-aliased into greys, and a head that can only burn or not burn turns those
+greys into bar widths the symbol never encoded — the label looks fine and does
+not scan.
+
+Sheet stock is still there under **Sheet labels (A4)**, and still uses the print
+dialog with "Save as PDF".

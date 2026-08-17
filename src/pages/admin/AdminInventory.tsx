@@ -3,7 +3,8 @@ import { Boxes, Minus, Plus, Search, Filter, Download, AlertCircle, Check, Packa
 import { productsApi } from '../../lib/firebase';
 import { CATEGORIES, formatINR } from '../../constants';
 import { toCsv, downloadCsv } from '../../lib/csv';
-import { printLabels, labelableProducts, LABEL_DESIGNS, defaultDesign, designById } from '../../admin/printLabels';
+import { printLabels, labelableProducts, LABEL_DESIGNS, designById } from '../../admin/printLabels';
+import { THERMAL_SIZES, downloadThermalLabel, isThermal, thermalById } from '../../admin/thermalLabel';
 import { awaitingPhoto } from '../../lib/availability';
 import { reserveBarcode } from '../../lib/barcodeAssign';
 import FabricImage from '../../components/FabricImage';
@@ -62,7 +63,7 @@ const AdminInventory: React.FC = () => {
   const [stockFilter, setStockFilter] = useState<StockFilter>('all');
   const [catFilter, setCatFilter] = useState<CatFilter>('all');
   const [listingFilter, setListingFilter] = useState<ListingFilter>('all');
-  const [labelDesignId, setLabelDesignId] = useState<string>(() => defaultDesign().id);
+  const [labelDesignId, setLabelDesignId] = useState<string>(() => THERMAL_SIZES[0].id);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
 
@@ -205,7 +206,18 @@ const AdminInventory: React.FC = () => {
       if (!ok) return;
     }
     try {
-      await printLabels(labelable.ready, designById(labelDesignId));
+      if (isThermal(labelDesignId)) {
+        // One PNG per piece: a thermal printer's app prints one image at a
+        // time, and a single tall strip would be torn in the wrong places.
+        // Sequential so the browser does not swallow a burst of downloads.
+        const size = thermalById(labelDesignId);
+        for (const p of labelable.ready) {
+          await downloadThermalLabel(p, { size });
+          await new Promise(r => window.setTimeout(r, 250));
+        }
+      } else {
+        await printLabels(labelable.ready, designById(labelDesignId));
+      }
     } catch (err) {
       window.alert(err instanceof Error ? err.message : 'Could not open the print dialog.');
     }
@@ -310,10 +322,17 @@ const AdminInventory: React.FC = () => {
             value={labelDesignId}
             onChange={e => setLabelDesignId(e.target.value)}
             aria-label="Label design"
-            title={designById(labelDesignId).blurb}
+            title={isThermal(labelDesignId)
+              ? `Saves one ${thermalById(labelDesignId).dots}px PNG per product — the exact width of a ${thermalById(labelDesignId).rollMm}mm print head.`
+              : designById(labelDesignId).blurb}
             className="input-box w-full sm:w-[170px]"
           >
-            {LABEL_DESIGNS.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+            <optgroup label="Thermal printer">
+              {THERMAL_SIZES.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </optgroup>
+            <optgroup label="Sheet labels (A4)">
+              {LABEL_DESIGNS.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </optgroup>
           </select>
           <button
             onClick={handlePrintLabels}
@@ -325,7 +344,7 @@ const AdminInventory: React.FC = () => {
             }
             className="btn-outline inline-flex items-center justify-center gap-1.5 !py-2.5 whitespace-nowrap"
           >
-            <Tag className="w-4 h-4" /> Print labels{labelable.ready.length ? ` (${labelable.ready.length})` : ''}
+            <Tag className="w-4 h-4" /> {isThermal(labelDesignId) ? 'Save labels' : 'Print labels'}{labelable.ready.length ? ` (${labelable.ready.length})` : ''}
           </button>
           <button onClick={exportCsv} className="btn-outline inline-flex items-center justify-center gap-1.5 !py-2.5 whitespace-nowrap">
             <Download className="w-4 h-4" /> Export CSV
