@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Boxes, Minus, Plus, Search, Filter, Download, AlertCircle, Check, PackageX, Tag } from 'lucide-react';
+import { Boxes, Minus, Plus, Search, Filter, Download, AlertCircle, Check, PackageX, Tag, Barcode } from 'lucide-react';
 import { productsApi } from '../../lib/firebase';
 import { CATEGORIES, formatINR } from '../../constants';
 import { toCsv, downloadCsv } from '../../lib/csv';
 import { printLabels, labelableProducts } from '../../admin/printLabels';
+import { awaitingPhoto } from '../../lib/availability';
+import { reserveBarcode } from '../../lib/barcodeAssign';
 import FabricImage from '../../components/FabricImage';
 import type { Fabric } from '../../types';
 
@@ -146,6 +148,46 @@ const AdminInventory: React.FC = () => {
     }
   };
 
+  /**
+   * Give every filtered product that lacks a barcode one.
+   *
+   * New products are barcoded as they are saved, so this is for the backlog:
+   * a catalogue that predates the counter, or anything that slipped through.
+   * It exists so the answer to "some of these have no barcode" is a button
+   * rather than a command line — the studio should never need a terminal to
+   * print a price tag.
+   *
+   * Sequential on purpose. The allocator is one transaction per number, and
+   * firing hundreds at a single counter document in parallel would make them
+   * contend and retry; a shelf's worth takes a couple of seconds either way.
+   */
+  const [barcoding, setBarcoding] = useState<{ done: number; total: number } | null>(null);
+
+  const handleGenerateBarcodes = async () => {
+    const missing = labelable.missing;
+    if (!missing.length || barcoding) return;
+    if (!window.confirm(
+      `Allocate a barcode for ${missing.length} product${missing.length === 1 ? '' : 's'} that ${missing.length === 1 ? 'does' : 'do'} not have one?\n\n` +
+      'Existing barcodes are never changed.',
+    )) return;
+
+    setBarcoding({ done: 0, total: missing.length });
+    try {
+      for (let i = 0; i < missing.length; i++) {
+        const barcode = await reserveBarcode();
+        await productsApi.update(missing[i].id, { barcode });
+        setBarcoding({ done: i + 1, total: missing.length });
+      }
+    } catch (err) {
+      // Partial progress is kept: the products already updated have real,
+      // unique barcodes. Re-running picks up where this stopped.
+      window.alert(err instanceof Error ? err.message : 'Could not allocate barcodes.');
+    } finally {
+      setBarcoding(null);
+      setReloadKey(k => k + 1);
+    }
+  };
+
   // Labels print for whatever the current filters show — the toolbar already
   // has search, stock and category filters, so "filter then print" needs no
   // extra selection UI. Products without a barcode are excluded and reported
@@ -252,6 +294,17 @@ const AdminInventory: React.FC = () => {
             <option value="Draft">Drafts</option>
             <option value="Retired">Retired</option>
           </select>
+          {labelable.missing.length > 0 && (
+            <button
+              onClick={handleGenerateBarcodes}
+              disabled={Boolean(barcoding)}
+              title={`${labelable.missing.length} of the filtered products have no barcode yet`}
+              className="btn-outline inline-flex items-center justify-center gap-1.5 !py-2.5 whitespace-nowrap"
+            >
+              <Barcode className="w-4 h-4" />
+              {barcoding ? `Generating ${barcoding.done}/${barcoding.total}…` : `Generate barcodes (${labelable.missing.length})`}
+            </button>
+          )}
           <button
             onClick={handlePrintLabels}
             disabled={!labelable.ready.length}
@@ -361,7 +414,7 @@ const AdminInventory: React.FC = () => {
                           <option value="Draft">Draft</option>
                           <option value="Retired">Retired</option>
                         </select>
-                        {listingOf(f) === 'Draft' && !f.photo?.startsWith('http') && (
+                        {listingOf(f) === 'Draft' && awaitingPhoto(f) && (
                           <div className="text-[10px] text-[color:var(--color-myntra-ink-mute)] mt-1">Needs a photo</div>
                         )}
                       </td>

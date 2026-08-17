@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { Recorder } from './lib/recorder';
 import { DESKTOP } from './lib/session';
-import { isListed } from '../../src/lib/availability';
+import { awaitingPhoto, isListed } from '../../src/lib/availability';
 import { subcategoriesFor } from '../../src/lib/subcategories';
 import type { Fabric } from '../../src/types';
 
@@ -67,6 +67,20 @@ test('Catalogue import · draft rules and derived subcategory menus', async () =
     expect(isListed(make({ stock: 0 }))).toBe(true);
     expect(isListed(make({ stock: 99, listingStatus: 'Draft' }))).toBe(false);
     rec.note('Draft is not sold-out', 'Listing status and stock are separate; neither stands in for the other.');
+
+    // --- What counts as "not photographed yet" -----------------------------
+    // The generated swatch is what a product has INSTEAD of a photograph, so it
+    // is the marker for the reshoot queue.
+    expect(awaitingPhoto(make({ photo: '' }))).toBe(true);
+    expect(awaitingPhoto(make({ photo: '   ' }))).toBe(true);
+    expect(awaitingPhoto(make({ photo: 'data:image/svg+xml;utf8,%3Csvg' }))).toBe(true);
+    expect(awaitingPhoto(make({ photo: '/products/lace/HA6758.jpg' }))).toBe(false);
+    expect(awaitingPhoto(make({ photo: 'https://tresorcouture.in/a.jpg' }))).toBe(false);
+    // The 34 rescued laces once held real photographs as data:image/jpeg URIs —
+    // badly stored, but genuinely shot. Calling those unphotographed would put
+    // finished work back in the queue.
+    expect(awaitingPhoto(make({ photo: 'data:image/jpeg;base64,/9j/4AAQ' }))).toBe(false);
+    rec.note('Swatch means "not shot yet"', 'Only the generated SVG counts — a badly-stored real photograph is still a photograph.');
 
     // --- Rule 2: menus follow the catalogue --------------------------------
     // The exact regression: design names in use, curated names unused.

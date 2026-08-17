@@ -46,6 +46,16 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    /* ---------- counters (barcode series) ---------- */
+    // `counters/barcodes` hands out the next TC number. Admin-only in both
+    // directions: a shopper reading it would learn the catalogue size, and a
+    // shopper writing it could make the admin console mint a barcode that is
+    // already on a product — an ambiguous scan rings up the wrong piece at the
+    // till. The document is a single `{ next: number }`.
+    match /counters/{counterId} {
+      allow read, write: if isAdmin();
+    }
+
     /* ---------- coupons ---------- */
     // Code is the document ID. Public read so the checkout can validate;
     // admin-only write.

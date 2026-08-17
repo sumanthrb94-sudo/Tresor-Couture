@@ -119,5 +119,31 @@ export async function assignBarcodes(db: Firestore, opts: AssignOptions = {}): P
     }
     await batch.commit();
   }
+
+  await advanceCounter(db, next);
   return result;
+}
+
+/**
+ * Push the shared counter past everything this run assigned.
+ *
+ * The admin console allocates barcodes by incrementing `counters/barcodes` in a
+ * transaction (src/lib/barcodeAssign.ts); this script finds the next number by
+ * scanning, because a Firestore transaction reads documents and cannot run a
+ * query. Two allocators means one series only if the scanning one leaves the
+ * counter where it found it — otherwise the console would re-issue numbers a
+ * bulk import had already printed on labels, and a scan would be ambiguous.
+ *
+ * Only ever moves the counter FORWARD: if the console is already further
+ * ahead, this leaves it alone.
+ */
+async function advanceCounter(db: Firestore, highest: number): Promise<void> {
+  const ref = db.collection('counters').doc('barcodes');
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const current = Number(snap.data()?.next ?? 0);
+    const wanted = highest + 1;
+    if (Number.isFinite(current) && current >= wanted) return;
+    tx.set(ref, { next: wanted }, { merge: true });
+  });
 }

@@ -1,4 +1,38 @@
-# Filling the store from a spreadsheet
+# Filling the store
+
+Two ways in, both landing in the same place: **Admin → Products → Add Product**
+for one piece at a time, or the spreadsheet below for a whole shelf at once.
+
+Either way, a product with no photograph is saved as a **Draft** — priced,
+stocked, barcoded and sellable at the counter, but not on the website. Adding
+the photograph is what publishes it.
+
+---
+
+## One at a time, in the admin console
+
+**Admin → Products → Add Product.** Fill brand, name, description, category,
+price, MRP and stock. **Leave Main Photo empty** and save.
+
+* A barcode is allocated automatically — TC00001, TC00002, … from the same
+  series the spreadsheet import and the command line draw from, so no two
+  pieces can ever carry the same code.
+* Print it from **Inventory → Print labels**.
+* The piece shows under **Products → Waiting for photos** until it is shot.
+* Open it, upload the photo: the listing status flips to *On the website* in
+  front of you, and saving publishes it. (Change it back with the same control
+  if you would rather hold it.)
+
+The barcode and status live together in the editor's **Publishing & Barcode**
+section, with a preview of the actual symbol that will print.
+
+Got a backlog of products with no barcode — a catalogue that predates all this?
+**Inventory → Generate barcodes (n)** does the lot. It only ever fills gaps;
+an existing barcode is never changed, because it is already on a printed label.
+
+---
+
+# From a spreadsheet
 
 Register the whole catalogue — category, subcategory, pricing, stock — from one
 Excel sheet, get a barcode for every product, and print the labels. Photographs
@@ -148,6 +182,7 @@ stock count, a value not in one of the dropdown lists.
 | `scripts/catalogue-xlsx-to-json.py` | Excel → JSON. Deliberately dumb: it reads cells, nothing more. |
 | `scripts/import-catalogue.ts` | Validation, mapping and the Firestore write. Every domain rule lives here, where it can read the real category tree. |
 | `scripts/lib/barcodes.ts` | The barcode numbering rule, shared with `assign-barcodes.ts`. |
-| `scripts/assign-barcodes.ts` | Barcodes on their own, for products added through the admin console. |
+| `scripts/assign-barcodes.ts` | Barcodes on their own, for a catalogue that predates the counter. |
+| `src/lib/barcodeAssign.ts` | The in-app allocator. Increments `counters/barcodes` in a transaction, so two admins clicking save at the same moment cannot get the same number. |
 | `docs/ops/tresor-catalogue-TEMPLATE.xlsx` | The sheet to fill. |
 | `docs/ops/tresor-catalogue-SAMPLE.xlsx` | The same sheet, filled, with a month of stock and orders. |

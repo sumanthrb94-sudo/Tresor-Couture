@@ -39,7 +39,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { initAdmin } from './lib/admin';
 import { assignBarcodes, formatBarcode } from './lib/barcodes';
 import { MASTER_CATEGORY_TREE, TAX_RATE } from '../src/constants';
-import { fabricSwatch } from '../src/lib/swatch';
+import { placeholderSwatch } from '../src/lib/swatch';
 import type { Fabric, MasterCategory } from '../src/types';
 
 /* ── CLI ──────────────────────────────────────────────────────────────── */
@@ -74,23 +74,6 @@ const num = (v: unknown): number | undefined => {
   const n = typeof v === 'number' ? v : Number(String(v).replace(/[₹,\s]/g, ''));
   return Number.isFinite(n) ? n : undefined;
 };
-
-/* ── Placeholder imagery ──────────────────────────────────────────────── */
-/** Deterministic palette per master category, so an unphotographed piece still
- *  renders as something recognisably of its family in the admin grid. */
-const PALETTE: Record<MasterCategory, { primary: string; secondary: string; accent: string; weave: Parameters<typeof fabricSwatch>[0]['weave'] }> = {
-  'Fabrics':         { primary: '#E8DCC6', secondary: '#CBB894', accent: '#B8915A', weave: 'plain' },
-  'Dyeable Fabrics': { primary: '#F2E4C4', secondary: '#DCCBA6', accent: '#B8915A', weave: 'twill' },
-  'Laces':           { primary: '#EDE4D2', secondary: '#D6C6A8', accent: '#C9A267', weave: 'brocade' },
-  'Sarees':          { primary: '#C9A267', secondary: '#A8823F', accent: '#8E6520', weave: 'kanjivaram' },
-  'Lehenga Cholis':  { primary: '#D9B26B', secondary: '#B8915A', accent: '#8E6520', weave: 'brocade' },
-  'Anarkalis':       { primary: '#E0BFA0', secondary: '#C4A182', accent: '#8E6520', weave: 'jamdani' },
-  'Western Wear':    { primary: '#CBC0A7', secondary: '#AFA385', accent: '#7E7355', weave: 'twill' },
-  'Studios Prêt':    { primary: '#B8915A', secondary: '#9C7A45', accent: '#F5ECDC', weave: 'satin' },
-};
-
-const swatchFor = (id: string, name: string, master: MasterCategory): string =>
-  fabricSwatch({ id, name, ...PALETTE[master] });
 
 /* ── Validation ───────────────────────────────────────────────────────── */
 interface Problem { row: number; id: string; message: string; }
@@ -328,7 +311,7 @@ async function main(): Promise<void> {
 
     // The SVG swatch is the guaranteed-loading fallback every product carries;
     // it is also the stand-in photo while a piece is unphotographed.
-    const swatch = swatchFor(p.id, name, master);
+    const swatch = placeholderSwatch(p.id, name, master);
     if (!before?.image) data.image = swatch;
     if (p.imageless && !before?.photo) data.photo = swatch;
 

@@ -48,3 +48,21 @@ type HasListing = Pick<Fabric, 'listingStatus'>;
 
 export const isListed = (f: HasListing): boolean =>
   f.listingStatus === undefined || f.listingStatus === 'Active';
+
+/**
+ * Whether a product is still waiting to be photographed.
+ *
+ * A piece with no photograph carries a generated SVG swatch so the admin grid
+ * renders something recognisable instead of a broken image. That swatch is the
+ * marker: it is what a product has INSTEAD of a photograph.
+ *
+ * Only `image/svg+xml` counts. The 34 rescued laces once held real photographs
+ * as `data:image/jpeg` URIs — badly stored, but genuinely shot, and calling
+ * those "unphotographed" would put finished work back in the reshoot queue.
+ */
+type HasPhoto = Pick<Fabric, 'photo'>;
+
+export const awaitingPhoto = (f: HasPhoto): boolean => {
+  const photo = (f.photo ?? '').trim();
+  return !photo || photo.startsWith('data:image/svg+xml');
+};

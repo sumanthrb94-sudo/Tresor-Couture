@@ -27,9 +27,11 @@ whether it actually bothers you.
 
 ## Before the first sale
 
-1. **Barcodes.** Every product needs one. A bulk import assigns them
-   automatically; for products added through the admin console, run
-   `npx tsx scripts/assign-barcodes.ts --prod`.
+1. **Barcodes.** Every product needs one, and every product gets one: saving a
+   product in Admin → Products allocates it, and so does a spreadsheet import.
+   Both draw from a single counter, so no two pieces can ever carry the same
+   code. For a catalogue that predates all this, run
+   `npx tsx scripts/assign-barcodes.ts --prod` once to fill the gaps.
 2. **Print ONE label and scan it.** Do this before printing the rest. The
    barcodes are generated in-house — Code 128-B, no third-party library — and a
    scanner disagreeing with the encoder is the one failure that unit tests

@@ -17,6 +17,10 @@ import {
   Check
 } from 'lucide-react';
 import { productsApi } from '../../lib/firebase';
+import { placeholderSwatch } from '../../lib/swatch';
+import { awaitingPhoto } from '../../lib/availability';
+import { code128Svg } from '../../lib/barcode';
+import { reserveBarcode } from '../../lib/barcodeAssign';
 import { CATEGORIES, formatINR } from '../../constants';
 import { toCsv, downloadCsv } from '../../lib/csv';
 import LACE_SEED from '../../../inventory-from-pptx/inventory_full_seed.json';
@@ -172,6 +176,10 @@ interface Draft {
   weaveType: string;
   rating: string;
   reviewCount: string;
+  /** Our own scannable code. Allocated on save when empty — never typed. */
+  barcode: string;
+  /** Draft = saved, barcoded and sellable at the counter, but not on the website. */
+  listingStatus: NonNullable<Fabric['listingStatus']>;
 }
 
 const emptyDraft = (): Draft => ({
@@ -198,7 +206,12 @@ const emptyDraft = (): Draft => ({
   bundlePrice: '',
   weaveType: '',
   rating: '',
-  reviewCount: ''
+  reviewCount: '',
+  barcode: '',
+  // A new product starts as a Draft. Almost everything is entered before it is
+  // photographed, and a piece with no photograph has no business on the
+  // storefront — adding the photo is what promotes it.
+  listingStatus: 'Draft'
 });
 
 const fabricToDraft = (f: Fabric): Draft => ({
@@ -209,7 +222,11 @@ const fabricToDraft = (f: Fabric): Draft => ({
   description: f.description,
   price: String(f.price),
   mrp: String(f.mrp),
-  photo: f.photo,
+  // A product with no photograph carries a generated swatch. Showing that in
+  // the form would read as "already photographed": the hint would not appear,
+  // and uploading the real photo would not promote the draft, because the field
+  // never went from empty to filled.
+  photo: awaitingPhoto(f) ? '' : f.photo,
   gallery1: f.photoGallery?.[0] ?? '',
   gallery2: f.photoGallery?.[1] ?? '',
   gallery3: f.photoGallery?.[2] ?? '',
@@ -225,7 +242,9 @@ const fabricToDraft = (f: Fabric): Draft => ({
   bundlePrice: f.bundlePrice != null ? String(f.bundlePrice) : '',
   weaveType: f.weaveType ?? '',
   rating: f.rating != null ? String(f.rating) : '',
-  reviewCount: f.reviewCount != null ? String(f.reviewCount) : ''
+  reviewCount: f.reviewCount != null ? String(f.reviewCount) : '',
+  barcode: f.barcode ?? '',
+  listingStatus: f.listingStatus ?? 'Active'
 });
 
 interface DraftErrors {
@@ -256,7 +275,14 @@ const validateDraft = (d: Draft): DraftErrors => {
   if (!d.name.trim()) errs.name = 'Name is required';
   if (!d.description.trim()) errs.description = 'Description is required';
   if (!d.category) errs.category = 'Pick a category';
-  if (!d.photo.trim()) errs.photo = 'Photo is required';
+  // A photo is deliberately NOT required. A piece is registered — priced,
+  // stocked, barcoded, sellable at the counter — days before the shoot, and
+  // blocking the save until a photograph exists is what pushed that work into
+  // spreadsheets. Instead, no photo means the product cannot be published:
+  // see `draftToFabric`, which forces Draft.
+  if (!d.photo.trim() && d.listingStatus === 'Active') {
+    errs.photo = 'A product on the website needs a photo. Leave it as a Draft until the shoot.';
+  }
 
   const price = Number(d.price);
   if (!Number.isFinite(price) || price <= 0) errs.price = 'Price must be > 0';
@@ -304,20 +330,31 @@ const draftToFabric = (d: Draft, existing?: Fabric): Fabric => {
   const parseNullable = (v: string): number | null =>
     v !== '' && Number.isFinite(Number(v)) ? Number(v) : null;
 
+  // No photograph yet? Stand in a deterministic swatch so the admin grid renders
+  // something recognisable, and keep the piece off the storefront. The swatch is
+  // never seen by a shopper: a product without a photo cannot be Active.
+  const id = d.id || newId();
+  const master = (d.category || 'Fabrics') as Fabric['masterCategory'];
+  const swatch = placeholderSwatch(id, d.name.trim() || id, master);
+  const listingStatus: NonNullable<Fabric['listingStatus']> =
+    !photo && d.listingStatus === 'Active' ? 'Draft' : d.listingStatus;
+
   const next: Fabric = {
-    id: d.id || newId(),
+    id,
     brand: d.brand.trim(),
     name: d.name.trim(),
     productCode: d.productCode.trim() || undefined,
     description: d.description.trim(),
     price: Number(d.price),
     mrp: Number(d.mrp),
-    photo,
+    photo: photo || swatch,
     photoGallery: gallery.length ? gallery : [],
-    image: existing?.image ?? photo,
+    image: existing?.image || swatch,
     gallery: existing?.gallery,
     category: (d.category || 'Fabrics') as Fabric['category'],
-    masterCategory: (d.category || 'Fabrics') as Fabric['masterCategory'],
+    masterCategory: master,
+    barcode: d.barcode.trim() || undefined,
+    listingStatus,
     subCategory: d.category === 'Laces' ? 'Trim & Edging' : existing?.subCategory,
     tags,
     sticker: d.sticker || undefined,
@@ -544,6 +581,32 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     onChange({ ...draft, [key]: value });
 
+  /**
+   * Adding the photograph is what publishes a draft.
+   *
+   * That is the whole point of allowing photo-less products: the piece is
+   * registered now and goes live the day it is shot. Doing it here, as the
+   * image lands, means the operator SEES the status change to "On the website"
+   * before pressing save — a silent promotion at save time would be a surprise,
+   * and one they can still undo with the select right below.
+   *
+   * Removing a photo does the reverse: a live product cannot lose its only
+   * image and stay live.
+   */
+  const setPhoto = (value: string) => {
+    const had = draft.photo.trim().length > 0;
+    const has = value.trim().length > 0;
+    if (!had && has && draft.listingStatus === 'Draft') {
+      onChange({ ...draft, photo: value, listingStatus: 'Active' });
+      return;
+    }
+    if (had && !has && draft.listingStatus === 'Active') {
+      onChange({ ...draft, photo: value, listingStatus: 'Draft' });
+      return;
+    }
+    set('photo', value);
+  };
+
   const priceNum = Number(draft.price);
   const mrpNum = Number(draft.mrp);
   const disc = discountPercent(priceNum, mrpNum);
@@ -612,6 +675,7 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
             </Field>
             <Field label="Category" error={errors.category}>
               <select
+                aria-label="Category"
                 className="input-box"
                 value={draft.category}
                 onChange={e => {
@@ -711,6 +775,7 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
               <input
                 type="number"
                 min={0}
+                aria-label="Stock"
                 className="input-box"
                 value={draft.stock}
                 onChange={e => set('stock', e.target.value)}
@@ -720,6 +785,7 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
               <input
                 type="number"
                 min={0}
+                aria-label="Price"
                 className="input-box"
                 value={draft.price}
                 onChange={e => set('price', e.target.value)}
@@ -729,6 +795,7 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
               <input
                 type="number"
                 min={0}
+                aria-label="MRP"
                 className="input-box"
                 value={draft.mrp}
                 onChange={e => set('mrp', e.target.value)}
@@ -800,11 +867,18 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
           <div className="space-y-4">
             <ImageUpload
               id="main"
-              label="Main Photo *"
+              label="Main Photo"
               value={draft.photo}
-              onChange={v => set('photo', v)}
+              onChange={setPhoto}
               error={errors.photo}
             />
+            {!draft.photo.trim() && (
+              <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] -mt-2">
+                No photo yet? Save anyway. The product is created with a barcode and counts for
+                stock and counter billing — it simply stays off the website until you add the
+                photograph here, which publishes it.
+              </p>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {([
@@ -820,6 +894,57 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
                   onChange={val => set(k, val as Draft[typeof k])}
                 />
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Publishing */}
+        <section>
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--color-myntra-ink-mute)] mb-3">
+            Publishing &amp; Barcode
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
+            <Field label="Listing status">
+              <select
+                aria-label="Listing status"
+                className="input-box"
+                value={draft.listingStatus}
+                onChange={e => set('listingStatus', e.target.value as Draft['listingStatus'])}
+              >
+                <option value="Active">On the website</option>
+                <option value="Draft">Draft — not on the website</option>
+                <option value="Retired">Retired</option>
+              </select>
+              <p className="mt-1.5 text-[11px] text-[color:var(--color-myntra-ink-soft)]">
+                {draft.listingStatus === 'Active'
+                  ? 'Shoppers can find and buy this piece.'
+                  : draft.listingStatus === 'Draft'
+                    ? 'Saved in the system with its stock and barcode, and sellable at the counter — but no shopper sees it.'
+                    : 'Taken down. Existing orders keep their record.'}
+              </p>
+            </Field>
+
+            <div>
+              <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[color:var(--color-myntra-ink-mute)] mb-2">
+                Barcode
+              </label>
+              {draft.barcode ? (
+                <div className="border border-[color:var(--color-myntra-border-soft)] rounded p-3 bg-white">
+                  {/* The real encoder, so what is previewed is what prints. */}
+                  <div
+                    className="[&>svg]:block [&>svg]:w-full [&>svg]:h-auto"
+                    dangerouslySetInnerHTML={{ __html: code128Svg(draft.barcode, { height: 34 }) }}
+                  />
+                  <p className="mt-1 font-mono text-[12px] tracking-[0.08em] text-[color:var(--color-myntra-navy)]">
+                    {draft.barcode}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-[12px] text-[color:var(--color-myntra-ink-soft)] border border-dashed border-[color:var(--color-myntra-border-soft)] rounded p-3">
+                  A barcode is allocated automatically when you save. Print it from
+                  Inventory → Print labels.
+                </p>
+              )}
             </div>
           </div>
         </section>
@@ -1128,6 +1253,8 @@ const AdminProducts: React.FC = () => {
   const [query, setQuery] = useState('');
   const [catFilter, setCatFilter] = useState<CategoryFilter>('all');
   const [lacesShowcase, setLacesShowcase] = useState(false);
+  /** "Waiting for photos" — the queue a bulk import or a photo-less save fills. */
+  const [needsPhoto, setNeedsPhoto] = useState(false);
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingExisting, setEditingExisting] = useState<Fabric | null>(null);
@@ -1150,6 +1277,7 @@ const AdminProducts: React.FC = () => {
     const q = query.trim().toLowerCase();
     return rows.filter(f => {
       if (effectiveCat !== 'all' && f.category !== effectiveCat) return false;
+      if (needsPhoto && !awaitingPhoto(f)) return false;
       if (!q) return true;
       return (
         f.name.toLowerCase().includes(q) ||
@@ -1158,7 +1286,9 @@ const AdminProducts: React.FC = () => {
         f.category.toLowerCase().includes(q)
       );
     });
-  }, [rows, query, effectiveCat]);
+  }, [rows, query, effectiveCat, needsPhoto]);
+
+  const awaitingCount = useMemo(() => rows.filter(awaitingPhoto).length, [rows]);
 
   /* open editor handlers */
   const openCreate = () => {
@@ -1188,7 +1318,18 @@ const AdminProducts: React.FC = () => {
     if (Object.keys(errs).length > 0) return;
     setSaving(true);
     try {
-      const record = draftToFabric(draft, editingExisting ?? undefined);
+      // Every product gets a scannable code, allocated here rather than typed:
+      // the number comes from one shared counter so the admin console and a
+      // bulk import can never hand out the same one. Allocated on save, not on
+      // open, so abandoning a half-filled form does not burn a number.
+      let working = draft;
+      if (!working.barcode.trim()) {
+        const barcode = await reserveBarcode();
+        working = { ...working, barcode };
+        setDraft(d => ({ ...d, barcode }));
+      }
+
+      const record = draftToFabric(working, editingExisting ?? undefined);
       const { id, ...payload } = record;
       const cleaned = cleanPayload(payload as unknown as Record<string, unknown>);
       const sizeKB = payloadSizeKB(cleaned);
@@ -1391,6 +1532,14 @@ const AdminProducts: React.FC = () => {
               <Plus className="w-4 h-4" /> Add Product
             </button>
             <button
+              onClick={() => setNeedsPhoto(v => !v)}
+              disabled={!awaitingCount && !needsPhoto}
+              title="Products saved without a photograph. They are barcoded and sellable at the counter, but not on the website."
+              className={`btn-outline inline-flex items-center justify-center gap-1.5 !py-2.5 disabled:opacity-40 ${needsPhoto ? 'bg-[#FDF0E1] border-[#F0D9B5] text-[#9A5B12]' : ''}`}
+            >
+              <Camera className="w-4 h-4" /> Waiting for photos{awaitingCount ? ` (${awaitingCount})` : ''}
+            </button>
+            <button
               onClick={() => setLacesShowcase(v => !v)}
               className={`btn-outline inline-flex items-center justify-center gap-1.5 !py-2.5 ${lacesShowcase ? 'bg-[#F1ECF7] border-[#D6C9E9] text-[#5C3A8E]' : ''}`}
               title="Toggle laces meter/bundle view"
@@ -1487,6 +1636,21 @@ const AdminProducts: React.FC = () => {
                               Code: {f.productCode ?? f.id}
                             </div>
                           )}
+                          <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                            {f.listingStatus && f.listingStatus !== 'Active' && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full border bg-[#FDF0E1] text-[#9A5B12] border-[#F0D9B5]">
+                                {f.listingStatus === 'Draft' ? 'Draft' : 'Retired'}
+                              </span>
+                            )}
+                            {awaitingPhoto(f) && (
+                              <span className="text-[10px] font-semibold text-[color:var(--color-myntra-ink-mute)]">
+                                needs a photo
+                              </span>
+                            )}
+                            {f.barcode && (
+                              <span className="text-[10px] font-mono text-[#5C3A8E]">{f.barcode}</span>
+                            )}
+                          </div>
                         </Td>
                         <Td>
                           <span

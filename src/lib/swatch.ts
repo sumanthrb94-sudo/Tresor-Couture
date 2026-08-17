@@ -95,6 +95,32 @@ const weavePattern = (input: SwatchInput, size: number): string => {
   }
 };
 
+/**
+ * Stand-in imagery for a product that has no photograph yet.
+ *
+ * A piece can be registered — priced, stocked, barcoded, sellable at the
+ * counter — days before it is photographed, so something has to render in the
+ * admin grid meanwhile. A deterministic swatch in the family's own colours
+ * reads as "not photographed yet" rather than as a broken image, and it never
+ * makes a network request.
+ *
+ * Such a product is kept off the storefront (`listingStatus: 'Draft'`), so no
+ * shopper ever sees this stand in for a real photograph.
+ */
+const PLACEHOLDER_PALETTE: Record<string, Omit<SwatchInput, 'id' | 'name'>> = {
+  'Fabrics':         { primary: '#E8DCC6', secondary: '#CBB894', accent: '#B8915A', weave: 'plain' },
+  'Dyeable Fabrics': { primary: '#F2E4C4', secondary: '#DCCBA6', accent: '#B8915A', weave: 'twill' },
+  'Laces':           { primary: '#EDE4D2', secondary: '#D6C6A8', accent: '#C9A267', weave: 'brocade' },
+  'Sarees':          { primary: '#C9A267', secondary: '#A8823F', accent: '#8E6520', weave: 'kanjivaram' },
+  'Lehenga Cholis':  { primary: '#D9B26B', secondary: '#B8915A', accent: '#8E6520', weave: 'brocade' },
+  'Anarkalis':       { primary: '#E0BFA0', secondary: '#C4A182', accent: '#8E6520', weave: 'jamdani' },
+  'Western Wear':    { primary: '#CBC0A7', secondary: '#AFA385', accent: '#7E7355', weave: 'twill' },
+  'Studios Prêt':    { primary: '#B8915A', secondary: '#9C7A45', accent: '#F5ECDC', weave: 'satin' },
+};
+
+export const placeholderSwatch = (id: string, name: string, masterCategory: string): string =>
+  fabricSwatch({ id, name, ...(PLACEHOLDER_PALETTE[masterCategory] ?? PLACEHOLDER_PALETTE.Fabrics) });
+
 export const fabricSwatch = (input: SwatchInput, width = 800, height = 1000): string => {
   const pattern = weavePattern(input, width);
   const name = escapeXml(input.name);

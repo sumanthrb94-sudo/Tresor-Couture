@@ -278,3 +278,93 @@ test('Admin ↔ Customer · Concurrent real-time support chat', async ({ browser
     throw err;
   }
 });
+
+test('Admin · Create a product before it has been photographed', async ({ browser }: { browser: Browser }) => {
+  test.setTimeout(150_000);
+  const name = `E2E Unshot Piece ${nonce()}`;
+  const rec = new Recorder({
+    slug: 'admin-w7-draft-product',
+    title: 'Admin workflow · Register a product with no photograph',
+    area: 'Admin console · Products',
+    purpose:
+      'A piece is priced, stocked and put on a shelf days before it is photographed. Saving must not require a photo: the product is created with a barcode, kept off the storefront as a Draft, and goes live when the photograph is added. Requiring the photo is what pushed this work into spreadsheets in the first place.',
+    reproduce: [
+      'Sign in as admin@test.local and open #/admin/products.',
+      'Add Product: fill brand, name, description, category, price, MRP and stock. Leave Main Photo empty.',
+      'Save. The product is created, listed as a Draft, and shows an allocated TC barcode.',
+      'It appears under "Waiting for photos" until an image is uploaded.',
+      'Open it, add the photo: the listing status flips to "On the website" before you save.',
+    ],
+  });
+
+  try {
+    const adm = await adminPage(browser);
+    await gotoAdmin(adm, 'products');
+    await rec.step(adm, 'Opened the Products section');
+
+    await adm.getByRole('button', { name: /add product/i }).first().click({ timeout: 15_000 });
+    await adm.waitForTimeout(800);
+    await rec.step(adm, 'Opened the New product form');
+
+    // Everything a product genuinely needs — deliberately NOT a photograph.
+    await adm.getByPlaceholder('Banarasi Bridal Silk').fill(name);
+    await adm.getByPlaceholder('Hand-woven on traditional pit looms…')
+      .fill('Registered from the shelf before the shoot. Copy and photography to follow.');
+    await adm.getByLabel('Category').selectOption('Laces');
+    await adm.getByLabel('Price', { exact: true }).fill('1200');
+    await adm.getByLabel('MRP', { exact: true }).fill('1200');
+    await adm.getByLabel('Stock', { exact: true }).fill('3');
+    await rec.step(adm, 'Filled the form with no photograph', 'Main Photo is left empty on purpose.');
+
+    // The status control defaults to Draft, and says why.
+    await expect(adm.getByText(/no shopper sees it/i).first()).toBeVisible({ timeout: 10_000 });
+    await rec.step(adm, 'Defaults to Draft', 'A product with no photo cannot be published, and the form says so plainly.', 'assert');
+
+    await adm.getByRole('button', { name: /^create product$/i }).last().click({ timeout: 10_000 });
+    await adm.waitForTimeout(3000);
+    await rec.step(adm, 'Saved without a photograph');
+
+    // It exists, it is a Draft, and it carries a barcode allocated by the app.
+    const row = adm.getByText(name).filter({ visible: true }).first();
+    await expect(row).toBeVisible({ timeout: 20_000 });
+    await rec.step(adm, 'The product was created', 'No photograph was required to save it.', 'assert');
+
+    await expect(adm.getByText(/^TC\d{5}$/).filter({ visible: true }).first()).toBeVisible({ timeout: 15_000 });
+    await rec.step(adm, 'A barcode was allocated', 'TC + 5 digits, from the same counter the bulk import and the CLI draw from — so two writers can never print the same code on two pieces.', 'assert');
+
+    // And it is queued for the photographer rather than quietly forgotten.
+    await adm.getByRole('button', { name: /waiting for photos/i }).click({ timeout: 10_000 });
+    await adm.waitForTimeout(1200);
+    await expect(adm.getByText(name).filter({ visible: true }).first()).toBeVisible({ timeout: 15_000 });
+    await rec.step(adm, 'Queued under "Waiting for photos"', 'The list of pieces the shoot still owes, rather than a note nobody keeps.', 'assert');
+
+    // --- The photograph arrives, and the piece goes live -------------------
+    // The list is still filtered to "Waiting for photos", so the only row is
+    // the one just created — open it with its own Edit control.
+    await adm.getByRole('button', { name: /^edit$/i }).first().click({ timeout: 10_000 });
+    await adm.waitForTimeout(1200);
+    await adm.locator('#file-main').setInputFiles({
+      name: 'shot.png',
+      mimeType: 'image/png',
+      // A 1x1 PNG. The uploader resizes through a canvas, so it needs a real
+      // decodable image rather than arbitrary bytes.
+      buffer: Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+        'base64',
+      ),
+    });
+    await adm.waitForTimeout(2500);
+    await rec.step(adm, 'Uploaded the photograph');
+
+    // The promotion happens as the image lands, not silently at save time —
+    // the operator sees it, and can still override it with the same control.
+    await expect(adm.getByLabel('Listing status')).toHaveValue('Active', { timeout: 15_000 });
+    await rec.step(adm, 'Adding the photo publishes it', 'The status flips to "On the website" in front of the operator, who can still change it back before saving.', 'assert');
+
+    rec.finish('passed');
+    await adm.context().close();
+  } catch (err) {
+    rec.finish('failed', err instanceof Error ? err.message : String(err));
+    throw err;
+  }
+});
