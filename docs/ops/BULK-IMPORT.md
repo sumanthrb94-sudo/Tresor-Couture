@@ -186,3 +186,25 @@ stock count, a value not in one of the dropdown lists.
 | `src/lib/barcodeAssign.ts` | The in-app allocator. Increments `counters/barcodes` in a transaction, so two admins clicking save at the same moment cannot get the same number. |
 | `docs/ops/tresor-catalogue-TEMPLATE.xlsx` | The sheet to fill. |
 | `docs/ops/tresor-catalogue-SAMPLE.xlsx` | The same sheet, filled, with a month of stock and orders. |
+
+---
+
+## Firestore rules deploy separately from the app
+
+Pushing code deploys the website to Vercel. It does **not** deploy
+`firestore.rules` — those live in Firebase and need their own push:
+
+```bash
+npx firebase-tools deploy --only firestore:rules --project tresor-couture
+```
+
+Or paste the contents of `firestore.rules` into
+**Firebase Console → Firestore Database → Rules → Publish**.
+
+Do this whenever `firestore.rules` changes in a release. The current file adds
+`counters/*` (admin-only), which is where barcode numbers are handed out.
+
+Until it is deployed, barcode allocation still works — it falls back to reading
+the highest number off the products themselves and verifies the result is
+unused before returning it. The only thing lost is the transaction that would
+serialise two people clicking "Generate barcode" in the same instant.

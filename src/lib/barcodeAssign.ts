@@ -45,6 +45,14 @@ async function highestAssigned(): Promise<number> {
   return highest;
 }
 
+/** Firestore rejected the read or write outright — almost always because the
+ *  rules granting `counters/*` to admins have not been deployed. */
+const isPermissionDenied = (err: unknown): boolean => {
+  const code = (err as { code?: string })?.code ?? '';
+  const message = err instanceof Error ? err.message : String(err ?? '');
+  return code === 'permission-denied' || /insufficient permissions/i.test(message);
+};
+
 /**
  * Create the counter if it has never existed, starting above every barcode
  * already in use. Runs once per project; afterwards it is a single cheap read.
@@ -82,16 +90,51 @@ async function inUse(barcode: string): Promise<boolean> {
  * skipping a number.
  */
 export async function reserveBarcode(): Promise<string> {
-  await ensureCounter();
+  // Firestore security rules deploy on their own, not with the app: pushing
+  // code to Vercel does nothing to them. So the counter document can be denied
+  // on a deployment whose app code is perfectly current — and refusing to
+  // issue a barcode over that would make a studio-floor feature depend on an
+  // ops step nobody in the studio can perform.
+  //
+  // Fall back to reading the highest barcode off the products themselves,
+  // which admins can already read and write. That path cannot serialise two
+  // people clicking in the same instant, but every number is still verified
+  // unused before it is returned, so the worst case is a retry rather than a
+  // duplicate on a shelf.
+  let useCounter = true;
+  try {
+    await ensureCounter();
+  } catch (err) {
+    if (!isPermissionDenied(err)) throw err;
+    useCounter = false;
+    console.warn(
+      '[barcode] counters/* is denied by the deployed Firestore rules, so numbers are ' +
+      'being derived from the catalogue instead. Deploy firestore.rules ' +
+      '(firebase deploy --only firestore:rules) to restore transactional allocation.',
+    );
+  }
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    const barcode = await runTransaction(db, async (tx) => {
-      const cur = await tx.get(counterRef());
-      const next = Number(cur.data()?.next ?? 1);
-      const value = Number.isFinite(next) && next > 0 ? Math.floor(next) : 1;
-      tx.set(counterRef(), { next: value + 1 }, { merge: true });
-      return formatBarcode(value);
-    });
+    let barcode: string;
+
+    if (useCounter) {
+      try {
+        barcode = await runTransaction(db, async (tx) => {
+          const cur = await tx.get(counterRef());
+          const next = Number(cur.data()?.next ?? 1);
+          const value = Number.isFinite(next) && next > 0 ? Math.floor(next) : 1;
+          tx.set(counterRef(), { next: value + 1 }, { merge: true });
+          return formatBarcode(value);
+        });
+      } catch (err) {
+        if (!isPermissionDenied(err)) throw err;
+        useCounter = false;
+        continue;   // same attempt, the other way
+      }
+    } else {
+      // `attempt` steps past anything the previous pass found taken.
+      barcode = formatBarcode((await highestAssigned()) + 1 + attempt);
+    }
 
     // The encoder must accept what we are about to print on a label.
     if (!encodableInCode128B(barcode)) throw new Error(`generated an unencodable barcode: ${barcode}`);

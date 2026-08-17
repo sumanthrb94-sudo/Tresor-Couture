@@ -606,7 +606,15 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
     try {
       onChange({ ...draft, barcode: await reserveBarcode() });
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : 'Could not allocate a barcode.');
+      // "Missing or insufficient permissions" is Firestore's wording and tells
+      // the operator nothing they can act on.
+      const raw = err instanceof Error ? err.message : String(err ?? '');
+      window.alert(
+        /insufficient permissions/i.test(raw)
+          ? 'Could not allocate a barcode: this account is not an admin on this project, '
+            + 'or it needs to sign out and back in so its admin claim refreshes.'
+          : raw || 'Could not allocate a barcode.',
+      );
     } finally {
       setBarcoding(false);
     }
