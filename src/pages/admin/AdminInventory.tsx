@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Boxes, Minus, Plus, Search, Filter, Download, AlertCircle, Check, PackageX } from 'lucide-react';
+import { Boxes, Minus, Plus, Search, Filter, Download, AlertCircle, Check, PackageX, Tag } from 'lucide-react';
 import { productsApi } from '../../lib/firebase';
 import { CATEGORIES, formatINR } from '../../constants';
 import { toCsv, downloadCsv } from '../../lib/csv';
+import { printLabels, labelableProducts } from '../../admin/printLabels';
 import FabricImage from '../../components/FabricImage';
 import type { Fabric } from '../../types';
 
@@ -109,6 +110,28 @@ const AdminInventory: React.FC = () => {
     }
   };
 
+  // Labels print for whatever the current filters show — the toolbar already
+  // has search, stock and category filters, so "filter then print" needs no
+  // extra selection UI. Products without a barcode are excluded and reported
+  // rather than silently dropped.
+  const labelable = useMemo(() => labelableProducts(filtered), [filtered]);
+
+  const handlePrintLabels = async () => {
+    if (!labelable.ready.length) return;
+    if (labelable.missing.length) {
+      const ok = window.confirm(
+        `${labelable.missing.length} of the ${filtered.length} filtered products have no barcode yet and will be skipped.\n\n` +
+        `Print ${labelable.ready.length} label${labelable.ready.length === 1 ? '' : 's'}?`,
+      );
+      if (!ok) return;
+    }
+    try {
+      await printLabels(labelable.ready);
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Could not open the print dialog.');
+    }
+  };
+
   const exportCsv = () => {
     const headers = [
       'Product ID',
@@ -178,6 +201,18 @@ const AdminInventory: React.FC = () => {
             <option value="all">All categories</option>
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
+          <button
+            onClick={handlePrintLabels}
+            disabled={!labelable.ready.length}
+            title={
+              labelable.ready.length
+                ? `Print ${labelable.ready.length} barcode label${labelable.ready.length === 1 ? '' : 's'} for the filtered products`
+                : 'None of the filtered products have a barcode yet'
+            }
+            className="btn-outline inline-flex items-center justify-center gap-1.5 !py-2.5 whitespace-nowrap"
+          >
+            <Tag className="w-4 h-4" /> Print labels{labelable.ready.length ? ` (${labelable.ready.length})` : ''}
+          </button>
           <button onClick={exportCsv} className="btn-outline inline-flex items-center justify-center gap-1.5 !py-2.5 whitespace-nowrap">
             <Download className="w-4 h-4" /> Export CSV
           </button>

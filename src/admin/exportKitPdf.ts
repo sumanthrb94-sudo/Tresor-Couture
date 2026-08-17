@@ -20,6 +20,7 @@ import {
   VOICE_NOTES,
   type KitAsset,
 } from './kitManifest';
+import { printHtmlDocument } from './printDocument';
 
 const DOC_TITLE = 'Tresor-Couture-Brand-Kit';
 
@@ -222,66 +223,11 @@ function buildDocument(): string {
 }
 
 /** Wait for every <img> in the doc to finish (load or error), with a cap. */
-function waitForImages(doc: Document, capMs = 8000): Promise<void> {
-  const imgs = Array.from(doc.images);
-  const pending = imgs
-    .filter(img => !img.complete)
-    .map(
-      img =>
-        new Promise<void>(resolve => {
-          img.addEventListener('load', () => resolve(), { once: true });
-          img.addEventListener('error', () => resolve(), { once: true });
-        }),
-    );
-  if (pending.length === 0) return Promise.resolve();
-  return Promise.race([
-    Promise.all(pending).then(() => undefined),
-    new Promise<void>(resolve => window.setTimeout(resolve, capMs)),
-  ]);
-}
 
 /**
  * Build the brand book and open the print dialog (choose "Save as PDF").
  * Resolves once printing has been triggered.
  */
 export async function downloadKitAsPdf(): Promise<void> {
-  const iframe = document.createElement('iframe');
-  iframe.setAttribute('aria-hidden', 'true');
-  iframe.style.position = 'fixed';
-  iframe.style.right = '0';
-  iframe.style.bottom = '0';
-  iframe.style.width = '0';
-  iframe.style.height = '0';
-  iframe.style.border = '0';
-  iframe.style.opacity = '0';
-  document.body.appendChild(iframe);
-
-  const cleanup = () => {
-    // Delay removal so the print dialog has the document while it's open.
-    window.setTimeout(() => {
-      if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-    }, 1000);
-  };
-
-  try {
-    const doc = iframe.contentDocument;
-    const win = iframe.contentWindow;
-    if (!doc || !win) throw new Error('Could not create the export frame.');
-
-    doc.open();
-    doc.write(buildDocument());
-    doc.close();
-
-    await waitForImages(doc);
-
-    win.addEventListener('afterprint', cleanup, { once: true });
-    win.focus();
-    win.print();
-
-    // Fallback cleanup in case afterprint never fires (some browsers).
-    window.setTimeout(cleanup, 60000);
-  } catch (err) {
-    cleanup();
-    throw err;
-  }
+  await printHtmlDocument(buildDocument());
 }
