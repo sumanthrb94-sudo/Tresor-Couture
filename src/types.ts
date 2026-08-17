@@ -45,6 +45,11 @@ export interface Fabric {
   stock?: number;
   /** Unique product code / SKU shown in exports (e.g. HA6758). Especially important for laces. */
   productCode?: string;
+  /** Our own scannable code, printed as Code 128 on shelf labels (e.g. TC00001).
+   *  Deliberately separate from `productCode`, which is the SUPPLIER's code:
+   *  that one is optional, non-unique and absent on own-production pieces, so
+   *  it cannot be the thing a till scans. Assigned by scripts/assign-barcodes.ts. */
+  barcode?: string;
   /** How the product is sold: per unit, per meter, or as a bundle of meters (laces). */
   unitType?: 'unit' | 'per meter' | 'bundle';
   /** Buying / cost price for margin reporting. */
