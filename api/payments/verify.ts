@@ -192,7 +192,7 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
     });
 
     // NOTE: the order-confirmation email for paid (card/UPI) orders is a
-    // follow-up. Main's email path (`api/email/order.ts`) requires the buyer's
+    // follow-up. Main's email path (`api/_handlers/email-order.ts`) requires the buyer's
     // Firebase ID token, which this server-to-server flow does not hold, so it
     // can't be called from here directly. Options for the follow-up: (a) have
     // the client call /api/email/order after a successful verify, or (b) add a

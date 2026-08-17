@@ -10,7 +10,7 @@
 //
 // SELF-CONTAINED: no relative imports — the project is ESM ("type":"module")
 // and Node ESM can't resolve extensionless relative imports, which crashes the
-// function at cold start. Helpers are inlined (mirrors api/email/welcome.ts).
+// function at cold start. Helpers are inlined (mirrors api/_handlers/email-welcome.ts).
 
 import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
 import { validateCsrfToken } from '../_lib/csrf.js';

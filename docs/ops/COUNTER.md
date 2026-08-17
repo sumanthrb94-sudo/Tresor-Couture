@@ -133,3 +133,29 @@ counter. Worth raising with the CA.
 | `src/lib/barcode.ts` | The Code 128-B encoder. |
 | `src/admin/printLabels.ts` | Label sheets. |
 | `tests/emulator/pos-sale.spec.ts` | Pricing, security and idempotency, against the real handler. |
+
+---
+
+## A note on the twelve-function budget
+
+Vercel's Hobby plan allows **twelve serverless functions**, one per file under
+`api/`. Adding the counter endpoint made thirteen — and the symptom was
+confusing: the build went green, then the *deploy* was refused with a message
+about creating a team.
+
+The fix was free. The three email routes now share one file
+(`api/email/[kind].ts`), a dynamic segment being one function that serves many
+paths, so `/api/email/welcome`, `/api/email/order` and `/api/email/bulk` all
+still resolve exactly as before. That puts the project at **11 of 12**.
+
+`npm run build` now counts them first and fails locally, with the options, if
+`api/` ever goes over again. Files under `api/_lib/` and `api/_handlers/` do
+not count — the leading underscore tells Vercel they are modules, not
+endpoints.
+
+When the next endpoint is needed, collapse siblings behind a dynamic segment
+before paying for Pro. One exception: **do not** merge routes with different
+security postures. The three payment endpoints stay separate because the
+webhook is signature-verified with no CSRF check while the other two are
+token-authenticated, and one dispatcher over three guard chains is how the
+wrong one ends up running.
