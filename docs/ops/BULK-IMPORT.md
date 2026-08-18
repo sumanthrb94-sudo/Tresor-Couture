@@ -90,6 +90,46 @@ freshly imported shelf.
 
 ---
 
+## Adding a category
+
+A master category lives in **two** places, and both are code:
+
+1. `MasterCategory` in `src/types.ts` — the union. Adding a name here makes
+   TypeScript demand the rest, which is the point: a category that is half
+   added cannot compile.
+2. `src/constants.ts` — `CATEGORIES`, `MASTER_CATEGORIES` (the same list twice,
+   for the admin form and the storefront), `MASTER_CATEGORY_TREE` (its curated
+   subcategory vocabulary — an empty `[]` is fine) and `MASTER_CATEGORY_TILES`
+   (colour and tagline for the home-page tile).
+
+Then run `python3 scripts/sync-workbook-categories.py`, which pushes the list
+into the Master Category dropdown in both catalogue workbooks. This is not
+optional: Excel **blocks** a value that is not on the dropdown's list, so a
+category the site accepts would be rejected by the spreadsheet, and nobody finds
+out until they are halfway through typing a delivery.
+
+**No Firestore rules change is needed.** The rules require `masterCategory` and
+`category` to be present and say nothing about their values — deliberately, so
+the vocabulary can move at the speed of the shop rather than the speed of a
+rules deploy.
+
+What happens next, on its own:
+
+* The category appears **immediately** in Products → Add Product, in the batch
+  grid's per-row dropdown, and in the batch defaults panel.
+* It appears in the **navbar, the home tiles and the shop filters only once a
+  live product uses it** (`masterCategoriesFor`, `src/lib/subcategories.ts`).
+  A section with nothing in it is a menu link that lands on an empty page, and
+  a category is always declared long before its first piece is photographed.
+* Its subcategories in the shopper menus come from the catalogue, not from
+  `MASTER_CATEGORY_TREE` — the tree only decides the ORDER of names that have
+  stock. A name typed into a product that the tree never heard of still shows.
+* `public/sitemap.xml` lists a handful of category URLs by hand
+  (`scripts/build-sitemap.ts`). Add the new one there **after** it has products,
+  not before — offering Google an empty page is worse than not offering it.
+
+---
+
 # From a spreadsheet
 
 Register the whole catalogue — category, subcategory, pricing, stock — from one
@@ -138,7 +178,7 @@ you do not use, or add your own — only the names below are read.
 |---|---|---|
 | **Product ID** | yes | The key. Letters, digits, `.`, `-`, `_`, up to 64 characters. A new ID creates a product; an existing ID updates it. It is also the product's web address, so keep it readable: `lc-zardozi-sage`, not `p1`. |
 | **Product Name** | yes | What the customer sees. |
-| **Master Category** | yes | One of the eight in the dropdown. |
+| **Master Category** | yes | One of the names in the dropdown. See "Adding a category" below. |
 | Sub Category / Design | no | Free text. A new name appears in the menus on its own — but check the spelling, because a typo quietly creates a second, near-empty subcategory. |
 | **Selling Price (₹)** | yes | Must be greater than zero. |
 | MRP (₹) | no | Defaults to the selling price. May not be *below* it — that would print a negative discount. |

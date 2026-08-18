@@ -926,35 +926,41 @@ export const TESTIMONIALS: Testimonial[] = [
 export const MATERIAL_TYPES = ['Silk', 'Cotton', 'Wool', 'Linen', 'Satin', 'Mixed'];
 
 /**
- * Product application categories — these drive the admin product form dropdown,
- * the navbar mega-menu, the home-page CategoryStrip, the mobile drawer and
- * the shop filter UI. Values match MasterCategory.
- */
-export const CATEGORIES: MasterCategory[] = [
-  'Fabrics',
-  'Dyeable Fabrics',
-  'Laces',
-  'Sarees',
-  'Lehenga Cholis',
-  'Anarkalis',
-  'Western Wear',
-  'Studios Prêt'
-];
-
-/**
- * The seven top-level catalogue sections. These drive the navbar mega-menu,
- * the home-page CategoryStrip, the mobile drawer and the shop filter UI.
+ * The top-level catalogue sections, in the order a designer chose. These drive
+ * the admin category dropdowns, the navbar mega-menu, the home-page
+ * CategoryStrip, the mobile drawer and the shop filter UI.
+ *
+ * Adding one: see "Adding a category" in docs/ops/BULK-IMPORT.md. It reaches the
+ * admin dropdowns at once and the shopper's menus on the day its first live
+ * product exists — `masterCategoriesFor()` (lib/subcategories.ts) hides a
+ * section with nothing in it, because that is a menu link landing on an empty
+ * page. No Firestore rules change is needed; the rules require the field to be
+ * present and say nothing about its value.
  */
 export const MASTER_CATEGORIES: MasterCategory[] = [
   'Fabrics',
   'Dyeable Fabrics',
   'Laces',
   'Sarees',
+  'One Minute Saree',
+  'Half Saree',
   'Lehenga Cholis',
+  'Langha Jacket',
   'Anarkalis',
+  'Gown',
+  'Three Piece Set',
+  'Ethnic Wear',
+  'Masakhali',
   'Western Wear',
   'Studios Prêt'
 ];
+
+/**
+ * The admin form's category dropdown. Was a second copy of the list above, which
+ * meant adding a category twice or having the two disagree; it is the same array
+ * now, kept only because plenty of code imports this name.
+ */
+export const CATEGORIES = MASTER_CATEGORIES;
 
 /**
  * Hierarchical taxonomy: each master category may have sub-categories that
@@ -976,8 +982,19 @@ export const MASTER_CATEGORY_TREE: Record<MasterCategory, string[]> = {
   'Dyeable Fabrics': ['Cotton', 'Silk', 'Linen', 'Mixed'],
   Laces: ['Trim & Edging', 'Patch'],
   Sarees: ['Half Sarees', 'Banarasi', 'Kanjivaram', 'Patola', 'Bandhani', 'Jamdani', 'Mashru', 'Pre-draped Saree'],
+  'One Minute Saree': ['Ready-pleated', 'Lycra', 'Georgette', 'Satin', 'Embellished'],
+  'Half Saree': ['Langa Voni', 'Traditional', 'Contemporary', 'Bridal'],
   'Lehenga Cholis': ['Bridal', 'Festive', 'Contemporary', 'Zardozi Floral', 'Threadwork', 'Pearl Strand', 'Ivory Heritage'],
+  'Langha Jacket': ['Long Jacket', 'Short Jacket', 'Cape', 'Shrug'],
   Anarkalis: ['Floor-length', 'Knee-length', 'Embroidered'],
+  Gown: ['Anarkali Gown', 'Indo-Western', 'Evening', 'Reception'],
+  'Three Piece Set': ['Kurta Pant Dupatta', 'Top Skirt Dupatta', 'Co-ord Set', 'Festive', 'Everyday'],
+  'Ethnic Wear': ['Kurta Sets', 'Salwar Suits', 'Sharara Sets', 'Palazzo Sets', 'Ethnic Gowns', 'Indo-Western', 'Dupattas'],
+  // Deliberately empty: Masakhali is a name, not a shape, so there is no
+  // vocabulary to curate yet. Subcategories typed against it still reach the
+  // menus — subcategoriesFor derives those from the catalogue — and the
+  // designer's preferred ORDER can be filled in here once there is one.
+  Masakhali: [],
   'Western Wear': ['Dresses', 'Tops', 'Co-ords', 'Jumpsuits'],
   'Studios Prêt': ['Ready-to-Wear', 'Capsule Drops', 'Atelier Edits']
 };
@@ -988,7 +1005,14 @@ export const MASTER_CATEGORY_TILES: { name: MasterCategory; color: string; tagli
   { name: 'Laces',            color: '#EDE4D2', tagline: 'Hand-knotted trims & edging' },
   { name: 'Sarees',           color: '#C9A267', tagline: 'Six yards of heritage' },
   { name: 'Lehenga Cholis',   color: '#D9B26B', tagline: 'For the aisle and after' },
+  { name: 'One Minute Saree', color: '#E6CBB2', tagline: 'Pre-draped, on in a minute' },
+  { name: 'Half Saree',       color: '#D9C48F', tagline: 'Langa voni for the ceremony' },
+  { name: 'Langha Jacket',    color: '#CBB79A', tagline: 'Jackets and capes over the lehenga' },
   { name: 'Anarkalis',        color: '#E0BFA0', tagline: 'Royal silhouettes, modern cuts' },
+  { name: 'Gown',             color: '#E3C9C0', tagline: 'Floor-sweeping silhouettes' },
+  { name: 'Three Piece Set',  color: '#DED0B6', tagline: 'Kurta, bottom and dupatta together' },
+  { name: 'Ethnic Wear',      color: '#D8C3A5', tagline: 'Kurta sets, suits and dupattas' },
+  { name: 'Masakhali',        color: '#C7A87C', tagline: 'The Masakhali edit' },
   { name: 'Western Wear',     color: '#CBC0A7', tagline: 'East-West edit' },
   { name: 'Studios Prêt',     color: '#B8915A', tagline: 'Ready-to-wear, off the atelier rail' }
 ];

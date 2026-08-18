@@ -10,6 +10,8 @@ operational fields the code does not yet track (buying price, supplier, HSN,
 reorder level, stock movements).
 """
 import json
+import re
+from pathlib import Path
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.worksheet.datavalidation import DataValidation
@@ -42,9 +44,27 @@ COLS = [
 ]
 C = {name: get_column_letter(i + 1) for i, (name, _) in enumerate(COLS)}
 
+def master_categories():
+    """Read MASTER_CATEGORIES out of src/constants.ts rather than restating it.
+
+    Excel *blocks* a value that is not on the dropdown's list, so a category
+    added to the application but not here makes the spreadsheet reject a product
+    the site accepts. Keeping a second copy of the list is how that happens, so
+    there is no second copy. (`scripts/sync-workbook-categories.py` pushes the
+    same list into workbooks that already exist, without rebuilding them.)
+    """
+    src = (Path(__file__).resolve().parent.parent / 'src' / 'constants.ts').read_text(encoding='utf8')
+    m = re.search(r'export const MASTER_CATEGORIES:\s*MasterCategory\[\]\s*=\s*\[(.*?)\];', src, re.S)
+    if not m:
+        raise SystemExit('Could not find MASTER_CATEGORIES in src/constants.ts — did it get renamed?')
+    names = re.findall(r"'([^']+)'", m.group(1))
+    if not names:
+        raise SystemExit('MASTER_CATEGORIES parsed as empty — refusing to build an empty dropdown.')
+    return names
+
+
 LISTS = {
-    'Master Category': ['Fabrics', 'Dyeable Fabrics', 'Laces', 'Sarees', 'Lehenga Cholis',
-                        'Anarkalis', 'Western Wear', 'Studios Prêt'],
+    'Master Category': master_categories(),
     'Material': ['Silk', 'Silk blend', 'Cotton', 'Wool', 'Linen', 'Satin', 'Net',
                  'Georgette', 'Organza', 'Mixed'],
     'Unit Type': ['unit', 'per meter', 'bundle'],

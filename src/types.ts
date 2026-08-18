@@ -9,8 +9,15 @@ export type MasterCategory =
   | 'Dyeable Fabrics'
   | 'Laces'
   | 'Sarees'
+  | 'One Minute Saree'
+  | 'Half Saree'
   | 'Lehenga Cholis'
+  | 'Langha Jacket'
   | 'Anarkalis'
+  | 'Gown'
+  | 'Three Piece Set'
+  | 'Ethnic Wear'
+  | 'Masakhali'
   | 'Western Wear'
   | 'Studios Prêt';
 

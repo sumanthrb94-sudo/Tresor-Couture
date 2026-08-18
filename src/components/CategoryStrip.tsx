@@ -1,9 +1,17 @@
 import React from 'react';
 import { MASTER_CATEGORY_TILES } from '../constants';
 import { useRouter } from '../context/RouterContext';
+import { useCatalog } from '../context/CatalogContext';
+import { masterCategoriesFor } from '../lib/subcategories';
 
 const CategoryStrip: React.FC = () => {
   const { navigate } = useRouter();
+  // Only sections that have something in them. A tile promising a category the
+  // shop cannot yet show is worse than one tile fewer, and a category is added
+  // to the admin dropdowns long before its first piece is photographed.
+  const { products } = useCatalog();
+  const live = React.useMemo(() => new Set(masterCategoriesFor(products)), [products]);
+  const tiles = MASTER_CATEGORY_TILES.filter(t => live.has(t.name));
   return (
     <section className="py-8 md:py-12 px-4 md:px-8 lg:px-10 max-w-[1400px] mx-auto">
       <div className="flex items-end justify-between mb-5 md:mb-7">
@@ -16,7 +24,7 @@ const CategoryStrip: React.FC = () => {
         </button>
       </div>
       <div className="grid grid-flow-col auto-cols-[78%] sm:auto-cols-[44%] md:auto-cols-auto md:grid-flow-row md:grid-cols-4 lg:grid-cols-7 gap-3 md:gap-4 overflow-x-auto md:overflow-visible snap-x snap-mandatory scrollbar-none pb-2">
-        {MASTER_CATEGORY_TILES.map(tile => (
+        {tiles.map(tile => (
           <button
             key={tile.name}
             onClick={() => navigate({ name: 'shop', category: tile.name })}

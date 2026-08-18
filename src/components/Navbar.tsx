@@ -7,8 +7,8 @@ import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
 import { useCatalog } from '../context/CatalogContext';
-import { FABRICS, MASTER_CATEGORIES, OFFER_TICKER } from '../constants';
-import { subcategoriesFor } from '../lib/subcategories';
+import { FABRICS, OFFER_TICKER } from '../constants';
+import { masterCategoriesFor, subcategoriesFor } from '../lib/subcategories';
 import { sellableFirst } from '../lib/availability';
 import type { MasterCategory } from '../types';
 
@@ -16,12 +16,23 @@ type NavEntry =
   | { kind: 'master'; label: MasterCategory; tone?: 'default' | 'premium' }
   | { kind: 'static'; label: string; tone?: 'default' | 'premium' };
 
-const NAV: NavEntry[] = [
-  ...MASTER_CATEGORIES
-    .filter(m => m !== 'Studios Prêt')
-    .map<NavEntry>(m => ({ kind: 'master', label: m })),
-  { kind: 'master', label: 'Studios Prêt', tone: 'premium' }
-];
+/**
+ * The nav, derived from the catalogue rather than from the category list.
+ *
+ * A section with no products in it is a menu link that lands on an empty page,
+ * so it is not offered. That also makes adding a category safe: it appears in
+ * the admin dropdowns immediately, and here on the day its first piece goes
+ * live. Studios Prêt keeps its own tone and its place at the end.
+ */
+const navFor = (pool: Parameters<typeof masterCategoriesFor>[0]): NavEntry[] => {
+  const masters = masterCategoriesFor(pool);
+  return [
+    ...masters.filter(m => m !== 'Studios Prêt').map<NavEntry>(m => ({ kind: 'master', label: m })),
+    ...(masters.includes('Studios Prêt')
+      ? [{ kind: 'master', label: 'Studios Prêt', tone: 'premium' } as NavEntry]
+      : []),
+  ];
+};
 
 const Navbar: React.FC = () => {
   const { navigate, route } = useRouter();
@@ -59,6 +70,7 @@ const Navbar: React.FC = () => {
   // Shared catalogue for search / mega panels
   const { products: catalogProducts } = useCatalog();
   const searchPool = catalogProducts.length ? catalogProducts : FABRICS;
+  const NAV = useMemo(() => navFor(searchPool), [searchPool]);
 
   const suggestions = useMemo(() => {
     const q = search.trim().toLowerCase();

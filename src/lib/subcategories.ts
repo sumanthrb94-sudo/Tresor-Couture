@@ -1,5 +1,34 @@
-import { MASTER_CATEGORY_TREE } from '../constants';
+import { MASTER_CATEGORIES, MASTER_CATEGORY_TREE } from '../constants';
 import type { Fabric, MasterCategory } from '../types';
+
+/**
+ * The master categories to OFFER a shopper, in the order a designer chose.
+ *
+ * Same rule as `subcategoriesFor` one level up: a section with nothing in it is
+ * a menu link that lands on an empty page, so it is not shown. This matters most
+ * the day a category is ADDED — 'Ethnic Wear' exists in the admin dropdowns from
+ * the moment it is declared, because that is how its first product gets created,
+ * but a shopper should not meet it until there is something to see.
+ *
+ * The pool passed in is the shopper's catalogue, which already excludes drafts
+ * and retired pieces, so "has a product" means "has a product on sale" without
+ * this needing to know what a draft is.
+ *
+ * An EMPTY pool returns everything. That is the catalogue still loading, not a
+ * shop with nothing in it, and blanking the navbar for a second is worse than
+ * briefly offering a section.
+ */
+export function masterCategoriesFor(
+  products: Pick<Fabric, 'masterCategory' | 'category'>[],
+): MasterCategory[] {
+  if (!products.length) return MASTER_CATEGORIES;
+  const inUse = new Set<string>();
+  for (const p of products) {
+    if (p.masterCategory) inUse.add(p.masterCategory);
+    if (p.category) inUse.add(p.category);
+  }
+  return MASTER_CATEGORIES.filter(m => inUse.has(m));
+}
 
 /**
  * The subcategories to OFFER a shopper under a master category.

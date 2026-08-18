@@ -5,7 +5,7 @@ import {
   MASTER_CATEGORIES,
   MASTER_CATEGORY_TILES
 } from '../constants';
-import { subcategoriesFor } from '../lib/subcategories';
+import { masterCategoriesFor, subcategoriesFor } from '../lib/subcategories';
 import { Fabric, MasterCategory } from '../types';
 import ProductCard from '../components/ProductCard';
 import { useRouter } from '../context/RouterContext';
@@ -97,6 +97,11 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
     });
   }, [allProducts, activeMaster, activeSub]);
 
+  // Sections worth offering: the ones with something in them. Derived from the
+  // WHOLE catalogue, not the filtered view, or narrowing to Sarees would remove
+  // every other section from the sidebar that is meant to get you out of it.
+  const liveMasters = useMemo(() => masterCategoriesFor(allProducts), [allProducts]);
+
   const allColors = useMemo(() => {
     const s = new Set<string>();
     (products ?? []).forEach(f => f.colors?.forEach(c => s.add(c.name)));
@@ -185,7 +190,7 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
       </div>
 
       <Section title="Master Category">
-        {MASTER_CATEGORIES.map(m => {
+        {liveMasters.map(m => {
           const active = activeMaster === m;
           return (
             <button
@@ -373,7 +378,7 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
                   Check back soon, or browse another atelier section.
                 </p>
                 <div className="flex gap-2 justify-center flex-wrap">
-                  {MASTER_CATEGORIES.filter(m => m !== activeMaster).slice(0, 4).map(m => (
+                  {liveMasters.filter(m => m !== activeMaster).slice(0, 4).map(m => (
                     <button
                       key={m}
                       onClick={() => navigate({ name: 'shop', category: m })}
@@ -398,7 +403,7 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
                   </p>
                 )}
                 <div className="flex gap-2 justify-center flex-wrap mb-3">
-                  {MASTER_CATEGORIES.filter(m => m !== activeMaster).slice(0, 4).map(m => (
+                  {liveMasters.filter(m => m !== activeMaster).slice(0, 4).map(m => (
                     <button
                       key={m}
                       onClick={() => navigate({ name: 'shop', category: m })}

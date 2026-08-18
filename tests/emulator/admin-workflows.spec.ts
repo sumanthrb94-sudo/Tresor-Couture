@@ -496,36 +496,42 @@ test('Admin · Add a batch of products and label exactly that batch', async ({ b
       `Product Name\tStock\tCategory\tSub Category\tSelling Price\tSupplier Code\n` +
       `E2E Batch Gold Braid ${tag}\t4\tLaces\tTrim & Edging\t1200\tHA-${tag}\n` +
       `E2E Batch Pearl Trim ${tag}\t2\tLaces\tPatch\t850\tPT-${tag}\n` +
-      `E2E Batch Silk Saree ${tag}\t6\tSarees\tBanarasi\t2100\tSR-${tag}`,
+      `E2E Batch Silk Saree ${tag}\t6\tSarees\tBanarasi\t2100\tSR-${tag}\n` +
+      `E2E Batch Kurta Set ${tag}\t3\tEthnic Wear\tKurta Sets\t3400\tKS-${tag}`,
     );
     await adm.getByRole('button', { name: /add these rows/i }).click();
     await adm.waitForTimeout(500);
-    await expect(adm.getByText(/3 ready to add/i).first()).toBeVisible({ timeout: 10_000 });
-    await rec.step(adm, 'Pasted three rows', 'Header recognised and dropped; columns matched by name, so a supplier sheet in its own order still lands in the right fields.', 'assert');
+    await expect(adm.getByText(/4 ready to add/i).first()).toBeVisible({ timeout: 10_000 });
+    await rec.step(adm, 'Pasted four rows', 'Header recognised and dropped; columns matched by name, so a supplier sheet in its own order still lands in the right fields.', 'assert');
 
     // Mixed categories in one batch: a delivery is rarely all one thing.
     await expect(adm.getByLabel('Category, row 1', { exact: true })).toHaveValue('Laces');
     await expect(adm.getByLabel('Category, row 3', { exact: true })).toHaveValue('Sarees');
+    await expect(adm.getByLabel('Category, row 4', { exact: true })).toHaveValue('Ethnic Wear');
     await expect(adm.getByLabel('Sub category, row 3', { exact: true })).toHaveValue('Banarasi');
     await expect(adm.getByLabel('Supplier code, row 1', { exact: true })).toHaveValue(`HA-${tag}`);
     await rec.step(adm, 'Per-row category, subcategory and code', 'One batch holds laces and a saree; the panel at the top only fills what a row left blank.', 'assert');
 
-    await adm.getByRole('button', { name: /^add 3 products$/i }).click();
+    await adm.getByRole('button', { name: /^add 4 products$/i }).click();
 
     // Each product is one barcode transaction, so give the batch room.
-    await expect(adm.getByText(/3 products added/i).first()).toBeVisible({ timeout: 90_000 });
-    await rec.step(adm, 'Batch saved', 'Three drafts, each with its own code.', 'assert');
+    await expect(adm.getByText(/4 products added/i).first()).toBeVisible({ timeout: 90_000 });
+    await rec.step(adm, 'Batch saved', 'Four drafts, each with its own code.', 'assert');
 
     // Scoped to the batch's own list: the catalogue behind the dialog is full
     // of TC codes, and counting those would prove nothing about this batch.
     const batchList = adm.getByRole('list', { name: /barcodes for this batch/i });
-    await expect(batchList.getByText(/^TC\d{5}$/)).toHaveCount(3, { timeout: 15_000 });
+    await expect(batchList.getByText(/^TC\d{5}$/)).toHaveCount(4, { timeout: 15_000 });
     // The categories came from the ROWS, not from the panel default.
     await expect(batchList.getByText(/Laces · Trim & Edging/)).toBeVisible();
     await expect(batchList.getByText(/Sarees · Banarasi/)).toBeVisible();
+    // A category added to the vocabulary is usable the same day, with no
+    // migration and no rules change: it reaches the row dropdown, the save and
+    // the label from one entry in MASTER_CATEGORY_TREE.
+    await expect(batchList.getByText(/Ethnic Wear · Kurta Sets/)).toBeVisible();
     await rec.step(adm, 'Every piece has a barcode, under its own category', 'Codes allocated as they saved, from the same series as the importer and the CLI.', 'assert');
 
-    await expect(adm.getByRole('button', { name: /print 3 labels|save 3 labels/i })).toBeVisible();
+    await expect(adm.getByRole('button', { name: /print 4 labels|save 4 labels/i })).toBeVisible();
     await rec.step(adm, 'Labels for exactly this batch', 'Not "whatever the Inventory filter shows", which is the same list only until someone changes a filter.', 'assert');
 
     // And they really are drafts: registered, stocked, off the storefront.
