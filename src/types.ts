@@ -42,7 +42,7 @@ export interface Fabric {
   category: MasterCategory;
   /** Top-level catalogue section. Mirrors category for storefront consistency. */
   masterCategory: MasterCategory;
-  /** Secondary classification under a master category (e.g. "Half Sarees"). */
+  /** Secondary classification under a master category (e.g. "Banarasi"). */
   subCategory?: string;
   /** Fabric material type — informational only (e.g. Silk, Cotton, Wool). Not a category. */
   materialType?: string;

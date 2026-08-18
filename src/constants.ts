@@ -518,10 +518,10 @@ export const FABRICS: Fabric[] = [
     mrp: 13999,
     photo: p(SOURCES.jamdani),
     image: swatch('f19', '#E8C7C8', '#C5A059', '#F2EBDD', 'plain', 'Half Saree'),
-    category: 'Sarees',
-    masterCategory: 'Sarees',
+    category: 'Half Saree',
+    masterCategory: 'Half Saree',
     materialType: 'Mixed',
-    subCategory: 'Half Sarees',
+    subCategory: 'Langa Voni',
     tags: ['Langa Voni', 'Three-Piece', 'Festive'],
     sticker: 'New In',
     colors: [{ name: 'Powder Pink', hex: '#E8C7C8' }],
@@ -964,7 +964,7 @@ export const CATEGORIES = MASTER_CATEGORIES;
 
 /**
  * Hierarchical taxonomy: each master category may have sub-categories that
- * surface as a second-tier filter (Half Sarees under Sarees, weave types
+ * surface as a second-tier filter (Langa Voni under Half Saree, weave types
  * under Fabrics, etc.).
  */
 /**
@@ -981,7 +981,11 @@ export const MASTER_CATEGORY_TREE: Record<MasterCategory, string[]> = {
   Fabrics: ['Silk', 'Cotton', 'Wool', 'Linen', 'Satin', 'Mixed'],
   'Dyeable Fabrics': ['Cotton', 'Silk', 'Linen', 'Mixed'],
   Laces: ['Trim & Edging', 'Patch'],
-  Sarees: ['Half Sarees', 'Banarasi', 'Kanjivaram', 'Patola', 'Bandhani', 'Jamdani', 'Mashru', 'Pre-draped Saree'],
+  // No 'Half Sarees' here: it is a master category of its own, and a name in
+  // both places is the same piece filed in two, which is how a shopper meets
+  // two half-truths instead of one shelf. Move any product still under
+  // Sarees / Half Sarees with scripts/reclassify-products.ts.
+  Sarees: ['Banarasi', 'Kanjivaram', 'Patola', 'Bandhani', 'Jamdani', 'Mashru', 'Pre-draped Saree'],
   'One Minute Saree': ['Ready-pleated', 'Lycra', 'Georgette', 'Satin', 'Embellished'],
   'Half Saree': ['Langa Voni', 'Traditional', 'Contemporary', 'Bridal'],
   'Lehenga Cholis': ['Bridal', 'Festive', 'Contemporary', 'Zardozi Floral', 'Threadwork', 'Pearl Strand', 'Ivory Heritage'],

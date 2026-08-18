@@ -128,6 +128,34 @@ What happens next, on its own:
   (`scripts/build-sitemap.ts`). Add the new one there **after** it has products,
   not before — offering Google an empty page is worse than not offering it.
 
+### One name, one place
+
+A name must not be both a category and somebody's subcategory. *Half Saree* was
+briefly both — a category of its own and `Half Sarees` under Sarees — and that
+is one piece filed in two places, so a shopper meets two half-empty shelves and
+neither is wrong enough to notice. Promoting a name to a category means removing
+it from the tree it came from, and moving the products with it:
+
+```bash
+# Look first — this writes nothing.
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 GCLOUD_PROJECT=demo-tresor \
+  npx tsx scripts/reclassify-products.ts \
+    --from "Sarees/Half Sarees" --to "Half Saree/Langa Voni" --dry-run
+
+# Then for real.
+GOOGLE_APPLICATION_CREDENTIALS=/path/key.json \
+  npx tsx scripts/reclassify-products.ts \
+    --from "Sarees/Half Sarees" --to "Half Saree/Langa Voni" --prod
+```
+
+It changes the category and nothing else — id, barcode, price, photograph and
+listing status are untouched, so **labels already printed and stuck on pieces
+stay valid**. A barcode identifies the piece, not the shelf it sits on.
+
+For a handful of products the admin console is quicker: Inventory → filter to the
+old category → open each one → change Category. The script exists for when it is
+not a handful.
+
 ---
 
 # From a spreadsheet
@@ -281,6 +309,8 @@ stock count, a value not in one of the dropdown lists.
 | `scripts/import-catalogue.ts` | Validation, mapping and the Firestore write. Every domain rule lives here, where it can read the real category tree. |
 | `scripts/lib/barcodes.ts` | The barcode numbering rule, shared with `assign-barcodes.ts`. |
 | `scripts/assign-barcodes.ts` | Barcodes on their own, for a catalogue that predates the counter. |
+| `scripts/reclassify-products.ts` | Moves products between categories when the taxonomy changes. |
+| `scripts/sync-workbook-categories.py` | Pushes the category list from the code into the workbook dropdowns. |
 | `src/lib/barcodeAssign.ts` | The in-app allocator. Increments `counters/barcodes` in a transaction, so two admins clicking save at the same moment cannot get the same number. |
 | `docs/ops/tresor-catalogue-TEMPLATE.xlsx` | The sheet to fill. |
 | `docs/ops/tresor-catalogue-SAMPLE.xlsx` | The same sheet, filled, with a month of stock and orders. |
