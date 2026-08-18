@@ -5,7 +5,7 @@ import { CATEGORIES, formatINR } from '../../constants';
 import { toCsv, downloadCsv } from '../../lib/csv';
 import { printLabels, labelableProducts, LABEL_DESIGNS, defaultDesign, designById } from '../../admin/printLabels';
 import { THERMAL_SIZES, downloadThermalLabel, isThermal, thermalById } from '../../admin/thermalLabel';
-import { awaitingPhoto } from '../../lib/availability';
+import { awaitingPhoto, unitsAvailable } from '../../lib/availability';
 import { reserveBarcode } from '../../lib/barcodeAssign';
 import FabricImage from '../../components/FabricImage';
 import type { Fabric } from '../../types';
@@ -190,18 +190,72 @@ const AdminInventory: React.FC = () => {
     }
   };
 
-  // Labels print for whatever the current filters show — the toolbar already
-  // has search, stock and category filters, so "filter then print" needs no
-  // extra selection UI. Products without a barcode are excluded and reported
-  // rather than silently dropped.
-  const labelable = useMemo(() => labelableProducts(filtered), [filtered]);
+  /* ── Choosing what to print ───────────────────────────────────────────
+   *
+   * Filters narrow the list; ticking chooses from it. Both are needed: a
+   * whole shelf is a filter ("Laces, drafts") but the pieces that came in
+   * this morning are a handful out of the middle of that, and there is no
+   * filter for "these ones".
+   *
+   * The selection holds product IDS, not rows, so it survives filtering —
+   * tick five laces, switch to Sarees, tick three more, print all eight.
+   * Nothing printed is ever off-screen without being counted first.
+   */
+  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+
+  const toggleOne = (id: string) =>
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+
+  const filteredIds = useMemo(() => filtered.map(f => f.id), [filtered]);
+  const allFilteredSelected = filteredIds.length > 0 && filteredIds.every(id => selected.has(id));
+
+  /** The header tick adds or removes exactly what is on screen, never more —
+   *  a "select all" that silently reached past the filter would be a trap. */
+  const toggleAllFiltered = () =>
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (allFilteredSelected) filteredIds.forEach(id => next.delete(id));
+      else filteredIds.forEach(id => next.add(id));
+      return next;
+    });
+
+  /** Ticked rows if any are ticked, otherwise everything the filters show. */
+  const printTargets = useMemo(
+    () => (selected.size ? rows.filter(f => selected.has(f.id)) : filtered),
+    [rows, filtered, selected],
+  );
+  const labelable = useMemo(() => labelableProducts(printTargets), [printTargets]);
+
+  /**
+   * How many labels per product.
+   *
+   * A barcode identifies the PRODUCT, but a tag goes on a PIECE — five reels
+   * of the same lace need five tags carrying the same code. "One per unit in
+   * stock" is what a receiving session actually wants; "one per product" is
+   * for replacing a single scuffed tag.
+   */
+  const [copies, setCopies] = useState<'product' | 'stock'>('product');
+
+  const toPrint = useMemo(() => {
+    if (copies === 'product') return labelable.ready;
+    return labelable.ready.flatMap(f => Array.from({ length: Math.max(1, unitsAvailable(f)) }, () => f));
+  }, [labelable.ready, copies]);
+
+  const perSheet = isThermal(labelDesignId)
+    ? 0
+    : designById(labelDesignId).columns * designById(labelDesignId).rows;
+  const sheets = perSheet ? Math.ceil(toPrint.length / perSheet) : 0;
 
   const handlePrintLabels = async () => {
-    if (!labelable.ready.length) return;
+    if (!toPrint.length) return;
     if (labelable.missing.length) {
       const ok = window.confirm(
-        `${labelable.missing.length} of the ${filtered.length} filtered products have no barcode yet and will be skipped.\n\n` +
-        `Print ${labelable.ready.length} label${labelable.ready.length === 1 ? '' : 's'}?`,
+        `${labelable.missing.length} of the ${printTargets.length} chosen products have no barcode yet and will be skipped.\n\n` +
+        `Print ${toPrint.length} label${toPrint.length === 1 ? '' : 's'}?`,
       );
       if (!ok) return;
     }
@@ -211,12 +265,12 @@ const AdminInventory: React.FC = () => {
         // time, and a single tall strip would be torn in the wrong places.
         // Sequential so the browser does not swallow a burst of downloads.
         const size = thermalById(labelDesignId);
-        for (const p of labelable.ready) {
-          await downloadThermalLabel(p, { size });
+        for (const f of toPrint) {
+          await downloadThermalLabel(f, { size });
           await new Promise(r => window.setTimeout(r, 250));
         }
       } else {
-        await printLabels(labelable.ready, designById(labelDesignId));
+        await printLabels(toPrint, designById(labelDesignId));
       }
     } catch (err) {
       window.alert(err instanceof Error ? err.message : 'Could not open the print dialog.');
@@ -334,22 +388,56 @@ const AdminInventory: React.FC = () => {
               {THERMAL_SIZES.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
             </optgroup>
           </select>
+          <select
+            value={copies}
+            onChange={e => setCopies(e.target.value as 'product' | 'stock')}
+            aria-label="How many labels per product"
+            title="A barcode identifies the product; a tag goes on a piece. Five reels of one lace need five tags."
+            className="input-box w-full sm:w-[165px]"
+          >
+            <option value="product">1 label each</option>
+            <option value="stock">1 per unit in stock</option>
+          </select>
           <button
             onClick={handlePrintLabels}
-            disabled={!labelable.ready.length}
+            disabled={!toPrint.length}
             title={
-              labelable.ready.length
-                ? `Print ${labelable.ready.length} barcode label${labelable.ready.length === 1 ? '' : 's'} for the filtered products`
-                : 'None of the filtered products have a barcode yet'
+              toPrint.length
+                ? `${toPrint.length} label${toPrint.length === 1 ? '' : 's'} for ${labelable.ready.length} product${labelable.ready.length === 1 ? '' : 's'}`
+                : 'Nothing chosen has a barcode yet'
             }
             className="btn-outline inline-flex items-center justify-center gap-1.5 !py-2.5 whitespace-nowrap"
           >
-            <Tag className="w-4 h-4" /> {isThermal(labelDesignId) ? 'Save labels' : 'Print labels'}{labelable.ready.length ? ` (${labelable.ready.length})` : ''}
+            <Tag className="w-4 h-4" /> {isThermal(labelDesignId) ? 'Save labels' : 'Print labels'}{toPrint.length ? ` (${toPrint.length})` : ''}
           </button>
           <button onClick={exportCsv} className="btn-outline inline-flex items-center justify-center gap-1.5 !py-2.5 whitespace-nowrap">
             <Download className="w-4 h-4" /> Export CSV
           </button>
         </div>
+      </div>
+
+      {/* What is about to print — spelled out, because the difference between
+          "everything shown" and "the five I ticked" is a wasted sheet. */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[color:var(--color-myntra-ink-soft)] px-1">
+        <span>
+          {selected.size
+            ? <><b className="text-[color:var(--color-myntra-navy)]">{selected.size} selected</b> — only these will print</>
+            : <>Nothing ticked — <b className="text-[color:var(--color-myntra-navy)]">all {filtered.length} shown</b> will print</>}
+        </span>
+        {toPrint.length > 0 && (
+          <span>
+            · {toPrint.length} label{toPrint.length === 1 ? '' : 's'}
+            {sheets > 0 && <> on <b className="text-[color:var(--color-myntra-navy)]">{sheets} A4 sheet{sheets === 1 ? '' : 's'}</b> ({perSheet} per sheet)</>}
+          </span>
+        )}
+        {labelable.missing.length > 0 && (
+          <span className="text-[#9A5B12]">· {labelable.missing.length} skipped, no barcode yet</span>
+        )}
+        {selected.size > 0 && (
+          <button onClick={() => setSelected(new Set())} className="underline hover:text-[color:var(--color-myntra-pink)]">
+            Clear selection
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -363,6 +451,16 @@ const AdminInventory: React.FC = () => {
             <table className="w-full text-[13px]">
               <thead className="bg-[color:var(--color-myntra-bg-soft)] border-b border-[color:var(--color-myntra-border-soft)] text-left">
                 <tr className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[color:var(--color-myntra-ink-mute)]">
+                  <th className="pl-3 pr-1 py-2.5 w-8">
+                    <input
+                      type="checkbox"
+                      checked={allFilteredSelected}
+                      onChange={toggleAllFiltered}
+                      aria-label={allFilteredSelected ? 'Unselect all shown' : 'Select all shown'}
+                      title={`${allFilteredSelected ? 'Unselect' : 'Select'} the ${filtered.length} products currently shown`}
+                      className="w-4 h-4 accent-[color:var(--color-myntra-pink)] align-middle"
+                    />
+                  </th>
                   <th className="px-3 py-2.5">Product</th>
                   <th className="px-3 py-2.5">Category</th>
                   <th className="px-3 py-2.5 text-right">Price</th>
@@ -377,7 +475,16 @@ const AdminInventory: React.FC = () => {
                   const s = f.stock ?? 0;
                   const st = stockStatus(s);
                   return (
-                    <tr key={f.id} className="border-b border-[color:var(--color-myntra-border-soft)] hover:bg-[color:var(--color-myntra-bg-soft)]">
+                    <tr key={f.id} className={`border-b border-[color:var(--color-myntra-border-soft)] hover:bg-[color:var(--color-myntra-bg-soft)] ${selected.has(f.id) ? 'bg-[#FDEEF2]' : ''}`}>
+                      <td className="pl-3 pr-1 py-2.5">
+                        <input
+                          type="checkbox"
+                          checked={selected.has(f.id)}
+                          onChange={() => toggleOne(f.id)}
+                          aria-label={`Select ${f.name} for printing`}
+                          className="w-4 h-4 accent-[color:var(--color-myntra-pink)] align-middle"
+                        />
+                      </td>
                       <td className="px-3 py-2.5">
                         <div className="flex gap-2.5 items-center">
                           <div className="w-9 h-12 rounded overflow-hidden border border-[color:var(--color-myntra-border-soft)] bg-[color:var(--color-myntra-bg-soft)] shrink-0">

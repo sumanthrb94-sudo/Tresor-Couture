@@ -32,6 +32,31 @@ an existing barcode is never changed, because it is already on a printed label.
 
 ---
 
+## Printing a batch of labels
+
+**Admin → Inventory.** The usual order, once a batch of products is in:
+
+1. **Narrow the list.** Search, or the stock / category / listing filters.
+   Filtering to **Drafts** is the natural way to find everything just added.
+2. **Generate barcodes (n)** if any of them lack one.
+3. **Tick the ones you want.** The header checkbox takes everything currently
+   shown — never more, so a "select all" cannot quietly reach past the filter.
+   Ticks are held by product id, so they survive changing the filter: tick five
+   laces, switch to Sarees, tick three more, print all eight.
+4. **Choose how many of each.** *1 label each* replaces a scuffed tag;
+   *1 per unit in stock* is what a receiving session wants, because a barcode
+   identifies the product but a tag goes on a piece — five reels of one lace
+   need five tags carrying the same code.
+5. **Print labels (n).**
+
+The line under the toolbar always says what is about to happen: how many are
+selected (or that everything shown will print), how many labels that is, how
+many A4 sheets, and how many products were skipped for having no barcode. Tick
+nothing and it prints the whole filtered list, which is the quick path for a
+freshly imported shelf.
+
+---
+
 # From a spreadsheet
 
 Register the whole catalogue — category, subcategory, pricing, stock — from one

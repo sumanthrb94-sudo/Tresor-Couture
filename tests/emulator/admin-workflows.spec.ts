@@ -379,3 +379,80 @@ test('Admin · Create a product before it has been photographed', async ({ brows
     throw err;
   }
 });
+
+test('Admin · Choose which barcodes go on a sheet', async ({ browser }: { browser: Browser }) => {
+  test.setTimeout(150_000);
+  const rec = new Recorder({
+    slug: 'admin-w8-select-labels',
+    title: 'Admin workflow · Selecting products for a label sheet',
+    area: 'Admin console · Inventory',
+    purpose:
+      'Filters narrow the list; ticking chooses from it. Both are needed — a whole shelf is a filter, but "the pieces that came in this morning" is a handful out of the middle of one, and there is no filter for "these ones". Before printing, the screen has to say exactly what will print and on how much paper.',
+    reproduce: [
+      'Sign in as admin@test.local and open #/admin/inventory.',
+      'With nothing ticked the line under the toolbar reads "all N shown will print".',
+      'Tick two rows: it changes to "2 selected — only these will print", with the sheet count.',
+      'Switch "1 label each" to "1 per unit in stock": the label count rises with stock.',
+      'Clear selection returns to printing everything the filters show.',
+    ],
+  });
+
+  try {
+    const adm = await adminPage(browser);
+    // "Generate barcodes" asks before writing; accept it.
+    adm.on('dialog', d => d.accept().catch(() => {}));
+
+    await gotoAdmin(adm, 'inventory');
+    await expect(adm.getByPlaceholder('Search product…')).toBeVisible({ timeout: 20_000 });
+    await rec.step(adm, 'Opened Inventory');
+
+    // The real order of work: products arrive without barcodes, so they are
+    // barcoded first and only then printed. Narrowed by search so the run
+    // stays quick — and so this also exercises "generate for what is shown".
+    await adm.getByPlaceholder('Search product…').fill('silk');
+    await adm.waitForTimeout(600);
+    const generate = adm.getByRole('button', { name: /generate barcodes/i });
+    if (await generate.isVisible().catch(() => false)) {
+      await generate.click();
+      // One transaction per code; wait for the button to disappear.
+      await expect(generate).toBeHidden({ timeout: 60_000 });
+      await adm.waitForTimeout(1500);
+    }
+    await rec.step(adm, 'Barcoded what the search shows', 'Products arrive without codes; this is the step before any label exists.', 'assert');
+
+    // Nothing ticked: the default is everything the filters show, and it says so.
+    await expect(adm.getByText(/will print/i).first()).toBeVisible({ timeout: 15_000 });
+    await expect(adm.getByText(/nothing ticked/i).first()).toBeVisible();
+    await rec.step(adm, 'Default is "everything shown"', 'Stated in words rather than left implicit — the difference between that and a ticked handful is a wasted sheet.', 'assert');
+
+    // Tick two rows.
+    const boxes = adm.locator('tbody input[type="checkbox"]');
+    await boxes.nth(0).check();
+    await boxes.nth(1).check();
+    await expect(adm.getByText(/2 selected/i).first()).toBeVisible({ timeout: 10_000 });
+    await rec.step(adm, 'Ticked two products', 'Only these will print now.', 'assert');
+
+    // The sheet count is part of the same line, so paper is never a surprise.
+    await expect(adm.getByText(/A4 sheet/i).first()).toBeVisible({ timeout: 10_000 });
+    await rec.step(adm, 'Sheet count shown', 'How many labels and how much paper, before anything is printed.', 'assert');
+
+    // One tag per PIECE, not per product: five reels of one lace need five tags.
+    const before = await adm.getByRole('button', { name: /print labels|save labels/i }).innerText();
+    await adm.getByLabel('How many labels per product').selectOption('stock');
+    await adm.waitForTimeout(500);
+    const after = await adm.getByRole('button', { name: /print labels|save labels/i }).innerText();
+    expect(after).not.toBe(before);
+    await rec.step(adm, 'One label per unit in stock', 'A barcode identifies the product; a tag goes on a piece.', 'assert');
+
+    // Clearing hands the list back to the filters.
+    await adm.getByRole('button', { name: /clear selection/i }).click();
+    await expect(adm.getByText(/nothing ticked/i).first()).toBeVisible({ timeout: 10_000 });
+    await rec.step(adm, 'Selection cleared', 'Back to printing whatever the filters show.', 'assert');
+
+    rec.finish('passed');
+    await adm.context().close();
+  } catch (err) {
+    rec.finish('failed', err instanceof Error ? err.message : String(err));
+    throw err;
+  }
+});
