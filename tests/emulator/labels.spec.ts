@@ -44,19 +44,28 @@ test('Labels · every design carries brand, piece, price and a scannable code', 
 
   try {
     expect(LABEL_DESIGNS.length).toBeGreaterThanOrEqual(4);
+    // The default is the small sticker: it is what gets printed by the hundred.
+    expect(designById(undefined).id).toBe('sticker-40x20');
 
     for (const d of LABEL_DESIGNS) {
       const html = buildSingleLabel(piece(), d);
 
       // --- What the tag says --------------------------------------------
-      expect(html, `${d.id}: brand`).toContain('TRESOR COUTURE');
-      expect(html, `${d.id}: code`).toContain('TC00042');
-      // Every design shows what is actually charged; only some show the MRP.
-      expect(html, `${d.id}: price`).toContain('₹32,999');
-      // Every design, including the 38 × 21 mm sticker, carries the name. A
-      // tag that says only a price and a code tells a customer nothing and
-      // tells staff nothing at a glance.
+      // Three things are not optional on any design. A tag that says only a
+      // price and a code tells a customer nothing and tells staff nothing at
+      // a glance.
       expect(html, `${d.id}: name`).toContain('Zardozi Floral Lehenga');
+      expect(html, `${d.id}: code`).toContain('TC00042');
+      expect(html, `${d.id}: price`).toContain('₹32,999');
+
+      // Brand and category are per-design, and DECLARED — so dropping a line
+      // is a visible decision rather than something that quietly happened.
+      // The stickers omit the brand because they go onto the round brand tag,
+      // which already carries it.
+      expect(html.includes('TRESOR COUTURE'), `${d.id}: brand vs carries`)
+        .toBe(d.carries.includes('brand'));
+      expect(html.includes('Lehenga Cholis'), `${d.id}: category vs carries`)
+        .toBe(d.carries.includes('category'));
 
       // --- The symbol is real, not a picture of one ----------------------
       expect(html, `${d.id}: svg`).toContain('<svg');
@@ -93,7 +102,7 @@ test('Labels · every design carries brand, piece, price and a scannable code', 
     expect(full).not.toContain('line-through">₹');
     rec.note('Discounts show both prices', 'MRP struck through beside what the till will charge.');
 
-    // --- The category line ------------------------------------------------
+    // --- The category line, where a design keeps it -----------------------
     const detailed = buildSingleLabel(piece(), designById('detailed'));
     expect(detailed).toContain('Lehenga Cholis · Zardozi Floral');
     // No subcategory means no dangling separator.

@@ -39,6 +39,10 @@ export interface LabelDesign {
   rows: number;
   gapX: number;
   gapY: number;
+  /** What this design prints beyond the four essentials (piece, price, code).
+   *  Declared rather than inferred, so a test can hold each design to its own
+   *  contract — and so dropping a line is a visible decision, not a silent one. */
+  carries: readonly ('brand' | 'category')[];
   /** Fraction of the label width the barcode should span. */
   codeSpan: number;
   /** Barcode height in millimetres. */
@@ -92,9 +96,47 @@ const A4_21 = { width: 210, height: 297, marginX: 7.25, marginY: 15.15 };
 
 export const LABEL_DESIGNS: readonly LabelDesign[] = [
   {
+    id: 'sticker-40x20',
+    name: 'Sticker · 40 × 20 mm',
+    blurb: 'The small tag — 70 per A4. Goes on the round brand tag, which already carries the name.',
+    // 5 x 40 + 2 x 5 margin = 210. 14 x 20 + 2 x 8.5 margin = 297. Both margins
+    // clear a Canon PIXMA's unprintable edge (~3.4mm sides, 5mm bottom).
+    width: 40, height: 20,
+    page: { width: 210, height: 297, marginX: 5, marginY: 8.5 },
+    columns: 5, rows: 14, gapX: 0, gapY: 0,
+    // No brand line. This sticker goes onto the round tag, which already says
+    // Tresor Couture — printing it twice spends 2mm of a 20mm tag saying
+    // nothing new, and that 2mm is the barcode's.
+    carries: [],
+    codeSpan: 0.85, codeHeight: 8,
+    cell: (p, svg, code) => `
+      <div class="name">${esc(p.name ?? '')}</div>
+      <div class="bc">${svg}</div>
+      <div class="foot">
+        <span class="code">${esc(code)}</span>
+        ${priceBlock(p)}
+      </div>
+      <div class="incl">Incl. of all taxes</div>`,
+    css: `
+      .label { justify-content: center; align-items: center; text-align: center;
+               padding: 1.1mm 1.6mm; gap: 0.3mm;
+               border-right: 0.2mm dashed #999; border-bottom: 0.2mm dashed #999; }
+      .label:nth-child(5n+1) { border-left: 0.2mm dashed #999; }
+      .label:nth-child(-n+5) { border-top: 0.2mm dashed #999; }
+      /* One line, ellipsised. A second line would push into the barcode's quiet
+         zone, and a symbol without its quiet zone does not scan. */
+      .name { font-size: 5.5pt; font-weight: 700; line-height: 1.1; width: 100%;
+              white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .foot { display: flex; align-items: baseline; justify-content: center; gap: 1.6mm; width: 100%; }
+      .code { font-family: "Courier New", monospace; font-size: 5pt; letter-spacing: 0.2pt; }
+      .price { font-size: 8pt; font-weight: 800; }
+      .was { font-size: 5pt; text-decoration: line-through; color: #777; }
+      .incl { font-size: 3.8pt; color: #555; }`,
+  },
+  {
     id: 'sticker-50x25',
     name: 'Sticker · 50 × 25 mm',
-    blurb: 'The blank sticker size — 44 per A4, and small enough to sit on the round brand tag.',
+    blurb: 'Matches the pre-cut blank sticker stock — 44 per A4.',
     // 4 x 50 + 2 x 5 margin = 210. 11 x 25 + 2 x 11 margin = 297. The 5mm side
     // margin clears a Canon PIXMA's unprintable edge (~3.4mm) with a little to
     // spare; going wider would cost a whole column.
@@ -102,11 +144,12 @@ export const LABEL_DESIGNS: readonly LabelDesign[] = [
     page: { width: 210, height: 297, marginX: 5, marginY: 11 },
     // Shared cut lines again: 10 straight passes across and 3 down for 44 tags.
     columns: 4, rows: 11, gapX: 0, gapY: 0,
+    carries: [],
     codeSpan: 0.8, codeHeight: 8,
-    // No category line. On 25mm of height every millimetre belongs to the
-    // barcode, and the category is on the shelf the piece is sitting on.
+    // Neither brand nor category. On 25mm of height every millimetre belongs to
+    // the barcode; the brand is on the tag this sticks to and the category is
+    // the shelf the piece is sitting on.
     cell: (p, svg, code) => `
-      <div class="brand">${esc(p.brand ?? '')}</div>
       <div class="name">${esc(p.name ?? '')}</div>
       <div class="bc">${svg}</div>
       <div class="foot">
@@ -120,7 +163,6 @@ export const LABEL_DESIGNS: readonly LabelDesign[] = [
                border-right: 0.2mm dashed #999; border-bottom: 0.2mm dashed #999; }
       .label:nth-child(4n+1) { border-left: 0.2mm dashed #999; }
       .label:nth-child(-n+4) { border-top: 0.2mm dashed #999; }
-      .brand { font-size: 5pt; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #444; }
       /* One line: a trim's name is long and the tag is 25mm tall. Truncating
          beats spilling into the barcode's quiet zone. */
       .name { font-size: 6pt; font-weight: 700; line-height: 1.1; width: 100%;
@@ -136,6 +178,7 @@ export const LABEL_DESIGNS: readonly LabelDesign[] = [
     name: 'Classic price tag',
     blurb: 'Brand, piece, price and code. The everyday label, on standard sheet stock.',
     width: 63.5, height: 38.1, page: A4_21, columns: 3, rows: 7, gapX: 2.5, gapY: 0,
+    carries: ['brand'],
     codeSpan: 0.62, codeHeight: 9,
     cell: (p, svg, code) => `
       <div class="brand">${esc(p.brand ?? '')}</div>
@@ -162,6 +205,7 @@ export const LABEL_DESIGNS: readonly LabelDesign[] = [
     name: 'Detailed tag',
     blurb: 'Adds the category line. Same sheet as Classic — for when one shelf holds several families.',
     width: 63.5, height: 38.1, page: A4_21, columns: 3, rows: 7, gapX: 2.5, gapY: 0,
+    carries: ['brand', 'category'],
     codeSpan: 0.58, codeHeight: 8,
     cell: (p, svg, code) => `
       <div class="head">
@@ -190,6 +234,7 @@ export const LABEL_DESIGNS: readonly LabelDesign[] = [
     blurb: 'Tall tag with a big price, for lehengas and sarees on a rail. Punch the hole above the brand.',
     width: 50, height: 70, page: { width: 210, height: 297, marginX: 25, marginY: 5 },
     columns: 3, rows: 4, gapX: 5, gapY: 2,
+    carries: ['brand', 'category'],
     codeSpan: 0.78, codeHeight: 12,
     cell: (p, svg, code) => `
       <div class="brand">${esc(p.brand ?? '')}</div>
@@ -227,9 +272,9 @@ export const LABEL_DESIGNS: readonly LabelDesign[] = [
     // sheet is cut with six straight passes across and two down rather than
     // thirty-six fiddly ones — and nothing is wasted between them.
     columns: 3, rows: 6, gapX: 0, gapY: 0,
+    carries: [],
     codeSpan: 0.66, codeHeight: 11,
     cell: (p, svg, code) => `
-      <div class="brand">${esc(p.brand ?? '')}</div>
       <div class="name">${esc(p.name ?? '')}</div>
       <div class="bc">${svg}</div>
       <div class="code">${esc(code)}</div>
@@ -244,7 +289,6 @@ export const LABEL_DESIGNS: readonly LabelDesign[] = [
       /* Single shared lines: only the outermost tags draw their left/top edge. */
       .label:nth-child(3n+1) { border-left: 0.2mm dashed #999; }
       .label:nth-child(-n+3) { border-top: 0.2mm dashed #999; }
-      .brand { font-size: 7pt; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
       .name { font-size: 8pt; font-weight: 700; line-height: 1.15; max-height: 9mm; overflow: hidden;
               display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
       .bc { margin-top: 1mm; }
@@ -260,6 +304,7 @@ export const LABEL_DESIGNS: readonly LabelDesign[] = [
     blurb: 'The same four facts squeezed onto 38 × 21 mm, for lace reels and trims where a full tag will not fit. 65 per A4.',
     width: 38.1, height: 21.2, page: { width: 210, height: 297, marginX: 6.75, marginY: 10 },
     columns: 5, rows: 13, gapX: 1.5, gapY: 0,
+    carries: ['brand'],
     codeSpan: 0.86, codeHeight: 7,
     cell: (p, svg, code) => `
       <div class="brand">${esc(p.brand ?? '')}</div>

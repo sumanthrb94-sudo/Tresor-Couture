@@ -37,19 +37,24 @@ A4 sheet stock still works if you would rather batch a shelf at once.
    `docs/ops/barcode-label-designs.pdf` — print that at 100% (not "fit to
    page") and hold the labels against your sheet stock:
 
-   | Design | Size | Per A4 | For |
-   |---|---|---|---|
-   | **Sticker · 50 × 25 mm** (default) | 50 × 25 mm | 44 | The blank sticker stock; fits the round brand tag |
-   | Thermal roll · 58 mm | 384 px wide | — | The portable printer |
-   | A4 cut-out sheet | 65 × 45 mm | 18 | A bigger tag on plain paper |
-   | Classic price tag | 63.5 × 38.1 mm | 21 | Pre-cut label stock |
-   | Detailed tag | 63.5 × 38.1 mm | 21 | Adds the category line |
-   | Garment hang tag | 50 × 70 mm | 12 | Lehengas and sarees on a rail |
-   | Small reel sticker | 38 × 21 mm | 65 | Lace reels and trims |
+   | Design | Size | Per A4 | Carries | For |
+   |---|---|---|---|---|
+   | **Sticker · 40 × 20 mm** (default) | 40 × 20 mm | **70** | — | The small tag, printed by the hundred |
+   | Sticker · 50 × 25 mm | 50 × 25 mm | 44 | — | Pre-cut blank sticker stock |
+   | Small reel sticker | 38 × 21 mm | 65 | brand | Lace reels and trims |
+   | Classic price tag | 63.5 × 38.1 mm | 21 | brand | Pre-cut label stock |
+   | Detailed tag | 63.5 × 38.1 mm | 21 | brand, category | When one shelf holds several families |
+   | A4 cut-out sheet | 65 × 45 mm | 18 | — | A bigger tag on plain paper |
+   | Garment hang tag | 50 × 70 mm | 12 | brand, category | Lehengas and sarees on a rail |
+   | Thermal roll · 58 mm | 384 px wide | — | brand, category | The portable printer |
 
-   Every design carries the brand, the piece, the price and the code; the
-   Detailed tag adds the category line, and the others leave it off — the
-   category is the shelf the piece is sitting on. Choose it in the dropdown beside **Print labels** (whole sheets) or
+   The stickers and the cut sheet leave the brand off on purpose: they go onto
+   the round Tresor Couture tag, which already carries the name, and 2mm spent
+   repeating it is 2mm the barcode does not get.
+
+   Every design carries the piece, the price and a scannable code. What each
+   adds beyond that is in the Carries column above, and is declared in the
+   design itself so a dropped line is a decision rather than an accident. Choose it in the dropdown beside **Print labels** (whole sheets) or
    beside **Download label (PDF)** in the product editor (one piece).
 3. **Print ONE label and scan it.** Do this before printing the rest. The
    barcodes are generated in-house — Code 128-B, no third-party library — and a
@@ -215,12 +220,14 @@ cut along. Two sizes, both with ready-to-print samples:
 
 | Design | Per sheet | Sample |
 |---|---|---|
-| **Sticker · 50 × 25 mm** | 44 | `docs/ops/barcode-sticker-sheet-SAMPLE.pdf` |
+| **Sticker · 40 × 20 mm** | 70 | `docs/ops/barcode-sticker-sheet-SAMPLE.pdf` |
+| Sticker · 50 × 25 mm | 44 | — |
 | A4 cut-out sheet · 65 × 45 mm | 18 | `docs/ops/barcode-cut-sheet-SAMPLE.pdf` |
 
-The sticker is the default: it matches the blank sticker stock, and at
-50 × 25 mm it sits on the 60 mm round brand tag with 2.5 mm clear either side
-and 5 mm below the punch hole.
+The 40 × 20 mm sticker is the default — 70 to a sheet, so three hundred pieces
+is five sheets. It sits on the 60 mm round tag with 10 mm clear either side.
+The 50 × 25 mm version matches pre-cut blank sticker stock, if that is what is
+being fed through the printer.
 
 The tags **share their cut lines** — no gutters between them. That turns a sheet
 into five straight passes across and two down, instead of thirty-six fiddly
