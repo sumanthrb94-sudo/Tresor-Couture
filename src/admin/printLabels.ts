@@ -1,11 +1,15 @@
 /**
  * Barcode price labels.
  *
- * Four designs, because a lace reel and a bridal lehenga do not want the same
+ * Several designs, because a lace reel and a bridal lehenga do not want the same
  * tag, and because the right one is a judgement call the studio makes with a
  * printed sheet in hand rather than one anybody makes from a description.
  * `LABEL_DESIGNS` is the list; adding a thermal roll is another entry, not a
  * change to the builder.
+ *
+ * Every sheet keeps SAFE_MARGIN clear of the page edge unless it is printed on
+ * die-cut stock, because a grid laid out to the edge comes back with its outer
+ * column half printed.
  *
  * Every design carries the four things a tag has to say — brand, what the piece
  * is, what it costs, and a code the till can scan — and differs in what it does
@@ -33,6 +37,18 @@ export interface LabelDesign {
   /** Label dimensions in millimetres. */
   width: number;
   height: number;
+  /**
+   * What it is printed on, which decides who owns the sheet geometry.
+   *
+   * `plain` — ordinary paper, cut by hand. The grid is ours, so it must keep
+   * SAFE_MARGIN clear of the page edge or the outer labels come back half
+   * printed.
+   *
+   * `die-cut` — pre-cut label stock. The die owns the geometry and the
+   * manufacturer already placed it inside the printable area; adding "safer"
+   * margins here would print into the gaps between labels, which is worse.
+   */
+  stock: 'plain' | 'die-cut';
   /** Sheet dimensions and margins in millimetres. */
   page: { width: number; height: number; marginX: number; marginY: number };
   columns: number;
@@ -83,6 +99,26 @@ const priceBlock = (p: Fabric): string => {
 /* ── The designs ───────────────────────────────────────────────────────── */
 
 /**
+ * The border every plain-paper sheet keeps clear of the page edge.
+ *
+ * A desktop printer cannot reach its own paper edge: a Canon PIXMA leaves about
+ * 3.4mm at the sides and 5mm at the bottom unprintable, and other machines are
+ * worse — some HPs give up 12.7mm at the bottom. On top of that the sheet is
+ * dragged through by rollers and arrives a millimetre or two askew.
+ *
+ * So a grid laid out to within 5mm of the edge does not come back short by
+ * 5mm — it comes back with the outer column half printed on one side and fine
+ * on the other, which is the failure that wastes a whole sheet rather than one
+ * label. 8mm across and 12mm down clears the worst common machine with room for
+ * the skew.
+ *
+ * Where honouring this would cost a whole column or row, the TAG gives up the
+ * millimetre or two instead — 38.5mm of sticker still holds the symbol, and 70
+ * per sheet with a safe border beats 52 without one.
+ */
+export const SAFE_MARGIN = { x: 8, y: 12 } as const;
+
+/**
  * 63.5 × 38.1 mm labels, 3 across and 7 down — 21 per A4.
  *
  * NOT 3 × 8. Eight rows of 38.1mm is 304.8mm of label on a 297mm page, so the
@@ -91,18 +127,27 @@ const priceBlock = (p: Fabric): string => {
  * remainder, so the grid is centred on the page:
  *   X: 3 × 63.5 + 2 × 2.5 gap + 2 × 7.25 margin = 210
  *   Y: 7 × 38.1 + 2 × 15.15 margin             = 297
+ *
+ * These numbers are the Avery L7160 die, not a choice. They are BELOW
+ * SAFE_MARGIN across, and deliberately so: the labels are already cut and the
+ * manufacturer placed them inside the printer's reach. Widening the margin here
+ * would slide the print off the labels and onto the backing paper.
  */
 const A4_21 = { width: 210, height: 297, marginX: 7.25, marginY: 15.15 };
 
 export const LABEL_DESIGNS: readonly LabelDesign[] = [
   {
-    id: 'sticker-40x20',
-    name: 'Sticker · 40 × 20 mm',
-    blurb: 'The small tag — 70 per A4. Goes on the round brand tag, which already carries the name.',
-    // 5 x 40 + 2 x 5 margin = 210. 14 x 20 + 2 x 8.5 margin = 297. Both margins
-    // clear a Canon PIXMA's unprintable edge (~3.4mm sides, 5mm bottom).
-    width: 40, height: 20,
-    page: { width: 210, height: 297, marginX: 5, marginY: 8.5 },
+    id: 'sticker-38x20',
+    name: 'Sticker · 38.5 × 19.5 mm',
+    blurb: 'The small tag — 70 per A4, with a safe border all round. Goes on the round brand tag, which already carries the name.',
+    // 1.5mm narrower and 0.5mm shorter than the 40 x 20 it replaces, and that
+    // trim is what buys the border: at 40mm five columns leave only 5mm at the
+    // sides, and the outer column came back half printed.
+    //   X: 5 x 38.5 + 2 x 8.75 margin = 210
+    //   Y: 14 x 19.5 + 2 x 12 margin  = 297
+    // Still 70 to a sheet, and still 11mm clear either side of the 60mm round tag.
+    width: 38.5, height: 19.5, stock: 'plain',
+    page: { width: 210, height: 297, marginX: 8.75, marginY: 12 },
     columns: 5, rows: 14, gapX: 0, gapY: 0,
     // No brand line. This sticker goes onto the round tag, which already says
     // Tresor Couture — printing it twice spends 2mm of a 20mm tag saying
@@ -119,7 +164,7 @@ export const LABEL_DESIGNS: readonly LabelDesign[] = [
       <div class="incl">Incl. of all taxes</div>`,
     css: `
       .label { justify-content: center; align-items: center; text-align: center;
-               padding: 1.1mm 1.6mm; gap: 0.3mm;
+               padding: 0.9mm 1.5mm; gap: 0.3mm;
                border-right: 0.2mm dashed #999; border-bottom: 0.2mm dashed #999; }
       .label:nth-child(5n+1) { border-left: 0.2mm dashed #999; }
       .label:nth-child(-n+5) { border-top: 0.2mm dashed #999; }
@@ -136,14 +181,20 @@ export const LABEL_DESIGNS: readonly LabelDesign[] = [
   {
     id: 'sticker-50x25',
     name: 'Sticker · 50 × 25 mm',
-    blurb: 'Matches the pre-cut blank sticker stock — 44 per A4.',
-    // 4 x 50 + 2 x 5 margin = 210. 11 x 25 + 2 x 11 margin = 297. The 5mm side
-    // margin clears a Canon PIXMA's unprintable edge (~3.4mm) with a little to
-    // spare; going wider would cost a whole column.
-    width: 50, height: 25,
-    page: { width: 210, height: 297, marginX: 5, marginY: 11 },
-    // Shared cut lines again: 10 straight passes across and 3 down for 44 tags.
-    columns: 4, rows: 11, gapX: 0, gapY: 0,
+    blurb: 'Matches the blank sticker stock on the shelf — 30 per A4. The size is fixed, so the border costs a column.',
+    // The one design whose SIZE is not ours to trim: it exists to land on a
+    // 50 x 25 sticker the studio already has, and a 48mm print on a 50mm
+    // sticker is visibly off-centre. So the border costs a column and a row
+    // rather than a millimetre.
+    //   X: 3 x 50 + 2 x 30 margin   = 210
+    //   Y: 10 x 25 + 2 x 23.5 margin = 297
+    // Four columns would need a 5mm side margin, which is what was printing the
+    // outer column half off the sheet. Use the 38.5mm sticker for volume — it
+    // gets 70 to a sheet with the same border.
+    width: 50, height: 25, stock: 'plain',
+    page: { width: 210, height: 297, marginX: 30, marginY: 23.5 },
+    // Shared cut lines: 9 straight passes across and 2 down for 30 tags.
+    columns: 3, rows: 10, gapX: 0, gapY: 0,
     carries: [],
     codeSpan: 0.8, codeHeight: 8,
     // Neither brand nor category. On 25mm of height every millimetre belongs to
@@ -161,8 +212,8 @@ export const LABEL_DESIGNS: readonly LabelDesign[] = [
       .label { justify-content: center; align-items: center; text-align: center;
                padding: 1.4mm 2mm; gap: 0.3mm;
                border-right: 0.2mm dashed #999; border-bottom: 0.2mm dashed #999; }
-      .label:nth-child(4n+1) { border-left: 0.2mm dashed #999; }
-      .label:nth-child(-n+4) { border-top: 0.2mm dashed #999; }
+      .label:nth-child(3n+1) { border-left: 0.2mm dashed #999; }
+      .label:nth-child(-n+3) { border-top: 0.2mm dashed #999; }
       /* One line: a trim's name is long and the tag is 25mm tall. Truncating
          beats spilling into the barcode's quiet zone. */
       .name { font-size: 6pt; font-weight: 700; line-height: 1.1; width: 100%;
@@ -176,8 +227,9 @@ export const LABEL_DESIGNS: readonly LabelDesign[] = [
   {
     id: 'classic',
     name: 'Classic price tag',
-    blurb: 'Brand, piece, price and code. The everyday label, on standard sheet stock.',
-    width: 63.5, height: 38.1, page: A4_21, columns: 3, rows: 7, gapX: 2.5, gapY: 0,
+    blurb: 'Brand, piece, price and code. The everyday label, on Avery L7160 die-cut stock.',
+    width: 63.5, height: 38.1, stock: 'die-cut',
+    page: A4_21, columns: 3, rows: 7, gapX: 2.5, gapY: 0,
     carries: ['brand'],
     codeSpan: 0.62, codeHeight: 9,
     cell: (p, svg, code) => `
@@ -203,8 +255,9 @@ export const LABEL_DESIGNS: readonly LabelDesign[] = [
   {
     id: 'detailed',
     name: 'Detailed tag',
-    blurb: 'Adds the category line. Same sheet as Classic — for when one shelf holds several families.',
-    width: 63.5, height: 38.1, page: A4_21, columns: 3, rows: 7, gapX: 2.5, gapY: 0,
+    blurb: 'Adds the category line. Same die-cut sheet as Classic — for when one shelf holds several families.',
+    width: 63.5, height: 38.1, stock: 'die-cut',
+    page: A4_21, columns: 3, rows: 7, gapX: 2.5, gapY: 0,
     carries: ['brand', 'category'],
     codeSpan: 0.58, codeHeight: 8,
     cell: (p, svg, code) => `
@@ -232,7 +285,13 @@ export const LABEL_DESIGNS: readonly LabelDesign[] = [
     id: 'hangtag',
     name: 'Garment hang tag',
     blurb: 'Tall tag with a big price, for lehengas and sarees on a rail. Punch the hole above the brand.',
-    width: 50, height: 70, page: { width: 210, height: 297, marginX: 25, marginY: 5 },
+    // 4mm shorter than the 70mm it was, because four 70mm rows plus their gaps
+    // came to 286mm and left 5.5mm at the top and bottom — the bottom row sat
+    // exactly on a Canon's unprintable edge. 66mm keeps all four rows:
+    //   X: 3 x 50 + 2 x 5 gap + 2 x 25 margin   = 210
+    //   Y: 4 x 66 + 3 x 2 gap + 2 x 13.5 margin = 297
+    width: 50, height: 66, stock: 'plain',
+    page: { width: 210, height: 297, marginX: 25, marginY: 13.5 },
     columns: 3, rows: 4, gapX: 5, gapY: 2,
     carries: ['brand', 'category'],
     codeSpan: 0.78, codeHeight: 12,
@@ -263,11 +322,12 @@ export const LABEL_DESIGNS: readonly LabelDesign[] = [
     id: 'a4-cut',
     name: 'A4 cut-out sheet (scissors)',
     blurb: 'Plain A4 on any inkjet — 18 tags with dashed lines to cut along. No special label stock.',
-    // 3 x 65 + 2 x 7.5 margin = 210. 6 x 45 + 2 x 13.5 margin = 297. The margins
-    // clear a Canon PIXMA's unprintable edge (~3.4mm sides, 5mm bottom) with
-    // room to spare, so nothing is clipped.
-    width: 65, height: 45,
-    page: { width: 210, height: 297, marginX: 7.5, marginY: 13.5 },
+    // 1mm narrower than the 65mm it was, which lifts the side margin from 7.5mm
+    // to 9mm without costing a column.
+    //   X: 3 x 64 + 2 x 9 margin    = 210
+    //   Y: 6 x 45 + 2 x 13.5 margin = 297
+    width: 64, height: 45, stock: 'plain',
+    page: { width: 210, height: 297, marginX: 9, marginY: 13.5 },
     // NO gutters, on purpose. Neighbouring tags share one dashed line, so the
     // sheet is cut with six straight passes across and two down rather than
     // thirty-six fiddly ones — and nothing is wasted between them.
@@ -302,8 +362,13 @@ export const LABEL_DESIGNS: readonly LabelDesign[] = [
     id: 'compact',
     name: 'Small reel sticker',
     blurb: 'The same four facts squeezed onto 38 × 21 mm, for lace reels and trims where a full tag will not fit. 65 per A4.',
-    width: 38.1, height: 21.2, page: { width: 210, height: 297, marginX: 6.75, marginY: 10 },
-    columns: 5, rows: 13, gapX: 1.5, gapY: 0,
+    // 0.2mm shorter and the column gap down from 1.5mm to 0.5mm — together
+    // those lift the margins from 6.75/10 to 8.75/12 without losing a tag.
+    //   X: 5 x 38.1 + 4 x 0.5 gap + 2 x 8.75 margin = 210
+    //   Y: 13 x 21 + 2 x 12 margin                  = 297
+    width: 38.1, height: 21, stock: 'plain',
+    page: { width: 210, height: 297, marginX: 8.75, marginY: 12 },
+    columns: 5, rows: 13, gapX: 0.5, gapY: 0,
     carries: ['brand'],
     codeSpan: 0.86, codeHeight: 7,
     cell: (p, svg, code) => `
@@ -327,7 +392,7 @@ export const LABEL_DESIGNS: readonly LabelDesign[] = [
   },
 ];
 
-/** The blank sticker stock the studio actually has on the shelf. */
+/** The small sticker for the round brand tag — what gets printed by the hundred. */
 export const defaultDesign = (): LabelDesign => LABEL_DESIGNS[0];
 
 export const designById = (id: string | undefined): LabelDesign =>
@@ -406,17 +471,24 @@ export function buildLabelSheet(products: Fabric[], design: LabelDesign): string
 }
 
 /**
- * One label on a page its own size.
+ * One label, alone on an A4 page.
  *
  * For the product editor: the operator wants THIS piece's tag, now, not a sheet
- * of twenty-four mostly-blank cells. Choosing "Save as PDF" in the print dialog
+ * of twenty-one mostly-blank cells. Choosing "Save as PDF" in the print dialog
  * downloads it.
+ *
+ * The page is A4 rather than the label's own size, which is what it used to be.
+ * A 46 × 26 mm page is not paper anybody owns, so the print dialog fell back to
+ * the tray's real size and the browser placed the tag hard against the corner —
+ * the one part of the sheet the printer cannot reach. On A4 with a 15mm border
+ * it lands where the print head can always get to it, and there is paper left to
+ * hold while cutting.
  */
 export function buildSingleLabel(product: Fabric, design: LabelDesign): string {
-  const pad = 3;
+  const marginY = 15;
   const solo: LabelDesign = {
     ...design,
-    page: { width: design.width + pad * 2, height: design.height + pad * 2, marginX: pad, marginY: pad },
+    page: { width: 210, height: 297, marginX: (210 - design.width) / 2, marginY },
     columns: 1,
     rows: 1,
   };

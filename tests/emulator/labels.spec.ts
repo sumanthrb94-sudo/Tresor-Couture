@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { Recorder } from './lib/recorder';
-import { LABEL_DESIGNS, buildSingleLabel, buildLabelSheet, labelableProducts, designById } from '../../src/admin/printLabels';
+import { LABEL_DESIGNS, SAFE_MARGIN, buildSingleLabel, buildLabelSheet, labelableProducts, designById } from '../../src/admin/printLabels';
 import { code128 } from '../../src/lib/barcode';
 import { THERMAL_SIZES, isThermal, thermalById } from '../../src/admin/thermalLabel';
 import type { Fabric } from '../../src/types';
@@ -31,21 +31,21 @@ const CODE_MODULES = 112 + 20;
 test('Labels · every design carries brand, piece, price and a scannable code', async () => {
   const rec = new Recorder({
     slug: 'label-designs',
-    title: 'Labels · the four designs',
+    title: 'Labels · the seven designs',
     area: 'Admin console · Labels',
     purpose:
-      'Four label designs, for a lace reel and a bridal lehenga and everything between. Whichever is chosen, the tag must carry the brand, the piece, the price and a scannable code — and the symbol must physically fit the stock it is printed on.',
+      'Seven label designs, for a lace reel and a bridal lehenga and everything between. Whichever is chosen, the tag must carry the brand, the piece, the price and a scannable code, the symbol must physically fit the stock it is printed on, and the sheet must keep a border the printer can actually reach.',
     reproduce: [
       'Admin → Products → edit a piece → Publishing & Barcode → pick a design → Download label (PDF).',
       'Admin → Inventory → pick a design → Print labels for a whole sheet.',
-      'docs/ops/barcode-label-designs.pdf shows all four at true size.',
+      'docs/ops/barcode-label-designs.pdf shows them all at true size — regenerate with scripts/label-samples.ts.',
     ],
   });
 
   try {
     expect(LABEL_DESIGNS.length).toBeGreaterThanOrEqual(4);
     // The default is the small sticker: it is what gets printed by the hundred.
-    expect(designById(undefined).id).toBe('sticker-40x20');
+    expect(designById(undefined).id).toBe('sticker-38x20');
 
     for (const d of LABEL_DESIGNS) {
       const html = buildSingleLabel(piece(), d);
@@ -86,8 +86,33 @@ test('Labels · every design carries brand, piece, price and a scannable code', 
       const usedY = d.rows * d.height + (d.rows - 1) * d.gapY + d.page.marginY * 2;
       expect(usedX, `${d.id}: columns overflow the page`).toBeLessThanOrEqual(d.page.width + 0.01);
       expect(usedY, `${d.id}: rows overflow the page`).toBeLessThanOrEqual(d.page.height + 0.01);
+
+      // --- ...and with a border the printer can actually reach --------------
+      // "Fits the page" is not enough. No desktop printer reaches its own paper
+      // edge — a Canon PIXMA gives up ~3.4mm at the sides and 5mm at the bottom,
+      // some machines far more — and the rollers drag the sheet through a
+      // millimetre or two askew. A grid laid out to within 5mm of the edge does
+      // not come back 5mm short; it comes back with the outer column half
+      // printed, which wastes the sheet rather than the label.
+      //
+      // Die-cut stock is exempt and must be: the die owns those numbers, the
+      // manufacturer already placed it inside the printable area, and a wider
+      // margin here prints onto the backing paper between the labels.
+      if (d.stock === 'plain') {
+        expect(d.page.marginX, `${d.id}: side border too tight to print safely`)
+          .toBeGreaterThanOrEqual(SAFE_MARGIN.x);
+        expect(d.page.marginY, `${d.id}: top/bottom border too tight to print safely`)
+          .toBeGreaterThanOrEqual(SAFE_MARGIN.y);
+      }
     }
-    rec.note('All four designs are complete and printable', 'Content, symbol size and sheet geometry checked per design.');
+
+    // A single label is centred on a full A4 page, not on a page its own size.
+    // No tray holds 46 x 26 mm paper, so that page fell back to A4 anyway and
+    // put the tag in the one corner the print head cannot reach.
+    const solo = buildSingleLabel(piece(), designById('classic'));
+    expect(solo).toContain('@page { size: 210mm 297mm');
+    rec.note('Sheets and single labels keep a printable border', 'Plain-paper grids stay 8mm from the sides and 12mm from the top and bottom; die-cut stock keeps the die\'s own geometry.');
+    rec.note('Every design is complete and printable', 'Content, symbol size and sheet geometry checked per design.');
 
     // --- A discount prints both figures ----------------------------------
     // Printing only the lower number makes the tag disagree with the invoice;

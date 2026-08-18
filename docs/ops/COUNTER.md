@@ -37,16 +37,35 @@ A4 sheet stock still works if you would rather batch a shelf at once.
    `docs/ops/barcode-label-designs.pdf` — print that at 100% (not "fit to
    page") and hold the labels against your sheet stock:
 
-   | Design | Size | Per A4 | Carries | For |
-   |---|---|---|---|---|
-   | **Sticker · 40 × 20 mm** (default) | 40 × 20 mm | **70** | — | The small tag, printed by the hundred |
-   | Sticker · 50 × 25 mm | 50 × 25 mm | 44 | — | Pre-cut blank sticker stock |
-   | Small reel sticker | 38 × 21 mm | 65 | brand | Lace reels and trims |
-   | Classic price tag | 63.5 × 38.1 mm | 21 | brand | Pre-cut label stock |
-   | Detailed tag | 63.5 × 38.1 mm | 21 | brand, category | When one shelf holds several families |
-   | A4 cut-out sheet | 65 × 45 mm | 18 | — | A bigger tag on plain paper |
-   | Garment hang tag | 50 × 70 mm | 12 | brand, category | Lehengas and sarees on a rail |
-   | Thermal roll · 58 mm | 384 px wide | — | brand, category | The portable printer |
+   | Design | Size | Per A4 | Border | Carries | For |
+   |---|---|---|---|---|---|
+   | **Sticker · 38.5 × 19.5 mm** (default) | 38.5 × 19.5 mm | **70** | 8.75 / 12 | — | The small tag, printed by the hundred |
+   | Sticker · 50 × 25 mm | 50 × 25 mm | 30 | 30 / 23.5 | — | When the sticker on the shelf is 50 × 25 |
+   | Small reel sticker | 38.1 × 21 mm | 65 | 8.75 / 12 | brand | Lace reels and trims |
+   | Classic price tag | 63.5 × 38.1 mm | 21 | die-cut | brand | Avery L7160 label stock |
+   | Detailed tag | 63.5 × 38.1 mm | 21 | die-cut | brand, category | When one shelf holds several families |
+   | A4 cut-out sheet | 64 × 45 mm | 18 | 9 / 13.5 | — | A bigger tag on plain paper |
+   | Garment hang tag | 50 × 66 mm | 12 | 25 / 13.5 | brand, category | Lehengas and sarees on a rail |
+   | Thermal roll · 58 mm | 384 px wide | — | n/a | brand, category | The portable printer |
+
+   **Border** is how much blank paper the sheet keeps at the sides and at the
+   top/bottom, in millimetres. It is not decoration. No desktop printer reaches
+   its own paper edge — a Canon PIXMA gives up about 3.4mm at the sides and 5mm
+   at the bottom, and the rollers pull the sheet through a millimetre or two
+   askew. A grid laid to within 5mm of the edge does not come back 5mm short; it
+   comes back with the outer column half printed, which wastes the whole sheet
+   instead of one label. Every hand-cut design now keeps **at least 8mm across
+   and 12mm down**, and a test fails the build if one stops.
+
+   The two die-cut designs are the exception, deliberately. Their numbers are the
+   Avery L7160 die, and the manufacturer already placed it where the printer can
+   reach; a "safer" margin there would slide the print off the labels and onto
+   the backing paper.
+
+   Where honouring the border would have cost a whole column, the **tag** gave up
+   a millimetre or two instead — the default sticker went from 40 × 20 to
+   38.5 × 19.5 and still gets 70 to a sheet. Only the 50 × 25 paid in labels
+   (44 → 30), because its size is the point of it.
 
    The stickers and the cut sheet leave the brand off on purpose: they go onto
    the round Tresor Couture tag, which already carries the name, and 2mm spent
@@ -155,7 +174,8 @@ counter. Worth raising with the CA.
 | `src/pages/admin/AdminCounter.tsx` | The till. |
 | `src/lib/pos.ts` | Barcode lookup and the sale call. |
 | `src/lib/barcode.ts` | The Code 128-B encoder. |
-| `src/admin/printLabels.ts` | The four A4 label designs, single labels and sheets. |
+| `src/admin/printLabels.ts` | The A4 label designs, single labels and sheets. |
+| `scripts/label-samples.ts` | Regenerates the three sample PDFs in `docs/ops` from the designs. |
 | `src/admin/thermalLabel.ts` | Thermal-roll labels, drawn dot by dot for the print head. |
 | `tests/emulator/labels.spec.ts` | What every design must say, and that it physically fits the page. |
 | `tests/emulator/pos-sale.spec.ts` | Pricing, security and idempotency, against the real handler. |
@@ -220,14 +240,18 @@ cut along. Two sizes, both with ready-to-print samples:
 
 | Design | Per sheet | Sample |
 |---|---|---|
-| **Sticker · 40 × 20 mm** | 70 | `docs/ops/barcode-sticker-sheet-SAMPLE.pdf` |
-| Sticker · 50 × 25 mm | 44 | — |
-| A4 cut-out sheet · 65 × 45 mm | 18 | `docs/ops/barcode-cut-sheet-SAMPLE.pdf` |
+| **Sticker · 38.5 × 19.5 mm** | 70 | `docs/ops/barcode-sticker-sheet-SAMPLE.pdf` |
+| Sticker · 50 × 25 mm | 30 | — |
+| A4 cut-out sheet · 64 × 45 mm | 18 | `docs/ops/barcode-cut-sheet-SAMPLE.pdf` |
 
-The 40 × 20 mm sticker is the default — 70 to a sheet, so three hundred pieces
-is five sheets. It sits on the 60 mm round tag with 10 mm clear either side.
-The 50 × 25 mm version matches pre-cut blank sticker stock, if that is what is
-being fed through the printer.
+The 38.5 × 19.5 mm sticker is the default — 70 to a sheet, so three hundred
+pieces is five sheets. It sits on the 60 mm round tag with 11 mm clear either
+side. Use the 50 × 25 mm one only if that is the size of the blank stickers
+being fed through the printer; it holds its size rather than its yield, so it
+gets 30 to a sheet.
+
+`scripts/label-samples.ts` regenerates all three PDFs from the designs
+themselves, so a sample can never quietly describe a layout that changed.
 
 The tags **share their cut lines** — no gutters between them. That turns a sheet
 into five straight passes across and two down, instead of thirty-six fiddly
@@ -235,9 +259,15 @@ ones, and wastes no paper. Each tag has a 4–5 mm inner margin, so scissors can
 wander a couple of millimetres without touching the barcode.
 
 Margins clear a Canon PIXMA's unprintable edge (about 3.4 mm at the sides and
-5 mm at the bottom) with room to spare. Print at **100% / Actual size** — the
-"fit to page" default shrinks the sheet by a few percent and the tags stop being
-the size they say they are.
+5 mm at the bottom) more than twice over, so a sheet that feeds a little askew
+still prints whole. Print at **100% / Actual size** — the "fit to page" default
+shrinks the sheet by a few percent and the tags stop being the size they say
+they are.
+
+A single label from the product editor prints centred on a full A4 page rather
+than on a page its own size. Nothing feeds 44 × 26 mm paper, so that page fell
+back to A4 anyway and put the tag hard into the corner the print head cannot
+reach — which is exactly how one comes back half printed.
 
 **Do not put thermal paper through an inkjet.** Thermal paper develops with
 heat, not ink: the coating is glossy, so dye ink beads and smudges instead of
