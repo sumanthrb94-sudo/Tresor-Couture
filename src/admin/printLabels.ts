@@ -175,6 +175,48 @@ export const LABEL_DESIGNS: readonly LabelDesign[] = [
       .code { font-family: "Courier New", monospace; font-size: 7pt; letter-spacing: 0.5pt; }`,
   },
   {
+    id: 'a4-cut',
+    name: 'A4 cut-out sheet (scissors)',
+    blurb: 'Plain A4 on any inkjet — 18 tags with dashed lines to cut along. No special label stock.',
+    // 3 x 65 + 2 x 7.5 margin = 210. 6 x 45 + 2 x 13.5 margin = 297. The margins
+    // clear a Canon PIXMA's unprintable edge (~3.4mm sides, 5mm bottom) with
+    // room to spare, so nothing is clipped.
+    width: 65, height: 45,
+    page: { width: 210, height: 297, marginX: 7.5, marginY: 13.5 },
+    // NO gutters, on purpose. Neighbouring tags share one dashed line, so the
+    // sheet is cut with six straight passes across and two down rather than
+    // thirty-six fiddly ones — and nothing is wasted between them.
+    columns: 3, rows: 6, gapX: 0, gapY: 0,
+    codeSpan: 0.66, codeHeight: 11,
+    cell: (p, svg, code) => `
+      <div class="brand">${esc(p.brand ?? '')}</div>
+      <div class="name">${esc(p.name ?? '')}</div>
+      <div class="cat">${esc(categoryOf(p))}</div>
+      <div class="bc">${svg}</div>
+      <div class="code">${esc(code)}</div>
+      <div class="prices">${priceBlock(p)}</div>
+      <div class="incl">Incl. of all taxes</div>`,
+    css: `
+      /* A generous inner margin is what makes a hand-cut tag forgiving: scissors
+         can wander a couple of millimetres and still not touch the barcode. */
+      .label { justify-content: center; align-items: center; text-align: center;
+               padding: 4mm 5mm; gap: 0.8mm;
+               border-right: 0.2mm dashed #999; border-bottom: 0.2mm dashed #999; }
+      /* Single shared lines: only the outermost tags draw their left/top edge. */
+      .label:nth-child(3n+1) { border-left: 0.2mm dashed #999; }
+      .label:nth-child(-n+3) { border-top: 0.2mm dashed #999; }
+      .brand { font-size: 7pt; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
+      .name { font-size: 8pt; font-weight: 700; line-height: 1.15; max-height: 9mm; overflow: hidden;
+              display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+      .cat { font-size: 5.5pt; color: #555; letter-spacing: 0.08em; text-transform: uppercase; }
+      .bc { margin-top: 1mm; }
+      .code { font-family: "Courier New", monospace; font-size: 7pt; letter-spacing: 0.5pt; }
+      .prices { display: flex; align-items: baseline; gap: 2mm; margin-top: 0.5mm; }
+      .price { font-size: 12pt; font-weight: 800; }
+      .was { font-size: 7pt; text-decoration: line-through; color: #777; }
+      .incl { font-size: 5pt; color: #555; }`,
+  },
+  {
     id: 'compact',
     name: 'Small reel sticker',
     blurb: 'The same four facts squeezed onto 38 × 21 mm, for lace reels and trims where a full tag will not fit. 65 per A4.',

@@ -39,7 +39,9 @@ A4 sheet stock still works if you would rather batch a shelf at once.
 
    | Design | Size | Per A4 | For |
    |---|---|---|---|
-   | Classic price tag | 63.5 × 38.1 mm | 21 | The everyday label |
+   | Thermal roll · 58 mm | 384 px wide | — | The portable printer |
+   | A4 cut-out sheet | 65 × 45 mm | 18 | Plain paper on any inkjet, cut with scissors |
+   | Classic price tag | 63.5 × 38.1 mm | 21 | Pre-cut label stock |
    | Detailed tag | 63.5 × 38.1 mm | 21 | Adds the category line |
    | Garment hang tag | 50 × 70 mm | 12 | Lehengas and sarees on a rail |
    | Small reel sticker | 38 × 21 mm | 65 | Lace reels and trims |
@@ -200,3 +202,30 @@ not scan.
 
 Sheet stock is still there under **Sheet labels (A4)**, and still uses the print
 dialog with "Save as PDF".
+
+
+---
+
+## The A4 cut-out sheet (any inkjet, scissors)
+
+No label stock, no thermal printer: **18 tags on a sheet of ordinary A4**, with
+dashed lines to cut along. `docs/ops/barcode-cut-sheet-SAMPLE.pdf` is a filled
+sheet, ready to print.
+
+The tags **share their cut lines** — no gutters between them. That turns a sheet
+into five straight passes across and two down, instead of thirty-six fiddly
+ones, and wastes no paper. Each tag has a 4–5 mm inner margin, so scissors can
+wander a couple of millimetres without touching the barcode.
+
+Margins clear a Canon PIXMA's unprintable edge (about 3.4 mm at the sides and
+5 mm at the bottom) with room to spare. Print at **100% / Actual size** — the
+"fit to page" default shrinks the sheet by a few percent and the tags stop being
+the size they say they are.
+
+**Do not put thermal paper through an inkjet.** Thermal paper develops with
+heat, not ink: the coating is glossy, so dye ink beads and smudges instead of
+drying, and the sheet greys with warmth and friction — a grey background is
+exactly what stops a barcode scanning. Thermal paper belongs in the thermal
+printer, which needs no ink at all. For the inkjet use plain 100–120 gsm paper
+or matte inkjet card, or A4 matte sticker sheets if the tags need to be
+adhesive.
