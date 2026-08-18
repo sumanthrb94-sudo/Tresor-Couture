@@ -456,3 +456,90 @@ test('Admin · Choose which barcodes go on a sheet', async ({ browser }: { brows
     throw err;
   }
 });
+
+test('Admin · Add a batch of products and label exactly that batch', async ({ browser }: { browser: Browser }) => {
+  test.setTimeout(180_000);
+  const tag = nonce();
+  const rec = new Recorder({
+    slug: 'admin-w9-batch-add',
+    title: 'Admin workflow · Add a shelf at once, then label it',
+    area: 'Admin console · Products',
+    purpose:
+      'Filling a store is forty trims off a supplier\'s invoice, each of which is a name, a price and a count — not forty passes through a full product form. The batch grid takes them in one go, saves each as a draft with its own barcode, and prints labels for exactly the pieces just entered rather than for whatever a filter happens to show.',
+    reproduce: [
+      'Sign in as admin@test.local and open #/admin/products.',
+      'Add batch. Set brand, category and unit once at the top.',
+      'Paste rows from a spreadsheet, or type them: name, price, MRP, stock.',
+      'Add N products: each is created as a Draft with an allocated TC barcode.',
+      'The result screen lists the batch with its codes and prints their labels.',
+    ],
+  });
+
+  try {
+    const adm = await adminPage(browser);
+    await gotoAdmin(adm, 'products');
+    await adm.getByRole('button', { name: /add batch/i }).click({ timeout: 15_000 });
+    await adm.waitForTimeout(700);
+    await rec.step(adm, 'Opened the batch grid');
+
+    // What repeats down an invoice is set once, not re-typed per row.
+    await adm.getByLabel('Batch category').selectOption('Laces');
+    await rec.step(adm, 'Set the shared fields', 'Brand, category and unit apply to the whole batch.');
+
+    // Pasting straight out of a spreadsheet is the point — tab-separated, with
+    // a header line that must be recognised and dropped rather than imported.
+    await adm.getByRole('button', { name: /paste from a spreadsheet/i }).click();
+    // Columns deliberately NOT in the app's own order, and with a column it
+    // does not want: a real supplier sheet is never laid out to suit us, so
+    // the header row has to be what decides where each value lands.
+    await adm.getByLabel('Paste rows').fill(
+      `Product Name\tStock\tCategory\tSub Category\tSelling Price\tSupplier Code\n` +
+      `E2E Batch Gold Braid ${tag}\t4\tLaces\tTrim & Edging\t1200\tHA-${tag}\n` +
+      `E2E Batch Pearl Trim ${tag}\t2\tLaces\tPatch\t850\tPT-${tag}\n` +
+      `E2E Batch Silk Saree ${tag}\t6\tSarees\tBanarasi\t2100\tSR-${tag}`,
+    );
+    await adm.getByRole('button', { name: /add these rows/i }).click();
+    await adm.waitForTimeout(500);
+    await expect(adm.getByText(/3 ready to add/i).first()).toBeVisible({ timeout: 10_000 });
+    await rec.step(adm, 'Pasted three rows', 'Header recognised and dropped; columns matched by name, so a supplier sheet in its own order still lands in the right fields.', 'assert');
+
+    // Mixed categories in one batch: a delivery is rarely all one thing.
+    await expect(adm.getByLabel('Category, row 1', { exact: true })).toHaveValue('Laces');
+    await expect(adm.getByLabel('Category, row 3', { exact: true })).toHaveValue('Sarees');
+    await expect(adm.getByLabel('Sub category, row 3', { exact: true })).toHaveValue('Banarasi');
+    await expect(adm.getByLabel('Supplier code, row 1', { exact: true })).toHaveValue(`HA-${tag}`);
+    await rec.step(adm, 'Per-row category, subcategory and code', 'One batch holds laces and a saree; the panel at the top only fills what a row left blank.', 'assert');
+
+    await adm.getByRole('button', { name: /^add 3 products$/i }).click();
+
+    // Each product is one barcode transaction, so give the batch room.
+    await expect(adm.getByText(/3 products added/i).first()).toBeVisible({ timeout: 90_000 });
+    await rec.step(adm, 'Batch saved', 'Three drafts, each with its own code.', 'assert');
+
+    // Scoped to the batch's own list: the catalogue behind the dialog is full
+    // of TC codes, and counting those would prove nothing about this batch.
+    const batchList = adm.getByRole('list', { name: /barcodes for this batch/i });
+    await expect(batchList.getByText(/^TC\d{5}$/)).toHaveCount(3, { timeout: 15_000 });
+    // The categories came from the ROWS, not from the panel default.
+    await expect(batchList.getByText(/Laces · Trim & Edging/)).toBeVisible();
+    await expect(batchList.getByText(/Sarees · Banarasi/)).toBeVisible();
+    await rec.step(adm, 'Every piece has a barcode, under its own category', 'Codes allocated as they saved, from the same series as the importer and the CLI.', 'assert');
+
+    await expect(adm.getByRole('button', { name: /print 3 labels|save 3 labels/i })).toBeVisible();
+    await rec.step(adm, 'Labels for exactly this batch', 'Not "whatever the Inventory filter shows", which is the same list only until someone changes a filter.', 'assert');
+
+    // And they really are drafts: registered, stocked, off the storefront.
+    await adm.getByRole('button', { name: /^done$/i }).click();
+    await adm.waitForTimeout(1500);
+    await adm.getByPlaceholder(/search/i).first().fill(`E2E Batch Gold Braid ${tag}`);
+    await adm.waitForTimeout(1200);
+    await expect(adm.getByText('Draft', { exact: true }).first()).toBeVisible({ timeout: 15_000 });
+    await rec.step(adm, 'Saved as drafts', 'In stock and sellable at the counter; not on the website until photographed.', 'assert');
+
+    rec.finish('passed');
+    await adm.context().close();
+  } catch (err) {
+    rec.finish('failed', err instanceof Error ? err.message : String(err));
+    throw err;
+  }
+});

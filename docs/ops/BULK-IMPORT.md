@@ -9,6 +9,39 @@ the photograph is what publishes it.
 
 ---
 
+## A batch at a time, in the admin console
+
+**Admin → Products → Add batch.** A grid, one row per piece — a whole delivery
+in one pass, mixed categories and all.
+
+Each row carries its **own category and subcategory**, so laces, a saree and a
+lehenga can arrive in the same batch. The panel at the top (brand, category,
+sub category, material, supplier, sold as) fills only what a row leaves blank,
+which is what makes forty lines of one supplier's trims quick without making a
+mixed delivery awkward.
+
+Per row: **name**, category, sub category, supplier code, cost, **price**, MRP,
+stock, sold-as. Name and price are the only two required — everything else has
+a default or is optional.
+
+**Paste from a spreadsheet** takes columns straight out of Excel. Keep the
+header row and the column ORDER does not matter: `Product Name`, `Category`,
+`Sub Category`, `Supplier Code`, `Buying Price`, `Selling Price`, `MRP`,
+`Stock` are all matched by name, and columns we do not want are ignored. With
+no header row the order is assumed to be name, category, sub category, price,
+MRP, stock.
+
+On save each row becomes a **Draft with its own barcode**, and the next screen
+lists the batch with its codes and a **Print labels** button — labels for
+exactly the pieces just entered, not for whatever an Inventory filter happens
+to show.
+
+What is deliberately *not* collected: the photograph and the description. Those
+are the only two things left per piece, and adding the photo is what publishes
+it.
+
+---
+
 ## One at a time, in the admin console
 
 **Admin → Products → Add Product.** Fill brand, name, description, category,

@@ -15,6 +15,7 @@ import {
   Ruler,
   Download,
   Barcode,
+  Layers,
   Check
 } from 'lucide-react';
 import { productsApi } from '../../lib/firebase';
@@ -23,6 +24,7 @@ import { awaitingPhoto } from '../../lib/availability';
 import { code128Svg } from '../../lib/barcode';
 import { reserveBarcode } from '../../lib/barcodeAssign';
 import { LABEL_DESIGNS, defaultDesign, designById, printSingleLabel } from '../../admin/printLabels';
+import BatchAddProducts from './BatchAddProducts';
 import { THERMAL_SIZES, downloadThermalLabel, isThermal, thermalById } from '../../admin/thermalLabel';
 import { CATEGORIES, formatINR } from '../../constants';
 import { toCsv, downloadCsv } from '../../lib/csv';
@@ -1362,6 +1364,7 @@ const AdminProducts: React.FC = () => {
   const [needsPhoto, setNeedsPhoto] = useState(false);
 
   const [editorOpen, setEditorOpen] = useState(false);
+  const [batchOpen, setBatchOpen] = useState(false);
   const [editingExisting, setEditingExisting] = useState<Fabric | null>(null);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [errors, setErrors] = useState<DraftErrors>({});
@@ -1635,6 +1638,13 @@ const AdminProducts: React.FC = () => {
               className="btn-primary inline-flex items-center justify-center gap-1.5 !py-2.5"
             >
               <Plus className="w-4 h-4" /> Add Product
+            </button>
+            <button
+              onClick={() => setBatchOpen(true)}
+              title="Enter a whole shelf at once — no photographs, barcodes assigned as they save"
+              className="btn-outline inline-flex items-center justify-center gap-1.5 !py-2.5"
+            >
+              <Layers className="w-4 h-4" /> Add batch
             </button>
             <button
               onClick={() => setNeedsPhoto(v => !v)}
@@ -1923,6 +1933,15 @@ const AdminProducts: React.FC = () => {
       </div>
 
       {/* editor overlay */}
+      {batchOpen && (
+        <Overlay onClose={() => setBatchOpen(false)}>
+          <BatchAddProducts
+            onClose={() => setBatchOpen(false)}
+            onSaved={() => setReloadKey(k => k + 1)}
+          />
+        </Overlay>
+      )}
+
       {editorOpen && (
         <Overlay onClose={closeEditor}>
           <Editor
