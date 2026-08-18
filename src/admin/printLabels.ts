@@ -92,6 +92,46 @@ const A4_21 = { width: 210, height: 297, marginX: 7.25, marginY: 15.15 };
 
 export const LABEL_DESIGNS: readonly LabelDesign[] = [
   {
+    id: 'sticker-50x25',
+    name: 'Sticker · 50 × 25 mm',
+    blurb: 'The blank sticker size — 44 per A4, and small enough to sit on the round brand tag.',
+    // 4 x 50 + 2 x 5 margin = 210. 11 x 25 + 2 x 11 margin = 297. The 5mm side
+    // margin clears a Canon PIXMA's unprintable edge (~3.4mm) with a little to
+    // spare; going wider would cost a whole column.
+    width: 50, height: 25,
+    page: { width: 210, height: 297, marginX: 5, marginY: 11 },
+    // Shared cut lines again: 10 straight passes across and 3 down for 44 tags.
+    columns: 4, rows: 11, gapX: 0, gapY: 0,
+    codeSpan: 0.8, codeHeight: 8,
+    // No category line. On 25mm of height every millimetre belongs to the
+    // barcode, and the category is on the shelf the piece is sitting on.
+    cell: (p, svg, code) => `
+      <div class="brand">${esc(p.brand ?? '')}</div>
+      <div class="name">${esc(p.name ?? '')}</div>
+      <div class="bc">${svg}</div>
+      <div class="foot">
+        <span class="code">${esc(code)}</span>
+        ${priceBlock(p)}
+      </div>
+      <div class="incl">Incl. of all taxes</div>`,
+    css: `
+      .label { justify-content: center; align-items: center; text-align: center;
+               padding: 1.4mm 2mm; gap: 0.3mm;
+               border-right: 0.2mm dashed #999; border-bottom: 0.2mm dashed #999; }
+      .label:nth-child(4n+1) { border-left: 0.2mm dashed #999; }
+      .label:nth-child(-n+4) { border-top: 0.2mm dashed #999; }
+      .brand { font-size: 5pt; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #444; }
+      /* One line: a trim's name is long and the tag is 25mm tall. Truncating
+         beats spilling into the barcode's quiet zone. */
+      .name { font-size: 6pt; font-weight: 700; line-height: 1.1; width: 100%;
+              white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .foot { display: flex; align-items: baseline; justify-content: center; gap: 2mm; width: 100%; }
+      .code { font-family: "Courier New", monospace; font-size: 5.5pt; letter-spacing: 0.3pt; }
+      .price { font-size: 9pt; font-weight: 800; }
+      .was { font-size: 5.5pt; text-decoration: line-through; color: #777; }
+      .incl { font-size: 4pt; color: #555; }`,
+  },
+  {
     id: 'classic',
     name: 'Classic price tag',
     blurb: 'Brand, piece, price and code. The everyday label, on standard sheet stock.',
@@ -191,7 +231,6 @@ export const LABEL_DESIGNS: readonly LabelDesign[] = [
     cell: (p, svg, code) => `
       <div class="brand">${esc(p.brand ?? '')}</div>
       <div class="name">${esc(p.name ?? '')}</div>
-      <div class="cat">${esc(categoryOf(p))}</div>
       <div class="bc">${svg}</div>
       <div class="code">${esc(code)}</div>
       <div class="prices">${priceBlock(p)}</div>
@@ -208,7 +247,6 @@ export const LABEL_DESIGNS: readonly LabelDesign[] = [
       .brand { font-size: 7pt; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
       .name { font-size: 8pt; font-weight: 700; line-height: 1.15; max-height: 9mm; overflow: hidden;
               display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-      .cat { font-size: 5.5pt; color: #555; letter-spacing: 0.08em; text-transform: uppercase; }
       .bc { margin-top: 1mm; }
       .code { font-family: "Courier New", monospace; font-size: 7pt; letter-spacing: 0.5pt; }
       .prices { display: flex; align-items: baseline; gap: 2mm; margin-top: 0.5mm; }
@@ -244,6 +282,7 @@ export const LABEL_DESIGNS: readonly LabelDesign[] = [
   },
 ];
 
+/** The blank sticker stock the studio actually has on the shelf. */
 export const defaultDesign = (): LabelDesign => LABEL_DESIGNS[0];
 
 export const designById = (id: string | undefined): LabelDesign =>

@@ -22,7 +22,7 @@ import { placeholderSwatch } from '../../lib/swatch';
 import { awaitingPhoto } from '../../lib/availability';
 import { code128Svg } from '../../lib/barcode';
 import { reserveBarcode } from '../../lib/barcodeAssign';
-import { LABEL_DESIGNS, designById, printSingleLabel } from '../../admin/printLabels';
+import { LABEL_DESIGNS, defaultDesign, designById, printSingleLabel } from '../../admin/printLabels';
 import { THERMAL_SIZES, downloadThermalLabel, isThermal, thermalById } from '../../admin/thermalLabel';
 import { CATEGORIES, formatINR } from '../../constants';
 import { toCsv, downloadCsv } from '../../lib/csv';
@@ -582,7 +582,7 @@ interface EditorProps {
 
 const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange, onCancel, onSave }) => {
   const [barcoding, setBarcoding] = useState(false);
-  const [labelDesignId, setLabelDesignId] = useState<string>(() => THERMAL_SIZES[0].id);
+  const [labelDesignId, setLabelDesignId] = useState<string>(() => defaultDesign().id);
 
   /**
    * Allocate the barcode now, not on save.
@@ -1023,14 +1023,14 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
                   onChange={e => setLabelDesignId(e.target.value)}
                   className="input-box !py-1.5 text-[12px] flex-1 min-w-[140px]"
                 >
-                  <optgroup label="Thermal printer">
-                    {THERMAL_SIZES.map(t => (
-                      <option key={t.id} value={t.id}>{t.name}</option>
-                    ))}
-                  </optgroup>
                   <optgroup label="Sheet labels (A4)">
                     {LABEL_DESIGNS.map(d => (
                       <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Thermal printer">
+                    {THERMAL_SIZES.map(t => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
                     ))}
                   </optgroup>
                 </select>

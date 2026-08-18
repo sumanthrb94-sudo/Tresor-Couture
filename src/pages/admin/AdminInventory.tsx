@@ -3,7 +3,7 @@ import { Boxes, Minus, Plus, Search, Filter, Download, AlertCircle, Check, Packa
 import { productsApi } from '../../lib/firebase';
 import { CATEGORIES, formatINR } from '../../constants';
 import { toCsv, downloadCsv } from '../../lib/csv';
-import { printLabels, labelableProducts, LABEL_DESIGNS, designById } from '../../admin/printLabels';
+import { printLabels, labelableProducts, LABEL_DESIGNS, defaultDesign, designById } from '../../admin/printLabels';
 import { THERMAL_SIZES, downloadThermalLabel, isThermal, thermalById } from '../../admin/thermalLabel';
 import { awaitingPhoto } from '../../lib/availability';
 import { reserveBarcode } from '../../lib/barcodeAssign';
@@ -63,7 +63,7 @@ const AdminInventory: React.FC = () => {
   const [stockFilter, setStockFilter] = useState<StockFilter>('all');
   const [catFilter, setCatFilter] = useState<CatFilter>('all');
   const [listingFilter, setListingFilter] = useState<ListingFilter>('all');
-  const [labelDesignId, setLabelDesignId] = useState<string>(() => THERMAL_SIZES[0].id);
+  const [labelDesignId, setLabelDesignId] = useState<string>(() => defaultDesign().id);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedId, setSavedId] = useState<string | null>(null);
 
@@ -327,11 +327,11 @@ const AdminInventory: React.FC = () => {
               : designById(labelDesignId).blurb}
             className="input-box w-full sm:w-[170px]"
           >
-            <optgroup label="Thermal printer">
-              {THERMAL_SIZES.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </optgroup>
             <optgroup label="Sheet labels (A4)">
               {LABEL_DESIGNS.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </optgroup>
+            <optgroup label="Thermal printer">
+              {THERMAL_SIZES.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
             </optgroup>
           </select>
           <button

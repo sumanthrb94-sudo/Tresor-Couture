@@ -39,15 +39,17 @@ A4 sheet stock still works if you would rather batch a shelf at once.
 
    | Design | Size | Per A4 | For |
    |---|---|---|---|
+   | **Sticker · 50 × 25 mm** (default) | 50 × 25 mm | 44 | The blank sticker stock; fits the round brand tag |
    | Thermal roll · 58 mm | 384 px wide | — | The portable printer |
-   | A4 cut-out sheet | 65 × 45 mm | 18 | Plain paper on any inkjet, cut with scissors |
+   | A4 cut-out sheet | 65 × 45 mm | 18 | A bigger tag on plain paper |
    | Classic price tag | 63.5 × 38.1 mm | 21 | Pre-cut label stock |
    | Detailed tag | 63.5 × 38.1 mm | 21 | Adds the category line |
    | Garment hang tag | 50 × 70 mm | 12 | Lehengas and sarees on a rail |
    | Small reel sticker | 38 × 21 mm | 65 | Lace reels and trims |
 
-   Every design carries the brand, the piece, its category, the price and the
-   code. Choose it in the dropdown beside **Print labels** (whole sheets) or
+   Every design carries the brand, the piece, the price and the code; the
+   Detailed tag adds the category line, and the others leave it off — the
+   category is the shelf the piece is sitting on. Choose it in the dropdown beside **Print labels** (whole sheets) or
    beside **Download label (PDF)** in the product editor (one piece).
 3. **Print ONE label and scan it.** Do this before printing the rest. The
    barcodes are generated in-house — Code 128-B, no third-party library — and a
@@ -206,11 +208,19 @@ dialog with "Save as PDF".
 
 ---
 
-## The A4 cut-out sheet (any inkjet, scissors)
+## Cut-out sheets (any inkjet, scissors)
 
-No label stock, no thermal printer: **18 tags on a sheet of ordinary A4**, with
-dashed lines to cut along. `docs/ops/barcode-cut-sheet-SAMPLE.pdf` is a filled
-sheet, ready to print.
+No label stock, no thermal printer — tags on ordinary A4 with dashed lines to
+cut along. Two sizes, both with ready-to-print samples:
+
+| Design | Per sheet | Sample |
+|---|---|---|
+| **Sticker · 50 × 25 mm** | 44 | `docs/ops/barcode-sticker-sheet-SAMPLE.pdf` |
+| A4 cut-out sheet · 65 × 45 mm | 18 | `docs/ops/barcode-cut-sheet-SAMPLE.pdf` |
+
+The sticker is the default: it matches the blank sticker stock, and at
+50 × 25 mm it sits on the 60 mm round brand tag with 2.5 mm clear either side
+and 5 mm below the punch hole.
 
 The tags **share their cut lines** — no gutters between them. That turns a sheet
 into five straight passes across and two down, instead of thirty-six fiddly
