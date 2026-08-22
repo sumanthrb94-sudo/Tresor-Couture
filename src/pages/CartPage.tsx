@@ -5,10 +5,9 @@ import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
 import { useCatalog } from '../context/CatalogContext';
-import { FABRICS, FREE_SHIPPING_THRESHOLD, formatINR } from '../constants';
+import { FREE_SHIPPING_THRESHOLD, formatINR } from '../constants';
 import { couponsApi } from '../lib/firebase';
 import { inStock } from '../lib/availability';
-import type { Fabric } from '../types';
 import FabricImage from '../components/FabricImage';
 import ProductCard from '../components/ProductCard';
 import DeliveryChecker from '../components/DeliveryChecker';
@@ -23,7 +22,7 @@ const CartPage: React.FC = () => {
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponBusy, setCouponBusy] = useState(false);
 
-  // "You might also like" uses the shared catalogue; FABRICS is the fallback.
+  // "You might also like" uses the shared catalogue.
   const { products: catalogProducts } = useCatalog();
   const catalog = catalogProducts.length ? catalogProducts : null;
 
@@ -136,7 +135,9 @@ const CartPage: React.FC = () => {
 
   // Never cross-sell something we cannot ship — this rail sits directly above
   // the checkout button.
-  const youMightLike = (catalog ?? FABRICS)
+  // `?? []` and not `?? FABRICS`: a cross-sell rail directly above Checkout
+  // must never offer a product that does not exist.
+  const youMightLike = (catalog ?? [])
     .filter(f => inStock(f) && !resolved.some(r => r.fabric.id === f.id))
     .slice(0, 5);
 

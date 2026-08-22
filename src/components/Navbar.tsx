@@ -7,7 +7,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
 import { useCatalog } from '../context/CatalogContext';
-import { FABRICS, OFFER_TICKER } from '../constants';
+import { OFFER_TICKER } from '../constants';
 import { masterCategoriesFor, subcategoriesFor } from '../lib/subcategories';
 import { sellableFirst } from '../lib/availability';
 import type { MasterCategory } from '../types';
@@ -69,7 +69,10 @@ const Navbar: React.FC = () => {
 
   // Shared catalogue for search / mega panels
   const { products: catalogProducts } = useCatalog();
-  const searchPool = catalogProducts.length ? catalogProducts : FABRICS;
+  // No seed fallback. An empty catalogue means it is still loading or the
+  // load failed, and both are better answered with an empty menu than with
+  // six weaves the shop does not sell and cannot be searched for.
+  const searchPool = catalogProducts;
   const NAV = useMemo(() => navFor(searchPool), [searchPool]);
 
   const suggestions = useMemo(() => {

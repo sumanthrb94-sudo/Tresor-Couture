@@ -24,7 +24,7 @@ import { useRouter } from '../context/RouterContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useOrders } from '../context/OrderContext';
-import { FABRICS, formatINR } from '../constants';
+import { formatINR } from '../constants';
 import FabricImage from '../components/FabricImage';
 import OrderStatusTracker from '../components/OrderStatusTracker';
 import AddressBookEditor from '../components/AddressBookEditor';
@@ -1013,18 +1013,11 @@ const WishlistTab: React.FC = () => {
   const { addItem } = useCart();
   const { navigate } = useRouter();
 
-  // Prefer the context's `resolved` (hydrated from Firestore + seed) so
-  // wishlist works for products that aren't in the static FABRICS array.
-  // Fall back to the seed lookup for safety during context warm-up.
-  const items = useMemo(
-    () =>
-      wishlist.resolved.length > 0
-        ? wishlist.resolved
-        : wishlist.ids
-            .map(id => FABRICS.find(f => f.id === id))
-            .filter((f): f is NonNullable<typeof f> => Boolean(f)),
-    [wishlist.resolved, wishlist.ids]
-  );
+  // Only what the catalogue resolved. The old fallback filled the gap during
+  // warm-up from the in-repo seed, which showed a shopper demo products in
+  // their own wishlist for a moment — the resolving state below is the honest
+  // answer to "not loaded yet".
+  const items = wishlist.resolved;
 
   if (items.length === 0 && wishlist.resolving) {
     return (

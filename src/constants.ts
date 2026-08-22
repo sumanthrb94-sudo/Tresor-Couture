@@ -999,7 +999,7 @@ export const MASTER_CATEGORY_TREE: Record<MasterCategory, string[]> = {
   // menus — subcategoriesFor derives those from the catalogue — and the
   // designer's preferred ORDER can be filled in here once there is one.
   Masakhali: [],
-  'Western Wear': ['Dresses', 'Tops', 'Co-ords', 'Jumpsuits'],
+  'Western Wear': ['Dresses', 'Tops', 'Co-ords', 'Jumpsuits', 'Shorts'],
   'Studios Prêt': ['Ready-to-Wear', 'Capsule Drops', 'Atelier Edits']
 };
 

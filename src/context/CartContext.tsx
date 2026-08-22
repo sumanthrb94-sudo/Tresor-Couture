@@ -3,7 +3,7 @@ import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db, productsApi } from '../lib/firebase';
 import { useAuth } from './AuthContext';
 import { CartItem, Fabric } from '../types';
-import { FABRICS, FREE_SHIPPING_THRESHOLD, SHIPPING_FLAT_RATE, TAX_RATE } from '../constants';
+import { FREE_SHIPPING_THRESHOLD, SHIPPING_FLAT_RATE, TAX_RATE } from '../constants';
 
 const STORAGE_KEY = 'tresor-cart-v1';
 // Tracks the uid we've already performed the one-time guest-merge for, so a
@@ -102,14 +102,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // page reload.
   const hadUserRef = useRef(false);
 
-  // Product details cache — cart items only store the fabricId, so we resolve
-  // the rest from Firestore on demand. FABRICS (static seed) is the fallback
-  // for legacy cart entries that predate the Firestore migration.
-  const [productCache, setProductCache] = useState<Map<string, Fabric>>(() => {
-    const m = new Map<string, Fabric>();
-    for (const f of FABRICS) m.set(f.id, f);
-    return m;
-  });
+  // Product details cache — cart items only store the fabricId, so the rest is
+  // resolved from Firestore on demand.
+  //
+  // Deliberately EMPTY at the start. It used to be pre-filled from the in-repo
+  // FABRICS seed, which meant any cart id matching a seed id was answered from
+  // the compiled-in copy and never fetched — so its price and stock came from
+  // the repository instead of from the shop, and a stale build could charge a
+  // stale price. An id with no product behind it should fail to resolve and be
+  // dropped, which is what the tombstone below already does.
+  const [productCache, setProductCache] = useState<Map<string, Fabric>>(() => new Map());
   const [resolving, setResolving] = useState(false);
   // Ids that failed to resolve (deleted product, rules/network error). Held in
   // a ref — NOT state — so they're excluded from refetch without re-triggering

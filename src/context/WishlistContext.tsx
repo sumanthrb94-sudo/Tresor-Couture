@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { productsApi } from '../lib/firebase';
 import { useAuth } from './AuthContext';
-import { FABRICS } from '../constants';
 import type { Fabric } from '../types';
 
 // Wishlist is keyed PER USER so that, on a shared device, signing out of one
@@ -84,11 +83,9 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return () => window.removeEventListener('storage', onStorage);
   }, [storageKey]);
 
-  const [productCache, setProductCache] = useState<Map<string, Fabric>>(() => {
-    const m = new Map<string, Fabric>();
-    for (const f of FABRICS) m.set(f.id, f);
-    return m;
-  });
+  // Empty to start, for the same reason as CartContext: a wishlist id must be
+  // answered by the catalogue, not by a copy of it compiled into the bundle.
+  const [productCache, setProductCache] = useState<Map<string, Fabric>>(() => new Map());
   const [resolving, setResolving] = useState(false);
   // Tombstone unresolvable ids so the resolve effect can't loop (see CartContext).
   const failedIdsRef = useRef<Set<string>>(new Set());

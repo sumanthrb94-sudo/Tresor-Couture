@@ -17,12 +17,10 @@ import {
   Database
 } from 'lucide-react';
 import { collection, getDocs, orderBy, query as fsQuery, limit as qLimit } from 'firebase/firestore';
-import { fabricsStore } from '../../data/storage';
-import { useStore } from '../../data/useStore';
 import { FABRICS, formatINR } from '../../constants';
-import { db, seedCatalog } from '../../lib/firebase';
+import { db, productsApi, seedCatalog } from '../../lib/firebase';
 import { useRouter } from '../../context/RouterContext';
-import type { Order, OrderStatus, Route } from '../../types';
+import type { Fabric, Order, OrderStatus, Route } from '../../types';
 
 /* ───────────── helpers ───────────── */
 
@@ -141,7 +139,27 @@ const AdminDashboard: React.FC = () => {
   // brings us back here.
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersError, setOrdersError] = useState<string | null>(null);
-  const { rows: fabrics } = useStore(fabricsStore);
+  // Products come from Firestore, not from `fabricsStore`.
+  //
+  // That store is localStorage seeded from the in-repo FABRICS array, so these
+  // tiles reported the size of the REPOSITORY rather than the size of the shop:
+  // "Total Products 41" on a catalogue of 151, and a low-stock count computed
+  // over products that are not the ones on the shelves. Read with no listing
+  // filter on purpose — a draft is still a product the studio owns, and it is
+  // the admin who needs to see it.
+  const [fabrics, setFabrics] = useState<Fabric[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const list = (await productsApi.list({ limit: 1000 })) as unknown as Fabric[];
+        if (!cancelled) setFabrics(list);
+      } catch {
+        if (!cancelled) setFabrics([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
   const { navigate } = useRouter();
 
   const fetchOrders = useCallback(async () => {

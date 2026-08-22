@@ -1,0 +1,83 @@
+{
+  "source": "Hand-written fix-up, Aug 2026: restock five sold-out laces and finish the two Western Wear pieces.",
+  "notes": [
+    "Dry run first:  GOOGLE_APPLICATION_CREDENTIALS=/path/key.json npx tsx scripts/import-catalogue.ts docs/ops/fixups/2026-08-restock-and-western-wear.json --prod --dry-run",
+    "Drop --dry-run to write. Only the fields present here are touched.",
+    "Name / Master Category / Selling Price / MRP are echoed back from the live values because the importer requires them on every row — they change nothing.",
+    "Listing Status is deliberately ABSENT. The importer demotes an Active row with no Image URL to Draft, and these rows carry no Image URL because the photographs are already on the products. Sending the status would take both Western Wear pieces off the website.",
+    "Stock Qty 1 matches every other lace in the catalogue (all 34 in-stock ones hold 1 bundle). Change it if your shelf says otherwise."
+  ],
+  "rows": [
+    {
+      "_row": 1,
+      "Product ID": "6343",
+      "Product Name": "Ivory Pearl Bouquet Bridal Border",
+      "Master Category": "Laces",
+      "Selling Price (₹)": 7000,
+      "MRP (₹)": 7000,
+      "Stock Qty": 1
+    },
+    {
+      "_row": 2,
+      "Product ID": "6988",
+      "Product Name": "Magenta Gota Braid with Pearl Rows",
+      "Master Category": "Laces",
+      "Selling Price (₹)": 999,
+      "MRP (₹)": 999,
+      "Stock Qty": 1
+    },
+    {
+      "_row": 3,
+      "Product ID": "HA3858",
+      "Product Name": "Champagne Sequin Encrusted Band",
+      "Master Category": "Laces",
+      "Selling Price (₹)": 1299,
+      "MRP (₹)": 1299,
+      "Stock Qty": 1
+    },
+    {
+      "_row": 4,
+      "Product ID": "HA4536",
+      "Product Name": "Pastel Deco Beadwork Border",
+      "Master Category": "Laces",
+      "Selling Price (₹)": 3800,
+      "MRP (₹)": 3800,
+      "Stock Qty": 1
+    },
+    {
+      "_row": 5,
+      "Product ID": "HA6320",
+      "Product Name": "Berry Garden Dimensional Floral Trim",
+      "Master Category": "Laces",
+      "Selling Price (₹)": 4800,
+      "MRP (₹)": 4800,
+      "Stock Qty": 1
+    },
+    {
+      "_row": 6,
+      "Product ID": "4Wkdg2Li6vD5YFxXzh4C",
+      "Product Name": "Denim Cut-Out Jumpsuit — Light Wash",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 5466,
+      "MRP (₹)": 5466,
+      "Sub Category / Design": "Jumpsuits",
+      "Material": "Cotton",
+      "Unit Type": "unit",
+      "Photo Quality": "Studio",
+      "Description": "A light-wash denim playsuit cut like a shirt jacket on top — point collar, button-through placket, flap chest pockets — then released into a frayed-hem short below. Open cut-outs at either side of the waist keep it from reading as workwear. Rolled cuffs, deep slant pockets, and a raw edge that softens with every wash."
+    },
+    {
+      "_row": 7,
+      "Product ID": "RGEBr2f3bpHp4x8E3p9U",
+      "Product Name": "Embroidered Cotton Shorts — Ivory & Black",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 1800,
+      "MRP (₹)": 1800,
+      "Sub Category / Design": "Shorts",
+      "Material": "Cotton",
+      "Unit Type": "unit",
+      "Photo Quality": "Studio",
+      "Description": "Ivory cotton cut high on the waist and worked all over in black thread — diamond medallions down each leg, a scalloped border tracing the hem and both pocket mouths. Structured enough to hold its shape, light enough for the heat. Button-and-zip fly with deep slant pockets."
+    }
+  ]
+}

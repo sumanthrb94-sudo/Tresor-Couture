@@ -124,6 +124,11 @@ What happens next, on its own:
 * Its subcategories in the shopper menus come from the catalogue, not from
   `MASTER_CATEGORY_TREE` — the tree only decides the ORDER of names that have
   stock. A name typed into a product that the tree never heard of still shows.
+* The home page's **Lookbook** rail is derived the same way (`src/lib/lookbook.ts`):
+  one card per subcategory that has a live product, fronted by that shelf's
+  best-photographed piece, using that piece's own description. Nothing about it
+  is written by hand, so it can never advertise something the shop does not
+  stock. It hides itself below three cards.
 * `public/sitemap.xml` lists a handful of category URLs by hand
   (`scripts/build-sitemap.ts`). Add the new one there **after** it has products,
   not before — offering Google an empty page is worse than not offering it.
