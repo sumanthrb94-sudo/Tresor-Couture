@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { Recorder } from './lib/recorder';
 import { buildEntries } from '../../src/lib/lookbook';
+import { categoryShowcase } from '../../src/lib/showcase';
 import type { Fabric } from '../../src/types';
 
 /**
@@ -125,6 +126,67 @@ test('Lookbook · every card points at a shelf that has stock', async () => {
     const many = Array.from({ length: 20 }, (_, i) =>
       piece({ id: `m${i}`, subCategory: `Sub ${i}` }));
     expect(buildEntries(many).length).toBeLessThanOrEqual(8);
+
+    rec.finish('passed');
+  } catch (err) {
+    rec.finish('failed', err instanceof Error ? err.message : String(err));
+    throw err;
+  }
+});
+
+test('Home page · the hero and the tiles are the shop, not a slideshow', async () => {
+  const rec = new Recorder({
+    slug: 'home-showcase',
+    title: 'Home · hero and category tiles come from the catalogue',
+    area: 'Storefront · Home',
+    purpose:
+      'The first screen a customer sees was three fixed slides of stock photography promising Banarasi, Kanjivaram, Patola and Bandhani — none of which the atelier lists — over CTAs pointing at Sarees and Fabrics. Both the hero and the Shop the House tiles are derived now, so the front page can only show categories that have pieces in them, photographed by those pieces.',
+    reproduce: [
+      'Open the home page.',
+      'Each hero slide is a master category that has live products, using a photograph of one of them.',
+      'Each Shop the House tile likewise; a category with nothing in it has no tile.',
+    ],
+  });
+
+  try {
+    const shown = categoryShowcase([
+      piece({ id: 'l1', masterCategory: 'Laces', category: 'Laces', subCategory: 'Trim & Edging' }),
+      piece({ id: 'l2', masterCategory: 'Laces', category: 'Laces', subCategory: 'Patch' }),
+      piece({ id: 'l3', masterCategory: 'Laces', category: 'Laces', subCategory: 'Patch' }),
+      piece({ id: 'w1', masterCategory: 'Western Wear', category: 'Western Wear', subCategory: 'Jumpsuits' }),
+    ]);
+
+    // Deepest category leads — the hero should open on the fullest shelf.
+    expect(shown.map(s => s.category)).toEqual(['Laces', 'Western Wear']);
+    expect(shown[0].count).toBe(3);
+
+    // A category with no products has no slide and no tile. This is the whole
+    // point: the old hero advertised four weaves that were never in the shop.
+    expect(shown.map(s => s.category)).not.toContain('Sarees');
+
+    // Subcategories are the ones with stock, so the subtitle cannot list a
+    // shelf that is empty.
+    expect(shown[0].subcategories.sort()).toEqual(['Patch', 'Trim & Edging']);
+    rec.note('Every slide and tile is a category that has stock', 'Ordered deepest first, so the hero opens on the fullest shelf.');
+
+    // Every slide carries a real photograph — a hero is the largest image on
+    // the site and a generated swatch at that size is unmistakable.
+    for (const s of shown) {
+      expect(s.photo, `${s.category} must have a photo`).toBeTruthy();
+      expect(s.photo.startsWith('data:image/svg')).toBe(false);
+    }
+
+    const swatchOnly = categoryShowcase([
+      piece({ id: 's1', masterCategory: 'Gown', category: 'Gown', photo: swatch, image: swatch, price: 9000 }),
+      piece({ id: 's2', masterCategory: 'Gown', category: 'Gown', photo: '/products/real.jpg', price: 10 }),
+    ]);
+    expect(swatchOnly[0].photo).toBe('/products/real.jpg');
+    rec.note('The photographed piece fronts its category', 'Even when a pricier piece in it has not been shot yet.');
+
+    // An empty catalogue yields no slides at all, so the hero renders nothing
+    // rather than falling back to something invented.
+    expect(categoryShowcase([])).toHaveLength(0);
+    rec.note('No catalogue, no hero', 'A shorter page beats a fabricated one.');
 
     rec.finish('passed');
   } catch (err) {
