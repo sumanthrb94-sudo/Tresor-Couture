@@ -43,8 +43,11 @@ function trim(text: string, max = BLURB_MAX): string {
  * being. Price breaks the remaining tie — the best piece fronts the shelf.
  */
 function pickHero(group: Fabric[]): Fabric | undefined {
+  // `featured` outranks everything: it is the studio saying so, and a
+  // heuristic that can overrule a human choice is not a choice.
   const score = (f: Fabric) =>
-    (awaitingPhoto(f) ? 0 : 4) + (inStock(f) ? 2 : 0) + ((f.description ?? '').trim().length > 40 ? 1 : 0);
+    (f.featured ? 16 : 0) + (awaitingPhoto(f) ? 0 : 4) + (inStock(f) ? 2 : 0)
+    + ((f.description ?? '').trim().length > 40 ? 1 : 0);
   return [...group].sort(
     (a, b) => score(b) - score(a) || Number(b.price ?? 0) - Number(a.price ?? 0),
   )[0];

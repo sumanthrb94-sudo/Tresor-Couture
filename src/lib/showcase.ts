@@ -35,7 +35,10 @@ export interface Showcase {
  * on a piece that can be bought; then price, so the best piece leads.
  */
 function pickHero(group: Fabric[]): Fabric | undefined {
-  const score = (f: Fabric) => (awaitingPhoto(f) ? 0 : 4) + (inStock(f) ? 2 : 0);
+  // `featured` outranks everything: it is the studio saying so, and a
+  // heuristic that can overrule a human choice is not a choice.
+  const score = (f: Fabric) =>
+    (f.featured ? 16 : 0) + (awaitingPhoto(f) ? 0 : 4) + (inStock(f) ? 2 : 0);
   return [...group].sort(
     (a, b) => score(b) - score(a) || Number(b.price ?? 0) - Number(a.price ?? 0),
   )[0];

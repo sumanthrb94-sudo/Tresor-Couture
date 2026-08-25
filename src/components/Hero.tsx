@@ -119,7 +119,7 @@ const Hero: React.FC = () => {
                 alt={banner.title}
                 loading="eager"
                 fetchPriority="high"
-                className="w-full h-full object-cover object-center"
+                className="w-full h-full object-cover object-top"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[rgba(42,37,32,0.78)] via-[rgba(42,37,32,0.35)] to-[rgba(42,37,32,0.0)]" />
             </div>
@@ -163,7 +163,7 @@ const Hero: React.FC = () => {
                   photo={banner.photo}
                   fallback={banner.fallback}
                   alt={banner.title}
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover object-top"
                 />
                 <div
                   className="absolute inset-0"
@@ -174,18 +174,20 @@ const Hero: React.FC = () => {
           </motion.div>
         </AnimatePresence>
 
-        {/* Arrows */}
+        {/* Arrows. Raised on mobile: the copy is overlaid on the photograph
+            from about 60% down, and an arrow at the vertical centre lands on
+            the eyebrow — "SAREES" reads as "AREES". */}
         <button
           onClick={() => go(idx - 1)}
           aria-label="Previous"
-          className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center z-10"
+          className="absolute left-2 md:left-4 top-[34%] md:top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center z-10"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
         <button
           onClick={() => go(idx + 1)}
           aria-label="Next"
-          className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center z-10"
+          className="absolute right-2 md:right-4 top-[34%] md:top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md flex items-center justify-center z-10"
         >
           <ChevronRight className="w-5 h-5" />
         </button>

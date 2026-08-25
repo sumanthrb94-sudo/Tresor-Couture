@@ -63,7 +63,7 @@ const CategoryStrip: React.FC = () => {
                 fallback={tile.showcase.hero?.image ?? tile.showcase.photo}
                 alt={tile.name}
                 loading="lazy"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
               />
               {/* The name sits on the photograph, so it needs its own ground. */}
               <span className="absolute inset-x-0 bottom-0 pt-8 pb-3 px-3 bg-gradient-to-t from-black/70 via-black/25 to-transparent">

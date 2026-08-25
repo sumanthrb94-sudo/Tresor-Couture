@@ -183,6 +183,25 @@ test('Home page · the hero and the tiles are the shop, not a slideshow', async 
     expect(swatchOnly[0].photo).toBe('/products/real.jpg');
     rec.note('The photographed piece fronts its category', 'Even when a pricier piece in it has not been shot yet.');
 
+    // --- The studio can overrule the guess ------------------------------
+    // The heuristic cannot tell a styled flat-lay from a snapshot with a price
+    // tag in it, so `featured` beats every other signal — including a real
+    // photograph and being in stock, which are the two it normally weighs most.
+    const featured = categoryShowcase([
+      piece({ id: 'auto', masterCategory: 'Laces', category: 'Laces', photo: '/products/auto.jpg', price: 9000 }),
+      piece({ id: 'chosen', masterCategory: 'Laces', category: 'Laces', photo: '/products/chosen.jpg', price: 10, stock: 0, featured: true }),
+    ]);
+    expect(featured[0].photo).toBe('/products/chosen.jpg');
+
+    // And on the Lookbook card for its subcategory, from the same flag.
+    const featuredCard = buildEntries([
+      piece({ id: 'auto2', photo: '/products/auto.jpg', price: 9000, description: 'The automatic pick, at length.' }),
+      piece({ id: 'chosen2', photo: '/products/chosen.jpg', price: 10, featured: true, description: 'The chosen pick, at length.' }),
+    ]);
+    expect(featuredCard[0].photo).toBe('/products/chosen.jpg');
+    expect(featuredCard[0].blurb).toContain('chosen');
+    rec.note('A featured piece outranks the heuristic', 'One tick in the product editor decides the hero, the tile and the card.');
+
     // An empty catalogue yields no slides at all, so the hero renders nothing
     // rather than falling back to something invented.
     expect(categoryShowcase([])).toHaveLength(0);

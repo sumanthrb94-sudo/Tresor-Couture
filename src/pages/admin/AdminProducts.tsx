@@ -185,6 +185,8 @@ interface Draft {
   barcode: string;
   /** Draft = saved, barcoded and sellable at the counter, but not on the website. */
   listingStatus: NonNullable<Fabric['listingStatus']>;
+  /** Put this piece forward on the home page. */
+  featured: boolean;
 }
 
 const emptyDraft = (): Draft => ({
@@ -216,7 +218,8 @@ const emptyDraft = (): Draft => ({
   // A new product starts as a Draft. Almost everything is entered before it is
   // photographed, and a piece with no photograph has no business on the
   // storefront — adding the photo is what promotes it.
-  listingStatus: 'Draft'
+  listingStatus: 'Draft',
+  featured: false
 });
 
 const fabricToDraft = (f: Fabric): Draft => ({
@@ -249,7 +252,8 @@ const fabricToDraft = (f: Fabric): Draft => ({
   rating: f.rating != null ? String(f.rating) : '',
   reviewCount: f.reviewCount != null ? String(f.reviewCount) : '',
   barcode: f.barcode ?? '',
-  listingStatus: f.listingStatus ?? 'Active'
+  listingStatus: f.listingStatus ?? 'Active',
+  featured: f.featured === true
 });
 
 interface DraftErrors {
@@ -360,6 +364,9 @@ const draftToFabric = (d: Draft, existing?: Fabric): Fabric => {
     masterCategory: master,
     barcode: d.barcode.trim() || undefined,
     listingStatus,
+    // Only written when true. `undefined` keeps the field off products that were
+    // never featured, rather than filling the catalogue with `featured: false`.
+    featured: d.featured || undefined,
     subCategory: d.category === 'Laces' ? 'Trim & Edging' : existing?.subCategory,
     tags,
     sticker: d.sticker || undefined,
@@ -985,6 +992,29 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
                     : 'Taken down. Existing orders keep their record.'}
               </p>
             </Field>
+
+            <div className="sm:col-span-2">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  aria-label="Feature on the home page"
+                  className="mt-0.5 w-4 h-4 accent-[color:var(--color-myntra-pink)]"
+                  checked={draft.featured}
+                  onChange={e => set('featured', e.target.checked)}
+                />
+                <span>
+                  <span className="block text-[13px] font-semibold text-[color:var(--color-myntra-navy)]">
+                    Feature on the home page
+                  </span>
+                  <span className="block text-[11px] text-[color:var(--color-myntra-ink-soft)]">
+                    Puts this piece on the hero slide and the tile for its category, and on
+                    the Lookbook card for its subcategory. Without it the home page picks the
+                    best-photographed piece in stock, which is a guess. Tick it on one piece
+                    per category.
+                  </span>
+                </span>
+              </label>
+            </div>
 
             <div>
               <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[color:var(--color-myntra-ink-mute)] mb-2">

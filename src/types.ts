@@ -80,6 +80,15 @@ export interface Fabric {
    *  a customer's invoice is a compliance problem, not a display bug. The
    *  importer warns on every row whose rate differs from the site-wide one. */
   gstRate?: number;
+  /** Put this piece forward on the home page — the hero slide and the tile for
+   *  its category, and the Lookbook card for its subcategory.
+   *
+   *  Without it the front page picks for itself: a real photograph over a
+   *  generated swatch, in stock over sold out, then the dearest piece. That is a
+   *  reasonable guess and it is still only a guess — it cannot tell a styled
+   *  flat-lay from a snapshot with a price tag in the frame. This is how the
+   *  studio overrules it. */
+  featured?: boolean;
   /** Stock level at which to reorder — reporting only, never blocks a sale. */
   reorderLevel?: number;
   /** Where the piece was bought. Back-office only, never shown to customers. */
