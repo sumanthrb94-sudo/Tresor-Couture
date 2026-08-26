@@ -105,7 +105,14 @@ const AdminInventory: React.FC = () => {
       if (stockFilter === 'low' && !(s > 0 && s < LOW_STOCK)) return false;
       if (stockFilter === 'in' && s < LOW_STOCK) return false;
       if (!q) return true;
-      return f.name.toLowerCase().includes(q) || f.brand.toLowerCase().includes(q);
+      // Inventory is where a receiving session scans, so the barcode and the
+      // supplier's own code both have to match here.
+      return (
+        f.name.toLowerCase().includes(q) ||
+        (f.barcode ?? '').toLowerCase().includes(q) ||
+        (f.productCode ?? '').toLowerCase().includes(q) ||
+        f.brand.toLowerCase().includes(q)
+      );
     });
   }, [rows, query, stockFilter, catFilter, listingFilter]);
 

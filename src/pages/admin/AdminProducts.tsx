@@ -1417,8 +1417,12 @@ const AdminProducts: React.FC = () => {
       if (effectiveCat !== 'all' && f.category !== effectiveCat) return false;
       if (needsPhoto && !awaitingPhoto(f)) return false;
       if (!q) return true;
+      // A scanner is a keyboard: it types the barcode into whatever has focus.
+      // Leaving `barcode` out of this list meant scanning a label the system
+      // printed itself found nothing — the one search that has to work.
       return (
         f.name.toLowerCase().includes(q) ||
+        (f.barcode ?? '').toLowerCase().includes(q) ||
         (f.productCode ?? '').toLowerCase().includes(q) ||
         f.brand.toLowerCase().includes(q) ||
         f.category.toLowerCase().includes(q)
@@ -1792,8 +1796,20 @@ const AdminProducts: React.FC = () => {
                                 needs a photo
                               </span>
                             )}
+                            {/* Labelled, because a product carries two codes and
+                                they look alike: the scannable one we print, and
+                                the supplier's. An unlabelled TC00066 beside a
+                                PRODUCT CODE field reading TC2001 is the whole
+                                confusion. */}
                             {f.barcode && (
-                              <span className="text-[10px] font-mono text-[#5C3A8E]">{f.barcode}</span>
+                              <span className="text-[10px] font-mono text-[#5C3A8E]" title="Scannable barcode — printed on the label">
+                                Scan {f.barcode}
+                              </span>
+                            )}
+                            {f.productCode && f.productCode !== f.barcode && (
+                              <span className="text-[10px] font-mono text-[color:var(--color-myntra-ink-mute)]" title="The supplier's own code">
+                                Supplier {f.productCode}
+                              </span>
                             )}
                           </div>
                         </Td>
@@ -1903,11 +1919,26 @@ const AdminProducts: React.FC = () => {
                       <div className="text-[13px] font-semibold text-[color:var(--color-myntra-navy)] line-clamp-2">
                         {f.name}
                       </div>
-                      {lacesShowcase && f.category === 'Laces' && (
+                      {/* Only when there is no supplier code to show below,
+                          or the lace showcase prints the same number twice. */}
+                      {lacesShowcase && f.category === 'Laces' && !f.productCode && (
                         <div className="text-[10px] font-bold text-[#5C3A8E] mt-0.5">
-                          Code: {f.productCode ?? f.id}
+                          Code: {f.id}
                         </div>
                       )}
+                      {/* The phone list showed neither code. Both, labelled, as
+                          on the desktop table — this is the view the studio has
+                          in hand while holding the piece. */}
+                      <div className="mt-0.5 flex flex-wrap items-center gap-x-2">
+                        {f.barcode && (
+                          <span className="text-[10px] font-mono text-[#5C3A8E]">Scan {f.barcode}</span>
+                        )}
+                        {f.productCode && f.productCode !== f.barcode && (
+                          <span className="text-[10px] font-mono text-[color:var(--color-myntra-ink-mute)]">
+                            Supplier {f.productCode}
+                          </span>
+                        )}
+                      </div>
 
                       <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
                         <span

@@ -340,8 +340,10 @@ test('Admin · Create a product before it has been photographed', async ({ brows
     await expect(row).toBeVisible({ timeout: 20_000 });
     await rec.step(adm, 'The product was created', 'No photograph was required to save it.', 'assert');
 
-    await expect(adm.getByText(/^TC\d{5}$/).filter({ visible: true }).first()).toBeVisible({ timeout: 15_000 });
-    await rec.step(adm, 'A barcode was allocated', 'TC + 5 digits, from the same counter the bulk import and the CLI draw from — so two writers can never print the same code on two pieces.', 'assert');
+    // "Scan TC00123", not a bare code: the row labels it, because a product
+    // carries two codes that look alike and only this one is on the label.
+    await expect(adm.getByText(/^Scan TC\d{5}$/).filter({ visible: true }).first()).toBeVisible({ timeout: 15_000 });
+    await rec.step(adm, 'A barcode was allocated', 'TC + 5 digits, from the same counter the bulk import and the CLI draw from — so two writers can never print the same code on two pieces. The row says "Scan", so it is never mistaken for the supplier\'s code.', 'assert');
 
     // And it is queued for the photographer rather than quietly forgotten.
     await adm.getByRole('button', { name: /waiting for photos/i }).click({ timeout: 10_000 });
@@ -534,6 +536,12 @@ test('Admin · Add a batch of products and label exactly that batch', async ({ b
     await expect(adm.getByRole('button', { name: /print 4 labels|save 4 labels/i })).toBeVisible();
     await rec.step(adm, 'Labels for exactly this batch', 'Not "whatever the Inventory filter shows", which is the same list only until someone changes a filter.', 'assert');
 
+    // Remember one code to scan with. A USB scanner is a keyboard: it types the
+    // barcode into whatever has focus and presses Enter, so "scanning" in the
+    // admin IS typing the code into the search box.
+    const scanned = (await batchList.getByText(/^TC\d{5}$/).first().textContent())?.trim() ?? '';
+    expect(scanned).toMatch(/^TC\d{5}$/);
+
     // And they really are drafts: registered, stocked, off the storefront.
     await adm.getByRole('button', { name: /^done$/i }).click();
     await adm.waitForTimeout(1500);
@@ -541,6 +549,27 @@ test('Admin · Add a batch of products and label exactly that batch', async ({ b
     await adm.waitForTimeout(1200);
     await expect(adm.getByText('Draft', { exact: true }).first()).toBeVisible({ timeout: 15_000 });
     await rec.step(adm, 'Saved as drafts', 'In stock and sellable at the counter; not on the website until photographed.', 'assert');
+
+    // --- Scanning a label we printed must find the piece ------------------
+    // It did not: the Products search matched name, supplier code, brand and
+    // category, and left out the one code the system prints on the label
+    // itself. Scanning found nothing while the piece sat in the list.
+    const search = adm.getByPlaceholder(/search/i).first();
+    await search.fill('');
+    await search.fill(scanned);
+    await adm.waitForTimeout(1200);
+    await expect(adm.getByText(new RegExp(`Scan ${scanned}`)).first())
+      .toBeVisible({ timeout: 15_000 });
+    await rec.step(adm, 'Scanning a printed barcode finds its product',
+      'Products search matches the scannable code, the supplier code, the name and the brand — and the row says which code is which.', 'assert');
+
+    // The supplier's own code still finds it too — a scuffed label is looked up
+    // by the number on the invoice, and both must work.
+    await search.fill('');
+    await search.fill(`PT-${tag}`);
+    await adm.waitForTimeout(1200);
+    await expect(adm.getByText(/E2E Batch Pearl Trim/).first()).toBeVisible({ timeout: 15_000 });
+    await rec.step(adm, 'The supplier code finds it as well', 'Two codes, both searchable, each labelled in the row.', 'assert');
 
     rec.finish('passed');
     await adm.context().close();
