@@ -409,12 +409,13 @@ export type AdminSection =
   | 'compliance'
   | 'delivery'
   | 'bulk-email'
-  | 'seo';
+  | 'seo'
+  | 'analytics';
 
 export const ADMIN_SECTIONS: AdminSection[] = [
   'dashboard', 'counter', 'products', 'inventory', 'orders', 'returns', 'billing',
   'customers', 'support', 'coupons', 'reviews', 'compliance', 'delivery',
-  'bulk-email', 'seo',
+  'bulk-email', 'seo', 'analytics',
 ];
 
 export type Route =

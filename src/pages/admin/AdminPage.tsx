@@ -16,6 +16,7 @@ import AdminCompliance from './AdminCompliance';
 import AdminDelivery from './AdminDelivery';
 import AdminBulkEmail from './AdminBulkEmail';
 import AdminSeo from './AdminSeo';
+import AdminAnalytics from './AdminAnalytics';
 import type { AdminSection } from '../../types';
 
 
@@ -41,6 +42,7 @@ const AdminPage: React.FC<Props> = ({ section = 'dashboard' }) => (
       {section === 'delivery' && <AdminDelivery />}
       {section === 'bulk-email' && <AdminBulkEmail />}
       {section === 'seo' && <AdminSeo />}
+      {section === 'analytics' && <AdminAnalytics />}
     </AdminLayout>
   </AdminGuard>
 );

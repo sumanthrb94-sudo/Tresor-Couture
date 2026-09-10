@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { LayoutDashboard, Package, Boxes, ShoppingBag, RotateCcw, ReceiptText, Users, Headphones, Tag, Star, Scale, Zap, Mail, Palette, LogOut, ExternalLink, ChevronDown, Search, ScanLine } from 'lucide-react';
+import { LayoutDashboard, Package, Boxes, ShoppingBag, RotateCcw, ReceiptText, Users, Headphones, Tag, Star, Scale, Zap, Mail, Palette, LogOut, ExternalLink, ChevronDown, Search, ScanLine, BarChart3 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
 import { chatApi } from '../../lib/support';
@@ -21,7 +21,8 @@ const NAV: { id: AdminSection; label: string; Icon: React.ComponentType<{ classN
   { id: 'compliance', label: 'Compliance', Icon: Scale },
   { id: 'delivery', label: 'Delivery', Icon: Zap },
   { id: 'bulk-email', label: 'Bulk Email', Icon: Mail },
-  { id: 'seo', label: 'Catalogue SEO', Icon: Search }
+  { id: 'seo', label: 'Catalogue SEO', Icon: Search },
+  { id: 'analytics', label: 'Views', Icon: BarChart3 },
 ];
 
 const AdminLayout: React.FC<{ section: AdminSection; children: React.ReactNode }> = ({ section, children }) => {
