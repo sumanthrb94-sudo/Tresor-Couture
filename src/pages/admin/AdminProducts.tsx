@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { productsApi } from '../../lib/firebase';
 import { placeholderSwatch } from '../../lib/swatch';
+import ProductAudit from './ProductAudit';
 import { awaitingPhoto } from '../../lib/availability';
 import { code128Svg } from '../../lib/barcode';
 import { reserveBarcode } from '../../lib/barcodeAssign';
@@ -1392,6 +1393,8 @@ const AdminProducts: React.FC = () => {
   const [lacesShowcase, setLacesShowcase] = useState(false);
   /** "Waiting for photos" — the queue a bulk import or a photo-less save fills. */
   const [needsPhoto, setNeedsPhoto] = useState(false);
+  /** Photos & codes: the catalogue split by what each piece has, not one list. */
+  const [auditOpen, setAuditOpen] = useState(false);
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [batchOpen, setBatchOpen] = useState(false);
@@ -1696,6 +1699,13 @@ const AdminProducts: React.FC = () => {
               <Ruler className="w-4 h-4" /> {lacesShowcase ? 'Hide Laces View' : 'Showcase Laces'}
             </button>
             <button
+              onClick={() => setAuditOpen(v => !v)}
+              title="Photographed vs not, side by side, with the scan-code count per category"
+              className={`btn-outline inline-flex items-center justify-center gap-1.5 !py-2.5 ${auditOpen ? 'bg-[#E8F0EA] border-[#C3DCC9] text-[#2F6B3F]' : ''}`}
+            >
+              <ImageIcon className="w-4 h-4" /> {auditOpen ? 'Hide photos & codes' : 'Photos & codes'}
+            </button>
+            <button
               onClick={exportCsv}
               className="btn-outline inline-flex items-center justify-center gap-1.5 !py-2.5"
             >
@@ -1729,6 +1739,13 @@ const AdminProducts: React.FC = () => {
           </p>
         </div>
       )}
+
+      {/* Photos & codes. Sits ABOVE the grid rather than replacing it, so the
+          split view and the row you want to open are on one screen — the point
+          is to act on what the split shows, not to look at it in isolation.
+          Fed the unfiltered `rows`: the counts describe the shop, not whatever
+          the search box currently narrows it to. */}
+      {auditOpen && !loading && <ProductAudit rows={rows} onEdit={openEdit} />}
 
       {/* content */}
       <div className="bg-white border border-[color:var(--color-myntra-border-soft)] rounded-md overflow-hidden">
