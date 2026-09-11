@@ -412,6 +412,101 @@ const Thumb: React.FC<{ photo: string; fallback?: string; alt: string; className
   );
 };
 
+/* ───────────── full-size photo viewer ───────────── */
+
+/**
+ * The editor's previews are small because they sit beside a text field, and a
+ * postage stamp cannot tell you whether a photograph is sharp, straight, or
+ * the right piece at all. This opens one at its real pixel size.
+ *
+ * It reports the natural dimensions because they are the honest answer to "is
+ * this good enough": uploads are downscaled to 800px on the long edge before
+ * they are stored, so what this shows IS the stored image, not the file that
+ * was chosen. A photograph that looks soft here looks soft on the website.
+ */
+const PhotoViewer: React.FC<{ src: string; label: string; onClose: () => void }> = ({
+  src,
+  label,
+  onClose,
+}) => {
+  const [dim, setDim] = useState<{ w: number; h: number } | null>(null);
+  const [actual, setActual] = useState(false);
+
+  // Esc closes. Without this the only way out is the button, and the viewer
+  // covers the editor it was opened from.
+  //
+  // Capture phase, and the event stops here. The editor has its own Escape
+  // handler on `window`, so a plain listener means one Esc closes BOTH — the
+  // viewer and the whole product form underneath it, discarding every unsaved
+  // edit. Looking closely at a photograph must not cost you the form.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.stopPropagation();
+      onClose();
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [onClose]);
+
+  const tooBig = dim ? dim.w > window.innerWidth - 80 || dim.h > window.innerHeight - 160 : false;
+
+  return (
+    <div
+      className="fixed inset-0 z-[70] bg-black/80 flex flex-col"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${label} at full size`}
+      onClick={onClose}
+    >
+      <div
+        className="flex items-center gap-3 px-4 py-2.5 text-white shrink-0"
+        onClick={e => e.stopPropagation()}
+      >
+        <span className="text-[13px] font-bold">{label}</span>
+        {dim && (
+          <span className="text-[12px] text-white/70 tabular-nums">
+            {dim.w} × {dim.h} px
+          </span>
+        )}
+        {tooBig && (
+          <button
+            type="button"
+            onClick={() => setActual(a => !a)}
+            className="text-[12px] font-bold px-2.5 py-1 rounded border border-white/30 hover:bg-white/10"
+          >
+            {actual ? 'Fit to screen' : 'Actual size'}
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="ml-auto text-[12px] font-bold px-2.5 py-1 rounded border border-white/30 hover:bg-white/10"
+        >
+          Close
+        </button>
+      </div>
+      <div className="flex-1 overflow-auto p-4" onClick={e => e.stopPropagation()}>
+        <img
+          src={src || PLACEHOLDER_SVG}
+          alt={label}
+          onLoad={e => setDim({
+            w: (e.currentTarget as HTMLImageElement).naturalWidth,
+            h: (e.currentTarget as HTMLImageElement).naturalHeight,
+          })}
+          className={
+            actual
+              ? 'max-w-none'
+              : 'max-w-full max-h-full mx-auto object-contain'
+          }
+          style={actual && dim ? { width: dim.w, height: dim.h } : undefined}
+        />
+      </div>
+    </div>
+  );
+};
+
 /* ───────────── image upload component ───────────── */
 
 const ImageUpload: React.FC<{
@@ -423,6 +518,7 @@ const ImageUpload: React.FC<{
 }> = ({ value, onChange, label, error, id }) => {
   const [uploading, setUploading] = useState(false);
   const [uploadErr, setUploadErr] = useState<string | null>(null);
+  const [viewing, setViewing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -458,16 +554,31 @@ const ImageUpload: React.FC<{
           onChange={e => { onChange(e.target.value); setUploadErr(null); }}
           placeholder="/products/… or base64"
         />
-        <div className="w-12 h-14 rounded border border-[color:var(--color-myntra-border-soft)] bg-[color:var(--color-myntra-bg-soft)] overflow-hidden shrink-0">
-          {value ? (
-            <Thumb photo={value} alt={label} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-[color:var(--color-myntra-ink-mute)]">
-              <ImageIcon className="w-4 h-4" />
-            </div>
-          )}
-        </div>
+        {/* Big enough to judge the piece at a glance, and a click away from its
+            real pixel size. The old 48×56 stamp could not tell one lace from
+            another, which is the whole reason to look at it. */}
+        {value ? (
+          <button
+            type="button"
+            onClick={() => setViewing(true)}
+            title="View at full size"
+            aria-label={`View ${label} at full size`}
+            className="group relative w-24 h-28 rounded border border-[color:var(--color-myntra-border-soft)] bg-[color:var(--color-myntra-bg-soft)] overflow-hidden shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-myntra-pink)]"
+          >
+            <Thumb photo={value} alt={label} className="w-full h-full object-contain" />
+            <span className="absolute inset-x-0 bottom-0 py-0.5 bg-black/55 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+              Full size
+            </span>
+          </button>
+        ) : (
+          <div className="w-24 h-28 rounded border border-[color:var(--color-myntra-border-soft)] bg-[color:var(--color-myntra-bg-soft)] overflow-hidden shrink-0 flex items-center justify-center text-[color:var(--color-myntra-ink-mute)]">
+            <ImageIcon className="w-5 h-5" />
+          </div>
+        )}
       </div>
+      {viewing && value && (
+        <PhotoViewer src={value} label={label} onClose={() => setViewing(false)} />
+      )}
       {error && <p className="text-[11px] font-semibold text-[#A12626]">{error}</p>}
       {uploadErr && <p className="text-[11px] font-semibold text-[#A12626]">{uploadErr}</p>}
 
