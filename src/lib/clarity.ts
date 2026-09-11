@@ -13,14 +13,35 @@
 // Same guarded access as business.ts — the project has no vite-env.d.ts, so
 // import.meta.env is untyped here.
 const env = typeof (import.meta as any).env !== 'undefined' ? (import.meta as any).env : {};
-const PROJECT_ID = String(env.VITE_CLARITY_PROJECT_ID || '').trim();
+
+/**
+ * The atelier's Clarity project.
+ *
+ * Committed on purpose: a Clarity project id is NOT a credential. Microsoft's
+ * own install snippet puts this exact string into the page source, so it is
+ * already public to anyone who opens the network tab — the repository being
+ * public changes nothing. Hardcoding it means Clarity works without the build
+ * depending on a dashboard setting nobody remembers to check, which is how it
+ * sat silently disabled for months.
+ *
+ * VITE_CLARITY_PROJECT_ID still wins when set, so a second property (a staging
+ * project, a replacement account) needs no code change.
+ */
+const DEFAULT_PROJECT_ID = 'ygmnwxzdl0';
+const PROJECT_ID = String(env.VITE_CLARITY_PROJECT_ID || DEFAULT_PROJECT_ID).trim();
 
 let initialised = false;
 
 function enabledHere(): boolean {
   if (!PROJECT_ID) return false;
   const host = window.location.hostname;
-  return host !== 'localhost' && host !== '127.0.0.1';
+  if (host === 'localhost' || host === '127.0.0.1') return false;
+  // Preview deployments are us testing the site, not customers shopping it.
+  // Before the id was hardcoded this could not happen, because previews had no
+  // id either; now it would quietly file our own QA sessions as shopper
+  // behaviour in the same recordings the studio reads.
+  if (host.endsWith('.vercel.app')) return false;
+  return true;
 }
 
 export function initClarity(consent = false): void {
