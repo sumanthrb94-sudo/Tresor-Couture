@@ -11,6 +11,7 @@ import ReviewsSection from '../components/ReviewsSection';
 import StickyAddToCart from '../components/StickyAddToCart';
 import DeliveryChecker from '../components/DeliveryChecker';
 import { productsApi } from '../lib/firebase';
+import { buildGallery } from '../lib/productGallery';
 import { useCatalog } from '../context/CatalogContext';
 import { useProductMeta } from '../lib/seoMeta';
 import { analytics } from '../lib/analytics';
@@ -93,12 +94,10 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
     if (addTimerRef.current) clearTimeout(addTimerRef.current);
   }, []);
 
-  const gallery = useMemo(() => {
-    if (!fabric) return [] as { photo: string; fallback: string }[];
-    const photos = fabric.photoGallery?.length ? fabric.photoGallery : [fabric.photo];
-    const fallbacks = fabric.gallery?.length ? fabric.gallery : [fabric.image];
-    return photos.map((photo, i) => ({ photo, fallback: fallbacks[i] ?? fallbacks[0] ?? fabric.image }));
-  }, [fabric]);
+  // Built in src/lib/productGallery.ts so the rules that decide what a shopper
+  // sees — main photo first, no duplicate shots, never a swatch in front of a
+  // real photograph — can be tested without mounting the page.
+  const gallery = useMemo(() => (fabric ? buildGallery(fabric) : []), [fabric]);
 
   if (fabric === undefined) {
     return (
