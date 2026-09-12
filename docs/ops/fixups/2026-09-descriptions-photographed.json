@@ -5,7 +5,8 @@
     "Drop --dry-run to write. Only the fields present here are touched.",
     "Every line describes what is actually in the product's own photograph - colour, cut, fabric, embellishment - not what its name says. Several names describe a different garment than the picture shows; see the mismatches listed in the commit message.",
     "Listing Status and Image URL are deliberately ABSENT. All ten are already Active, and sending Active with no Image URL would make the importer demote them to Draft - taking them off the website.",
-    "These ten SUPERSEDE the same ten rows in 2026-09-descriptions.json, which were inferred from product names before the photographs were read."
+    "These ten SUPERSEDE the same ten rows in 2026-09-descriptions.json, which were inferred from product names before the photographs were read.",
+    "TC00101 has no main photograph but three real gallery shots, so its copy is written from those. Its name says SAREE; the photographs show a blouse, a drape skirt and a cape — a three-piece set, which is what its category already says."
   ],
   "rows": [
     {
@@ -63,6 +64,14 @@
       "Selling Price (₹)": 4800,
       "MRP (₹)": 4800,
       "Description": "A red fit-and-flare midi, sleeveless, with a split notch at the neckline and princess seams shaping the bodice before the skirt opens out to mid-calf. The dress to own when one dress has to cover everything."
+    },
+    {
+      "Product ID": "Ve384vUNgftjuFM9OoDa",
+      "Product Name": "SAREE YELLOW 3 PIECE SET",
+      "Master Category": "Three Piece Set",
+      "Selling Price (₹)": 11866,
+      "MRP (₹)": 11866,
+      "Description": "Lime yellow in three pieces: a cropped blouse embroidered in white floral threadwork, a softly pleated drape skirt, and a full-length sheer cape with embroidery running down both front edges. The cape does the work — wear it open and the whole look moves with you."
     },
     {
       "Product ID": "RGEBr2f3bpHp4x8E3p9U",
