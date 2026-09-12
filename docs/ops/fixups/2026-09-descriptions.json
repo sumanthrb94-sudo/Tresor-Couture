@@ -1,0 +1,709 @@
+{
+  "source": "Product copy, Sep 2026: turn one-word descriptions into sentences, and fill the empty ones.",
+  "notes": [
+    "Dry run first:  GOOGLE_APPLICATION_CREDENTIALS=/path/key.json npx tsx scripts/import-catalogue.ts docs/ops/fixups/2026-09-descriptions.json --prod --dry-run",
+    "Drop --dry-run to write. Only the fields present here are touched.",
+    "Name / Master Category / Selling Price / MRP are echoed back from the live values because the importer requires them on every row - they change nothing.",
+    "Listing Status and Image URL are deliberately ABSENT. Most of these are Drafts awaiting photography; sending a status would either publish an unphotographed product or, for an Active row with no Image URL, silently demote it to Draft.",
+    "Copy is grounded only in each product's own record - the garment type and colour in its name or existing description, plus its category. Fabric and technique are claimed only where the record names them (Banarasi, Denim, Leather, Sequin); nothing else is asserted.",
+    "14 products are NOT in this file because their record says nothing to describe: twelve named only 'DESIGNER WEAR', one 'WESTERN WEAR', and one literally named 'test'. Twelve different descriptions for twelve identically-named products would be fiction. Give them real names and the copy follows."
+  ],
+  "rows": [
+    {
+      "Product ID": "dDAUD41srK8gmcdNI24n",
+      "Product Name": "ANARKALI",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 29097,
+      "MRP (₹)": 29097,
+      "Description": "An anarkali with the flare coming in from the yoke, so it moves when you do. Full-length, and cut to be worn without a dupatta if the evening calls for it."
+    },
+    {
+      "Product ID": "iSHP43DEbAC4kmGxnAr4",
+      "Product Name": "ANARKALI",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 15104,
+      "MRP (₹)": 15104,
+      "Description": "An anarkali with the flare coming in from the yoke, so it moves when you do. Full-length, and cut to be worn without a dupatta if the evening calls for it."
+    },
+    {
+      "Product ID": "id6oaykx9OxgrDGA8rwI",
+      "Product Name": "ANARKALI DARK GREEN",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 23096,
+      "MRP (₹)": 23096,
+      "Description": "Dark green anarkali with the flare coming in from the yoke, so it moves when you do. Full-length, and cut to be worn without a dupatta if the evening calls for it."
+    },
+    {
+      "Product ID": "8i5fPq2dVYYtkSoYs9UX",
+      "Product Name": "ANARKALI LAVENDER",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 14000,
+      "MRP (₹)": 14000,
+      "Description": "Lavender anarkali with the flare coming in from the yoke, so it moves when you do. Full-length, and cut to be worn without a dupatta if the evening calls for it."
+    },
+    {
+      "Product ID": "MEsasAHWjZsDB2Tt6p3B",
+      "Product Name": "ANARKALI ORANGE",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 19999,
+      "MRP (₹)": 19999,
+      "Description": "Orange anarkali with the flare coming in from the yoke, so it moves when you do. Full-length, and cut to be worn without a dupatta if the evening calls for it."
+    },
+    {
+      "Product ID": "bWWxRIwfiuNzfJrBX1Je",
+      "Product Name": "ANARKALI RADIUM GREEN",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 17481,
+      "MRP (₹)": 17481,
+      "Description": "Radium green anarkali with the flare coming in from the yoke, so it moves when you do. Full-length, and cut to be worn without a dupatta if the evening calls for it."
+    },
+    {
+      "Product ID": "SOibmv9XtjjEhgXa8O2r",
+      "Product Name": "ANARKALI SHELLS",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 7999,
+      "MRP (₹)": 7999,
+      "Description": "An anarkali with the flare coming in from the yoke, so it moves when you do. Full-length, and cut to be worn without a dupatta if the evening calls for it."
+    },
+    {
+      "Product ID": "M6ACT9Os11MMtl6nfkp8",
+      "Product Name": "ANARKALI WHITE",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 30527,
+      "MRP (₹)": 30527,
+      "Description": "White anarkali with the flare coming in from the yoke, so it moves when you do. Full-length, and cut to be worn without a dupatta if the evening calls for it."
+    },
+    {
+      "Product ID": "rvMbVe9IJInW89uj5lQm",
+      "Product Name": "ANARKALI YELLOW",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 18000,
+      "MRP (₹)": 18000,
+      "Description": "Yellow anarkali with the flare coming in from the yoke, so it moves when you do. Full-length, and cut to be worn without a dupatta if the evening calls for it."
+    },
+    {
+      "Product ID": "LR5HPvMa9Uz504Rw9VBW",
+      "Product Name": "ANARKALI YELLOW LONG HANDS",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 13800,
+      "MRP (₹)": 13800,
+      "Description": "Yellow anarkali with the flare coming in from the yoke, so it moves when you do. Full-length, and cut to be worn without a dupatta if the evening calls for it."
+    },
+    {
+      "Product ID": "e1p1AIQH408CkYLHzjNT",
+      "Product Name": "ANARKALI YELLOW LONG HANDS",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 12700,
+      "MRP (₹)": 12700,
+      "Description": "Yellow anarkali with the flare coming in from the yoke, so it moves when you do. Full-length, and cut to be worn without a dupatta if the evening calls for it."
+    },
+    {
+      "Product ID": "1esXzU1ndtviNMo1Axqw",
+      "Product Name": "BEIGE SKIRT",
+      "Master Category": "Laces",
+      "Selling Price (₹)": 1600,
+      "MRP (₹)": 1600,
+      "Description": "A beige skirt cut to sit on the waist and fall clean. Pairs back to a fitted top, or to a blouse you already own."
+    },
+    {
+      "Product ID": "KEvYLim0SNdKI431LRiV",
+      "Product Name": "BLACK OPEN TOP",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 1800,
+      "MRP (₹)": 1800,
+      "Description": "A black top cut clean and easy to layer. Works under a jacket or on its own."
+    },
+    {
+      "Product ID": "uqkG5MsBzCXfcyJyUz3L",
+      "Product Name": "BLOUSE",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 7999,
+      "MRP (₹)": 7999,
+      "Description": "A blouse piece, ready for the tailor to cut to your measurements. Pairs with a saree or a lehenga skirt already in the wardrobe."
+    },
+    {
+      "Product ID": "5PKQE5nPZfk4qFB2Gb90",
+      "Product Name": "BLUE  MASAKALI",
+      "Master Category": "Ethnic Wear",
+      "Selling Price (₹)": 13799,
+      "MRP (₹)": 13799,
+      "Description": "Blue masakhali, cut in the silhouette the style is named for — fitted above, released below. A festive piece that reads dressed without being formal."
+    },
+    {
+      "Product ID": "izub5lom100zfVJIG2Sm",
+      "Product Name": "BLUE SHERWANI",
+      "Master Category": "Ethnic Wear",
+      "Selling Price (₹)": 7499,
+      "MRP (₹)": 7499,
+      "Description": "Blue sherwani cut for the groom's side of the celebration — structured through the shoulder, falling clean to the knee. Wears with churidar or a straight trouser."
+    },
+    {
+      "Product ID": "g2YHksIIjGg9fU7j5BCR",
+      "Product Name": "BROWN SKIRT",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 1600,
+      "MRP (₹)": 1600,
+      "Description": "A brown skirt cut to sit on the waist and fall clean. Pairs back to a fitted top, or to a blouse you already own."
+    },
+    {
+      "Product ID": "Xev7pgZw3mGXV0YFUljX",
+      "Product Name": "BULE  DENIM DRESS",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 2600,
+      "MRP (₹)": 2600,
+      "Description": "A blue denim dress with enough structure to stand on its own and enough ease to wear all day. Straightforward, and better for it."
+    },
+    {
+      "Product ID": "C27rAyZWgpJbnc6PshjV",
+      "Product Name": "Banarasi Lehanga choli",
+      "Master Category": "Lehenga Cholis",
+      "Selling Price (₹)": 24000,
+      "MRP (₹)": 24000,
+      "Description": "Woven in the Banarasi tradition, with zari running through the drape and a border that carries the weight of the weave. A wedding-season piece that photographs as richly as it wears."
+    },
+    {
+      "Product ID": "4Wkdg2Li6vD5YFxXzh4C",
+      "Product Name": "DENIM JUMPSUIT",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 5466,
+      "MRP (₹)": 5466,
+      "Description": "A denim jumpsuit cut for an easy line through the waist, with the weight to hold its shape all day. Roll the cuff with flats for daytime, or belt it and add a heel."
+    },
+    {
+      "Product ID": "VWlX9lB9z9FGTgAp0VAa",
+      "Product Name": "DENIM SHORTS",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 2100,
+      "MRP (₹)": 2100,
+      "Description": "Denim shorts in a clean, unfussy cut that sits well on the waist. The kind of piece that earns its place by going with everything already in the wardrobe."
+    },
+    {
+      "Product ID": "9FFeEaXbOkDYmWAAPxGU",
+      "Product Name": "DESIGNER WEAR",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 26000,
+      "MRP (₹)": 26000,
+      "Description": "A gagra choli cut full through the skirt, with a fitted choli and a drape to finish. Festive dressing that holds its shape from the ceremony to the last dance."
+    },
+    {
+      "Product ID": "exkgcLRkafdgCEp2Ak1z",
+      "Product Name": "DESIGNER WEAR WITH COAT",
+      "Master Category": "One Minute Saree",
+      "Selling Price (₹)": 27000,
+      "MRP (₹)": 27000,
+      "Description": "A one-minute saree: pre-draped and pre-pleated, so it goes on like a dress and falls like a saree. For the mornings where the ceremony starts before you have finished getting ready."
+    },
+    {
+      "Product ID": "dUARnpF8091ZVgIVLqtd",
+      "Product Name": "DRESS BACK OPEN",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 5877,
+      "MRP (₹)": 5877,
+      "Description": "A dress with an open back — the detail sits behind you, so the front stays quiet and the turn does the talking."
+    },
+    {
+      "Product ID": "D2SVmJ32HpiDZOiG3ESB",
+      "Product Name": "FROCK",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 3898,
+      "MRP (₹)": 3898,
+      "Description": "A frock with a fitted bodice and a skirt that moves. Short enough for the evening, structured enough for the office party."
+    },
+    {
+      "Product ID": "EPWdYZaBggQKDIsfjWa8",
+      "Product Name": "FROCK",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 6799,
+      "MRP (₹)": 6799,
+      "Description": "A frock with a fitted bodice and a skirt that moves. Short enough for the evening, structured enough for the office party."
+    },
+    {
+      "Product ID": "EsYlH4xUKMcfR89RxcZo",
+      "Product Name": "FROCK",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 5999,
+      "MRP (₹)": 5999,
+      "Description": "A frock with a fitted bodice and a skirt that moves. Short enough for the evening, structured enough for the office party."
+    },
+    {
+      "Product ID": "dmddM49PGhiXiPtqqXZn",
+      "Product Name": "FROCK",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 6999,
+      "MRP (₹)": 6999,
+      "Description": "A frock with a fitted bodice and a skirt that moves. Short enough for the evening, structured enough for the office party."
+    },
+    {
+      "Product ID": "vEaShz8IpOnbi3Yfq9Mc",
+      "Product Name": "FROCK",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 5999,
+      "MRP (₹)": 5999,
+      "Description": "A frock with a fitted bodice and a skirt that moves. Short enough for the evening, structured enough for the office party."
+    },
+    {
+      "Product ID": "Gqe7H86eYR2b5bAQ336H",
+      "Product Name": "GOWN",
+      "Master Category": "Gown",
+      "Selling Price (₹)": 4599,
+      "MRP (₹)": 4599,
+      "Description": "A gown cut to fall full-length, shaped through the bodice and released below. For the evening that asks for one considered piece and nothing else."
+    },
+    {
+      "Product ID": "8muLczdiJdDiUhr0ktr8",
+      "Product Name": "GREEN MASAKALI",
+      "Master Category": "Ethnic Wear",
+      "Selling Price (₹)": 13799,
+      "MRP (₹)": 13799,
+      "Description": "Green masakhali, cut in the silhouette the style is named for — fitted above, released below. A festive piece that reads dressed without being formal."
+    },
+    {
+      "Product ID": "nC4bfSZ5eKgfkJXjjZXF",
+      "Product Name": "GREEN SHERWANI",
+      "Master Category": "Three Piece Set",
+      "Selling Price (₹)": 5237,
+      "MRP (₹)": 5237,
+      "Description": "Green sherwani cut for the groom's side of the celebration — structured through the shoulder, falling clean to the knee. Wears with churidar or a straight trouser."
+    },
+    {
+      "Product ID": "08HV0KpqMcLwyVAKO9Lt",
+      "Product Name": "HALF SAREE",
+      "Master Category": "Ethnic Wear",
+      "Selling Price (₹)": 11999,
+      "MRP (₹)": 11999,
+      "Description": "A half saree set — skirt, blouse and drape — for the ceremony where the whole point is the transition into it. Cut to be worn young and carried well."
+    },
+    {
+      "Product ID": "FcRwcYsT6tmRabI32Pfw",
+      "Product Name": "HALF SAREE",
+      "Master Category": "Ethnic Wear",
+      "Selling Price (₹)": 11999,
+      "MRP (₹)": 11999,
+      "Description": "A half saree set — skirt, blouse and drape — for the ceremony where the whole point is the transition into it. Cut to be worn young and carried well."
+    },
+    {
+      "Product ID": "cdsG1rdG69uZvRh7ribU",
+      "Product Name": "HALF SAREE",
+      "Master Category": "Ethnic Wear",
+      "Selling Price (₹)": 11999,
+      "MRP (₹)": 11999,
+      "Description": "A half saree set — skirt, blouse and drape — for the ceremony where the whole point is the transition into it. Cut to be worn young and carried well."
+    },
+    {
+      "Product ID": "GS7YLoNIuEMwIrMtQBT8",
+      "Product Name": "LAHANGACHOLI  PINK",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 13200,
+      "MRP (₹)": 13200,
+      "Description": "A pink lehenga choli — skirt, blouse and dupatta — cut with enough volume in the skirt to hold its shape through a long evening. A wedding-party piece."
+    },
+    {
+      "Product ID": "y6JwwVIoaXA6ciJrvW88",
+      "Product Name": "LAHANGACHOLI  PINK.",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 16000,
+      "MRP (₹)": 16000,
+      "Description": "A pink lehenga choli — skirt, blouse and dupatta — cut with enough volume in the skirt to hold its shape through a long evening. A wedding-party piece."
+    },
+    {
+      "Product ID": "4Lcwqh9OSQKw4DBI0U5R",
+      "Product Name": "LEATHER HALF PIECE",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 4566,
+      "MRP (₹)": 4566,
+      "Description": "A leather half piece, cut close and finished clean. Pairs back to a soft top or a full skirt when you want one structured element carrying the look."
+    },
+    {
+      "Product ID": "mkX7f3E3LQ1NPzW9oPsU",
+      "Product Name": "LEHANGA CHOLI",
+      "Master Category": "Ethnic Wear",
+      "Selling Price (₹)": 12000,
+      "MRP (₹)": 12000,
+      "Description": "A lehenga choli — skirt, blouse and dupatta — cut with enough volume in the skirt to hold its shape through a long evening. A wedding-party piece."
+    },
+    {
+      "Product ID": "MiOn8Zp9E7at8FfrNwSD",
+      "Product Name": "LEHANGA CHOLI  SG",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 24000,
+      "MRP (₹)": 24000,
+      "Description": "A lehenga choli — skirt, blouse and dupatta — cut with enough volume in the skirt to hold its shape through a long evening. A wedding-party piece."
+    },
+    {
+      "Product ID": "gIvfz5IfUsEpP3DmfHbM",
+      "Product Name": "LEHANGA CHOLI BANARASI",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 26000,
+      "MRP (₹)": 26000,
+      "Description": "Woven in the Banarasi tradition, with zari running through the drape and a border that carries the weight of the weave. A wedding-season piece that photographs as richly as it wears."
+    },
+    {
+      "Product ID": "DK2gulIrcd3eZ7qSjrhA",
+      "Product Name": "LEHANGA CHOLI BLUE",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 36000,
+      "MRP (₹)": 36000,
+      "Description": "A blue lehenga choli — skirt, blouse and dupatta — cut with enough volume in the skirt to hold its shape through a long evening. A wedding-party piece."
+    },
+    {
+      "Product ID": "L5E7TGeaWAxkHUmNn4ng",
+      "Product Name": "LEHANGA CHOLI CREAME",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 19000,
+      "MRP (₹)": 19000,
+      "Description": "A cream lehenga choli — skirt, blouse and dupatta — cut with enough volume in the skirt to hold its shape through a long evening. A wedding-party piece."
+    },
+    {
+      "Product ID": "CAftosPLNdDPAOlP65nu",
+      "Product Name": "LEHANGA CHOLI LAVENDER",
+      "Master Category": "Ethnic Wear",
+      "Selling Price (₹)": 16000,
+      "MRP (₹)": 16000,
+      "Description": "A lavender lehenga choli — skirt, blouse and dupatta — cut with enough volume in the skirt to hold its shape through a long evening. A wedding-party piece."
+    },
+    {
+      "Product ID": "GIjkinpQ0fb95bOsY4t4",
+      "Product Name": "LEHANGA CHOLI MUD",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 33000,
+      "MRP (₹)": 33000,
+      "Description": "A mud lehenga choli — skirt, blouse and dupatta — cut with enough volume in the skirt to hold its shape through a long evening. A wedding-party piece."
+    },
+    {
+      "Product ID": "SlUf3eX1PfUN52XsvQUt",
+      "Product Name": "LEHANGA CHOLI ORANGE",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 21000,
+      "MRP (₹)": 21000,
+      "Description": "A orange lehenga choli — skirt, blouse and dupatta — cut with enough volume in the skirt to hold its shape through a long evening. A wedding-party piece."
+    },
+    {
+      "Product ID": "WvkzZHAmYpP0eX0mx5eQ",
+      "Product Name": "LEHANGA CHOLI SEQUEL WHITE",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 29000,
+      "MRP (₹)": 29000,
+      "Description": "White sequin work across the length of the piece, catching light with every turn. Cut for receptions and sangeet evenings, where the room is lit low and the shine does the work."
+    },
+    {
+      "Product ID": "YL6iaDwgCIKmiwhOI2FY",
+      "Product Name": "LEHANGA CHOLI SKYBLUE",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 24000,
+      "MRP (₹)": 24000,
+      "Description": "A sky blue lehenga choli — skirt, blouse and dupatta — cut with enough volume in the skirt to hold its shape through a long evening. A wedding-party piece."
+    },
+    {
+      "Product ID": "7SATZh30MG70t0DJXZGU",
+      "Product Name": "LEHANGA CHOLI WHITE",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 33000,
+      "MRP (₹)": 33000,
+      "Description": "A white lehenga choli — skirt, blouse and dupatta — cut with enough volume in the skirt to hold its shape through a long evening. A wedding-party piece."
+    },
+    {
+      "Product ID": "80pBWUHFb9HBU39ztHjR",
+      "Product Name": "LEHANGA CHOLI YELLOW",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 17000,
+      "MRP (₹)": 17000,
+      "Description": "A yellow lehenga choli — skirt, blouse and dupatta — cut with enough volume in the skirt to hold its shape through a long evening. A wedding-party piece."
+    },
+    {
+      "Product ID": "9XD0ApWG4F3iWnkqMYOy",
+      "Product Name": "LEHANGACHOLI  PINK SEQUEL",
+      "Master Category": "Laces",
+      "Selling Price (₹)": 16000,
+      "MRP (₹)": 16000,
+      "Description": "Pink sequin work across the length of the piece, catching light with every turn. Cut for receptions and sangeet evenings, where the room is lit low and the shine does the work."
+    },
+    {
+      "Product ID": "wY7fD57ZYRX9bWSNFMyu",
+      "Product Name": "LEHANGACHOLI PINK 001",
+      "Master Category": "Laces",
+      "Selling Price (₹)": 12000,
+      "MRP (₹)": 12000,
+      "Description": "A pink lehenga choli — skirt, blouse and dupatta — cut with enough volume in the skirt to hold its shape through a long evening. A wedding-party piece."
+    },
+    {
+      "Product ID": "ubMxQHjLUxM4qhodl2Hj",
+      "Product Name": "LEHANGACHOLI WHITE",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 16000,
+      "MRP (₹)": 16000,
+      "Description": "A white lehenga choli — skirt, blouse and dupatta — cut with enough volume in the skirt to hold its shape through a long evening. A wedding-party piece."
+    },
+    {
+      "Product ID": "AiIrl7feU7r17boT8slW",
+      "Product Name": "MAXI",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 3999,
+      "MRP (₹)": 3999,
+      "Description": "A maxi cut to fall full-length with an easy drape through the skirt. Wears flat by day and heeled after dark."
+    },
+    {
+      "Product ID": "JpfobEqecmtVdBDZB6XT",
+      "Product Name": "MAXI",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 5299,
+      "MRP (₹)": 5299,
+      "Description": "A maxi cut to fall full-length with an easy drape through the skirt. Wears flat by day and heeled after dark."
+    },
+    {
+      "Product ID": "kbSkO4YLszeONcC6MfIY",
+      "Product Name": "MAXI",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 6599,
+      "MRP (₹)": 6599,
+      "Description": "A maxi cut to fall full-length with an easy drape through the skirt. Wears flat by day and heeled after dark."
+    },
+    {
+      "Product ID": "mN4jkjuo2XQu0iJVzt72",
+      "Product Name": "MAXI",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 4999,
+      "MRP (₹)": 4999,
+      "Description": "A maxi cut to fall full-length with an easy drape through the skirt. Wears flat by day and heeled after dark."
+    },
+    {
+      "Product ID": "U32Vg55Fm26MqiR7DqM4",
+      "Product Name": "ONE MINUTE SAREE",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 24000,
+      "MRP (₹)": 24000,
+      "Description": "A one-minute saree: pre-draped and pre-pleated, so it goes on like a dress and falls like a saree. For the mornings where the ceremony starts before you have finished getting ready."
+    },
+    {
+      "Product ID": "ZQ8Ydd10CEAoSdtLCZex",
+      "Product Name": "ONE MINUTE SAREE LAVENDER",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 16000,
+      "MRP (₹)": 16000,
+      "Description": "A lavender one-minute saree: pre-draped and pre-pleated, so it goes on like a dress and falls like a saree. For the mornings where the ceremony starts before you have finished getting ready."
+    },
+    {
+      "Product ID": "tanDK0dqtc4SAvTFCv8Y",
+      "Product Name": "ONE MINUTE SAREE PURPLE",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 24000,
+      "MRP (₹)": 24000,
+      "Description": "A purple one-minute saree: pre-draped and pre-pleated, so it goes on like a dress and falls like a saree. For the mornings where the ceremony starts before you have finished getting ready."
+    },
+    {
+      "Product ID": "7DxezWIwC9qBu8AEcXrC",
+      "Product Name": "ORANGE SHERWANI",
+      "Master Category": "Three Piece Set",
+      "Selling Price (₹)": 5237,
+      "MRP (₹)": 5237,
+      "Description": "Orange sherwani cut for the groom's side of the celebration — structured through the shoulder, falling clean to the knee. Wears with churidar or a straight trouser."
+    },
+    {
+      "Product ID": "eie2RVP82oZ7dI4yjFVN",
+      "Product Name": "ORANGE SLEEVE LESS TOP",
+      "Master Category": "Laces",
+      "Selling Price (₹)": 1600,
+      "MRP (₹)": 1600,
+      "Description": "A orange sleeveless top cut clean and easy to layer. Works under a jacket or on its own."
+    },
+    {
+      "Product ID": "p0hp79PeaG43XQK4czcL",
+      "Product Name": "PINK  SHERWANI",
+      "Master Category": "Ethnic Wear",
+      "Selling Price (₹)": 4499,
+      "MRP (₹)": 4499,
+      "Description": "Pink sherwani cut for the groom's side of the celebration — structured through the shoulder, falling clean to the knee. Wears with churidar or a straight trouser."
+    },
+    {
+      "Product ID": "zwtpJJtp8n3atGb79NST",
+      "Product Name": "PINK  SHERWANI",
+      "Master Category": "Three Piece Set",
+      "Selling Price (₹)": 5377,
+      "MRP (₹)": 5377,
+      "Description": "Pink sherwani cut for the groom's side of the celebration — structured through the shoulder, falling clean to the knee. Wears with churidar or a straight trouser."
+    },
+    {
+      "Product ID": "V5MkzlcC1BlhRKx9qOmu",
+      "Product Name": "PINK SHERWANI",
+      "Master Category": "Three Piece Set",
+      "Selling Price (₹)": 5237,
+      "MRP (₹)": 5237,
+      "Description": "Pink sherwani cut for the groom's side of the celebration — structured through the shoulder, falling clean to the knee. Wears with churidar or a straight trouser."
+    },
+    {
+      "Product ID": "Yxw12Hau3yzHTm0Pt2Nu",
+      "Product Name": "PINK SHERWANI",
+      "Master Category": "Ethnic Wear",
+      "Selling Price (₹)": 7499,
+      "MRP (₹)": 7499,
+      "Description": "Pink sherwani cut for the groom's side of the celebration — structured through the shoulder, falling clean to the knee. Wears with churidar or a straight trouser."
+    },
+    {
+      "Product ID": "fi953THskKOF53lS4Qeo",
+      "Product Name": "PINK SKIRT",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 2699,
+      "MRP (₹)": 2699,
+      "Description": "A pink skirt cut to sit on the waist and fall clean. Pairs back to a fitted top, or to a blouse you already own."
+    },
+    {
+      "Product ID": "aFgAwNNMOvF9LbxeaQQJ",
+      "Product Name": "RED DRESS",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 4800,
+      "MRP (₹)": 4800,
+      "Description": "A red dress cut with a fitted bodice and a skirt that moves — the kind of piece that carries a dinner without needing much beside it."
+    },
+    {
+      "Product ID": "cjgenoVL2KPLVn9DGDw2",
+      "Product Name": "RED DRESS GOWN",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 13200,
+      "MRP (₹)": 13200,
+      "Description": "A red gown cut to fall full-length, shaped through the bodice and released below. For the evening that asks for one considered piece and nothing else."
+    },
+    {
+      "Product ID": "03fXbGVpRDBiaW1Nz6oB",
+      "Product Name": "SAREE",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 14000,
+      "MRP (₹)": 14000,
+      "Description": "A saree with the drape and fall to carry a full evening. Comes with its blouse piece, ready for the tailor."
+    },
+    {
+      "Product ID": "DajFzZjdb1Z7vVZVAlP3",
+      "Product Name": "SAREE",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 9000,
+      "MRP (₹)": 9000,
+      "Description": "A saree with the drape and fall to carry a full evening. Comes with its blouse piece, ready for the tailor."
+    },
+    {
+      "Product ID": "F7WysrDE9QI4IgCWTagN",
+      "Product Name": "SAREE",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 29000,
+      "MRP (₹)": 29000,
+      "Description": "A saree with the drape and fall to carry a full evening. Comes with its blouse piece, ready for the tailor."
+    },
+    {
+      "Product ID": "Plhx3dcFLb2sLLs20sJu",
+      "Product Name": "SAREE",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 17000,
+      "MRP (₹)": 17000,
+      "Description": "A saree with the drape and fall to carry a full evening. Comes with its blouse piece, ready for the tailor."
+    },
+    {
+      "Product ID": "Ve384vUNgftjuFM9OoDa",
+      "Product Name": "SAREE YELLOW 3 PIECE SET",
+      "Master Category": "Three Piece Set",
+      "Selling Price (₹)": 11866,
+      "MRP (₹)": 11866,
+      "Description": "A yellow three-piece set that arrives complete, so nothing has to be matched to it. The easiest kind of festive dressing: one decision, not three."
+    },
+    {
+      "Product ID": "JqUIgrtM7W0z8tufVaeD",
+      "Product Name": "SHORTS",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 1800,
+      "MRP (₹)": 1800,
+      "Description": "Tailored shorts cut to sit neatly on the waist. An easy, unfussy piece for warm mornings and long days."
+    },
+    {
+      "Product ID": "RGEBr2f3bpHp4x8E3p9U",
+      "Product Name": "SHORTS",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 1800,
+      "MRP (₹)": 1800,
+      "Description": "Tailored shorts cut to sit neatly on the waist. An easy, unfussy piece for warm mornings and long days."
+    },
+    {
+      "Product ID": "o5ciZDkoq9bfJO0Xjgb3",
+      "Product Name": "SHORTS",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 1800,
+      "MRP (₹)": 1800,
+      "Description": "Tailored shorts cut to sit neatly on the waist. An easy, unfussy piece for warm mornings and long days."
+    },
+    {
+      "Product ID": "GCaDRrIRHQRRQ9quTCs3",
+      "Product Name": "SPECIAL EDITION JEANS(SPACE GIRL)",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 2000,
+      "MRP (₹)": 2000,
+      "Description": "A special-edition jean, cut straight through the leg and finished with the detail that gives the piece its name. Made in a short run."
+    },
+    {
+      "Product ID": "IWGtENyicFGDNxQib6Vk",
+      "Product Name": "STRETCHABLE OPEN TOP",
+      "Master Category": "Laces",
+      "Selling Price (₹)": 1900,
+      "MRP (₹)": 1900,
+      "Description": "A top cut clean and easy to layer. Stretch through the body, so it moves with you rather than against you. Works under a jacket or on its own."
+    },
+    {
+      "Product ID": "BTGmlkdK7N0zJwlfVjFL",
+      "Product Name": "THREE PIECE SET GREEN",
+      "Master Category": "Three Piece Set",
+      "Selling Price (₹)": 8200,
+      "MRP (₹)": 8200,
+      "Description": "A green three-piece set that arrives complete, so nothing has to be matched to it. The easiest kind of festive dressing: one decision, not three."
+    },
+    {
+      "Product ID": "kpAHRkjflCadHaJeRiRt",
+      "Product Name": "THREE PIECE SET LEMON GREEN",
+      "Master Category": "Three Piece Set",
+      "Selling Price (₹)": 8200,
+      "MRP (₹)": 8200,
+      "Description": "A lemon green three-piece set that arrives complete, so nothing has to be matched to it. The easiest kind of festive dressing: one decision, not three."
+    },
+    {
+      "Product ID": "q3nXf2cPfeaE1vcaOp9i",
+      "Product Name": "THREE PIECE SET OLIVE GREEN",
+      "Master Category": "Three Piece Set",
+      "Selling Price (₹)": 10350,
+      "MRP (₹)": 10350,
+      "Description": "A olive green three-piece set that arrives complete, so nothing has to be matched to it. The easiest kind of festive dressing: one decision, not three."
+    },
+    {
+      "Product ID": "Gp5Lc79IbotIVEYUIbaM",
+      "Product Name": "THREE PIECE SET WHITE",
+      "Master Category": "Three Piece Set",
+      "Selling Price (₹)": 10254,
+      "MRP (₹)": 10254,
+      "Description": "A white three-piece set that arrives complete, so nothing has to be matched to it. The easiest kind of festive dressing: one decision, not three."
+    },
+    {
+      "Product ID": "m6sr8EkQ4jl3XSuqTVik",
+      "Product Name": "THREE PIECE SET YELLOW",
+      "Master Category": "Three Piece Set",
+      "Selling Price (₹)": 21152,
+      "MRP (₹)": 21152,
+      "Description": "A yellow three-piece set that arrives complete, so nothing has to be matched to it. The easiest kind of festive dressing: one decision, not three."
+    },
+    {
+      "Product ID": "ckQtUVj8vSwGiL6fN6I6",
+      "Product Name": "WESTERN WEAR",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 7999,
+      "MRP (₹)": 7999,
+      "Description": "A piece from the Tresor Couture Studios Prêt rail, cut and finished in the Hyderabad atelier. Message us for measurements and fabric detail before you order."
+    },
+    {
+      "Product ID": "KUdHPg8ESrAILIMyVfqv",
+      "Product Name": "WHITE OPEN TOP",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 1800,
+      "MRP (₹)": 1800,
+      "Description": "A white top cut clean and easy to layer. Works under a jacket or on its own."
+    },
+    {
+      "Product ID": "82S57XuRgJdksraDPL9b",
+      "Product Name": "YELLOW SHERWANI",
+      "Master Category": "Ethnic Wear",
+      "Selling Price (₹)": 7499,
+      "MRP (₹)": 7499,
+      "Description": "Yellow sherwani cut for the groom's side of the celebration — structured through the shoulder, falling clean to the knee. Wears with churidar or a straight trouser."
+    }
+  ]
+}
