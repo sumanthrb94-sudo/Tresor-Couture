@@ -1,0 +1,92 @@
+{
+  "source": "Product copy written FROM THE PHOTOGRAPHS, Sep 2026 — the ten live products that had a word instead of a description.",
+  "notes": [
+    "Dry run first:  GOOGLE_APPLICATION_CREDENTIALS=/path/key.json npx tsx scripts/import-catalogue.ts docs/ops/fixups/2026-09-descriptions-photographed.json --prod --dry-run",
+    "Drop --dry-run to write. Only the fields present here are touched.",
+    "Every line describes what is actually in the product's own photograph - colour, cut, fabric, embellishment - not what its name says. Several names describe a different garment than the picture shows; see the mismatches listed in the commit message.",
+    "Listing Status and Image URL are deliberately ABSENT. All ten are already Active, and sending Active with no Image URL would make the importer demote them to Draft - taking them off the website.",
+    "These ten SUPERSEDE the same ten rows in 2026-09-descriptions.json, which were inferred from product names before the photographs were read."
+  ],
+  "rows": [
+    {
+      "Product ID": "rvMbVe9IJInW89uj5lQm",
+      "Product Name": "ANARKALI YELLOW",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 18000,
+      "MRP (₹)": 18000,
+      "Description": "Marigold yellow, cut as a tiered anarkali that sweeps to the floor. The bodice is embroidered in pastel florals with mirror work catching the light; the skirt is gathered through three soft tiers of georgette. Haldi and mehendi dressing."
+    },
+    {
+      "Product ID": "C27rAyZWgpJbnc6PshjV",
+      "Product Name": "Banarasi Lehanga choli",
+      "Master Category": "Lehenga Cholis",
+      "Selling Price (₹)": 24000,
+      "MRP (₹)": 24000,
+      "Description": "Deep violet Banarasi silk, worked all over in gold zari butis, with a wide brocade border running the length of the dupatta. The V-neck blouse is embroidered to match and finished with a row of pearl drops. A wedding piece, meant for the main ceremony."
+    },
+    {
+      "Product ID": "4Wkdg2Li6vD5YFxXzh4C",
+      "Product Name": "DENIM JUMPSUIT",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 5466,
+      "MRP (₹)": 5466,
+      "Description": "A light-wash denim playsuit with a collared, long-sleeved shirt top and flap pockets at the chest, nipped in with cut-outs at the waist and finished with a raw frayed hem. Roll the cuffs, add white sneakers, and it is done."
+    },
+    {
+      "Product ID": "9FFeEaXbOkDYmWAAPxGU",
+      "Product Name": "DESIGNER WEAR",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 26000,
+      "MRP (₹)": 26000,
+      "Description": "A lehenga choli in iridescent sequinned net — pale rose that shifts through lilac and silver as it turns. The blouse is embroidered in pastel threadwork with a scalloped hem; the dupatta is sheer, edged in blue-green scallops. Reception dressing."
+    },
+    {
+      "Product ID": "exkgcLRkafdgCEp2Ak1z",
+      "Product Name": "DESIGNER WEAR WITH COAT",
+      "Master Category": "One Minute Saree",
+      "Selling Price (₹)": 27000,
+      "MRP (₹)": 27000,
+      "Description": "A pre-draped saree in flowing black georgette, so it goes on like a gown and falls like a saree. The high-neck blouse is hand-beaded with a fringe of beadwork over the shoulder, and the waist is finished with an embellished belt. Cocktail and reception wear."
+    },
+    {
+      "Product ID": "Gqe7H86eYR2b5bAQ336H",
+      "Product Name": "GOWN",
+      "Master Category": "Gown",
+      "Selling Price (₹)": 4599,
+      "MRP (₹)": 4599,
+      "Description": "A mother-and-daughter set in slubbed grey chambray, scattered with tiny multicoloured woven dots. Hers falls from a fitted bodice into a full blush-pink skirt; the little one's is a tie-shoulder pinafore cut from the same cloth. Made to be worn together."
+    },
+    {
+      "Product ID": "aFgAwNNMOvF9LbxeaQQJ",
+      "Product Name": "RED DRESS",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 4800,
+      "MRP (₹)": 4800,
+      "Description": "A red fit-and-flare midi, sleeveless, with a split notch at the neckline and princess seams shaping the bodice before the skirt opens out to mid-calf. The dress to own when one dress has to cover everything."
+    },
+    {
+      "Product ID": "RGEBr2f3bpHp4x8E3p9U",
+      "Product Name": "SHORTS",
+      "Master Category": "Western Wear",
+      "Selling Price (₹)": 1800,
+      "MRP (₹)": 1800,
+      "Description": "Ivory cotton shorts embroidered in black folk motifs — diamonds across the leg, a fine border tracing the pockets, the waistband and the hem. Sits high on the waist. Comes as part of a set with the matching cropped top."
+    },
+    {
+      "Product ID": "IWGtENyicFGDNxQib6Vk",
+      "Product Name": "STRETCHABLE OPEN TOP",
+      "Master Category": "Laces",
+      "Selling Price (₹)": 1900,
+      "MRP (₹)": 1900,
+      "Description": "A black halter mini cut in glitter-flecked knit, with a deep plunge V and a clean, close line through the body. Layer it over a white tee for daytime, or wear it as it comes after dark."
+    },
+    {
+      "Product ID": "ckQtUVj8vSwGiL6fN6I6",
+      "Product Name": "WESTERN WEAR",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 7999,
+      "MRP (₹)": 7999,
+      "Description": "A black halter mini, sequinned all over so it reads matte until it catches light. Deep plunge neckline, clean through the body, cut above the knee. One piece, one decision, and the evening is handled."
+    }
+  ]
+}

@@ -6,7 +6,8 @@
     "Name / Master Category / Selling Price / MRP are echoed back from the live values because the importer requires them on every row - they change nothing.",
     "Listing Status and Image URL are deliberately ABSENT. Most of these are Drafts awaiting photography; sending a status would either publish an unphotographed product or, for an Active row with no Image URL, silently demote it to Draft.",
     "Copy is grounded only in each product's own record - the garment type and colour in its name or existing description, plus its category. Fabric and technique are claimed only where the record names them (Banarasi, Denim, Leather, Sequin); nothing else is asserted.",
-    "14 products are NOT in this file because their record says nothing to describe: twelve named only 'DESIGNER WEAR', one 'WESTERN WEAR', and one literally named 'test'. Twelve different descriptions for twelve identically-named products would be fiction. Give them real names and the copy follows."
+    "14 products are NOT in this file because their record says nothing to describe: twelve named only 'DESIGNER WEAR', one 'WESTERN WEAR', and one literally named 'test'. Twelve different descriptions for twelve identically-named products would be fiction. Give them real names and the copy follows.",
+    "The ten photographed products were REMOVED from this file and live in 2026-09-descriptions-photographed.json instead, written from their actual photographs. Nothing here overlaps it."
   ],
   "rows": [
     {
@@ -72,14 +73,6 @@
       "Selling Price (₹)": 30527,
       "MRP (₹)": 30527,
       "Description": "White anarkali with the flare coming in from the yoke, so it moves when you do. Full-length, and cut to be worn without a dupatta if the evening calls for it."
-    },
-    {
-      "Product ID": "rvMbVe9IJInW89uj5lQm",
-      "Product Name": "ANARKALI YELLOW",
-      "Master Category": "Studios Prêt",
-      "Selling Price (₹)": 18000,
-      "MRP (₹)": 18000,
-      "Description": "Yellow anarkali with the flare coming in from the yoke, so it moves when you do. Full-length, and cut to be worn without a dupatta if the evening calls for it."
     },
     {
       "Product ID": "LR5HPvMa9Uz504Rw9VBW",
@@ -154,44 +147,12 @@
       "Description": "A blue denim dress with enough structure to stand on its own and enough ease to wear all day. Straightforward, and better for it."
     },
     {
-      "Product ID": "C27rAyZWgpJbnc6PshjV",
-      "Product Name": "Banarasi Lehanga choli",
-      "Master Category": "Lehenga Cholis",
-      "Selling Price (₹)": 24000,
-      "MRP (₹)": 24000,
-      "Description": "Woven in the Banarasi tradition, with zari running through the drape and a border that carries the weight of the weave. A wedding-season piece that photographs as richly as it wears."
-    },
-    {
-      "Product ID": "4Wkdg2Li6vD5YFxXzh4C",
-      "Product Name": "DENIM JUMPSUIT",
-      "Master Category": "Western Wear",
-      "Selling Price (₹)": 5466,
-      "MRP (₹)": 5466,
-      "Description": "A denim jumpsuit cut for an easy line through the waist, with the weight to hold its shape all day. Roll the cuff with flats for daytime, or belt it and add a heel."
-    },
-    {
       "Product ID": "VWlX9lB9z9FGTgAp0VAa",
       "Product Name": "DENIM SHORTS",
       "Master Category": "Western Wear",
       "Selling Price (₹)": 2100,
       "MRP (₹)": 2100,
       "Description": "Denim shorts in a clean, unfussy cut that sits well on the waist. The kind of piece that earns its place by going with everything already in the wardrobe."
-    },
-    {
-      "Product ID": "9FFeEaXbOkDYmWAAPxGU",
-      "Product Name": "DESIGNER WEAR",
-      "Master Category": "Studios Prêt",
-      "Selling Price (₹)": 26000,
-      "MRP (₹)": 26000,
-      "Description": "A gagra choli cut full through the skirt, with a fitted choli and a drape to finish. Festive dressing that holds its shape from the ceremony to the last dance."
-    },
-    {
-      "Product ID": "exkgcLRkafdgCEp2Ak1z",
-      "Product Name": "DESIGNER WEAR WITH COAT",
-      "Master Category": "One Minute Saree",
-      "Selling Price (₹)": 27000,
-      "MRP (₹)": 27000,
-      "Description": "A one-minute saree: pre-draped and pre-pleated, so it goes on like a dress and falls like a saree. For the mornings where the ceremony starts before you have finished getting ready."
     },
     {
       "Product ID": "dUARnpF8091ZVgIVLqtd",
@@ -240,14 +201,6 @@
       "Selling Price (₹)": 5999,
       "MRP (₹)": 5999,
       "Description": "A frock with a fitted bodice and a skirt that moves. Short enough for the evening, structured enough for the office party."
-    },
-    {
-      "Product ID": "Gqe7H86eYR2b5bAQ336H",
-      "Product Name": "GOWN",
-      "Master Category": "Gown",
-      "Selling Price (₹)": 4599,
-      "MRP (₹)": 4599,
-      "Description": "A gown cut to fall full-length, shaped through the bodice and released below. For the evening that asks for one considered piece and nothing else."
     },
     {
       "Product ID": "8muLczdiJdDiUhr0ktr8",
@@ -546,14 +499,6 @@
       "Description": "A pink skirt cut to sit on the waist and fall clean. Pairs back to a fitted top, or to a blouse you already own."
     },
     {
-      "Product ID": "aFgAwNNMOvF9LbxeaQQJ",
-      "Product Name": "RED DRESS",
-      "Master Category": "Western Wear",
-      "Selling Price (₹)": 4800,
-      "MRP (₹)": 4800,
-      "Description": "A red dress cut with a fitted bodice and a skirt that moves — the kind of piece that carries a dinner without needing much beside it."
-    },
-    {
       "Product ID": "cjgenoVL2KPLVn9DGDw2",
       "Product Name": "RED DRESS GOWN",
       "Master Category": "Studios Prêt",
@@ -610,14 +555,6 @@
       "Description": "Tailored shorts cut to sit neatly on the waist. An easy, unfussy piece for warm mornings and long days."
     },
     {
-      "Product ID": "RGEBr2f3bpHp4x8E3p9U",
-      "Product Name": "SHORTS",
-      "Master Category": "Western Wear",
-      "Selling Price (₹)": 1800,
-      "MRP (₹)": 1800,
-      "Description": "Tailored shorts cut to sit neatly on the waist. An easy, unfussy piece for warm mornings and long days."
-    },
-    {
       "Product ID": "o5ciZDkoq9bfJO0Xjgb3",
       "Product Name": "SHORTS",
       "Master Category": "Western Wear",
@@ -632,14 +569,6 @@
       "Selling Price (₹)": 2000,
       "MRP (₹)": 2000,
       "Description": "A special-edition jean, cut straight through the leg and finished with the detail that gives the piece its name. Made in a short run."
-    },
-    {
-      "Product ID": "IWGtENyicFGDNxQib6Vk",
-      "Product Name": "STRETCHABLE OPEN TOP",
-      "Master Category": "Laces",
-      "Selling Price (₹)": 1900,
-      "MRP (₹)": 1900,
-      "Description": "A top cut clean and easy to layer. Stretch through the body, so it moves with you rather than against you. Works under a jacket or on its own."
     },
     {
       "Product ID": "BTGmlkdK7N0zJwlfVjFL",
@@ -680,14 +609,6 @@
       "Selling Price (₹)": 21152,
       "MRP (₹)": 21152,
       "Description": "A yellow three-piece set that arrives complete, so nothing has to be matched to it. The easiest kind of festive dressing: one decision, not three."
-    },
-    {
-      "Product ID": "ckQtUVj8vSwGiL6fN6I6",
-      "Product Name": "WESTERN WEAR",
-      "Master Category": "Studios Prêt",
-      "Selling Price (₹)": 7999,
-      "MRP (₹)": 7999,
-      "Description": "A piece from the Tresor Couture Studios Prêt rail, cut and finished in the Hyderabad atelier. Message us for measurements and fabric detail before you order."
     },
     {
       "Product ID": "KUdHPg8ESrAILIMyVfqv",
