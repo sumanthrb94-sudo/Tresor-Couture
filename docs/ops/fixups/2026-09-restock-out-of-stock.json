@@ -1,0 +1,68 @@
+{
+  "source": "Restock: every product sitting at 0, Sep 2026.",
+  "notes": [
+    "Dry run first:  GOOGLE_APPLICATION_CREDENTIALS=/path/key.json npx tsx scripts/import-catalogue.ts docs/ops/fixups/2026-09-restock-out-of-stock.json --prod --dry-run",
+    "Drop --dry-run to write. Only the fields present here are touched.",
+    "Name / Master Category / Selling Price / MRP are echoed back from the live values because the importer requires them on every row - they change nothing.",
+    "Stock Qty 1 matches every in-stock peer: Laces, Studios Pret and Three Piece Set all hold min=median=max=1.",
+    "Listing Status is deliberately ABSENT. The five laces are already Active and go live the moment they have stock. TC00064 and TC00065 are Drafts with no photograph - sending Active would either put an unphotographed product on the website or, because the importer demotes an Active row that carries no Image URL, silently push it straight back to Draft."
+  ],
+  "rows": [
+    {
+      "Product ID": "6343",
+      "Product Name": "Ivory Pearl Bouquet Bridal Border",
+      "Master Category": "Laces",
+      "Selling Price (₹)": 7000,
+      "MRP (₹)": 7000,
+      "Stock Qty": 1
+    },
+    {
+      "Product ID": "6988",
+      "Product Name": "Magenta Gota Braid with Pearl Rows",
+      "Master Category": "Laces",
+      "Selling Price (₹)": 999,
+      "MRP (₹)": 999,
+      "Stock Qty": 1
+    },
+    {
+      "Product ID": "HA3858",
+      "Product Name": "Champagne Sequin Encrusted Band",
+      "Master Category": "Laces",
+      "Selling Price (₹)": 1299,
+      "MRP (₹)": 1299,
+      "Stock Qty": 1
+    },
+    {
+      "Product ID": "HA4536",
+      "Product Name": "Pastel Deco Beadwork Border",
+      "Master Category": "Laces",
+      "Selling Price (₹)": 3800,
+      "MRP (₹)": 3800,
+      "Stock Qty": 1
+    },
+    {
+      "Product ID": "HA6320",
+      "Product Name": "Berry Garden Dimensional Floral Trim",
+      "Master Category": "Laces",
+      "Selling Price (₹)": 4800,
+      "MRP (₹)": 4800,
+      "Stock Qty": 1
+    },
+    {
+      "Product ID": "V5MkzlcC1BlhRKx9qOmu",
+      "Product Name": "PINK SHERWANI",
+      "Master Category": "Three Piece Set",
+      "Selling Price (₹)": 5237,
+      "MRP (₹)": 5237,
+      "Stock Qty": 1
+    },
+    {
+      "Product ID": "WhU7RX3J65A1AFbwK0f9",
+      "Product Name": "DESIGNER WEAR",
+      "Master Category": "Studios Prêt",
+      "Selling Price (₹)": 8999,
+      "MRP (₹)": 8999,
+      "Stock Qty": 1
+    }
+  ]
+}
