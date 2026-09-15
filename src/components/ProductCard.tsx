@@ -8,6 +8,8 @@ import { useCart } from '../context/CartContext';
 import FabricImage from './FabricImage';
 import QuickAddModal from './QuickAddModal';
 import { inStock } from '../lib/availability';
+import { colourwayCount } from '../lib/styleGroup';
+import { useCatalog } from '../context/CatalogContext';
 
 interface Props {
   fabric: Fabric;
@@ -21,6 +23,10 @@ const ProductCard: React.FC<Props> = ({ fabric, compact = false }) => {
   const { addItem } = useCart();
   const wished = has(fabric.id);
   const soldOut = !inStock(fabric);
+  // The catalogue is already loaded and shared, so counting siblings costs a
+  // pass over an in-memory array rather than a query per card.
+  const { products: catalogProducts } = useCatalog();
+  const colourways = colourwayCount(fabric, catalogProducts);
 
   const [justAdded, setJustAdded] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -95,6 +101,14 @@ const ProductCard: React.FC<Props> = ({ fabric, compact = false }) => {
           {fabric.subCategory && (
             <p className="text-[10px] font-extrabold uppercase tracking-[0.08em] text-[color:var(--color-myntra-ink-mute)] mb-1">
               {fabric.subCategory}
+            </p>
+          )}
+          {/* Every colourway keeps its own card — nothing is hidden from the grid,
+              from search or from a shared link. The badge is only a signal that
+              this design continues in other colours. */}
+          {colourways > 1 && (
+            <p className="text-[10px] font-bold text-[#5C3A8E] mb-1" data-testid="colourway-count">
+              {colourways} colours
             </p>
           )}
           {fabric.category === 'Laces' && fabric.unitType && (

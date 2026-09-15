@@ -172,6 +172,8 @@ interface Draft {
   category: Fabric['category'] | '';
   tagsCsv: string;
   sticker: Fabric['sticker'] | '';
+  styleCode: string;
+  colourName: string;
   colors: ColorRow[];
   stock: string;
   unitType: Fabric['unitType'] | '';
@@ -205,6 +207,8 @@ const emptyDraft = (): Draft => ({
   category: '',
   tagsCsv: '',
   sticker: '',
+  styleCode: '',
+  colourName: '',
   colors: [],
   stock: '',
   unitType: '',
@@ -242,6 +246,8 @@ const fabricToDraft = (f: Fabric): Draft => ({
   category: f.category,
   tagsCsv: (f.tags ?? []).join(', '),
   sticker: f.sticker ?? '',
+  styleCode: f.styleCode ?? '',
+  colourName: f.colourName ?? '',
   colors: (f.colors ?? []).map(c => ({ name: c.name, hex: c.hex })),
   stock: f.stock != null ? String(f.stock) : '',
   unitType: f.unitType ?? '',
@@ -371,6 +377,9 @@ const draftToFabric = (d: Draft, existing?: Fabric): Fabric => {
     subCategory: d.category === 'Laces' ? 'Trim & Edging' : existing?.subCategory,
     tags,
     sticker: d.sticker || undefined,
+    // Upper-cased on the way in so "tc-bfv" and "TC-BFV" are one design.
+    styleCode: d.styleCode.trim().toUpperCase() || undefined,
+    colourName: d.colourName.trim() || undefined,
     colors: colors.length ? colors : undefined,
     stock: d.stock !== '' ? Number(d.stock) : undefined,
     unitType: d.unitType || undefined,
@@ -1203,6 +1212,42 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
           <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--color-myntra-ink-mute)] mb-3">
             Variants
           </h3>
+
+          {/* One design in six colours is six products, each with its own
+              barcode, stock and photographs. These two fields are what links
+              them: give every colour the SAME style code and its own colour
+              name, and each one's page grows a row of the others. */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <label className="block">
+              <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[color:var(--color-myntra-ink-mute)] mb-1">
+                Style code
+              </span>
+              <input
+                value={draft.styleCode}
+                onChange={e => set('styleCode', e.target.value)}
+                placeholder="TC-BFV"
+                aria-label="Style code"
+                className="input-box w-full"
+              />
+            </label>
+            <label className="block">
+              <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[color:var(--color-myntra-ink-mute)] mb-1">
+                Colour name
+              </span>
+              <input
+                value={draft.colourName}
+                onChange={e => set('colourName', e.target.value)}
+                placeholder="Emerald"
+                aria-label="Colour name"
+                className="input-box w-full"
+              />
+            </label>
+          </div>
+          <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] -mt-2 mb-4 leading-relaxed">
+            Same <b>style code</b> on every colour of one design; each gets its own <b>colour name</b>.
+            Nothing is merged — stock, price and the barcode stay per piece.
+          </p>
+
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[color:var(--color-myntra-ink-mute)] mb-2">
               Colors

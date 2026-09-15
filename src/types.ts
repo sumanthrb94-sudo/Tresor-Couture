@@ -50,6 +50,17 @@ export interface Fabric {
   /** Optional sticker (e.g. "Trending", "Bestseller", "New In"). */
   sticker?: 'Trending' | 'Bestseller' | 'New In' | 'Limited';
   colors?: { name: string; hex: string }[];
+  /** Which DESIGN this piece is, shared by every colourway of it (e.g. "TC-BFV").
+   *  A lace design sold in six colours is six products — six barcodes, six stock
+   *  numbers, six sets of photographs — linked by this code. See lib/styleGroup.ts
+   *  for why the colours are not folded into one document.
+   *  A different axis from `subCategory`: that is what the piece IS and is the
+   *  shelf a shopper browses; this is which design it is. */
+  styleCode?: string;
+  /** Which colourway this piece is, within its `styleCode` (e.g. "Emerald").
+   *  Deliberately separate from `colors[]`, which lists the colours PRESENT in a
+   *  piece and whose selection rides along on the cart line. */
+  colourName?: string;
   /** Units available to sell. Drives the quantity stepper + out-of-stock. */
   stock?: number;
   /** Unique product code / SKU shown in exports (e.g. HA6758). Especially important for laces. */

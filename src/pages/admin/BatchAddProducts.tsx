@@ -39,6 +39,8 @@ interface Row {
   category: string;
   subCategory: string;
   code: string;
+  styleCode: string;
+  colourName: string;
   cost: string;
   price: string;
   mrp: string;
@@ -47,7 +49,7 @@ interface Row {
 }
 
 const blankRow = (): Row => ({
-  name: '', category: '', subCategory: '', code: '',
+  name: '', category: '', subCategory: '', code: '', styleCode: '', colourName: '',
   cost: '', price: '', mrp: '', stock: '', unit: '',
 });
 
@@ -73,7 +75,9 @@ const HEADER_ALIASES: Record<keyof Row, RegExp> = {
   category: /^(category|master\s*category|type)$/i,
   subCategory: /^(sub\s*category|subcategory|sub\s*category\s*\/\s*design|design)$/i,
   code: /^(code|supplier\s*code|sku|article)$/i,
-  cost: /^(cost|buying|buying\s*price.*|purchase.*|cost\s*price.*)$/i,
+  styleCode: /^(style\s*code|style|design\s*code|model)$/i,
+  colourName: /^(colou?r\s*name|colou?r|colou?rway)$/i,
+  cost: /^(cost.*|buying.*|purchase.*)$/i,
   price: /^(price.*|selling.*|rate|mrp\s*price)$/i,
   mrp: /^(mrp.*|list\s*price|max.*)$/i,
   stock: /^(stock.*|qty|quantity|units?|pcs?)$/i,
@@ -216,6 +220,9 @@ const BatchAddProducts: React.FC<{ onClose: () => void; onSaved: () => void }> =
           ...(material.trim() ? { materialType: material.trim() } : {}),
           ...(supplier.trim() ? { supplier: supplier.trim() } : {}),
           ...(r.code.trim() ? { productCode: r.code.trim() } : {}),
+          // Upper-cased so "tc-bfv" and "TC-BFV" group as one design.
+          ...(r.styleCode.trim() ? { styleCode: r.styleCode.trim().toUpperCase() } : {}),
+          ...(r.colourName.trim() ? { colourName: r.colourName.trim() } : {}),
           ...(num(r.cost) !== undefined ? { costPrice: num(r.cost) } : {}),
           tags: [cat, ...(sub ? [sub] : []), ...(material.trim() ? [material.trim()] : [])],
           stock: num(r.stock) ?? 0,
@@ -424,6 +431,8 @@ const BatchAddProducts: React.FC<{ onClose: () => void; onSaved: () => void }> =
               <th className={`${th} w-[130px]`}>Category</th>
               <th className={`${th} w-[120px]`}>Sub category</th>
               <th className={`${th} w-[100px]`}>Code</th>
+              <th className={`${th} w-[104px]`}>Style code</th>
+              <th className={`${th} w-[104px]`}>Colour</th>
               <th className={`${th} w-[86px]`}>Cost ₹</th>
               <th className={`${th} w-[86px]`}>Price ₹ *</th>
               <th className={`${th} w-[86px]`}>MRP ₹</th>
@@ -462,6 +471,18 @@ const BatchAddProducts: React.FC<{ onClose: () => void; onSaved: () => void }> =
                   <td className="py-1 pr-2">
                     <input value={r.code} onChange={e => setRow(i, { code: e.target.value })}
                       placeholder="HA6758" aria-label={`Supplier code, row ${i + 1}`} className="input-box w-full" />
+                  </td>
+                  {/* Same style code on every colour of one design; each row its
+                      own colour. Blank on both is fine — a piece that comes in
+                      one colour needs neither. */}
+                  <td className="py-1 pr-2">
+                    <input value={r.styleCode} onChange={e => setRow(i, { styleCode: e.target.value })}
+                      list="batch-style-codes"
+                      placeholder="TC-BFV" aria-label={`Style code, row ${i + 1}`} className="input-box w-full" />
+                  </td>
+                  <td className="py-1 pr-2">
+                    <input value={r.colourName} onChange={e => setRow(i, { colourName: e.target.value })}
+                      placeholder="Emerald" aria-label={`Colour name, row ${i + 1}`} className="input-box w-full" />
                   </td>
                   <td className="py-1 pr-2">
                     <input value={r.cost} onChange={e => setRow(i, { cost: e.target.value })}
@@ -502,6 +523,15 @@ const BatchAddProducts: React.FC<{ onClose: () => void; onSaved: () => void }> =
             })}
           </tbody>
         </table>
+        {/* The style codes already used in this batch. Entering the second
+            colour of a design is then a pick rather than a retype, and a typo
+            that would quietly split one design into two groups is much harder
+            to make. */}
+        <datalist id="batch-style-codes">
+          {Array.from(new Set(rows.map(r => r.styleCode.trim().toUpperCase()).filter(Boolean)))
+            .sort()
+            .map(sc => <option key={sc} value={sc} />)}
+        </datalist>
 
         <button
           onClick={() => setRows(prev => [...prev, ...Array.from({ length: 5 }, blankRow)])}

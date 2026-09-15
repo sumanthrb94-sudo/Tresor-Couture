@@ -12,6 +12,7 @@ import StickyAddToCart from '../components/StickyAddToCart';
 import DeliveryChecker from '../components/DeliveryChecker';
 import { productsApi } from '../lib/firebase';
 import { buildGallery } from '../lib/productGallery';
+import { colourSiblings } from '../lib/styleGroup';
 import { useCatalog } from '../context/CatalogContext';
 import { useProductMeta } from '../lib/seoMeta';
 import { analytics } from '../lib/analytics';
@@ -98,6 +99,13 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
   // sees — main photo first, no duplicate shots, never a swatch in front of a
   // real photograph — can be tested without mounting the page.
   const gallery = useMemo(() => (fabric ? buildGallery(fabric) : []), [fabric]);
+
+  // The other colourways of this design. Grouping rules live in lib/styleGroup.ts
+  // so "which colours does a shopper see" can be tested without mounting a page.
+  const siblings = useMemo(
+    () => (fabric ? colourSiblings(fabric, catalogProducts) : []),
+    [fabric, catalogProducts],
+  );
 
   if (fabric === undefined) {
     return (
@@ -283,6 +291,54 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
                 {fabric.productCode && (
                   <span className="text-[12px] text-[color:var(--color-myntra-ink-mute)]">Code: {fabric.productCode}</span>
                 )}
+              </div>
+            )}
+
+            {/* Colourways of this design — each one a separate product.
+                Swatches are the actual PHOTOGRAPHS rather than hex circles: for
+                lace the weave and the density of the work differ between
+                colourways as much as the colour does, and a flat dot of colour
+                shows none of that. */}
+            {siblings.length > 1 && (
+              <div className="mt-5 mb-5" data-testid="colourways">
+                <p className="text-[13px] font-extrabold uppercase tracking-wider text-[color:var(--color-myntra-navy)] mb-3">
+                  Also in {siblings.length - 1} more colour{siblings.length - 1 === 1 ? '' : 's'}
+                </p>
+                <div className="flex gap-2.5 flex-wrap">
+                  {siblings.map(s => (
+                    <button
+                      key={s.id}
+                      onClick={() => { if (!s.isCurrent) navigate({ name: 'product', id: s.id }); }}
+                      aria-current={s.isCurrent ? 'true' : undefined}
+                      aria-label={`${s.colour}${s.soldOut ? ', sold out' : ''}`}
+                      title={s.colour}
+                      className={`w-[58px] shrink-0 text-left ${s.isCurrent ? '' : 'cursor-pointer'}`}
+                    >
+                      <span
+                        className={`block aspect-square overflow-hidden border-2 transition-colors ${
+                          s.isCurrent
+                            ? 'border-[color:var(--color-myntra-pink)]'
+                            : 'border-[color:var(--color-myntra-border)] hover:border-[color:var(--color-myntra-navy)]'
+                        }`}
+                      >
+                        <FabricImage
+                          photo={s.photo}
+                          fallback={s.fallback}
+                          alt={s.colour}
+                          className={`w-full h-full object-cover ${s.soldOut ? 'opacity-45' : ''}`}
+                        />
+                      </span>
+                      <span className="block text-[10px] leading-tight mt-1 font-semibold text-[color:var(--color-myntra-navy)] line-clamp-2">
+                        {s.colour}
+                      </span>
+                      {s.soldOut && (
+                        <span className="block text-[9px] font-bold text-[color:var(--color-myntra-ink-mute)] uppercase tracking-wide">
+                          Sold out
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
