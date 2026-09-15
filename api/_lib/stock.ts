@@ -10,6 +10,11 @@ import type { Firestore, Transaction } from 'firebase-admin/firestore';
 
 export interface StockLine {
   fabricId: string;
+  /** Units LEAVING THE SHELF, which is not always the quantity ordered.
+   *  Lace is stocked in metres with a bundle price break, and when rounding a
+   *  part-bundle up is the cheaper way to cover an order the customer is handed
+   *  the whole bundle — so eight metres ordered can take nine metres of stock.
+   *  Callers pass `PricedLine.metersGiven ?? quantity`, never the raw request. */
   quantity: number;
 }
 

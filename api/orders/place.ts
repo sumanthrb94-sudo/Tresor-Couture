@@ -182,11 +182,18 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
         if (!snap.exists) throw new Error(`unknown_product:${line.fabricId}`);
         const data = (snap.data() ?? {}) as Record<string, unknown>;
         const current = readStock(data);
-        if (current < line.quantity) {
+        // What LEAVES THE SHELF, which is not always what was ordered: when
+        // rounding a part-bundle up is the cheaper way to cover an order, the
+        // customer is handed the whole bundle. Eight metres ordered against a
+        // nine-metre bundle takes nine metres of stock. Decrementing by the
+        // quantity ordered would leave a metre on the books that is not on the
+        // shelf, once per such order, until the count drifted into overselling.
+        const taken = line.metersGiven ?? line.quantity;
+        if (current < taken) {
           throw new Error(`insufficient_stock:${line.fabricId}`);
         }
         tx.update(snap.ref, {
-          stock: current - line.quantity,
+          stock: current - taken,
           updatedAt: new Date().toISOString(),
         });
       }

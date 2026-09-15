@@ -12,6 +12,7 @@
  * not added again to the total. Free shipping >= ₹1999 else ₹99; COD adds ₹50.
  */
 import type { Firestore } from 'firebase-admin/firestore';
+import { costOf, type LaceTerms } from './lacePricing.js';
 
 export const COD_SURCHARGE = 50;
 export const FREE_SHIPPING_THRESHOLD = 1999;
@@ -29,6 +30,13 @@ export interface PricedLine extends CartLineInput {
   lineTotal: number;
   /** Units available at compute time, if the product tracks stock. */
   stock?: number;
+  /** Whole bundles charged on this line, when the product has a bundle break. */
+  bundles?: number;
+  /** Metres charged at the loose rate. */
+  looseMeters?: number;
+  /** Metres the customer receives. Larger than `quantity` when rounding a
+   *  part-bundle up was the cheaper way to cover the order. */
+  metersGiven?: number;
 }
 
 export interface PriceBreakdown {
@@ -95,17 +103,34 @@ export async function computeBreakdown(
     if (!snap.exists) throw new Error(`unknown_product:${raw.fabricId}`);
     const data = (snap.data() ?? {}) as Record<string, unknown>;
     const price = readPrice(data);
+    // Lace is priced in metres with a bundle break; everything else is
+    // price x quantity, which is what costOf() returns when there is no break.
+    // The rule lives in lacePricing.ts so the cart's on-screen total and this
+    // authoritative total cannot drift apart.
+    const terms: LaceTerms = {
+      price,
+      unitType: typeof data.unitType === 'string' ? data.unitType : undefined,
+      bundleSizeMeters: typeof data.bundleSizeMeters === 'number' ? data.bundleSizeMeters : undefined,
+      bundlePrice: typeof data.bundlePrice === 'number' ? data.bundlePrice : undefined,
+    };
+    const cost = costOf(terms, quantity);
     lines.push({
       fabricId: String(raw.fabricId),
       quantity,
       color: raw.color,
       price,
-      lineTotal: Math.round(price * quantity),
+      lineTotal: cost.total,
       stock: readStock(data),
+      ...(cost.bundles > 0 || cost.metersGiven !== quantity
+        ? { bundles: cost.bundles, looseMeters: cost.looseMeters, metersGiven: cost.metersGiven }
+        : {}),
     });
   }
 
-  const subtotal = lines.reduce((s, l) => s + l.price * l.quantity, 0);
+  // Sum the LINE TOTALS, not price x quantity: with a bundle break those two
+  // differ, and a subtotal that disagreed with the lines above it would be the
+  // number the customer disputes.
+  const subtotal = lines.reduce((s, l) => s + l.lineTotal, 0);
 
   // Coupon — looked up by document id (uppercased code), same as the client.
   let couponDiscount = 0;

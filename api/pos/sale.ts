@@ -239,7 +239,13 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
         return { orderId: String(lockSnap.data()?.orderId ?? ''), alreadyProcessed: true };
       }
 
-      await decrementStockInTx(tx, db, items.map(i => ({ fabricId: i.fabricId, quantity: i.quantity })));
+      // Taken from the PRICED lines, not the raw ticket: pricing is what knows
+      // that a part-bundle was rounded up to a whole one, and the shelf has to
+      // lose the metres the customer actually walks out with.
+      await decrementStockInTx(tx, db, breakdown.lines.map(l => ({
+        fabricId: l.fabricId,
+        quantity: l.metersGiven ?? l.quantity,
+      })));
 
       const orderRef = db.collection('orders').doc();
       tx.set(orderRef, orderData);

@@ -384,7 +384,12 @@ const draftToFabric = (d: Draft, existing?: Fabric): Fabric => {
     stock: d.stock !== '' ? Number(d.stock) : undefined,
     unitType: d.unitType || undefined,
     costPrice: parseOpt(d.costPrice),
-    sellingPricePerMeter: parseNullable(d.sellingPricePerMeter),
+    // Mirrored from the selling price for lace, so the reporting screens and
+    // the CSV can never disagree with what is actually charged.
+    sellingPricePerMeter:
+      d.unitType === 'per meter' || d.unitType === 'bundle'
+        ? (Number.isFinite(Number(d.price)) ? Number(d.price) : null)
+        : parseNullable(d.sellingPricePerMeter),
     bundleSizeMeters: parseNullable(d.bundleSizeMeters),
     bundlePrice: parseNullable(d.bundlePrice),
     weaveType: d.weaveType.trim() || undefined,
@@ -1001,14 +1006,19 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
                 <span className="text-[12px] font-bold uppercase tracking-[0.12em]">Laces / Metered Pricing</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <Field label="Selling Price per Meter (₹)" error={errors.sellingPricePerMeter}>
-                  <input
-                    type="number"
-                    min={0}
-                    className="input-box"
-                    value={draft.sellingPricePerMeter}
-                    onChange={e => set('sellingPricePerMeter', e.target.value)}
-                  />
+                {/* Derived, not entered. Checkout charges `price` and nothing
+                    else — api/_lib/pricing.ts reads no other field — so a
+                    separate per-metre box was a second place to write one
+                    number: set price 200 and this 250, and the customer paid
+                    200 while every admin screen said 250. It now mirrors the
+                    selling price, which for lace IS the per-metre rate. */}
+                <Field label="Selling Price per Meter (₹)">
+                  <div className="input-box bg-[color:var(--color-myntra-bg-soft)] flex items-center justify-between">
+                    <span className="font-semibold">{draft.price === '' ? '—' : `₹${draft.price}`}</span>
+                    <span className="text-[10px] uppercase tracking-wide text-[color:var(--color-myntra-ink-mute)]">
+                      = selling price
+                    </span>
+                  </div>
                 </Field>
                 {draft.unitType === 'bundle' && (
                   <>

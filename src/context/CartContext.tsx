@@ -3,6 +3,7 @@ import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db, productsApi } from '../lib/firebase';
 import { useAuth } from './AuthContext';
 import { CartItem, Fabric } from '../types';
+import { lineTotal } from '../../api/_lib/lacePricing';
 import { FREE_SHIPPING_THRESHOLD, SHIPPING_FLAT_RATE, TAX_RATE } from '../constants';
 
 const STORAGE_KEY = 'tresor-cart-v1';
@@ -316,7 +317,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       })
       .filter((x): x is { item: CartItem; fabric: Fabric } => x !== null);
 
-    const subtotal = resolved.reduce((sum, { item, fabric }) => sum + item.quantity * fabric.price, 0);
+    // Same rule the server charges by (api/_lib/lacePricing.ts), so a lace
+    // line with a bundle break shows the price it will actually be billed.
+    const subtotal = resolved.reduce((sum, { item, fabric }) => sum + lineTotal(fabric, item.quantity), 0);
     const shipping = subtotal === 0 || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FLAT_RATE;
     // Product prices are advertised and stored as tax-inclusive ("inclusive of all taxes").
     // Report the GST component for disclosure/invoices, but do NOT add it on top again.

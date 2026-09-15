@@ -11,6 +11,7 @@ import { inStock } from '../lib/availability';
 import FabricImage from '../components/FabricImage';
 import ProductCard from '../components/ProductCard';
 import DeliveryChecker from '../components/DeliveryChecker';
+import { lineTotal } from '../../api/_lib/lacePricing';
 
 const CartPage: React.FC = () => {
   const { items, resolved, resolving, updateQuantity, removeItem, subtotal, shipping, tax, total, unitCount } = useCart();
@@ -180,7 +181,7 @@ const CartPage: React.FC = () => {
 
             {/* Items */}
             {resolved.map(({ item, fabric }) => {
-              const linePrice = item.quantity * fabric.price;
+              const linePrice = lineTotal(fabric, item.quantity);
               const stock = fabric.stock ?? 999;
               // Quantity choices: 1…min(stock, 10). Always include the current
               // value so a line that somehow exceeds the cap still renders.

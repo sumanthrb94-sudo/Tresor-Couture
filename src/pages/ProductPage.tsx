@@ -13,6 +13,7 @@ import DeliveryChecker from '../components/DeliveryChecker';
 import { productsApi } from '../lib/firebase';
 import { buildGallery } from '../lib/productGallery';
 import { colourSiblings } from '../lib/styleGroup';
+import { costOf, describeLine, hasBundleBreak } from '../../api/_lib/lacePricing';
 import { useCatalog } from '../context/CatalogContext';
 import { useProductMeta } from '../lib/seoMeta';
 import { analytics } from '../lib/analytics';
@@ -105,6 +106,16 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
   const siblings = useMemo(
     () => (fabric ? colourSiblings(fabric, catalogProducts) : []),
     [fabric, catalogProducts],
+  );
+
+  const isLace = fabric?.category === 'Laces'
+    && (fabric.unitType === 'per meter' || fabric.unitType === 'bundle');
+  // Only worth showing when a bundle break exists — for plain per-metre lace the
+  // headline price times the length is the whole story, and a box restating it
+  // is noise.
+  const laceCost = useMemo(
+    () => (fabric && hasBundleBreak(fabric) ? costOf(fabric, quantity) : null),
+    [fabric, quantity],
   );
 
   if (fabric === undefined) {
@@ -367,7 +378,12 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
             {/* Quantity stepper */}
             <div className="mb-6">
               <div className="flex items-baseline justify-between mb-3">
-                <p className="text-[13px] font-extrabold uppercase tracking-wider text-[color:var(--color-myntra-navy)]">Quantity</p>
+                <p className="text-[13px] font-extrabold uppercase tracking-wider text-[color:var(--color-myntra-navy)]">
+                  {isLace ? 'Length' : 'Quantity'}
+                </p>
+                {isLace && (
+                  <span className="text-[12px] font-semibold text-[color:var(--color-myntra-ink-soft)]">in meters</span>
+                )}
               </div>
               {soldOut ? (
                 <p className="text-[13px] font-bold text-[color:var(--color-myntra-pink)] bg-[color:var(--color-myntra-bg-sale)] border border-[color:var(--color-myntra-border)] rounded px-3 py-2">
@@ -394,9 +410,35 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
                       <Plus className="w-4 h-4" />
                     </button>
                   </div>
+                  {/* What this length actually costs, and why. A bundle is a
+                      price break on the same metres, so a customer asking for
+                      eight of a nine-metre bundle is charged the bundle price
+                      and handed the ninth metre — cheaper than eight loose. Say
+                      so plainly here rather than letting the total look wrong. */}
+                  {laceCost && (
+                    <div className="mt-3 text-[12px] rounded border border-[#D6C9E9] bg-[#F7F4FB] px-3 py-2" data-testid="lace-cost">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="font-semibold text-[#5C3A8E]">
+                          {describeLine(fabric, quantity) || `${quantity}m`}
+                        </span>
+                        <span className="font-extrabold text-[color:var(--color-myntra-navy)]">{formatINR(laceCost.total)}</span>
+                      </div>
+                      {laceCost.metersGiven > quantity && (
+                        <p className="mt-1 text-[color:var(--color-myntra-ink-soft)]">
+                          A full {fabric.bundleSizeMeters}m bundle costs less than {quantity}m loose, so you get{' '}
+                          <b>{laceCost.metersGiven}m</b> for the price of the bundle.
+                        </p>
+                      )}
+                      {laceCost.metersGiven === quantity && laceCost.total < laceCost.wouldHaveCost && (
+                        <p className="mt-1 text-[color:var(--color-myntra-green)] font-semibold">
+                          Bundle rate applied — you save {formatINR(laceCost.wouldHaveCost - laceCost.total)}
+                        </p>
+                      )}
+                    </div>
+                  )}
                   {stock < 10 && (
                     <p className="text-[12px] text-[color:var(--color-myntra-pink)] font-semibold mt-2">
-                      Only {stock} {fabric.category === 'Laces' ? (fabric.unitType === 'bundle' ? 'meters' : 'meters') : 'left'} in stock — order soon
+                      Only {stock} {isLace ? 'meters' : 'left'} in stock — order soon
                     </p>
                   )}
                 </>
