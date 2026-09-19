@@ -55,7 +55,7 @@ self-contained — screenshots are embedded, so nothing else is needed to read i
 |---|---|
 | [`legal-disclosure-gating.pdf`](./legal-disclosure-gating.pdf) | A placeholder or malformed GSTIN/PAN is omitted rather than printed — on the tax invoice, Terms, Contact page, storefront footer and order-confirmation email, client and server gates both |
 | [`bulk-email-html-safety.pdf`](./bulk-email-html-safety.pdf) | The bulk-email composer refuses script tags, `javascript:` URLs, inline event handlers, iframes/objects/embeds — 9 attack payloads blocked, 3 legitimate ones allowed |
-| [`checkout-payment-methods.pdf`](./checkout-payment-methods.pdf) | UPI/Card unlock **iff** `VITE_RAZORPAY_KEY_ID` is set; verified in both directions |
+| [`checkout-payment-methods.pdf`](./checkout-payment-methods.pdf) | UPI/Card unlock **iff** `VITE_CASHFREE_MODE` is set; verified in both directions |
 
 ## Known gaps
 
@@ -65,7 +65,7 @@ Deliberately **not** automated:
   real contacts via Brevo. The HTML safety guard in front of it is tested; the
   dispatch itself is a manual step against a Brevo list containing only your own
   address.
-- **Completing a Razorpay payment.** Requires the hosted modal and a real card.
+- **Completing a Cashfree payment.** Requires the hosted modal and a real card.
   The gating and the server-side verification path are covered; the charge is not.
 - **The `/api/*` serverless functions' happy paths.** They do not run under the
   static emulator preview. Their SECURITY contract is now covered by the
@@ -80,7 +80,7 @@ Deliberately **not** automated:
   ```
 
   Set `apiBase` to the deployment origin. It asserts, among other things, that a
-  forged Razorpay signature never yields a paid order, that an unsigned webhook
+  forged Cashfree signature never yields a paid order, that an unsigned webhook
   is rejected, that a non-admin cannot send bulk email, and that a foreign origin
   is refused. Note: `newman` currently crashes on Node 22 inside `object-hash`;
   run it on Node 20 or via the Postman app.

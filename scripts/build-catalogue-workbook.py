@@ -369,7 +369,7 @@ def build(path: str, with_data: bool) -> None:
 
     TASKS = [
         ('Rotate the Firebase service-account key (Firebase Console → Project settings → Service accounts → generate new, delete old)', 'Security', 'Pending', 'You', 'Current key was shared in chat — treat as exposed'),
-        ('Regenerate the live Razorpay Key Secret; update RAZORPAY_KEY_SECRET in Vercel', 'Security', 'Pending', 'You', 'Old secret appeared in a screenshot'),
+        ('Revoke the old Razorpay key and delete the RAZORPAY_* vars from Vercel', 'Security', 'Pending', 'You', 'Secret appeared in a screenshot; Razorpay is no longer used but the key still works on the account'),
         ('Paste VITE_GSTIN (from the GST certificate) into Vercel and redeploy', 'Compliance', 'Pending', 'You', 'Until then invoices/footer omit the GSTIN by design'),
         ('Update VITE_BUSINESS_ADDRESS in Vercel to the full registered address (Gachibowli · 500046)', 'Compliance', 'Pending', 'You', 'Must match the GST certificate on invoices'),
         ('Add CRON_SECRET + GOOGLE_REVIEW_URL in Vercel to switch on the review-request emails', 'Marketing', 'Pending', 'You', 'Cron is deployed and waiting on these two values'),
@@ -382,7 +382,7 @@ def build(path: str, with_data: bool) -> None:
         ('CA: confirm GST rates (5% vs 18% over ₹2,500/piece) and HSN codes per category', 'Finance', 'Pending', 'CA', 'Then per-product rates get wired into checkout + invoices'),
         ('Replace illustrative buying prices in this workbook with real PO costs', 'Finance', 'Pending', 'You', 'Blue cells on the Catalogue sheet'),
         ('Reshoot 3 product photos: HA6378, MI263, RI5687 (warehouse snapshots today)', 'Catalogue', 'Pending', 'You', 'Flagged in Photo Quality column'),
-        ('One live low-value Razorpay test payment after the key rotation', 'Finance', 'Pending', 'You', 'Proves the full prepaid path end to end'),
+        ('One live low-value Cashfree payment, then refund it', 'Finance', 'Pending', 'You', 'Proves the full prepaid path end to end'),
         ('Open Google Ads account with the new-advertiser spend-match credit (Search only)', 'Marketing', 'Blocked', 'You', 'Do AFTER reviews exist + GA4 conversions imported'),
         ('Set SENTRY_DSN in Vercel for server error alerting', 'Operations', 'Pending', 'You', 'Hooks are wired on all 12 API functions, currently inert'),
         ('If exporting: IEC registration + LUT filing (zero-rated exports without paying IGST)', 'Finance', 'Pending', 'CA', 'Only when international orders start'),

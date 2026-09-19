@@ -78,7 +78,7 @@
 <table>
   <tr><th style="width:26%">Area</th><th style="width:8%">Grade</th><th>Assessment</th></tr>
   <tr><td class="k">Commerce core</td><td><span class="grade gA">A−</span></td><td>Catalogue, cart, wishlist, coupons, 3-step checkout, COD orders, stock decremented in a transaction so overselling is impossible. Sold-out product is badged, unbuyable and de-merchandised — verified end to end today.</td></tr>
-  <tr><td class="k">Payments</td><td><span class="grade gB">B+</span></td><td>Razorpay wired with server-side amount recomputation and HMAC signature verification; a forged signature cannot yield a paid order (tested). Held back one notch: no live-card transaction has completed yet, and the exposed live Key Secret must be revoked first.</td></tr>
+  <tr><td class="k">Payments</td><td><span class="grade gB">B+</span></td><td>Cashfree wired with server-side amount recomputation and HMAC signature verification; a forged signature cannot yield a paid order (tested). Held back one notch: no live-card transaction has completed yet, and the exposed live Key Secret must be revoked first.</td></tr>
   <tr><td class="k">CRM, chat &amp; support</td><td><span class="grade gA">A</span></td><td>Per-order real-time chat proven with customer and admin in two concurrent browsers, unread badges both sides, consolidated CRM records, support inbox. The strongest subsystem.</td></tr>
   <tr><td class="k">Returns &amp; refunds</td><td><span class="grade gA">A−</span></td><td>Full RMA lifecycle; the 7-day window and delivered-only rule enforced in Firestore security rules, so they hold even against a crafted request. Money movement is manual by explicit choice.</td></tr>
   <tr><td class="k">Compliance</td><td><span class="grade gB">B</span></td><td>GST registration issued and cross-validated against PAN; invoices carry HSN and CGST/SGST split; placeholder identifiers can no longer reach any customer surface (fixed and regression-tested this week). Open: VITE_GSTIN not yet pasted into Vercel, and the garment GST rate question below.</td></tr>
@@ -103,7 +103,7 @@
 <ul>
   <li>Sold-out stock: badged, sticker suppressed, unbuyable, off the home rails, sorted last</li>
   <li>Bulk-email guard: 9 attack payloads blocked, 3 legitimate campaigns allowed</li>
-  <li>Payment-method gating in both directions; forged Razorpay signatures rejected</li>
+  <li>Payment-method gating in both directions; forged Cashfree signatures rejected</li>
   <li>Placeholder GSTIN/PAN can never print on invoice, Terms, Contact, footer or email</li>
   <li>Catalogue SEO audit engine: 7 rule assertions, clean catalogue scores 100</li>
 </ul>
@@ -120,7 +120,7 @@
 </div>
 <div class="risk">
   <h3>R2 · Exposed credentials — security, one bad actor from catastrophic</h3>
-  <p>The Firebase service-account key (full database access) was shared into a chat transcript after rotation, and a live Razorpay Key Secret appeared in a screenshot. Rotating both is ~15 minutes in two dashboards. <b>Nothing else on this list matters if these leak.</b></p>
+  <p>The Firebase service-account key (full database access) was shared into a chat transcript after rotation, and a live Cashfree Key Secret appeared in a screenshot. Rotating both is ~15 minutes in two dashboards. <b>Nothing else on this list matters if these leak.</b></p>
 </div>
 <div class="risk amber">
   <h3>R3 · Invisible storefront — growth, compounding daily</h3>
@@ -156,7 +156,7 @@
 <ul>
   <li><b>The offer, precisely:</b> India's current new-advertiser promotion is spend-matched — typically <b>spend ₹20,000 within 60 days, receive ₹20,000 in credit</b> (tiers up to ₹60k exist). It is not free money up front; it halves the effective cost of your first two months. New Ads accounts only, promo applied at signup.</li>
   <li><b>Where to point it:</b> Search campaigns on high-intent local queries — "bridal lehenga Hyderabad", "designer lehenga Gachibowli", "pre-draped saree Hyderabad" — landing on the shop. At a ₹35,999 order value, one conversion pays for the entire matched spend.</li>
-  <li><b>Prerequisites before the first rupee:</b> revoke/replace the exposed Razorpay secret (you are about to drive real buyers), import GA4 purchase events as Ads conversions (events are already wired — this is configuration, not code), and accept that Shopping/PMax stays locked until R3 (real product URLs) is done.</li>
+  <li><b>Prerequisites before the first rupee:</b> revoke/replace the exposed Cashfree secret (you are about to drive real buyers), import GA4 purchase events as Ads conversions (events are already wired — this is configuration, not code), and accept that Shopping/PMax stays locked until R3 (real product URLs) is done.</li>
   <li><b>Sequencing:</b> run ads only after Tier 0 and the abandoned-cart email exist — paid traffic into a store with no reviews and no recovery loop is buying leaks.</li>
 </ul>
 
@@ -170,7 +170,7 @@
 <h2>5 · 30 / 60 / 90 days</h2>
 <table>
   <tr><th style="width:14%">Horizon</th><th>Do</th><th style="width:34%">Exit criteria</th></tr>
-  <tr><td class="k">Days 1–30</td><td>Rotate both credentials · paste VITE_GSTIN + full address into Vercel and redeploy · CA confirms GST rates → implement per-product HSN/rate · one live ₹1 → full-price Razorpay transaction · GBP overhaul + first review asks · rewrite the 31 SKU-named products</td><td>A real paid order end to end · correct GST on every invoice · 10+ reviews · zero placeholder content</td></tr>
+  <tr><td class="k">Days 1–30</td><td>Rotate both credentials · paste VITE_GSTIN + full address into Vercel and redeploy · CA confirms GST rates → implement per-product HSN/rate · one live ₹1 → full-price Cashfree transaction · GBP overhaul + first review asks · rewrite the 31 SKU-named products</td><td>A real paid order end to end · correct GST on every invoice · 10+ reviews · zero placeholder content</td></tr>
   <tr><td class="k">Days 31–60</td><td>Abandoned-cart + review-request automations · open Google Ads account with credit, Search-only, conversion import verified · Sentry DSN + Upstash on</td><td>₹20k spend matched · first attributable ad-driven sale · recovery emails sending</td></tr>
   <tr><td class="k">Days 61–90</td><td>Routing migration (hash → history + prerender) · sitemap of real URLs · Merchant Center + PMax · win-back automation</td><td>Product pages indexed · Shopping ads live · organic impressions in Search Console</td></tr>
 </table>

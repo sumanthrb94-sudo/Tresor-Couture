@@ -79,10 +79,10 @@ regressions fail the tests.
 
 ### 🟢 Phase 13 · Deferred product scope
 
-- **Online payments.** Razorpay endpoints exist and are tested. To enable: set
-  `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`,
-  `VITE_RAZORPAY_KEY_ID`, then surface the UPI/Card options currently rendered
-  as "Coming soon". See `docs/PAYMENTS-SETUP.md`.
+- **Online payments.** Cashfree endpoints exist and are tested. To enable: set
+  `CASHFREE_APP_ID`, `CASHFREE_SECRET_KEY`, `CASHFREE_SECRET_KEY`,
+  `VITE_CASHFREE_MODE`, then surface the UPI/Card options currently rendered
+  as "Coming soon". See `docs/ops/cashfree-go-live.md`.
 - **Automated refund payouts.** Today refunds are recorded in the system and paid
   manually; automating them depends on the payment rail above.
 - WhatsApp order alerts (endpoint dormant pending Meta credentials).

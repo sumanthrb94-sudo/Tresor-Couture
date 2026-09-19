@@ -20,7 +20,7 @@
 | Auth | **Firebase Auth** — email/password; admin via a custom claim `admin: true` |
 | Hosting | **Vercel** (auto-deploy on merge to `main`); domain `tresorcouture.in` |
 | Email | **Brevo** (transactional order confirmation + marketing campaigns) |
-| Payments | **Razorpay** — integrated but dormant (COD-only until keys are set) |
+| Payments | **Cashfree** — integrated but dormant (COD-only until keys are set) |
 | Monitoring | **Sentry** (`@sentry/react`, `@sentry/node`), Vercel Analytics + Speed Insights |
 | Testing | **Playwright** (E2E, incl. Firebase Emulator suites), **Postman/newman** (API + security) |
 
@@ -41,7 +41,7 @@ trusted to the client:
 | Endpoint | Why it must be server-side |
 |---|---|
 | `POST /api/orders/place` | Recomputes price from authoritative product data and decrements stock. Clients may not create orders. |
-| `POST /api/payments/*` | Razorpay secret + signature verification. |
+| `POST /api/payments/*` | Cashfree secret + signature verification. |
 | `POST /api/email/*` | Brevo API key; recipient forced to the authenticated user's own verified email. |
 | `POST /api/contact` | Brevo list write + captcha verification. |
 | `POST /api/whatsapp/notify` | Meta credentials. |
@@ -132,7 +132,7 @@ firestore.rules      THE security boundary
 `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`,
 `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID`,
 `VITE_FIREBASE_APP_ID`, `VITE_FIREBASE_MEASUREMENT_ID`, `VITE_PUBLIC_APP_URL`,
-`VITE_LEGAL_NAME`, `VITE_GSTIN`, `VITE_PAN`, `VITE_RAZORPAY_KEY_ID`,
+`VITE_LEGAL_NAME`, `VITE_GSTIN`, `VITE_PAN`, `VITE_CASHFREE_MODE`,
 `VITE_HCAPTCHA_SITE_KEY`, `VITE_USE_EMULATORS` *(test only — never set in prod)*
 
 **Server (never exposed to the client):**
@@ -140,7 +140,7 @@ firestore.rules      THE security boundary
 `FIREBASE_SERVICE_ACCOUNT` (full JSON — **required** for order placement),
 `FIREBASE_PROJECT_ID`, `ALLOWED_ORIGIN`, `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`,
 `BREVO_SENDER_NAME`, `BREVO_LIST_ID`, `BREVO_WELCOME_TEMPLATE_ID`,
-`RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`,
+`CASHFREE_APP_ID`, `CASHFREE_SECRET_KEY`, `CASHFREE_SECRET_KEY`,
 `HCAPTCHA_SECRET`, `SENTRY_DSN`, `UPSTASH_REDIS_REST_URL`,
 `UPSTASH_REDIS_REST_TOKEN` *(optional)*
 

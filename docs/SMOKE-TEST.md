@@ -78,8 +78,8 @@ curl -s -X POST https://tresorcouture.in/api/payments/create-order \
 
 | Response | Meaning |
 |---|---|
-| `503 {"error":"payments_not_configured"}` | Razorpay keys / Firebase service account not set yet → checkout runs in **demo mode**. |
-| `400`/`409` about the product/amount | ✅ Razorpay + Admin SDK ARE wired (it got far enough to price the cart). |
+| `503 {"error":"payments_not_configured"}` | Cashfree keys / Firebase service account not set yet → checkout runs in **demo mode**. |
+| `400`/`409` about the product/amount | ✅ Cashfree + Admin SDK ARE wired (it got far enough to price the cart). |
 
 ---
 
@@ -90,7 +90,7 @@ On `https://tresorcouture.in`:
 2. **Cart math:** add 2 qty of a per-unit item + a per-meter length → subtotal/GST/shipping correct; free shipping over ₹1,999.
 3. **Newsletter:** submit the footer form → success message. Then check Brevo Contacts + the Firestore `subscribers` collection for the row.
 4. **Consent banner:** appears; after Accept, GA4 Realtime + Meta Pixel Helper show `page_view`/`PageView` (only if `VITE_GA4_MEASUREMENT_ID`/`VITE_META_PIXEL_ID` are set).
-5. **Checkout (demo or Razorpay TEST keys):** complete an order → confirmation page → the `order_placed` Brevo automation sends the email (and, if the `mail/` extension is also on, watch for a DUPLICATE — see double-send note).
+5. **Checkout (demo or Cashfree TEST keys):** complete an order → confirmation page → the `order_placed` Brevo automation sends the email (and, if the `mail/` extension is also on, watch for a DUPLICATE — see double-send note).
 6. **Admin:** footer → Atelier Admin → passcode (NOT the default `tresor-atelier`) → change an order status.
 7. **Auth:** register a new account → your Brevo `signup` automation fires the welcome.
 

@@ -11,8 +11,8 @@
 | Area | What is now in place |
 |---|---|
 | **Security** | Hardcoded admin password removed; Firebase config fallbacks removed; CSP enforced; CSRF double-submit cookies on all state-changing APIs; CORS pinned to allowed origins; Firestore rules block client order writes. |
-| **Revenue / inventory** | `/api/orders/place` decrements stock inside the order transaction; client-side order fallback removed; Razorpay scaffolding is server-authoritative. |
-| **Abuse protection** | Upstash-Redis-backed global rate limiting on contact, order placement, and Razorpay order creation; hCaptcha on newsletter capture. |
+| **Revenue / inventory** | `/api/orders/place` decrements stock inside the order transaction; client-side order fallback removed; Cashfree scaffolding is server-authoritative. |
+| **Abuse protection** | Upstash-Redis-backed global rate limiting on contact, order placement, and Cashfree order creation; hCaptcha on newsletter capture. |
 | **Observability** | Sentry wired on frontend + critical API routes; `/api/health` endpoint reports service configuration status. |
 | **Legal / brand safety** | 40-minute delivery claims removed from customer surfaces; business-identity placeholders clearly marked for replacement. |
 
@@ -23,7 +23,7 @@
 Before you start, make sure you can log into:
 1. **Firebase Console** — https://console.firebase.google.com/project/tresor-couture
 2. **Vercel Dashboard** — https://vercel.com/dashboard
-3. **Razorpay Dashboard** — https://dashboard.razorpay.com (sign up + complete KYC)
+3. **Cashfree Dashboard** — https://merchant.cashfree.com (sign up + complete KYC)
 4. **Brevo** — https://app.brevo.com (free tier is enough to start)
 5. **Upstash** — https://console.upstash.com (optional but recommended)
 6. **hCaptcha** — https://dashboard.hcaptcha.com (optional but recommended)
@@ -93,7 +93,7 @@ Add or verify every variable below in **Vercel → Project → Settings → Envi
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | `102541847727` | Firebase Console |
 | `VITE_FIREBASE_APP_ID` | `1:102541847727:web:...` | Firebase Console |
 | `VITE_FIREBASE_MEASUREMENT_ID` | `G-...` | Firebase Console (Analytics) |
-| `VITE_RAZORPAY_KEY_ID` | `rzp_live_...` | Razorpay Dashboard → Settings → API Keys |
+| `VITE_CASHFREE_MODE` | `production` | Literally the word — it only tells the browser SDK which Cashfree to talk to |
 | `VITE_HCAPTCHA_SITE_KEY` | Your hCaptcha site key | hCaptcha Dashboard → Sites |
 | `VITE_SENTRY_DSN` | Your Sentry DSN | Sentry → Project → Settings → Client Keys (DSN) |
 
@@ -104,9 +104,9 @@ Add or verify every variable below in **Vercel → Project → Settings → Envi
 | `ALLOWED_ORIGIN` | `https://tresorcouture.in,https://www.tresorcouture.in` | Your domains (comma-separated) |
 | `FIREBASE_PROJECT_ID` | `tresor-couture` | Firebase project id |
 | `FIREBASE_SERVICE_ACCOUNT` | Entire service-account JSON | Section 3.1 |
-| `RAZORPAY_KEY_ID` | `rzp_live_...` | Razorpay Dashboard → Settings → API Keys |
-| `RAZORPAY_KEY_SECRET` | `rzp_live_...` secret | Razorpay Dashboard → Settings → API Keys |
-| `RAZORPAY_WEBHOOK_SECRET` | Webhook secret from Razorpay | Section 6 |
+| `CASHFREE_APP_ID` | Your App ID | Cashfree Dashboard → Developers → API Keys |
+| `CASHFREE_SECRET_KEY` | Your Secret Key — also signs webhooks, so there is no separate webhook secret | Cashfree Dashboard → Developers → API Keys |
+| `CASHFREE_ENV` | `production` — anything else stays on sandbox | Section 6 |
 | `BREVO_API_KEY` | `xkeysib-...` | Brevo → Account → SMTP & API → API Keys |
 | `BREVO_SENDER_EMAIL` | `orders@tresorcouture.in` | A sender you verify in Brevo |
 | `BREVO_SENDER_NAME` | `Tresor Couture` | Display name |
@@ -156,36 +156,42 @@ website:  'https://tresorcouture.in',
 
 ---
 
-## 6. Razorpay setup
+## 6. Cashfree setup
 
-### 6.1 Activate Razorpay account
+### 6.1 Activate Cashfree account
 
-1. Sign up at https://razorpay.com.
+1. Sign up at https://cashfree.com.
 2. Complete KYC and business verification.
 3. Switch to **Live Mode** in the dashboard.
 
 ### 6.2 Generate API keys
 
-1. Razorpay Dashboard → **Settings → API Keys**.
-2. Generate **Live** key pair.
+1. Cashfree Dashboard → **Developers → API Keys**.
+2. Copy the **App ID** and **Secret Key**.
 3. Add to Vercel:
-   - `VITE_RAZORPAY_KEY_ID` (public)
-   - `RAZORPAY_KEY_ID` (server)
-   - `RAZORPAY_KEY_SECRET` (server)
+   - `VITE_CASHFREE_MODE` = `production` (public — one word, no key)
+   - `CASHFREE_APP_ID` (server)
+   - `CASHFREE_SECRET_KEY` (server)
+   - `CASHFREE_ENV` = `production` (server)
+
+`CASHFREE_ENV` must read exactly `production` to reach real cards. Unset, blank,
+`prod` or `true` all stay on sandbox, so a typo can only fail to go live rather
+than quietly start charging people.
 
 ### 6.3 Configure webhook
 
-1. Razorpay Dashboard → **Settings → Webhooks → Add New Webhook**.
+1. Cashfree Dashboard → **Developers → Webhooks → Add Webhook Endpoint**.
 2. URL: `https://tresorcouture.in/api/payments/webhook`
-3. Secret: generate a strong random string and add it to Vercel as `RAZORPAY_WEBHOOK_SECRET`.
-4. Active events: select at least `payment.captured`.
+3. No secret to generate: Cashfree signs with your Secret Key, as
+   `base64(HMAC-SHA256(timestamp + rawBody))`.
+4. Subscribe to at least `PAYMENT_SUCCESS_WEBHOOK`.
 5. Save.
 
 ### 6.4 Test before going live
 
-1. Set Razorpay to **Test Mode**.
+1. Leave `CASHFREE_ENV` unset (or set it to `sandbox`) on a Preview deployment.
 2. Use Test keys in a staging/preview Vercel deployment.
-3. Run an end-to-end purchase with Razorpay test cards:
+3. Run an end-to-end purchase with Cashfree test cards:
    - Card: `5267 3181 8797 5449`
    - Expiry: any future date
    - CVV: any 3 digits
@@ -266,7 +272,7 @@ Expected healthy response (HTTP 200):
   "ok": true,
   "checks": [
     { "name": "firebase_admin", "configured": true, "required": true },
-    { "name": "razorpay", "configured": true, "required": false },
+    { "name": "cashfree", "configured": true, "required": false },
     ...
   ]
 }
@@ -294,7 +300,7 @@ Alert channels: email, Slack, or PagerDuty.
 The policy content exists in `src/content/policies.ts` and is rendered by `LegalPage`. Before launch:
 
 1. Review every policy (Privacy, Terms, Refund/Cancellation, Shipping, Cookies, Contact).
-2. Have a lawyer review them for Indian D2C and Razorpay requirements.
+2. Have a lawyer review them for Indian D2C and Cashfree requirements.
 3. Update `src/lib/business.ts` so legal details are real.
 4. Make sure footer links route correctly (they already point to `/#/policy/:id`).
 
@@ -310,7 +316,7 @@ After all env vars are set and deployed, run through this manually:
    - Signed-in user path works.
    - COD order places successfully.
    - Product stock decrements in Firestore.
-4. Razorpay test card payment works (in Test mode).
+4. Cashfree test card payment works (in Test mode).
 5. Order confirmation email arrives.
 6. Admin panel loads; admin can change order status.
 7. `/api/health` returns `ok: true`.
@@ -324,7 +330,7 @@ After all env vars are set and deployed, run through this manually:
 | Frequency | Action |
 |---|---|
 | Daily | Check Sentry for new errors; check uptime monitor. |
-| Weekly | Review Razorpay settlements vs Firestore orders. |
+| Weekly | Review Cashfree settlements vs Firestore orders. |
 | Weekly | Check hCaptcha / Upstash logs for abuse spikes. |
 | Monthly | Patch npm dependencies (`npm audit fix`). |
 | Quarterly | Review Firestore rules, env vars, and access. |

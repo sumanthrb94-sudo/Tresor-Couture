@@ -42,5 +42,5 @@ update the document.
 [`../PRODUCTION-CHECKLIST.md`](../PRODUCTION-CHECKLIST.md) ·
 [`../INCIDENT-RUNBOOK.md`](../INCIDENT-RUNBOOK.md) ·
 [`../SMOKE-TEST.md`](../SMOKE-TEST.md) ·
-[`../PAYMENTS-SETUP.md`](../PAYMENTS-SETUP.md) ·
+[`../ops/cashfree-go-live.md`](../ops/cashfree-go-live.md) ·
 [`../../MANUAL-ACTIONS.md`](../../MANUAL-ACTIONS.md)

@@ -8,16 +8,18 @@
  * }
  *
  * Recomputes the authoritative amount server-side from Firestore product
- * prices (the client total is ignored), creates a Razorpay order for that
- * amount, and returns the order id + amount + public key id so the browser
- * can open Razorpay Checkout.
+ * prices (the client total is ignored), creates a Cashfree order for that
+ * amount, and returns a single-use `payment_session_id` the browser uses to
+ * open the Cashfree modal.
  *
- * If Razorpay keys are absent the endpoint returns 503 `payments_not_configured`
+ * The browser never learns a key and never states an amount: the session id is
+ * bound to a total Cashfree already holds.
+ *
+ * If Cashfree keys are absent the endpoint returns 503 `payments_not_configured`
  * so the client falls back to the demo flow gracefully.
  */
 import { getDb, firebaseAdminConfigured } from '../_lib/firebaseAdmin.js';
 import { computeBreakdown } from '../_lib/pricing.js';
-import { getRazorpay, razorpayConfigured } from '../_lib/razorpay.js';
 import {
   cashfreeConfigured, createCashfreeOrder, newCashfreeOrderId, normalisePhone,
 } from '../_lib/cashfree.js';
@@ -55,7 +57,7 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
     return;
   }
 
-  // 10 Razorpay order creations per IP per minute.
+  // 10 order creations per IP per minute.
   const CREATE_ORDER_RATE_LIMIT = { window: 60, max: 10 };
   for (const [k, v] of Object.entries(rateLimitHeaders(CREATE_ORDER_RATE_LIMIT))) {
     res.setHeader(k, v);
@@ -65,12 +67,8 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
     return;
   }
 
-  // Credential gate — let the client fall back to demo mode. Cashfree is
-  // preferred when configured; Razorpay stays as the fallback so switching
-  // gateway is an environment change rather than a deploy, and so a bad
-  // go-live can be undone in the time it takes to unset two variables.
-  const useCashfree = cashfreeConfigured();
-  if (!useCashfree && !razorpayConfigured()) {
+  // Credential gate — let the client fall back to demo mode.
+  if (!cashfreeConfigured()) {
     res.status(503).json({ error: 'payments_not_configured' });
     return;
   }
@@ -101,78 +99,43 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
       paymentMethod: body.paymentMethod,
     });
 
-    if (breakdown.amountMinor < 100) {
-      // Razorpay rejects amounts under ₹1.00.
+    if (breakdown.total < 1) {
+      // Cashfree rejects an order below ₹1.00.
       res.status(400).json({ error: 'amount_too_low' });
       return;
     }
 
-    if (useCashfree) {
-      const phone = normalisePhone(body.customer?.phone);
-      if (phone.length !== 10) {
-        res.status(400).json({ error: 'customer_phone_required' });
-        return;
-      }
-      const orderId = newCashfreeOrderId();
-      const origin = header(req, 'origin') || `https://${header(req, 'host') ?? 'tresorcouture.in'}`;
-      const created = await createCashfreeOrder({
-        orderId,
-        // RUPEES here, not paise: Cashfree takes a decimal amount where
-        // Razorpay takes an integer minor unit.
-        amount: breakdown.total,
-        currency: breakdown.currency,
-        customer: {
-          id: decoded.uid,
-          phone,
-          name: body.customer?.name,
-          email: body.customer?.email,
-        },
-        // {order_id} is a literal placeholder Cashfree substitutes when a bank
-        // or UPI app sends the shopper back to us.
-        returnUrl: `${origin}/checkout?cf_order={order_id}`,
-        notifyUrl: `${origin}/api/payments/webhook`,
-        note: `${breakdown.lines.length} item(s)`,
-      });
-
-      res.status(200).json({
-        provider: 'cashfree',
-        orderId: created.orderId,
-        paymentSessionId: created.paymentSessionId,
-        amount: breakdown.amountMinor,
-        currency: breakdown.currency,
-        breakdown: {
-          subtotal: breakdown.subtotal,
-          couponCode: breakdown.couponCode ?? null,
-          couponDiscount: breakdown.couponDiscount,
-          tax: breakdown.tax,
-          shipping: breakdown.shipping,
-          codSurcharge: breakdown.codSurcharge,
-          total: breakdown.total,
-        },
-      });
+    const phone = normalisePhone(body.customer?.phone);
+    if (phone.length !== 10) {
+      res.status(400).json({ error: 'customer_phone_required' });
       return;
     }
-
-    const razorpay = getRazorpay();
-    const order = await razorpay.orders.create({
-      amount: breakdown.amountMinor,
+    const orderId = newCashfreeOrderId();
+    const origin = header(req, 'origin') || `https://${header(req, 'host') ?? 'tresorcouture.in'}`;
+    const created = await createCashfreeOrder({
+      orderId,
+      // RUPEES as a decimal, NOT paise. Sending a minor-unit integer here
+      // would charge a hundred times the order.
+      amount: breakdown.total,
       currency: breakdown.currency,
-      receipt: `tc_${Date.now().toString(36)}`,
-      notes: {
-        itemCount: String(breakdown.lines.length),
-        couponCode: breakdown.couponCode ?? '',
-        paymentMethod: body.paymentMethod ?? '',
-        userId: decoded.uid,
+      customer: {
+        id: decoded.uid,
+        phone,
+        name: body.customer?.name,
+        email: body.customer?.email,
       },
+      // {order_id} is a literal placeholder Cashfree substitutes when a bank
+      // or UPI app sends the shopper back to us.
+      returnUrl: `${origin}/checkout?cf_order={order_id}`,
+      notifyUrl: `${origin}/api/payments/webhook`,
+      note: `${breakdown.lines.length} item(s)`,
     });
 
     res.status(200).json({
-      provider: 'razorpay',
-      orderId: order.id,
-      amount: breakdown.amountMinor,
+      orderId: created.orderId,
+      paymentSessionId: created.paymentSessionId,
+      amount: breakdown.total,
       currency: breakdown.currency,
-      razorpayKeyId: process.env.RAZORPAY_KEY_ID,
-      // Echo the breakdown so the UI can show an authoritative summary.
       breakdown: {
         subtotal: breakdown.subtotal,
         couponCode: breakdown.couponCode ?? null,
@@ -183,6 +146,7 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
         total: breakdown.total,
       },
     });
+
   } catch (err) {
     const message = err instanceof Error ? err.message : 'create_order_failed';
     if (message.startsWith('unknown_product')) {

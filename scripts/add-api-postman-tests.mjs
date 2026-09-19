@@ -90,33 +90,35 @@ const items = [
       body: JSON.stringify({ items: [{ fabricId: '1', quantity: 1 }], paymentMethod: 'card' }, null, 2),
     }),
     event: [t(
-      "// Must not mint a Razorpay order for an anonymous caller.",
+      "// Must not mint a payment order for an anonymous caller.",
       "pm.test('no anonymous payment order', () => pm.expect([401,403,503]).to.include(pm.response.code));",
-      "pm.test('no razorpay order id leaked', () => pm.expect(pm.response.text()).to.not.match(/order_[A-Za-z0-9]/));",
+      "pm.test('no payment session leaked', () => pm.expect(pm.response.text()).to.not.match(/payment_session_id/));",
     )],
   },
   {
-    name: 'Payments · POST /api/payments/verify with a forged signature (expect 400/401/403/503)',
+    name: 'Payments · POST /api/payments/verify with a forged order id (expect 400/401/403/409/503)',
     request: req('POST', '/api/payments/verify', {
       headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': '{{csrfToken}}', Cookie: 'tresor_csrf={{csrfToken}}' },
       auth: 'Bearer {{idToken}}',
       body: JSON.stringify({
-        success: { razorpay_order_id: 'order_FORGED', razorpay_payment_id: 'pay_FORGED', razorpay_signature: 'deadbeef' },
+        cashfree_order_id: 'tc_FORGED_does_not_exist',
         order: { items: [{ fabricId: '1', quantity: 1 }], paymentMethod: 'card', shippingAddress: {} },
       }, null, 2),
     }),
     event: [t(
-      "// THE critical payment control: a forged signature must never produce a paid order.",
-      "pm.test('forged signature rejected', () =>",
-      "  pm.expect([400,401,403,503]).to.include(pm.response.code));",
+      "// THE critical payment control: claiming an order was paid must never",
+      "// produce a paid order. The server asks Cashfree, which has never heard",
+      "// of this id, so there is nothing to forge.",
+      "pm.test('forged order id rejected', () =>",
+      "  pm.expect([400,401,403,409,503]).to.include(pm.response.code));",
       "pm.test('response is not a success', () => pm.expect(pm.response.text()).to.not.include('\"ok\":true'));",
     )],
   },
   {
     name: 'Payments · POST /api/payments/webhook with a bad signature (expect 400/401/503)',
     request: req('POST', '/api/payments/webhook', {
-      headers: { 'Content-Type': 'application/json', 'X-Razorpay-Signature': 'not-a-valid-signature' },
-      body: JSON.stringify({ event: 'payment.captured', payload: {} }, null, 2),
+      headers: { 'Content-Type': 'application/json', 'x-webhook-signature': 'not-a-valid-signature' },
+      body: JSON.stringify({ type: 'PAYMENT_SUCCESS_WEBHOOK', data: { order: { order_id: 'tc_FORGED' } } }, null, 2),
     }),
     event: [t(
       "pm.test('unsigned webhook rejected', () => pm.expect([400,401,403,503]).to.include(pm.response.code));",

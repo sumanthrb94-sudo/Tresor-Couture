@@ -12,7 +12,7 @@ Fast reference for when production (https://tresorcouture.in) is broken. Keep it
 |---|---|---|
 | Incident lead (decides rollback) | [NAME] | [PHONE] |
 | Engineering | [NAME] | [EMAIL/PHONE] |
-| Payments/Finance (Razorpay) | [NAME] | [PHONE] |
+| Payments/Finance (Cashfree) | [NAME] | [PHONE] |
 | Comms (customers/social) | [NAME] | [PHONE] |
 
 Escalate to the incident lead for any SEV1 within 5 minutes.
@@ -25,7 +25,7 @@ Escalate to the incident lead for any SEV1 within 5 minutes.
 ## 3. First checks (triage, ~2 min)
 - Vercel → Deployments: is the latest deploy **Ready** or **Error**? Check build logs.
 - Firebase Console → Firestore: rules published? quota/usage exceeded? (Spark plan caps.)
-- Razorpay Dashboard: payments succeeding? webhook delivering 200s?
+- Cashfree Dashboard: payments succeeding? webhook delivering 200s?
 - Browser console on the live site: JS errors / CSP blocks / failed network calls.
 
 ## 4. Rollback strategies (fastest first)
@@ -46,15 +46,15 @@ Rules are independent of the app deploy.
 
 ### D. Env/secret/config issue
 - Vercel → Settings → Environment Variables. Fix the value, then **redeploy** (env changes need a new deployment).
-- Payments down? Verify `RAZORPAY_KEY_ID/SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `FIREBASE_SERVICE_ACCOUNT`.
+- Payments down? Verify `CASHFREE_APP_ID/SECRET`, `CASHFREE_SECRET_KEY`, `FIREBASE_SERVICE_ACCOUNT`.
 - Email down? Verify `BREVO_API_KEY` (degrades gracefully; not SEV1).
 
 ## 5. Payment-specific (SEV1)
-- If orders are charged but not recorded: check `/api/payments/webhook` logs + Razorpay webhook delivery. Orders are reconciled server-side on verify; cross-check Razorpay payments vs Firestore `orders`.
-- If checkout fails entirely: confirm Razorpay keys are LIVE + activated; fall back to COD by disabling online payment in the UI if needed.
+- If orders are charged but not recorded: check `/api/payments/webhook` logs + Cashfree webhook delivery. Orders are reconciled server-side on verify; cross-check Cashfree payments vs Firestore `orders`.
+- If checkout fails entirely: confirm Cashfree keys are LIVE + activated; fall back to COD by disabling online payment in the UI if needed.
 
 ## 6. Security incident
-- Suspected key leak: rotate the affected secret (Razorpay, Brevo, Firebase service account) immediately; update Vercel env; redeploy.
+- Suspected key leak: rotate the affected secret (Cashfree, Brevo, Firebase service account) immediately; update Vercel env; redeploy.
 - Suspected abuse/DDoS (no WAF on Hobby): enable Vercel **Attack Challenge Mode** if available; otherwise upgrade to Pro for WAF. Tighten Firestore rules to deny the abused path.
 
 ## 7. After action (within 48h)

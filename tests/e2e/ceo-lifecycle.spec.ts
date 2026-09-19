@@ -11,7 +11,7 @@
  *
  * Requirements to run successfully:
  *   - BASE_URL pointing to a deployment with all env vars configured
- *     (FIREBASE_SERVICE_ACCOUNT, Razorpay TEST keys or COD enabled, Brevo).
+ *     (FIREBASE_SERVICE_ACCOUNT, Cashfree sandbox keys or COD enabled, Brevo).
  *   - Firestore rules deployed.
  *   - Test data seeded (products, coupons).
  *   - A dedicated test admin user with the `admin` custom claim.

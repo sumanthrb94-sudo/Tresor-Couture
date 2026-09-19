@@ -39,7 +39,7 @@ documents: [PRD](./docs/project/01-PRD.md) ·
 | Security | `firestore.rules` — this *is* the authorization layer |
 | Compute | Vercel serverless functions in `/api` (firebase-admin) |
 | Auth | Firebase Auth (email/password); admin via a custom claim |
-| Email | Brevo · **Payments** Razorpay (integrated, dormant — COD only) |
+| Email | Brevo · **Payments** Cashfree (integrated, dormant — COD only) |
 | Monitoring | Sentry · Vercel Analytics & Speed Insights |
 
 ## Run locally

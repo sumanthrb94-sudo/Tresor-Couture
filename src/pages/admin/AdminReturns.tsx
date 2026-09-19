@@ -278,7 +278,7 @@ const ReturnDrawer: React.FC<{ initial: ReturnRequest; onClose: () => void; onCh
                 <option>Store credit</option>
               </select>
               <p className="text-[11px] text-[#9A5B12] bg-[#FDF0E1] border border-[#F0D9B5] rounded p-2">
-                The gateway/bank refund is issued separately (Razorpay dashboard or bank). Marking “Refunded” records it and emails the customer.
+                The gateway/bank refund is issued separately (Cashfree dashboard or bank). Marking “Refunded” records it and emails the customer.
               </p>
             </div>
           )}

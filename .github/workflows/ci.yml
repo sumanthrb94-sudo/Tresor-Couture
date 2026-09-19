@@ -41,7 +41,7 @@ jobs:
 
       - name: Guard — no server secrets leaked into the client bundle
         run: |
-          if grep -rlE "firebase-admin|RAZORPAY_KEY_SECRET|BREVO_API_KEY" dist/assets/ 2>/dev/null; then
+          if grep -rlE "firebase-admin|CASHFREE_SECRET_KEY|BREVO_API_KEY" dist/assets/ 2>/dev/null; then
             echo "::error::A server-only package or secret name leaked into the client bundle."
             exit 1
           fi

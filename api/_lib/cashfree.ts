@@ -11,15 +11,12 @@
  * and bound to an amount Cashfree already holds. There is no public key to
  * expose and no amount the browser can restate.
  *
- * HOW THIS DIFFERS FROM RAZORPAY, and why it is safer:
+ * WHERE PAYMENT TRUTH COMES FROM:
  *
- * Razorpay hands the browser a signature and we check it with our secret. That
- * proves the browser was not tampering, but the browser is still the messenger.
- * Cashfree has no such client handshake — so instead of believing anything the
- * page reports, the server ASKS CASHFREE what happened (`fetchOrder`) and acts
- * only on `order_status: "PAID"`. Payment truth comes from the payment
- * processor over a server-to-server call, which is the strongest form available
- * and removes a whole class of forged-callback attack.
+ * Nothing the browser reports about the outcome is believed. The server ASKS
+ * CASHFREE what happened (`fetchOrder`) and acts only on
+ * `order_status: "PAID"`. Truth comes from the payment processor over a
+ * server-to-server call, so there is no client-side success token to forge.
  *
  * API: https://www.cashfree.com/docs/api-reference/payments/latest/orders
  */
@@ -107,9 +104,8 @@ async function cashfreeFetch(path: string, init: RequestInit): Promise<Record<st
 /**
  * Create the order Cashfree will collect against.
  *
- * `amount` is in RUPEES, not paise — Cashfree takes a decimal here where
- * Razorpay takes an integer minor unit, and sending paise would charge a
- * hundred times too much.
+ * `amount` is in RUPEES as a decimal, not paise. Sending a minor-unit integer
+ * here would charge a hundred times the order.
  */
 export async function createCashfreeOrder(args: {
   orderId: string;

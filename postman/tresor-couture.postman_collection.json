@@ -1714,16 +1714,16 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "// Must not mint a Razorpay order for an anonymous caller.",
+                  "// Must not mint a payment order for an anonymous caller.",
                   "pm.test('no anonymous payment order', () => pm.expect([401,403,503]).to.include(pm.response.code));",
-                  "pm.test('no razorpay order id leaked', () => pm.expect(pm.response.text()).to.not.match(/order_[A-Za-z0-9]/));"
+                  "pm.test('no payment session leaked', () => pm.expect(pm.response.text()).to.not.match(/payment_session_id/));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "Payments · POST /api/payments/verify with a forged signature (expect 400/401/403/503)",
+          "name": "Payments · POST /api/payments/verify with a forged order id (expect 400/401/403/409/503)",
           "request": {
             "method": "POST",
             "header": [
@@ -1757,7 +1757,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"success\": {\n    \"razorpay_order_id\": \"order_FORGED\",\n    \"razorpay_payment_id\": \"pay_FORGED\",\n    \"razorpay_signature\": \"deadbeef\"\n  },\n  \"order\": {\n    \"items\": [\n      {\n        \"fabricId\": \"1\",\n        \"quantity\": 1\n      }\n    ],\n    \"paymentMethod\": \"card\",\n    \"shippingAddress\": {}\n  }\n}"
+              "raw": "{\n  \"cashfree_order_id\": \"tc_FORGED_does_not_exist\",\n  \"order\": {\n    \"items\": [\n      {\n        \"fabricId\": \"1\",\n        \"quantity\": 1\n      }\n    ],\n    \"paymentMethod\": \"card\",\n    \"shippingAddress\": {}\n  }\n}"
             }
           },
           "event": [
@@ -1766,9 +1766,11 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "// THE critical payment control: a forged signature must never produce a paid order.",
-                  "pm.test('forged signature rejected', () =>",
-                  "  pm.expect([400,401,403,503]).to.include(pm.response.code));",
+                  "// THE critical payment control: claiming an order was paid must never",
+                  "// produce a paid order. The server asks Cashfree, which has never heard",
+                  "// of this id, so there is nothing to forge.",
+                  "pm.test('forged order id rejected', () =>",
+                  "  pm.expect([400,401,403,409,503]).to.include(pm.response.code));",
                   "pm.test('response is not a success', () => pm.expect(pm.response.text()).to.not.include('\"ok\":true'));"
                 ]
               }
@@ -1785,7 +1787,7 @@
                 "value": "application/json"
               },
               {
-                "key": "X-Razorpay-Signature",
+                "key": "x-webhook-signature",
                 "value": "not-a-valid-signature"
               }
             ],
@@ -1802,7 +1804,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"event\": \"payment.captured\",\n  \"payload\": {}\n}"
+              "raw": "{\n  \"type\": \"PAYMENT_SUCCESS_WEBHOOK\",\n  \"data\": {\n    \"order\": {\n      \"order_id\": \"tc_FORGED\"\n    }\n  }\n}"
             }
           },
           "event": [

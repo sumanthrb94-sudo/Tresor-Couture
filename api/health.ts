@@ -3,7 +3,7 @@
  *
  * Lightweight health/readiness probe for uptime monitors and load balancers.
  * Reports whether the critical third-party integrations are configured.
- * Does NOT perform deep dependency checks (no Firestore reads, no Brevo/Razorpay
+ * Does NOT perform deep dependency checks (no Firestore reads, no Brevo/Cashfree
  * API calls) so it stays fast and cheap.
  */
 import { handleCorsPreflight, rejectDisallowedOrigin } from './_lib/cors.js';
@@ -34,9 +34,9 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
       required: true,
     },
     {
-      name: 'razorpay',
+      name: 'cashfree',
       configured: Boolean(
-        process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET,
+        process.env.CASHFREE_APP_ID && process.env.CASHFREE_SECRET_KEY,
       ),
       required: false, // launch blocker, but site can run in demo mode without it
     },

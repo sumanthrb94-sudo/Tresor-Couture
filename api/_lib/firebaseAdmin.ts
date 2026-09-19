@@ -9,7 +9,7 @@
  *   - If neither is set, we fall back to applicationDefault() so the function
  *     still initialises in environments where ADC is implicitly available
  *     (e.g. Google Cloud). On Vercel without credentials, Firestore calls will
- *     fail — the calling handler is expected to gate on Razorpay config first.
+ *     fail — the calling handler is expected to gate on payment config first.
  *
  * The Admin SDK bypasses Firestore security rules, so all authority checks
  * (amount recomputation, stock) live in the handler code, not the rules.

@@ -200,7 +200,7 @@
       <div class="fact"><dt>Status</dt><dd>Live in production</dd></div>
       <div class="fact"><dt>Frontend</dt><dd>React 19 · TypeScript</dd></div>
       <div class="fact"><dt>Backend</dt><dd>Firebase · Vercel</dd></div>
-      <div class="fact"><dt>Payments</dt><dd>Razorpay</dd></div>
+      <div class="fact"><dt>Payments</dt><dd>Cashfree</dd></div>
       <div class="fact"><dt>Test suite</dt><dd>29 end-to-end</dd></div>
     </dl>
   </header>
@@ -230,7 +230,7 @@
       </div>
       <div class="item">
         <h3>Payments</h3>
-        <p>Razorpay, with the server as the authority: order amounts are recomputed server-side
+        <p>Cashfree, with the server as the authority: order amounts are recomputed server-side
         from the catalogue, and the payment signature is HMAC-verified before an order is ever
         marked paid.</p>
       </div>
@@ -269,7 +269,7 @@
           <tr><td>Data</td><td>Firestore, browser-direct</td><td>No always-on backend to pay for or operate</td></tr>
           <tr><td>Authorization</td><td>firestore.rules</td><td>The rules <em>are</em> the security boundary</td></tr>
           <tr><td>Server logic</td><td>Vercel functions</td><td>Only where a secret or an authority decision is needed</td></tr>
-          <tr><td>Payments</td><td>Razorpay</td><td>Server-side amount recomputation, HMAC verification</td></tr>
+          <tr><td>Payments</td><td>Cashfree</td><td>Server-side amount recomputation, HMAC verification</td></tr>
           <tr><td>Testing</td><td>Playwright + emulators</td><td>Real rules, real listeners, two concurrent browsers</td></tr>
         </tbody>
       </table>
@@ -370,7 +370,7 @@
 
   <footer>
     <p>
-      tresorcouture.in · Built with React, Firebase, Vercel and Razorpay
+      tresorcouture.in · Built with React, Firebase, Vercel and Cashfree
     </p>
   </footer>
 </div>

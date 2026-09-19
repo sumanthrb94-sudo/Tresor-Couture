@@ -1,30 +1,34 @@
 /**
  * POST /api/payments/verify
  *
- * Called by the browser after Razorpay Checkout succeeds. Body:
+ * Called by the browser after the Cashfree modal closes. Body:
  * {
- *   razorpay_order_id, razorpay_payment_id, razorpay_signature,
+ *   cashfree_order_id,
  *   order: {
  *     userId, items:[{fabricId, quantity, color?}], couponCode?,
  *     paymentMethod, shippingAddress
  *   }
  * }
  *
+ * NOTHING THE BROWSER SAYS ABOUT THE OUTCOME IS TRUSTED. The page reports only
+ * which order it was working on; whether money actually moved is settled by
+ * asking Cashfree over a server-to-server call. There is no client-side
+ * success token to forge, because there is no client-side success token.
+ *
  * Steps (all server-authoritative; the Admin SDK bypasses Firestore rules):
- *   1. Verify the Razorpay handshake signature.
- *   2. Recompute the authoritative amount from Firestore and confirm it
- *      equals the amount Razorpay actually captured (anti-tamper).
+ *   1. Ask Cashfree for the order and proceed only on order_status "PAID".
+ *   2. Recompute the authoritative amount from Firestore and confirm Cashfree
+ *      holds that same amount (anti-tamper).
  *   3. In a single Firestore transaction: re-read stock, reject if any line
  *      is short, decrement stock, and write the order with
- *      status:'placed' + paymentStatus:'paid' + the payment ids.
+ *      status:'placed' + paymentStatus:'paid' + the payment id.
  *
- * Idempotent on razorpay_payment_id: a repeat call returns the existing order
- * instead of double-decrementing stock.
+ * Idempotent on the Cashfree order id: a repeat call returns the existing
+ * order instead of double-decrementing stock.
  */
 import { FieldValue } from 'firebase-admin/firestore';
 import { getDb, firebaseAdminConfigured } from '../_lib/firebaseAdmin.js';
 import { computeBreakdown } from '../_lib/pricing.js';
-import { getRazorpay, razorpayConfigured, verifyCheckoutSignature } from '../_lib/razorpay.js';
 import { CASHFREE_PAID, cashfreeConfigured, fetchCashfreeOrder } from '../_lib/cashfree.js';
 import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
 import { validateCsrfToken } from '../_lib/csrf.js';
@@ -34,14 +38,9 @@ import { rateLimited, rateLimitHeaders } from '../_lib/rateLimit.js';
 import { withSentry } from '../_lib/sentry.js';
 
 interface VerifyBody {
-  /** 'cashfree' | 'razorpay'. Absent means Razorpay, so existing clients keep working. */
-  provider?: string;
-  /** Cashfree: the order id we generated at create-order time. Nothing else is
-   *  taken from the browser — the status comes from Cashfree itself. */
+  /** The order id we generated at create-order time. Nothing else is taken
+   *  from the browser — the status comes from Cashfree itself. */
   cashfree_order_id?: string;
-  razorpay_order_id?: string;
-  razorpay_payment_id?: string;
-  razorpay_signature?: string;
   order?: {
     userId?: string;
     items?: { fabricId: string; quantity: number; color?: string }[];
@@ -69,8 +68,8 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
     return;
   }
 
-  // The HMAC check is the security boundary; this bounds how fast anyone can
-  // ATTEMPT forgeries (or hammer the endpoint after a real payment).
+  // The Cashfree status lookup is the security boundary; this bounds how fast
+  // anyone can probe order ids (or hammer the endpoint after a real payment).
   const VERIFY_RATE_LIMIT = { window: 60, max: 10 };
   for (const [k, v] of Object.entries(rateLimitHeaders(VERIFY_RATE_LIMIT))) {
     res.setHeader(k, v);
@@ -80,7 +79,7 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
     return;
   }
 
-  if ((!cashfreeConfigured() && !razorpayConfigured()) || !firebaseAdminConfigured()) {
+  if (!cashfreeConfigured() || !firebaseAdminConfigured()) {
     res.status(503).json({ error: 'payments_not_configured' });
     return;
   }
@@ -93,52 +92,24 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
     return;
   }
 
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, cashfree_order_id, order } = body;
-  const viaCashfree = body.provider === 'cashfree' || Boolean(cashfree_order_id);
+  const { cashfree_order_id, order } = body;
 
   if (!order || !Array.isArray(order.items) || order.items.length === 0) {
     res.status(400).json({ error: 'empty_cart' });
     return;
   }
-  if (viaCashfree) {
-    if (!cashfreeConfigured()) {
-      res.status(503).json({ error: 'payments_not_configured' });
-      return;
-    }
-    if (!cashfree_order_id) {
-      res.status(400).json({ error: 'missing_payment_fields' });
-      return;
-    }
-  } else if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+  if (!cashfree_order_id) {
     res.status(400).json({ error: 'missing_payment_fields' });
     return;
-  }
-
-  // 1. Establish that the payment really happened.
-  //
-  // Razorpay hands the browser a signature we check with our secret. Cashfree
-  // has no such client handshake, and inventing one out of anything the page
-  // reports would be security theatre — so for Cashfree the check happens after
-  // the id lookup below, by ASKING CASHFREE. Nothing the browser says about the
-  // outcome is trusted either way.
-  if (!viaCashfree) {
-    if (!verifyCheckoutSignature({
-      razorpay_order_id: razorpay_order_id!,
-      razorpay_payment_id: razorpay_payment_id!,
-      razorpay_signature: razorpay_signature!,
-    })) {
-      res.status(400).json({ error: 'signature_mismatch' });
-      return;
-    }
   }
 
   try {
     const db = getDb();
 
-    // Idempotency: if we've already recorded this payment, return it. For
-    // Cashfree the order id is the key — an order can be attempted several
-    // times but only one attempt ever reaches PAID.
-    const paymentKey = viaCashfree ? cashfree_order_id! : razorpay_payment_id!;
+    // Idempotency: if we've already recorded this payment, return it. The
+    // order id is the key — an order can be attempted several times but only
+    // one attempt ever reaches PAID.
+    const paymentKey = cashfree_order_id;
     const existing = await db
       .collection('orders')
       .where('paymentId', '==', paymentKey)
@@ -150,39 +121,28 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
       return;
     }
 
-    // 2. Recompute authoritative amount and confirm Razorpay actually
-    //    captured that amount for this order id.
+    // 2. Recompute the authoritative amount and confirm Cashfree is holding
+    //    that same amount for this order id.
     const breakdown = await computeBreakdown(db, {
       items: order.items,
       couponCode: order.couponCode,
       paymentMethod: order.paymentMethod,
     });
 
-    if (viaCashfree) {
-      // The payment processor is the only witness worth believing.
-      const state = await fetchCashfreeOrder(cashfree_order_id!);
-      if (state.status !== CASHFREE_PAID) {
-        // ACTIVE means the shopper never completed; EXPIRED/TERMINATED means it
-        // can never complete. Neither is an error on our side, so say plainly
-        // what happened rather than returning a generic failure.
-        res.status(409).json({ error: 'payment_not_completed', status: state.status });
-        return;
-      }
-      // Cashfree holds rupees with two decimals; our total is whole rupees.
-      // Compare with a paise of tolerance rather than exact float equality.
-      if (Math.abs(state.amount - breakdown.total) > 0.01) {
-        res.status(409).json({ error: 'amount_mismatch' });
-        return;
-      }
-    } else {
-      const razorpay = getRazorpay();
-      const rzpOrder = await razorpay.orders.fetch(razorpay_order_id!);
-      const capturedAmount = Number(rzpOrder.amount);
-      if (capturedAmount !== breakdown.amountMinor) {
-        // Amount tampering or stale cart — refuse to fulfil.
-        res.status(409).json({ error: 'amount_mismatch' });
-        return;
-      }
+    // The payment processor is the only witness worth believing.
+    const state = await fetchCashfreeOrder(cashfree_order_id);
+    if (state.status !== CASHFREE_PAID) {
+      // ACTIVE means the shopper never completed; EXPIRED/TERMINATED means it
+      // can never complete. Neither is an error on our side, so say plainly
+      // what happened rather than returning a generic failure.
+      res.status(409).json({ error: 'payment_not_completed', status: state.status });
+      return;
+    }
+    // Cashfree holds rupees with two decimals; our total is whole rupees.
+    // Compare with a paise of tolerance rather than exact float equality.
+    if (Math.abs(state.amount - breakdown.total) > 0.01) {
+      res.status(409).json({ error: 'amount_mismatch' });
+      return;
     }
 
     // 3. Transactional stock decrement + order write.
@@ -236,11 +196,9 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
         placedAt: new Date().toISOString(),
         status: 'placed',
         paymentStatus: 'paid',
-        paymentProvider: viaCashfree ? 'cashfree' : 'razorpay',
+        paymentProvider: 'cashfree',
         paymentId: paymentKey,
-        ...(viaCashfree
-          ? { cashfreeOrderId: cashfree_order_id }
-          : { razorpayOrderId: razorpay_order_id }),
+        cashfreeOrderId: cashfree_order_id,
         ...(breakdown.couponCode
           ? { couponCode: breakdown.couponCode, couponDiscount: breakdown.couponDiscount }
           : {}),
@@ -260,7 +218,7 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
     const message = err instanceof Error ? err.message : 'verify_failed';
     if (message.startsWith('insufficient_stock')) {
       // Payment captured but stock ran out: flag for refund. We do NOT write a
-      // 'placed' order; the CEO should refund from the Razorpay dashboard.
+      // 'placed' order; the CEO should refund from the Cashfree dashboard.
       res.status(409).json({ error: 'insufficient_stock', detail: message, refundRequired: true });
       return;
     }

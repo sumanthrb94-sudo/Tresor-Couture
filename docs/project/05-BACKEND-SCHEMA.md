@@ -137,7 +137,7 @@ production. Sort in JS instead.
 | Data | Handling |
 |---|---|
 | Passwords | never stored — Firebase Auth |
-| Payment instruments | never stored — Razorpay holds them; only ids/signatures pass through |
+| Payment instruments | never stored — Cashfree holds them; only ids/signatures pass through |
 | Service account key | `FIREBASE_SERVICE_ACCOUNT` env var only; never in the repo |
 | Legal registrations (GSTIN/PAN) | env vars — the repository is public |
 | Customer PII (address, phone, email) | readable only by the owner and admins |

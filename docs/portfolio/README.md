@@ -15,20 +15,20 @@ section admin console — built and deployed end to end.
 > **Tresor Couture — luxury fashion e-commerce platform**
 >
 > Designed and built a full-stack e-commerce platform for an Indian couture
-> house: storefront, Razorpay checkout, customer accounts, real-time
+> house: storefront, Cashfree checkout, customer accounts, real-time
 > order chat, a returns/refunds (RMA) workflow enforced down to the database
 > rules, GST-compliant tax invoicing, and a 14-section admin console covering
 > catalogue, inventory, orders, CRM, billing and compliance.
 >
 > React 19 · TypeScript · Vite · Tailwind · Firebase · Vercel serverless ·
-> Razorpay · Playwright
+> Cashfree · Playwright
 >
 > Notable: authorization is enforced in Firestore security rules rather than
 > client code, and every release is gated by a 29-test Playwright suite that
 > runs against the Firebase Emulator Suite loading the real production rules.
 
 **Suggested title (≤ 70 characters):**
-`Luxury Fashion E-Commerce Platform — React, Firebase, Razorpay`
+`Luxury Fashion E-Commerce Platform — React, Firebase, Cashfree`
 
 ---
 
@@ -48,7 +48,7 @@ sorting, product detail pages with colourways and stock-aware quantity
 controls, cart, wishlist, coupons, address book, and a three-step checkout.
 
 ### Payments
-Razorpay integration where the **server** is the authority: the order amount is
+Cashfree integration where the **server** is the authority: the order amount is
 recomputed server-side from the catalogue before a payment order is minted, and
 the payment signature is verified with an HMAC before an order is ever marked
 paid. A forged signature cannot produce a paid order — asserted by test.
@@ -95,7 +95,7 @@ already in your own database.
 | Data | Firebase Firestore, browser-direct | No always-on backend to pay for or operate |
 | Authorization | `firestore.rules` | The rules *are* the security boundary, not a convenience layer |
 | Server logic | Vercel serverless functions (`/api`) | Only where a secret or an authority decision is required |
-| Payments | Razorpay (orders, verify, webhook) | Server-side amount recomputation + HMAC signature verification |
+| Payments | Cashfree (orders, verify, webhook) | Server-side amount recomputation + HMAC signature verification |
 | Email | Brevo transactional + campaigns | Order confirmations, welcome, bulk |
 | Hosting | Vercel | Preview per PR, production on merge |
 | Tests | Playwright + Firebase Emulator Suite | Real rules, real listeners, two concurrent browser contexts |
@@ -132,7 +132,7 @@ repo at [`docs/test-reports/`](../test-reports/).
   payment-method gating, cross-customer data isolation
 
 A separate Postman collection covers the serverless endpoints' security
-contract: **22 assertions, every one negative** — forged Razorpay signature,
+contract: **22 assertions, every one negative** — forged Cashfree signature,
 unsigned webhook, anonymous order placement, missing CSRF token, non-admin bulk
 email, foreign origin. No request in that folder may ever succeed, so it is safe
 to run against production.

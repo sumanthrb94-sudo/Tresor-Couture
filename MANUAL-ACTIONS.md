@@ -28,11 +28,11 @@ These are the long-pole items. Even if you do nothing else today, **submit these
 
 | # | Action | Where | Hand back to Eng | Your time | Lead-time | Owner |
 |---|---|---|---|---|---|---|
-| 1 | **Razorpay account + KYC.** Sign up, submit business PAN, GST, bank account, address proof. Activation requires this to clear. | https://dashboard.razorpay.com/signup | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `VITE_RAZORPAY_KEY_ID` | 1–2 hrs to submit | **2–7 business days** for KYC/activation | CEO + Finance |
+| 1 | **Cashfree account + KYC.** Sign up, submit business PAN, GST, bank account, address proof. Activation requires this to clear. | https://merchant.cashfree.com/ | `CASHFREE_APP_ID`, `CASHFREE_SECRET_KEY`, `CASHFREE_ENV`, `VITE_CASHFREE_MODE` | 1–2 hrs to submit | **2–7 business days** for KYC/activation | CEO + Finance |
 | 2 | **WhatsApp Business Platform** via a BSP (AiSensy / Interakt / Wati / Gupshup) **or** Meta Cloud API direct. Register a business phone number + submit message templates for approval. | See `docs/WHATSAPP-SETUP.md` | BSP API key / phone-number-id + token (names in that doc) | 1–2 hrs | **Number verification 1–3 days + each template 1–2 days** | CEO + Ops |
 | 3 | **Transactional email — verify a sending domain** (SPF + DKIM DNS records) on SendGrid/Brevo. DNS propagation is the wait. | SendGrid: https://app.sendgrid.com · Brevo: https://app.brevo.com | `SMTP` connection URI (entered in Firebase, not Vercel) | 45 min | **DNS verify a few hours – 48 hrs** | CEO + Eng |
 | 4 | **Brevo — generate API key** (marketing engine; ✅ Brevo already set up). Contact-sync code is built and wired — it just needs the key. | https://app.brevo.com → SMTP & API → API Keys | `BREVO_API_KEY` (+ optional `BREVO_LIST_ID`) | 10 min | none (key is instant) | CEO |
-| 5 | **Legal/policy pages live** (Privacy, Terms, Returns/Refund/Cancellation, Shipping, Contact). **Razorpay activation will not complete without these published.** | Your site footer + Razorpay merchant profile | URLs of the 5 published pages | 3–6 hrs (draft + review) | gated by your lawyer's turnaround | CEO + Legal |
+| 5 | **Legal/policy pages live** (Privacy, Terms, Returns/Refund/Cancellation, Shipping, Contact). **Cashfree activation will not complete without these published.** | Your site footer + Cashfree merchant profile | URLs of the 5 published pages | 3–6 hrs (draft + review) | gated by your lawyer's turnaround | CEO + Legal |
 
 > **Why these five first:** #1 and #2 cannot be rushed once submitted — KYC and template review are external review queues. #3/#4 wait on DNS. #5 is a hard gate on #1. Everything else in this runbook can be done in an afternoon once you have the credentials.
 
@@ -43,7 +43,7 @@ These are the long-pole items. Even if you do nothing else today, **submit these
 | # | Action | Where | Hand back to Eng | Your time | Lead-time | Owner |
 |---|---|---|---|---|---|---|
 | 6 | **Upgrade Firebase to the Blaze (pay-as-you-go) plan.** Required for scale beyond the 50k-reads/day Spark cap (you *will* exhaust it at 1–2k visitors/day — see `DEPLOY.md` §10), AND it is the prerequisite for Cloud Functions and the Trigger Email extension. Set a **budget + billing alert** immediately after. | https://console.firebase.google.com/project/tresor-couture → ⚙ → Usage and billing → Modify plan | (none — infra) | 20 min | none | CEO + Eng |
-| 7 | **Razorpay webhook configuration** (after KYC clears, #1). Add the webhook URL your engineers give you, subscribe to `payment.captured` / `payment.failed` / `order.paid`, and copy the signing secret. | Razorpay Dashboard → Settings → Webhooks | `RAZORPAY_WEBHOOK_SECRET` | 20 min | after #1 | CEO + Eng |
+| 7 | **Cashfree webhook configuration** (after KYC clears, #1). Add the webhook URL your engineers give you, subscribe to `PAYMENT_SUCCESS_WEBHOOK`. No separate signing secret — it signs with your Secret Key. | Cashfree Dashboard → Developers → Webhooks | (none) | 20 min | after #1 | CEO + Eng |
 | 8 | **Firebase service-account JSON** for the serverless payment/verify backend. Download it, hand it to Eng as a secret — **never** commit it. | https://console.firebase.google.com/project/tresor-couture/settings/serviceaccounts/adminsdk → Generate new private key | `FIREBASE_SERVICE_ACCOUNT` (full JSON, base64 or pasted into Vercel secret) | 10 min | none | CEO + Eng |
 | 9 | **Install the "Trigger Email from Firestore" extension** + paste SMTP URI (from #3). Smoke-test by adding a `mail/` doc. | https://console.firebase.google.com/project/tresor-couture/extensions | (SMTP entered in console) | 30 min | needs #3 + #6 | CEO + Eng |
 | 10 | **Brand the Firebase Auth email templates** (paste the HTML from `branding/email-templates/auth/`, set sender = "Tresor Couture", set the action URL). | https://console.firebase.google.com → Authentication → Templates | (none) | 20 min | none | CEO |
@@ -84,10 +84,10 @@ This is weeks of work and gated on physical/operational setup, not code. Begin s
 
 | Var / secret | Public? | Source | Item |
 |---|---|---|---|
-| `RAZORPAY_KEY_ID` | secret (server) | Razorpay Dashboard → API Keys | 1 |
-| `RAZORPAY_KEY_SECRET` | secret (server) | Razorpay Dashboard → API Keys | 1 |
-| `RAZORPAY_WEBHOOK_SECRET` | secret (server) | Razorpay → Settings → Webhooks | 7 |
-| `VITE_RAZORPAY_KEY_ID` | **public** | same as Key ID (browser checkout needs it) | 1 |
+| `CASHFREE_APP_ID` | secret (server) | Cashfree Dashboard → Developers → API Keys | 1 |
+| `CASHFREE_SECRET_KEY` | secret (server) — also signs webhooks | Cashfree Dashboard → Developers → API Keys | 1 |
+| `CASHFREE_ENV` | `production` (server) | Exactly that word, or it stays on sandbox | 1 |
+| `VITE_CASHFREE_MODE` | **public** | same as Key ID (browser checkout needs it) | 1 |
 | `FIREBASE_SERVICE_ACCOUNT` | secret (server) | Firebase → Service accounts → generate key | 8 |
 | `SMTP` connection URI | secret (in Firebase) | SendGrid/Brevo | 3, 9 |
 | `BREVO_API_KEY` | secret (server) | Brevo → SMTP & API → API Keys | 4 |
@@ -107,7 +107,7 @@ This is weeks of work and gated on physical/operational setup, not code. Begin s
 
 | Domain | Doc |
 |---|---|
-| Razorpay payments + webhook + serverless backend | `docs/PAYMENTS-SETUP.md` |
+| Cashfree payments + webhook + serverless backend | `docs/ops/cashfree-go-live.md` |
 | GA4 + Meta Pixel + consent + Conversions API | `docs/ANALYTICS-SETUP.md` |
 | Transactional (Firebase extension) + marketing (Brevo) email | `docs/EMAIL-SETUP.md` |
 | WhatsApp Business Platform / BSP | `docs/WHATSAPP-SETUP.md` |
@@ -187,7 +187,7 @@ in the repo or a chat.
   authenticates the *domain*, so the fault was invisible — but every customer who
   replied to an order confirmation was replying into a void. Override with
   `BREVO_SENDER_EMAIL` only if you want a different real mailbox.
-- **Razorpay / WhatsApp** keys per `docs/PAYMENTS-SETUP.md`,
+- **Cashfree / WhatsApp** keys per `docs/ops/cashfree-go-live.md`,
   `docs/WHATSAPP-SETUP.md`. Both remain dormant by design — the store is COD-only.
 - **Upstash Redis is OPTIONAL — no external service needed to launch.**
   `api/_lib/rateLimit.ts` uses Upstash for *global* rate limiting when
@@ -201,7 +201,7 @@ in the repo or a chat.
 - **Return status emails** reuse the existing `mail/` queue (Trigger Email
   extension) — no extra config beyond what order emails already use.
 - **Refund money movement stays manual**: marking a return "Refunded" records
-  the amount and emails the customer; issue the actual refund in the Razorpay
+  the amount and emails the customer; issue the actual refund in the Cashfree
   dashboard (or bank). A gateway auto-refund can be wired later.
 - **Support phone / WhatsApp** number is set in `src/components/SupportWidget.tsx`
   (`SUPPORT_PHONE_*` / `SUPPORT_WA`) — update it if the atelier number changes.
@@ -237,4 +237,4 @@ To run the same suite locally, see the Tests section of `README.md`.
 
 ## Testing note (Playwright / E2E)
 
-The CEO is adding Playwright MCP for manual/automated testing. The key flows to test, and the staging env needed, are in `docs/PRODUCTION-CHECKLIST.md` → "End-to-end test flows". In short, on a **staging deployment with Razorpay in TEST mode**, walk: browse → product → cart → checkout (demo + a real test-card charge) → order confirmation; newsletter/WhatsApp signup capture; admin login → change order status → confirm the customer email fires.
+The CEO is adding Playwright MCP for manual/automated testing. The key flows to test, and the staging env needed, are in `docs/PRODUCTION-CHECKLIST.md` → "End-to-end test flows". In short, on a **staging deployment with Cashfree in TEST mode**, walk: browse → product → cart → checkout (demo + a real test-card charge) → order confirmation; newsletter/WhatsApp signup capture; admin login → change order status → confirm the customer email fires.

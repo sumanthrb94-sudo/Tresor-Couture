@@ -59,7 +59,7 @@ test.describe('POST /api/contact (Brevo capture)', () => {
   });
 });
 
-test.describe('POST /api/payments/create-order (Razorpay)', () => {
+test.describe('POST /api/payments/create-order (Cashfree)', () => {
   test('reports configured-vs-demo state without charging', async ({ request }) => {
     const headers = await csrfHeaders(request);
     const res = await request.post('/api/payments/create-order', {
@@ -68,7 +68,7 @@ test.describe('POST /api/payments/create-order (Razorpay)', () => {
     });
     const status = res.status();
     if (status === 503) {
-      console.log('ℹ️ Payments in DEMO mode (Razorpay/Firebase Admin not configured).');
+      console.log('ℹ️ Payments in DEMO mode (Cashfree/Firebase Admin not configured).');
       expect((await res.json()).error).toBe('payments_not_configured');
     } else {
       // Configured: it got far enough to price the cart and rejected the fake product.

@@ -11,9 +11,9 @@ Final gate before flipping the switch. Each box should be ticked by the named ow
 - [ ] Catalog seeded (`npm run seed`) — Firestore is empty until then (Appendix B). (Eng)
 
 ## Payments (hard blocker)
-- [ ] Razorpay **activated** (KYC cleared). (CEO)
-- [ ] `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` / `VITE_RAZORPAY_KEY_ID` set; **LIVE** keys (not test). (Eng)
-- [ ] Webhook configured + `RAZORPAY_WEBHOOK_SECRET` set; test webhook returns 200. (Eng)
+- [ ] Cashfree **activated** (KYC cleared). (CEO)
+- [ ] `CASHFREE_APP_ID` / `CASHFREE_SECRET_KEY` / `VITE_CASHFREE_MODE` set; **LIVE** keys (not test). (Eng)
+- [ ] Webhook configured + `CASHFREE_SECRET_KEY` set; test webhook returns 200. (Eng)
 - [ ] Server-side **authoritative totals** + **signature verification** in place (fixes client-side-totals security hole, report §10). (Eng)
 - [ ] **Stock decrement on paid order** working (fixes overselling, report §6). (Eng)
 - [ ] COD gated by value cap + serviceable pincode. (Eng)
@@ -53,7 +53,7 @@ Final gate before flipping the switch. Each box should be ticked by the named ow
 ## Legal / compliance (India D2C)
 - [ ] Privacy Policy, Terms, Returns/Refund/Cancellation, Shipping, Contact pages **published** and linked from the footer (links go nowhere today). (Legal+CEO)
 - [ ] GST: GSTIN on invoices; 5% GST already computed in code. (Finance)
-- [ ] Razorpay merchant profile points at the live policy pages. (CEO)
+- [ ] Cashfree merchant profile points at the live policy pages. (CEO)
 
 ## Delivery (only if advertising fast delivery)
 - [ ] 40-minute claim **softened/removed** unless `docs/DELIVERY-OPS.md` is fully live. (CEO)
@@ -62,12 +62,12 @@ Final gate before flipping the switch. Each box should be ticked by the named ow
 
 ## End-to-end test flows (Playwright / E2E)
 
-Run against a **staging deployment** with **Razorpay in TEST mode**. Env needed: staging Vercel URL, `VITE_RAZORPAY_KEY_ID` (test), test admin account with the `admin` claim, a seeded catalog.
+Run against a **staging deployment** with **Cashfree in TEST mode**. Env needed: staging Vercel URL, `VITE_CASHFREE_MODE` (test), test admin account with the `admin` claim, a seeded catalog.
 
 | Flow | Steps | Expected |
 |---|---|---|
 | **Browse → buy (demo path)** | home → category → product → add to cart → checkout | order persists in Firestore |
-| **Real payment** | checkout → Razorpay TEST card / UPI → return | order marked paid only after webhook/signature verify; stock decremented |
+| **Real payment** | checkout → Cashfree TEST card / UPI → return | order marked paid only after webhook/signature verify; stock decremented |
 | **Totals integrity** | attempt a tampered amount | server rejects / recomputes — never charges the browser value |
 | **Lead capture** | submit newsletter + WhatsApp opt-in | doc lands in `subscribers` with `consent` |
 | **Auth** | register, Google sign-in, phone OTP, password reset | all succeed on the live/staging domain |

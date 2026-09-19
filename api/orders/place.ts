@@ -18,7 +18,7 @@
  *
  * NOTE: mirrors the current client total (no COD surcharge) so the figure
  * charged equals the figure the checkout UI showed. Real card/UPI money uses
- * /api/payments/verify, which additionally checks the Razorpay signature.
+ * /api/payments/verify, which additionally confirms the payment with Cashfree.
  */
 import { FieldValue } from 'firebase-admin/firestore';
 import { getDb } from '../_lib/firebaseAdmin.js';

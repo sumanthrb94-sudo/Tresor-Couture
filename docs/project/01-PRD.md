@@ -61,7 +61,7 @@ approve returns without touching a database.
 
 ## Nice to have (built but dormant, or deferred)
 
-- **Online payments** — Razorpay create-order / verify / webhook endpoints exist and are tested, but the UI ships COD-only until keys are set. *Explicitly out of scope for the current release.*
+- **Online payments** — Cashfree create-order / verify / webhook endpoints exist and are tested, but the UI ships COD-only until keys are set. *Explicitly out of scope for the current release.*
 - **WhatsApp order alerts** — endpoint exists, dormant until Meta Cloud API credentials are set.
 - Bulk marketing email (admin-only Brevo campaigns) — built, lightly used.
 - Reviews — schema and admin screen exist; storefront surfacing is minimal.

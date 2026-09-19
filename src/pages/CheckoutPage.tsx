@@ -9,7 +9,7 @@ import { WebPaymentMethod, ShippingAddress } from '../types';
 import { couponsApi } from '../lib/firebase';
 import { analytics } from '../lib/analytics';
 import { sendOrderEmail, sendOrderWhatsApp } from '../lib/notify';
-import { paymentsConfigured, runRazorpayPayment, PaymentsNotConfiguredError } from '../lib/payments';
+import { paymentsConfigured, runCardPayment, PaymentsNotConfiguredError } from '../lib/payments';
 import FabricImage from '../components/FabricImage';
 
 type Step = 'login' | 'address' | 'payment';
@@ -273,11 +273,11 @@ const CheckoutPage: React.FC = () => {
       const items = resolved.map(({ item }) => ({ fabricId: item.fabricId, quantity: item.quantity, color: item.color }));
 
       if (payment !== 'cod') {
-        // Online payment. The server creates the Razorpay order (recomputing the
-        // amount), the gateway collects, and /api/payments/verify checks the
-        // signature and amount before it writes the order — so the order only
-        // exists once payment actually succeeded.
-        const { orderId } = await runRazorpayPayment({
+        // Online payment. The server creates the Cashfree order (recomputing
+        // the amount), the gateway collects, and /api/payments/verify asks
+        // Cashfree what happened before it writes the order — so the order
+        // only exists once payment actually succeeded.
+        const { orderId } = await runCardPayment({
           items,
           couponCode: couponCode ?? undefined,
           paymentMethod: payment,
@@ -444,10 +444,10 @@ const CheckoutPage: React.FC = () => {
                 </p>
               </div>
 
-              {/* UPI/Card unlock automatically once VITE_RAZORPAY_KEY_ID is set,
+              {/* UPI/Card unlock automatically once VITE_CASHFREE_MODE is set,
                   so enabling online payment is an environment change and needs no
-                  code edit. Without the key they stay disabled rather than
-                  failing at the gateway. */}
+                  code edit. Without it they stay disabled rather than failing at
+                  the gateway. */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
                 {([
                   { id: 'cod',  label: 'Cash on Delivery', sub: 'Pay when you receive', icon: Truck, enabled: true },

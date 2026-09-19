@@ -1,15 +1,16 @@
 /**
- * POST /api/payments/webhook  — Razorpay server-to-server webhook.
+ * POST /api/payments/webhook  — Cashfree server-to-server webhook.
  *
  * Defense-in-depth backstop to /verify: if the browser closes before the
- * verify call lands (network drop, tab close), Razorpay still notifies us
- * here so the order can be reconciled. Register this URL in the Razorpay
- * Dashboard (Settings → Webhooks) for the `payment.captured` event with the
- * secret stored in RAZORPAY_WEBHOOK_SECRET.
+ * verify call lands (network drop, tab close), Cashfree still notifies us
+ * here so the order can be reconciled. Register this URL in the Cashfree
+ * Dashboard (Developers → Webhooks) for PAYMENT_SUCCESS_WEBHOOK. There is no
+ * separate webhook secret — it signs with CASHFREE_SECRET_KEY.
  *
- * Signature: HMAC_SHA256(rawBody, RAZORPAY_WEBHOOK_SECRET) === X-Razorpay-Signature.
+ * Signature: base64(HMAC_SHA256(timestamp + rawBody, CASHFREE_SECRET_KEY))
+ * === x-webhook-signature. Signed over the RAW body, hence bodyParser:false.
  *
- * This handler marks an EXISTING order (matched by razorpay order/payment id)
+ * This handler marks an EXISTING order (matched by the Cashfree order id)
  * as paid if /verify hasn't already. It does NOT create new orders or
  * decrement stock — it lacks the cart/address context and the rich product
  * snapshot that /verify builds; it only reconciles payment state. Orders that
@@ -22,7 +23,6 @@
  */
 import type { IncomingMessage } from 'node:http';
 import { getDb, firebaseAdminConfigured } from '../_lib/firebaseAdmin.js';
-import { verifyWebhookSignature } from '../_lib/razorpay.js';
 import { cashfreeConfigured, verifyCashfreeWebhook } from '../_lib/cashfree.js';
 import { header, type ApiRequest, type ApiResponse } from '../_lib/http.js';
 import { withSentry } from '../_lib/sentry.js';
@@ -48,7 +48,7 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
     res.status(405).json({ error: 'method_not_allowed' });
     return;
   }
-  if (!firebaseAdminConfigured() || (!process.env.RAZORPAY_WEBHOOK_SECRET && !cashfreeConfigured())) {
+  if (!firebaseAdminConfigured() || !cashfreeConfigured()) {
     res.status(503).json({ error: 'payments_not_configured' });
     return;
   }
@@ -61,64 +61,38 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
     return;
   }
 
-  // Which gateway is calling is decided by WHICH SIGNATURE HEADER IS PRESENT,
-  // never by anything in the body — a forged payload must not be able to pick
-  // the cheaper check. Cashfree signs base64(HMAC(timestamp + rawBody)) over
-  // the raw bytes, which is why this route keeps bodyParser:false.
-  const cfSignature = header(req, 'x-webhook-signature');
-  const rzpSignature = header(req, 'x-razorpay-signature');
-  const viaCashfree = Boolean(cfSignature);
-
-  if (viaCashfree) {
-    if (!verifyCashfreeWebhook(raw, cfSignature, header(req, 'x-webhook-timestamp'))) {
-      res.status(400).json({ error: 'signature_mismatch' });
-      return;
-    }
-  } else if (!verifyWebhookSignature(raw, rzpSignature)) {
+  // Signed over the raw bytes: re-serialising parsed JSON reorders keys and
+  // changes whitespace, which would reject every genuine webhook.
+  if (!verifyCashfreeWebhook(raw, header(req, 'x-webhook-signature'), header(req, 'x-webhook-timestamp'))) {
     res.status(400).json({ error: 'signature_mismatch' });
     return;
   }
 
-  let event: {
-    event?: string;
-    payload?: { payment?: { entity?: { id?: string; order_id?: string; status?: string } } };
+  let cf: {
+    type?: string;
+    data?: {
+      order?: { order_id?: string };
+      payment?: { cf_payment_id?: string | number; payment_status?: string };
+    };
   };
   try {
-    event = JSON.parse(raw);
+    cf = JSON.parse(raw);
   } catch {
     res.status(400).json({ error: 'invalid_json' });
     return;
   }
 
-  // We only act on successful captures. Acknowledge everything else with 200
-  // so the gateway stops retrying.
+  // Only PAYMENT_SUCCESS_WEBHOOK moves an order. Everything else is
+  // acknowledged with 200 so Cashfree stops retrying.
   //
-  // Cashfree's shape is different: type PAYMENT_SUCCESS_WEBHOOK, with the order
-  // under data.order and the payment under data.payment. We key on OUR order id
-  // (data.order.order_id) because that is what /verify stored as paymentId, so
-  // the two paths reconcile to the same document.
-  let payment: { id?: string; order_id?: string; status?: string } | undefined;
-  if (viaCashfree) {
-    const cf = event as unknown as {
-      type?: string;
-      data?: {
-        order?: { order_id?: string };
-        payment?: { cf_payment_id?: string | number; payment_status?: string };
-      };
-    };
-    const orderId = cf.data?.order?.order_id;
-    if (cf.type !== 'PAYMENT_SUCCESS_WEBHOOK' || !orderId) {
-      res.status(200).json({ ok: true, ignored: true });
-      return;
-    }
-    payment = { id: orderId, order_id: orderId, status: cf.data?.payment?.payment_status };
-  } else {
-    payment = event.payload?.payment?.entity;
-    if (event.event !== 'payment.captured' || !payment?.id) {
-      res.status(200).json({ ok: true, ignored: true });
-      return;
-    }
+  // We key on OUR order id (data.order.order_id) because that is what /verify
+  // stored as paymentId, so both paths reconcile to the same document.
+  const orderId = cf.data?.order?.order_id;
+  if (cf.type !== 'PAYMENT_SUCCESS_WEBHOOK' || !orderId) {
+    res.status(200).json({ ok: true, ignored: true });
+    return;
   }
+  const payment = { id: orderId, order_id: orderId, status: cf.data?.payment?.payment_status };
 
   try {
     const db = getDb();
@@ -132,7 +106,7 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
     if (matched.empty && payment.order_id) {
       matched = await db
         .collection('orders')
-        .where(viaCashfree ? 'cashfreeOrderId' : 'razorpayOrderId', '==', payment.order_id)
+        .where('cashfreeOrderId', '==', payment.order_id)
         .limit(1)
         .get();
     }
@@ -142,7 +116,7 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
         {
           paymentStatus: 'paid',
           paymentId: payment.id,
-          paymentProvider: viaCashfree ? 'cashfree' : 'razorpay',
+          paymentProvider: 'cashfree',
           status: 'placed',
         },
         { merge: true },
@@ -154,10 +128,10 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
     // No matching order: the browser never completed /verify. Record the
     // orphan payment for manual reconciliation rather than silently dropping.
     await db.collection('payment_events').add({
-      provider: 'razorpay',
-      event: event.event,
+      provider: 'cashfree',
+      event: cf.type ?? null,
       paymentId: payment.id,
-      razorpayOrderId: payment.order_id ?? null,
+      cashfreeOrderId: payment.order_id ?? null,
       status: payment.status ?? null,
       receivedAt: new Date().toISOString(),
       reconciled: false,
@@ -165,7 +139,7 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
     res.status(200).json({ ok: true, orphan: true });
   } catch (err) {
     console.error('[webhook] failed', err instanceof Error ? err.message : err);
-    // Return 500 so Razorpay retries delivery.
+    // Return 500 so Cashfree retries delivery.
     res.status(500).json({ error: 'webhook_failed' });
   }
 }

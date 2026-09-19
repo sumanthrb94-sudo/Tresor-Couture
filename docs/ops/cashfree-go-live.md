@@ -4,11 +4,13 @@ The code is in. What remains is configuration, and it is all done in the Vercel
 and Cashfree dashboards — **not in this repository**. Nothing below should ever
 be pasted into a file, a commit, a chat window or a screenshot.
 
-Cashfree runs alongside Razorpay rather than replacing it: when the Cashfree
-variables are present the server uses Cashfree, and when they are absent it
-falls back to Razorpay exactly as before. That is deliberate. It means going
-live is setting variables, and backing out is unsetting them — no deploy, no
-code change, no waiting for a build while checkout is down.
+Cashfree is the only payment gateway. Razorpay has been removed entirely —
+code, dependency, environment variables and CSP entries.
+
+Without the Cashfree variables the storefront runs in demo mode: Cash on
+Delivery still works and Card/UPI show as "Coming soon" rather than failing at
+the gateway. So going live is setting variables, and the fallback is COD — not
+another gateway.
 
 ---
 
@@ -89,21 +91,30 @@ It is the only test that proves the whole chain.
 
 ---
 
-## Rolling back
+## If something goes wrong
 
-Unset `CASHFREE_APP_ID` and `CASHFREE_SECRET_KEY` and redeploy. The server falls
-straight back to Razorpay. Keep the Razorpay variables in place until Cashfree
-has settled a few days of real orders.
+There is no second gateway to fall back to. Unset `CASHFREE_APP_ID` and
+`CASHFREE_SECRET_KEY` and redeploy, and the store reverts to **Cash on Delivery
+only** — Card and UPI go back to "Coming soon". Orders keep coming in; they just
+are not prepaid.
+
+That is the honest trade for running one gateway, and it is worth knowing before
+you need it rather than during.
 
 ---
 
 ## What is still outstanding
 
-**The Razorpay key secret was exposed in a screenshot earlier and has not been
-rotated.** Going live on Cashfree does not fix that, because Razorpay stays
-configured as the fallback — an exposed secret on a live fallback gateway is
-still a live exposure. Either rotate it in the Razorpay dashboard, or remove the
-Razorpay variables entirely once Cashfree is proven.
+**The Razorpay key secret exposed in a screenshot earlier is still live on the
+Razorpay account.** Deleting the integration from this codebase does not revoke
+it — the key belongs to the account, not to the code, and anyone holding it can
+still call the Razorpay API against that merchant.
+
+Go into the Razorpay dashboard and either regenerate the key or close the
+account. Also delete `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`,
+`RAZORPAY_WEBHOOK_SECRET` and `VITE_RAZORPAY_KEY_ID` from the Vercel project —
+nothing reads them now, but a stale secret sitting in an environment is one
+screenshot away from being exposed again.
 
 ---
 
@@ -119,7 +130,7 @@ Razorpay variables entirely once Cashfree is proven.
 4. `POST /api/payments/webhook` — Cashfree confirms server-to-server; if step 3
    never ran, this reconciles the order.
 
-Step 3 is the security boundary. Razorpay gives the browser a signature we check
+Step 3 is the security boundary. Cashfree gives the browser a signature we check
 with our secret; Cashfree has no client handshake, so rather than trusting
 anything the page reports, the server asks the payment processor directly. That
 is a stronger guarantee, not a weaker one — there is no callback to forge.

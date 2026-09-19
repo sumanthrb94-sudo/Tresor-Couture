@@ -50,7 +50,9 @@ export interface PriceBreakdown {
   codSurcharge: number;
   /** Grand total in rupees (integer). */
   total: number;
-  /** Total in the smallest currency unit (paise) for Razorpay. */
+  /** Total in paise. Cashfree is charged in rupees, so this is for anything
+   *  that needs a minor-unit integer (analytics, reconciliation), NOT the
+   *  amount sent to the gateway. */
   amountMinor: number;
   currency: 'INR';
 }
