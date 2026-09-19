@@ -24,8 +24,17 @@ const env = (import.meta as unknown as { env?: Record<string, string | undefined
 /** PUBLIC key id. Safe to expose; the secret stays server-side. */
 export const razorpayKeyId: string | undefined = env.VITE_RAZORPAY_KEY_ID?.trim() || undefined;
 
+/**
+ * 'production' or 'sandbox' — which Cashfree the browser SDK should talk to.
+ * There is no public Cashfree key: the browser only ever receives a
+ * single-use payment_session_id minted by our server for an amount Cashfree
+ * already holds, so there is nothing here worth stealing and no amount the
+ * page could restate.
+ */
+export const cashfreeMode: string | undefined = env.VITE_CASHFREE_MODE?.trim() || undefined;
+
 /** True when real payments are configured; otherwise the UI uses demo mode. */
-export const paymentsConfigured: boolean = Boolean(razorpayKeyId);
+export const paymentsConfigured: boolean = Boolean(razorpayKeyId || cashfreeMode);
 
 export interface CartLine {
   fabricId: string;
@@ -42,9 +51,13 @@ export interface OrderContext {
 }
 
 export interface CreatedOrder {
+  /** Which gateway the server chose. Absent means Razorpay (older responses). */
+  provider?: 'cashfree' | 'razorpay';
   orderId: string;
   amount: number;
   currency: string;
+  /** Cashfree only: single-use, minted server-side, bound to the amount. */
+  paymentSessionId?: string;
   razorpayKeyId: string;
   breakdown?: {
     subtotal: number;
@@ -75,6 +88,8 @@ export async function createPaymentOrder(input: {
   items: CartLine[];
   couponCode?: string;
   paymentMethod: 'card' | 'upi' | 'cod';
+  /** Cashfree requires a 10-digit mobile on the order and rejects it without one. */
+  customer?: { name?: string; email?: string; phone?: string };
 }): Promise<CreatedOrder> {
   const res = await apiPost('/api/payments/create-order', input, await authHeader());
   if (res.status === 503) throw new PaymentsNotConfiguredError();
@@ -188,17 +203,93 @@ export function openRazorpayCheckout(args: {
   });
 }
 
+/* ---------------------------------------------------------------- Cashfree */
+
+const CASHFREE_SRC = 'https://sdk.cashfree.com/js/v3/cashfree.js';
+let cashfreeScript: Promise<void> | null = null;
+
+interface CashfreeInstance {
+  checkout(opts: { paymentSessionId: string; redirectTarget?: string }): Promise<{
+    error?: { message?: string };
+    paymentDetails?: { paymentMessage?: string };
+    redirect?: boolean;
+  }>;
+}
+declare global {
+  interface Window {
+    Cashfree?: (opts: { mode: string }) => CashfreeInstance;
+  }
+}
+
+/** Lazily inject the Cashfree SDK exactly once. */
+export function loadCashfreeScript(): Promise<void> {
+  if (typeof window === 'undefined') return Promise.reject(new Error('no_window'));
+  if (window.Cashfree) return Promise.resolve();
+  if (cashfreeScript) return cashfreeScript;
+  cashfreeScript = new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector<HTMLScriptElement>(`script[src="${CASHFREE_SRC}"]`);
+    const fail = () => {
+      cashfreeScript = null;
+      reject(new Error('cashfree_script_failed'));
+    };
+    if (existing) {
+      existing.addEventListener('load', () => resolve());
+      existing.addEventListener('error', fail);
+      if (window.Cashfree) resolve();
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = CASHFREE_SRC;
+    s.async = true;
+    s.onload = () => resolve();
+    s.onerror = fail;
+    document.body.appendChild(s);
+  });
+  return cashfreeScript;
+}
+
+/**
+ * Open the Cashfree modal and wait for it to close.
+ *
+ * Resolving here means "the shopper finished with the modal", NOT "the payment
+ * succeeded" — the SDK reports what the page saw, and the page is not a
+ * trustworthy witness to a payment. The server decides, by asking Cashfree
+ * directly in /api/payments/verify. So this deliberately returns nothing about
+ * the outcome beyond "carry on and go ask".
+ */
+export async function openCashfreeCheckout(created: CreatedOrder): Promise<void> {
+  if (!window.Cashfree) throw new Error('cashfree_unavailable');
+  if (!created.paymentSessionId) throw new Error('cashfree_no_session');
+  const cashfree = window.Cashfree({ mode: cashfreeMode === 'production' ? 'production' : 'sandbox' });
+  const result = await cashfree.checkout({
+    paymentSessionId: created.paymentSessionId,
+    redirectTarget: '_modal',
+  });
+  // A dismissed modal reports an error; treat it as a cancellation rather than
+  // a failure so the UI does not accuse the shopper of a problem they did not
+  // have. Either way the server is the one that decides whether money moved.
+  if (result?.error) {
+    throw new Error('payment_cancelled');
+  }
+}
+
 /** Verify the payment server-side; the server writes the paid order + stock. */
 export async function verifyPayment(args: {
-  success: RazorpaySuccess;
+  success?: RazorpaySuccess;
+  /** Cashfree: our own order id. The server asks Cashfree what became of it. */
+  cashfreeOrderId?: string;
   order: OrderContext;
 }): Promise<{ orderId: string }> {
-  const res = await apiPost('/api/payments/verify', {
-    razorpay_order_id: args.success.razorpay_order_id,
-    razorpay_payment_id: args.success.razorpay_payment_id,
-    razorpay_signature: args.success.razorpay_signature,
-    order: args.order,
-  }, await authHeader());
+  const payload = args.cashfreeOrderId
+    ? { provider: 'cashfree', cashfree_order_id: args.cashfreeOrderId, order: args.order }
+    : {
+        provider: 'razorpay',
+        razorpay_order_id: args.success!.razorpay_order_id,
+        razorpay_payment_id: args.success!.razorpay_payment_id,
+        razorpay_signature: args.success!.razorpay_signature,
+        order: args.order,
+      };
+  const res = await apiPost('/api/payments/verify', payload, await authHeader());
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
   if (!res.ok || !data.ok) {
     throw new Error(typeof data.error === 'string' ? data.error : 'verify_failed');
@@ -222,17 +313,31 @@ export async function runRazorpayPayment(input: {
     items: input.items,
     couponCode: input.couponCode,
     paymentMethod: input.paymentMethod,
-  });
-  await loadRazorpayScript();
-  const success = await openRazorpayCheckout({ created, prefill: input.prefill });
-  return verifyPayment({
-    success,
-    order: {
-      items: input.items,
-      couponCode: input.couponCode,
-      paymentMethod: input.paymentMethod,
-      shippingAddress: input.shippingAddress,
-      userId: input.userId,
+    customer: {
+      name: input.prefill?.name,
+      email: input.prefill?.email,
+      phone: input.prefill?.contact,
     },
   });
+
+  const order: OrderContext = {
+    items: input.items,
+    couponCode: input.couponCode,
+    paymentMethod: input.paymentMethod,
+    shippingAddress: input.shippingAddress,
+    userId: input.userId,
+  };
+
+  // Which gateway is in play is the SERVER's decision, echoed back on the
+  // created order. The checkout page stays gateway-agnostic, so switching
+  // gateway is an environment change rather than a UI change.
+  if (created.provider === 'cashfree') {
+    await loadCashfreeScript();
+    await openCashfreeCheckout(created);
+    return verifyPayment({ cashfreeOrderId: created.orderId, order });
+  }
+
+  await loadRazorpayScript();
+  const success = await openRazorpayCheckout({ created, prefill: input.prefill });
+  return verifyPayment({ success, order });
 }

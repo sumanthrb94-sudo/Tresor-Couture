@@ -18,6 +18,9 @@
 import { getDb, firebaseAdminConfigured } from '../_lib/firebaseAdmin.js';
 import { computeBreakdown } from '../_lib/pricing.js';
 import { getRazorpay, razorpayConfigured } from '../_lib/razorpay.js';
+import {
+  cashfreeConfigured, createCashfreeOrder, newCashfreeOrderId, normalisePhone,
+} from '../_lib/cashfree.js';
 import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
 import { validateCsrfToken } from '../_lib/csrf.js';
 import { rateLimited, rateLimitHeaders } from '../_lib/rateLimit.js';
@@ -29,6 +32,9 @@ interface Body {
   items?: { fabricId: string; quantity: number; color?: string }[];
   couponCode?: string;
   paymentMethod?: 'card' | 'upi' | 'cod';
+  /** Cashfree requires a 10-digit mobile on the order itself and rejects the
+   *  call without one. Checkout already collects and validates it. */
+  customer?: { name?: string; email?: string; phone?: string };
 }
 
 async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
@@ -59,8 +65,12 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
     return;
   }
 
-  // Credential gate — let the client fall back to demo mode.
-  if (!razorpayConfigured()) {
+  // Credential gate — let the client fall back to demo mode. Cashfree is
+  // preferred when configured; Razorpay stays as the fallback so switching
+  // gateway is an environment change rather than a deploy, and so a bad
+  // go-live can be undone in the time it takes to unset two variables.
+  const useCashfree = cashfreeConfigured();
+  if (!useCashfree && !razorpayConfigured()) {
     res.status(503).json({ error: 'payments_not_configured' });
     return;
   }
@@ -97,6 +107,52 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
       return;
     }
 
+    if (useCashfree) {
+      const phone = normalisePhone(body.customer?.phone);
+      if (phone.length !== 10) {
+        res.status(400).json({ error: 'customer_phone_required' });
+        return;
+      }
+      const orderId = newCashfreeOrderId();
+      const origin = header(req, 'origin') || `https://${header(req, 'host') ?? 'tresorcouture.in'}`;
+      const created = await createCashfreeOrder({
+        orderId,
+        // RUPEES here, not paise: Cashfree takes a decimal amount where
+        // Razorpay takes an integer minor unit.
+        amount: breakdown.total,
+        currency: breakdown.currency,
+        customer: {
+          id: decoded.uid,
+          phone,
+          name: body.customer?.name,
+          email: body.customer?.email,
+        },
+        // {order_id} is a literal placeholder Cashfree substitutes when a bank
+        // or UPI app sends the shopper back to us.
+        returnUrl: `${origin}/checkout?cf_order={order_id}`,
+        notifyUrl: `${origin}/api/payments/webhook`,
+        note: `${breakdown.lines.length} item(s)`,
+      });
+
+      res.status(200).json({
+        provider: 'cashfree',
+        orderId: created.orderId,
+        paymentSessionId: created.paymentSessionId,
+        amount: breakdown.amountMinor,
+        currency: breakdown.currency,
+        breakdown: {
+          subtotal: breakdown.subtotal,
+          couponCode: breakdown.couponCode ?? null,
+          couponDiscount: breakdown.couponDiscount,
+          tax: breakdown.tax,
+          shipping: breakdown.shipping,
+          codSurcharge: breakdown.codSurcharge,
+          total: breakdown.total,
+        },
+      });
+      return;
+    }
+
     const razorpay = getRazorpay();
     const order = await razorpay.orders.create({
       amount: breakdown.amountMinor,
@@ -111,6 +167,7 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
     });
 
     res.status(200).json({
+      provider: 'razorpay',
       orderId: order.id,
       amount: breakdown.amountMinor,
       currency: breakdown.currency,

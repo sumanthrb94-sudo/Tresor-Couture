@@ -25,6 +25,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { getDb, firebaseAdminConfigured } from '../_lib/firebaseAdmin.js';
 import { computeBreakdown } from '../_lib/pricing.js';
 import { getRazorpay, razorpayConfigured, verifyCheckoutSignature } from '../_lib/razorpay.js';
+import { CASHFREE_PAID, cashfreeConfigured, fetchCashfreeOrder } from '../_lib/cashfree.js';
 import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
 import { validateCsrfToken } from '../_lib/csrf.js';
 import { readJson, header, type ApiRequest, type ApiResponse } from '../_lib/http.js';
@@ -33,6 +34,11 @@ import { rateLimited, rateLimitHeaders } from '../_lib/rateLimit.js';
 import { withSentry } from '../_lib/sentry.js';
 
 interface VerifyBody {
+  /** 'cashfree' | 'razorpay'. Absent means Razorpay, so existing clients keep working. */
+  provider?: string;
+  /** Cashfree: the order id we generated at create-order time. Nothing else is
+   *  taken from the browser — the status comes from Cashfree itself. */
+  cashfree_order_id?: string;
   razorpay_order_id?: string;
   razorpay_payment_id?: string;
   razorpay_signature?: string;
@@ -74,7 +80,7 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
     return;
   }
 
-  if (!razorpayConfigured() || !firebaseAdminConfigured()) {
+  if ((!cashfreeConfigured() && !razorpayConfigured()) || !firebaseAdminConfigured()) {
     res.status(503).json({ error: 'payments_not_configured' });
     return;
   }
@@ -87,29 +93,55 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
     return;
   }
 
-  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, order } = body;
-  if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !order) {
-    res.status(400).json({ error: 'missing_payment_fields' });
-    return;
-  }
+  const { razorpay_order_id, razorpay_payment_id, razorpay_signature, cashfree_order_id, order } = body;
+  const viaCashfree = body.provider === 'cashfree' || Boolean(cashfree_order_id);
+
   if (!order || !Array.isArray(order.items) || order.items.length === 0) {
     res.status(400).json({ error: 'empty_cart' });
     return;
   }
-
-  // 1. Signature check.
-  if (!verifyCheckoutSignature({ razorpay_order_id, razorpay_payment_id, razorpay_signature })) {
-    res.status(400).json({ error: 'signature_mismatch' });
+  if (viaCashfree) {
+    if (!cashfreeConfigured()) {
+      res.status(503).json({ error: 'payments_not_configured' });
+      return;
+    }
+    if (!cashfree_order_id) {
+      res.status(400).json({ error: 'missing_payment_fields' });
+      return;
+    }
+  } else if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    res.status(400).json({ error: 'missing_payment_fields' });
     return;
+  }
+
+  // 1. Establish that the payment really happened.
+  //
+  // Razorpay hands the browser a signature we check with our secret. Cashfree
+  // has no such client handshake, and inventing one out of anything the page
+  // reports would be security theatre — so for Cashfree the check happens after
+  // the id lookup below, by ASKING CASHFREE. Nothing the browser says about the
+  // outcome is trusted either way.
+  if (!viaCashfree) {
+    if (!verifyCheckoutSignature({
+      razorpay_order_id: razorpay_order_id!,
+      razorpay_payment_id: razorpay_payment_id!,
+      razorpay_signature: razorpay_signature!,
+    })) {
+      res.status(400).json({ error: 'signature_mismatch' });
+      return;
+    }
   }
 
   try {
     const db = getDb();
 
-    // Idempotency: if we've already recorded this payment, return it.
+    // Idempotency: if we've already recorded this payment, return it. For
+    // Cashfree the order id is the key — an order can be attempted several
+    // times but only one attempt ever reaches PAID.
+    const paymentKey = viaCashfree ? cashfree_order_id! : razorpay_payment_id!;
     const existing = await db
       .collection('orders')
-      .where('paymentId', '==', razorpay_payment_id)
+      .where('paymentId', '==', paymentKey)
       .limit(1)
       .get();
     if (!existing.empty) {
@@ -126,13 +158,31 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
       paymentMethod: order.paymentMethod,
     });
 
-    const razorpay = getRazorpay();
-    const rzpOrder = await razorpay.orders.fetch(razorpay_order_id);
-    const capturedAmount = Number(rzpOrder.amount);
-    if (capturedAmount !== breakdown.amountMinor) {
-      // Amount tampering or stale cart — refuse to fulfil.
-      res.status(409).json({ error: 'amount_mismatch' });
-      return;
+    if (viaCashfree) {
+      // The payment processor is the only witness worth believing.
+      const state = await fetchCashfreeOrder(cashfree_order_id!);
+      if (state.status !== CASHFREE_PAID) {
+        // ACTIVE means the shopper never completed; EXPIRED/TERMINATED means it
+        // can never complete. Neither is an error on our side, so say plainly
+        // what happened rather than returning a generic failure.
+        res.status(409).json({ error: 'payment_not_completed', status: state.status });
+        return;
+      }
+      // Cashfree holds rupees with two decimals; our total is whole rupees.
+      // Compare with a paise of tolerance rather than exact float equality.
+      if (Math.abs(state.amount - breakdown.total) > 0.01) {
+        res.status(409).json({ error: 'amount_mismatch' });
+        return;
+      }
+    } else {
+      const razorpay = getRazorpay();
+      const rzpOrder = await razorpay.orders.fetch(razorpay_order_id!);
+      const capturedAmount = Number(rzpOrder.amount);
+      if (capturedAmount !== breakdown.amountMinor) {
+        // Amount tampering or stale cart — refuse to fulfil.
+        res.status(409).json({ error: 'amount_mismatch' });
+        return;
+      }
     }
 
     // 3. Transactional stock decrement + order write.
@@ -149,12 +199,17 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
         if (!snap.exists) throw new Error(`unknown_product:${line.fabricId}`);
         const data = (snap.data() ?? {}) as Record<string, unknown>;
         const stock = data.stock;
+        // What LEAVES THE SHELF, which is not always what was ordered: lace is
+        // stocked in metres with a bundle price break, and rounding a
+        // part-bundle up hands over the whole bundle. Same rule as
+        // api/orders/place.ts — the two paths must not disagree about stock.
+        const taken = line.metersGiven ?? line.quantity;
         if (typeof stock === 'number') {
-          if (stock < line.quantity) {
+          if (stock < taken) {
             throw new Error(`insufficient_stock:${line.fabricId}`);
           }
           tx.update(productRefs[i]!, {
-            stock: FieldValue.increment(-line.quantity),
+            stock: FieldValue.increment(-taken),
             updatedAt: FieldValue.serverTimestamp(),
           });
         }
@@ -181,9 +236,11 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
         placedAt: new Date().toISOString(),
         status: 'placed',
         paymentStatus: 'paid',
-        paymentProvider: 'razorpay',
-        paymentId: razorpay_payment_id,
-        razorpayOrderId: razorpay_order_id,
+        paymentProvider: viaCashfree ? 'cashfree' : 'razorpay',
+        paymentId: paymentKey,
+        ...(viaCashfree
+          ? { cashfreeOrderId: cashfree_order_id }
+          : { razorpayOrderId: razorpay_order_id }),
         ...(breakdown.couponCode
           ? { couponCode: breakdown.couponCode, couponDiscount: breakdown.couponDiscount }
           : {}),

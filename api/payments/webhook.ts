@@ -23,6 +23,7 @@
 import type { IncomingMessage } from 'node:http';
 import { getDb, firebaseAdminConfigured } from '../_lib/firebaseAdmin.js';
 import { verifyWebhookSignature } from '../_lib/razorpay.js';
+import { cashfreeConfigured, verifyCashfreeWebhook } from '../_lib/cashfree.js';
 import { header, type ApiRequest, type ApiResponse } from '../_lib/http.js';
 import { withSentry } from '../_lib/sentry.js';
 
@@ -47,7 +48,7 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
     res.status(405).json({ error: 'method_not_allowed' });
     return;
   }
-  if (!firebaseAdminConfigured() || !process.env.RAZORPAY_WEBHOOK_SECRET) {
+  if (!firebaseAdminConfigured() || (!process.env.RAZORPAY_WEBHOOK_SECRET && !cashfreeConfigured())) {
     res.status(503).json({ error: 'payments_not_configured' });
     return;
   }
@@ -60,8 +61,20 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
     return;
   }
 
-  const signature = header(req, 'x-razorpay-signature');
-  if (!verifyWebhookSignature(raw, signature)) {
+  // Which gateway is calling is decided by WHICH SIGNATURE HEADER IS PRESENT,
+  // never by anything in the body — a forged payload must not be able to pick
+  // the cheaper check. Cashfree signs base64(HMAC(timestamp + rawBody)) over
+  // the raw bytes, which is why this route keeps bodyParser:false.
+  const cfSignature = header(req, 'x-webhook-signature');
+  const rzpSignature = header(req, 'x-razorpay-signature');
+  const viaCashfree = Boolean(cfSignature);
+
+  if (viaCashfree) {
+    if (!verifyCashfreeWebhook(raw, cfSignature, header(req, 'x-webhook-timestamp'))) {
+      res.status(400).json({ error: 'signature_mismatch' });
+      return;
+    }
+  } else if (!verifyWebhookSignature(raw, rzpSignature)) {
     res.status(400).json({ error: 'signature_mismatch' });
     return;
   }
@@ -78,11 +91,33 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
   }
 
   // We only act on successful captures. Acknowledge everything else with 200
-  // so Razorpay stops retrying.
-  const payment = event.payload?.payment?.entity;
-  if (event.event !== 'payment.captured' || !payment?.id) {
-    res.status(200).json({ ok: true, ignored: true });
-    return;
+  // so the gateway stops retrying.
+  //
+  // Cashfree's shape is different: type PAYMENT_SUCCESS_WEBHOOK, with the order
+  // under data.order and the payment under data.payment. We key on OUR order id
+  // (data.order.order_id) because that is what /verify stored as paymentId, so
+  // the two paths reconcile to the same document.
+  let payment: { id?: string; order_id?: string; status?: string } | undefined;
+  if (viaCashfree) {
+    const cf = event as unknown as {
+      type?: string;
+      data?: {
+        order?: { order_id?: string };
+        payment?: { cf_payment_id?: string | number; payment_status?: string };
+      };
+    };
+    const orderId = cf.data?.order?.order_id;
+    if (cf.type !== 'PAYMENT_SUCCESS_WEBHOOK' || !orderId) {
+      res.status(200).json({ ok: true, ignored: true });
+      return;
+    }
+    payment = { id: orderId, order_id: orderId, status: cf.data?.payment?.payment_status };
+  } else {
+    payment = event.payload?.payment?.entity;
+    if (event.event !== 'payment.captured' || !payment?.id) {
+      res.status(200).json({ ok: true, ignored: true });
+      return;
+    }
   }
 
   try {
@@ -95,12 +130,21 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
     }
     let matched = byPayment;
     if (matched.empty && payment.order_id) {
-      matched = await db.collection('orders').where('razorpayOrderId', '==', payment.order_id).limit(1).get();
+      matched = await db
+        .collection('orders')
+        .where(viaCashfree ? 'cashfreeOrderId' : 'razorpayOrderId', '==', payment.order_id)
+        .limit(1)
+        .get();
     }
     if (!matched.empty) {
       const doc = matched.docs[0]!;
       await doc.ref.set(
-        { paymentStatus: 'paid', paymentId: payment.id, paymentProvider: 'razorpay', status: 'placed' },
+        {
+          paymentStatus: 'paid',
+          paymentId: payment.id,
+          paymentProvider: viaCashfree ? 'cashfree' : 'razorpay',
+          status: 'placed',
+        },
         { merge: true },
       );
       res.status(200).json({ ok: true, reconciled: doc.id });
