@@ -14,7 +14,32 @@ another gateway.
 
 ---
 
-## 1. Variables to set in Vercel
+## 1. Where the keys come from
+
+Cashfree Dashboard → **Developers** (top right) → **API Keys**, under Payment
+Gateway. Two values: **App ID** (sent as `x-client-id`) and **Secret Key**
+(`x-client-secret`).
+
+**Sandbox and production are different key pairs.** Sandbox keys are generated
+for you automatically. Production keys need a click on *Generate API Keys* plus
+an OTP, and only appear once the Payment Gateway is activated. To read either
+back later: the ellipsis next to the key → *View API Key*, OTP again in
+production.
+
+Cashfree does not store your secret in a recoverable form — if it is lost the
+only option is to regenerate, which invalidates the old one. So copy it straight
+into Vercel rather than into a note, a chat, or a screenshot.
+
+The IP allowlist some Cashfree guides mention is a **Payouts** feature, under
+Payouts → Two-Factor Authentication. It does not apply to the Payment Gateway
+APIs this integration uses, which is fortunate: Vercel functions egress from a
+rotating IP range with no fixed address to allowlist. If Payouts is ever turned
+on for automated refunds, that becomes a real constraint and needs Vercel's
+Static IPs (a paid plan feature).
+
+---
+
+## 2. Variables to set in Vercel
 
 Project → Settings → Environment Variables. Set all four for **Production**
 (and, if you want a test run first, the sandbox pair for Preview).
@@ -48,7 +73,7 @@ live, which you will notice immediately.
 
 ---
 
-## 2. The webhook
+## 3. The webhook
 
 Cashfree Dashboard → Developers → Webhooks → add an endpoint:
 
@@ -59,7 +84,7 @@ https://tresorcouture.in/api/payments/webhook
 Subscribe to **PAYMENT_SUCCESS_WEBHOOK** at minimum.
 
 No extra secret is needed. Cashfree signs webhooks with the same Secret Key from
-step 1, as `base64(HMAC-SHA256(timestamp + rawBody))`, and the route already
+step 2, as `base64(HMAC-SHA256(timestamp + rawBody))`, and the route already
 reads the raw body so the digest matches.
 
 The webhook is a safety net, not the main path. A normal order is confirmed by
@@ -69,7 +94,7 @@ payment — the money arrives, and the order is reconciled without them.
 
 ---
 
-## 3. Test on sandbox first
+## 4. Test on sandbox first
 
 Set the sandbox pair on a Preview deployment (`CASHFREE_ENV` anything but
 `production`), then place a real order through the site with a Cashfree test
@@ -85,7 +110,7 @@ looking at.
 
 ---
 
-## 4. Go live
+## 5. Go live
 
 Production currently runs `main`, which does not contain the Cashfree
 integration at all — it is on the feature branch. So the order is:
