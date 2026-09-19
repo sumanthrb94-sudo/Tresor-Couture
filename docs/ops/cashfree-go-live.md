@@ -19,12 +19,18 @@ another gateway.
 Project → Settings → Environment Variables. Set all four for **Production**
 (and, if you want a test run first, the sandbox pair for Preview).
 
-| Variable | Value | Scope |
-|---|---|---|
-| `CASHFREE_APP_ID` | Your Cashfree **App ID** | Server only |
-| `CASHFREE_SECRET_KEY` | Your Cashfree **Secret Key** | Server only |
-| `CASHFREE_ENV` | `production` | Server only |
-| `VITE_CASHFREE_MODE` | `production` | Public (browser) |
+| Variable | Value | Scope | Status |
+|---|---|---|---|
+| `CASHFREE_APP_ID` | Your Cashfree **App ID** | Server only | **You must add** |
+| `CASHFREE_SECRET_KEY` | Your Cashfree **Secret Key** | Server only | **You must add** |
+| `CASHFREE_ENV` | `production` | Server only | ✅ already set (Production target only, so Preview stays sandbox) |
+| `VITE_CASHFREE_MODE` | `production` | Public (browser) | Add LAST — see below |
+
+`VITE_CASHFREE_MODE` is the switch that puts Card and UPI in front of customers.
+Add it only once the App ID and Secret Key are in, or shoppers will be offered
+Card, pick it, and be told online payment is unavailable. Nothing breaks and no
+money moves — the checkout says "please choose Cash on Delivery" rather than
+faking a success — but it is a bad first impression for no reason.
 
 `VITE_` variables are compiled into the JavaScript every visitor downloads.
 `VITE_CASHFREE_MODE` is safe there because it is the single word `production` —
@@ -81,10 +87,16 @@ looking at.
 
 ## 4. Go live
 
-Set the four production variables, then **redeploy**. `VITE_CASHFREE_MODE` is
-baked in at build time, so changing it does not take effect until a new build.
-The three server variables are read per request and would take effect
-immediately, but redeploying keeps all four in step.
+Production currently runs `main`, which does not contain the Cashfree
+integration at all — it is on the feature branch. So the order is:
+
+1. Add `CASHFREE_APP_ID` and `CASHFREE_SECRET_KEY` in Vercel.
+2. Add `VITE_CASHFREE_MODE` = `production`.
+3. Merge the branch into `main`.
+
+Merging triggers the deploy. `VITE_CASHFREE_MODE` is baked in at build time, so
+it must be set BEFORE the build that goes live; the server variables are read
+per request, so they only need to exist by the time the first customer pays.
 
 Then buy something small on the live site with a real card and refund yourself.
 It is the only test that proves the whole chain.
@@ -111,10 +123,9 @@ it — the key belongs to the account, not to the code, and anyone holding it ca
 still call the Razorpay API against that merchant.
 
 Go into the Razorpay dashboard and either regenerate the key or close the
-account. Also delete `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`,
-`RAZORPAY_WEBHOOK_SECRET` and `VITE_RAZORPAY_KEY_ID` from the Vercel project —
-nothing reads them now, but a stale secret sitting in an environment is one
-screenshot away from being exposed again.
+account. That is the whole remediation: the Vercel project was checked and has
+never held any `RAZORPAY_*` variable, so there is nothing to delete there and
+the storefront has been running Cash-on-Delivery-only all along.
 
 ---
 
@@ -130,7 +141,7 @@ screenshot away from being exposed again.
 4. `POST /api/payments/webhook` — Cashfree confirms server-to-server; if step 3
    never ran, this reconciles the order.
 
-Step 3 is the security boundary. Cashfree gives the browser a signature we check
-with our secret; Cashfree has no client handshake, so rather than trusting
-anything the page reports, the server asks the payment processor directly. That
-is a stronger guarantee, not a weaker one — there is no callback to forge.
+Step 3 is the security boundary. Cashfree has no client-side success token, so
+rather than trusting anything the page reports, the server asks the payment
+processor directly. That is a stronger guarantee than a signature handshake, not
+a weaker one — there is no callback to forge in the first place.
