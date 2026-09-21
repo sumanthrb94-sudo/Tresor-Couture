@@ -71,22 +71,55 @@ function canEncodeWebp(): boolean {
   return webpSupport;
 }
 
-/** Render `img` at a given longest edge and return the data URI. */
-function render(img: HTMLImageElement, maxDim: number, quality: number): string {
-  const canvas = document.createElement('canvas');
-  let { width, height } = img;
-  // Only ever scale DOWN. Blowing a small photo up to the ladder's top rung
-  // would cost bytes and add nothing — there is no detail to recover.
+/**
+ * Every stored product photo is cropped to this shape, width ÷ height.
+ *
+ * 3:4 because that is already the shape of the card: the grid renders
+ * `aspect-[3/4]` with object-cover, so a photograph of any other proportion is
+ * being cropped to this anyway — just at display time, invisibly, and
+ * differently in every other place it appears.
+ *
+ * Storing the crop instead of improvising it is what makes a gallery look
+ * deliberate. One supplier sends 768x1376, the next 1600x1200; uncropped, two
+ * shots of the SAME lace open at visibly different sizes in the viewer, the
+ * thumbnail rail is ragged, and the page reads as a scrapbook rather than a
+ * shop.
+ */
+export const PHOTO_ASPECT = 3 / 4;
+
+/**
+ * Render `img` cropped to `aspect` and scaled to fit `maxDim`.
+ *
+ * The crop is taken from the centre. For fabric photographed on a flat-lay —
+ * which is all of this catalogue — the piece runs through the middle of the
+ * frame, so the centre is where the subject is and the edges are table.
+ */
+function render(img: HTMLImageElement, maxDim: number, quality: number, aspect = PHOTO_ASPECT): string {
+  const sw = img.naturalWidth || img.width;
+  const sh = img.naturalHeight || img.height;
+
+  // The largest rectangle of `aspect` that fits inside the source.
+  let cropW = sw;
+  let cropH = Math.round(sw / aspect);
+  if (cropH > sh) {
+    cropH = sh;
+    cropW = Math.round(sh * aspect);
+  }
+  const sx = Math.round((sw - cropW) / 2);
+  const sy = Math.round((sh - cropH) / 2);
+
+  // Only ever scale DOWN — upscaling costs bytes and recovers no detail.
+  let width = cropW;
+  let height = cropH;
   if (width > height && width > maxDim) {
     height = Math.round((height * maxDim) / width);
     width = maxDim;
-  } else if (height > width && height > maxDim) {
+  } else if (height >= width && height > maxDim) {
     width = Math.round((width * maxDim) / height);
     height = maxDim;
-  } else if (width === height && width > maxDim) {
-    width = maxDim;
-    height = maxDim;
   }
+
+  const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
@@ -95,7 +128,7 @@ function render(img: HTMLImageElement, maxDim: number, quality: number): string 
   // composite onto black and arrive as a silhouette.
   ctx.fillStyle = '#FFFFFF';
   ctx.fillRect(0, 0, width, height);
-  ctx.drawImage(img, 0, 0, width, height);
+  ctx.drawImage(img, sx, sy, cropW, cropH, 0, 0, width, height);
   if (canEncodeWebp()) {
     // Slightly lower number, comparable picture: WebP's quality scale is not
     // JPEG's, and matching them by eye rather than by digit is what turns the
