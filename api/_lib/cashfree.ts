@@ -39,7 +39,19 @@ export function cashfreeLive(): boolean {
   return (process.env.CASHFREE_ENV ?? '').trim().toLowerCase() === 'production';
 }
 
-export const cashfreeBase = (): string => (cashfreeLive() ? PROD_BASE : SANDBOX_BASE);
+/**
+ * Which Cashfree to talk to.
+ *
+ * `CASHFREE_API_BASE` redirects the sandbox at a local stub so the verify and
+ * webhook handlers can be driven end to end without a merchant account. It is
+ * checked ONLY on the sandbox branch and is unreachable once CASHFREE_ENV says
+ * `production` — a live deploy always talks to api.cashfree.com, whatever the
+ * environment says. Making the payment-truth endpoint redirectable in
+ * production would hand an attacker with env access the ability to mark orders
+ * paid, which is the one thing this whole module exists to prevent.
+ */
+export const cashfreeBase = (): string =>
+  cashfreeLive() ? PROD_BASE : process.env.CASHFREE_API_BASE?.trim() || SANDBOX_BASE;
 
 function authHeaders(): Record<string, string> {
   const id = process.env.CASHFREE_APP_ID?.trim();

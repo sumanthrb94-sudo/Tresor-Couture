@@ -94,6 +94,27 @@ payment — the money arrives, and the order is reconciled without them.
 
 ---
 
+## 3a. Check the keys before a customer does
+
+The likely failure at go-live is sandbox keys with `CASHFREE_ENV=production`.
+Both halves look right in the Vercel dashboard — the variables are set, the
+word says production — and nothing complains until someone tries to pay.
+
+```bash
+CASHFREE_APP_ID=... CASHFREE_SECRET_KEY=... CASHFREE_ENV=production \
+  node scripts/check-cashfree.mjs
+```
+
+It asks Cashfree for an order id that cannot exist. Being told *no such order*
+proves the credentials were accepted; a 401 or 403 with a JSON body proves they
+were not. Nothing is created and nothing is charged, and the keys are never
+printed or written anywhere — pass them on the command line, not in a file.
+
+Run it from a machine with direct internet access. Behind a proxy the script
+says so and exits rather than blaming your keys for a blocked connection.
+
+---
+
 ## 4. Test on sandbox first
 
 Set the sandbox pair on a Preview deployment (`CASHFREE_ENV` anything but
@@ -112,16 +133,18 @@ looking at.
 
 ## 5. Go live
 
-Production currently runs `main`, which does not contain the Cashfree
-integration at all — it is on the feature branch. So the order is:
+The integration is already on `main` and deployed — the store is live and
+taking Cash on Delivery today. What is missing is only the two secrets, so the
+order is:
 
 1. Add `CASHFREE_APP_ID` and `CASHFREE_SECRET_KEY` in Vercel.
 2. Add `VITE_CASHFREE_MODE` = `production`.
-3. Merge the branch into `main`.
+3. Redeploy.
 
-Merging triggers the deploy. `VITE_CASHFREE_MODE` is baked in at build time, so
-it must be set BEFORE the build that goes live; the server variables are read
-per request, so they only need to exist by the time the first customer pays.
+`VITE_CASHFREE_MODE` is baked in at build time, so the redeploy in step 3 is
+what actually puts Card and UPI in front of customers — adding the variable
+alone changes nothing until a new build runs. The server variables are read per
+request, so they only need to exist by the time the first customer pays.
 
 Then buy something small on the live site with a real card and refund yourself.
 It is the only test that proves the whole chain.
@@ -148,9 +171,11 @@ it — the key belongs to the account, not to the code, and anyone holding it ca
 still call the Razorpay API against that merchant.
 
 Go into the Razorpay dashboard and either regenerate the key or close the
-account. That is the whole remediation: the Vercel project was checked and has
-never held any `RAZORPAY_*` variable, so there is nothing to delete there and
-the storefront has been running Cash-on-Delivery-only all along.
+account. **That is the whole remediation, and nothing in this repository can do
+it for you.** All four surfaces on our side were checked and are clean: no
+source file, no dependency in `package.json` or the lockfile, no `razorpay`
+entry in the `vercel.json` CSP, and no `RAZORPAY_*` variable in the Vercel
+project. The storefront has been running Cash-on-Delivery-only all along.
 
 ---
 

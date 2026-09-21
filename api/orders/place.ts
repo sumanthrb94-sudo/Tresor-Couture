@@ -21,7 +21,7 @@
  * /api/payments/verify, which additionally confirms the payment with Cashfree.
  */
 import { FieldValue } from 'firebase-admin/firestore';
-import { getDb } from '../_lib/firebaseAdmin.js';
+import { getDb, firebaseAdminConfigured } from '../_lib/firebaseAdmin.js';
 import { computeBreakdown } from '../_lib/pricing.js';
 import { handleCorsPreflight, rejectDisallowedOrigin } from '../_lib/cors.js';
 import { validateCsrfToken } from '../_lib/csrf.js';
@@ -31,17 +31,6 @@ import { verifyIdToken } from '../_lib/auth.js';
 import { withSentry } from '../_lib/sentry.js';
 
 const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'tresor-couture';
-
-/** True only when real WRITE credentials exist. The keyless projectId path can
- *  verify ID tokens but cannot write Firestore, so we must not advertise this
- *  endpoint as available on a keyless deploy — return 503 instead of 500-ing
- *  mid-checkout. */
-function canWriteOrders(): boolean {
-  return Boolean(
-    (process.env.FIREBASE_SERVICE_ACCOUNT && process.env.FIREBASE_SERVICE_ACCOUNT.trim()) ||
-      process.env.GOOGLE_APPLICATION_CREDENTIALS,
-  );
-}
 
 interface Body {
   order?: {
@@ -107,7 +96,14 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
     return;
   }
 
-  if (!canWriteOrders()) {
+  // The keyless projectId path can verify ID tokens but cannot write Firestore,
+  // so a keyless deploy must return 503 rather than 500 mid-checkout. This was
+  // a private copy of the check that every other route already imports from
+  // firebaseAdmin.ts — and the copy had drifted: the shared one also counts a
+  // running Firestore emulator as writable, which it genuinely is. Without that
+  // allowance the one endpoint that places orders was the one endpoint no test
+  // could drive.
+  if (!firebaseAdminConfigured()) {
     res.status(503).json({ error: 'orders_not_configured' });
     return;
   }

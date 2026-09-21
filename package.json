@@ -27,6 +27,8 @@
     "test:e2e:signed-in:smoke": "npx playwright test tests/e2e/signed-in/signed-in-smoke.spec.ts --project=signed-in-chrome --workers=1",
     "test:e2e:signed-in:lifecycle": "npx playwright test tests/e2e/signed-in/signed-in-lifecycle.spec.ts --project=signed-in-chrome --workers=1",
     "emulators": "npx -y firebase-tools emulators:start --only auth,firestore --project demo-tresor",
+    "serve:local": "tsx scripts/local-api-server.ts",
+    "test:emulator:entry-to-exit": "playwright test --config=playwright.emulator.config.ts tests/emulator/entry-to-exit.spec.ts",
     "seed:emulator": "tsx scripts/seed-emulator-users.ts",
     "seed:emulator:full": "tsx scripts/seed-emulator-full.ts",
     "test:emulator": "playwright test --config=playwright.emulator.config.ts",

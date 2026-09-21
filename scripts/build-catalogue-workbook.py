@@ -369,7 +369,7 @@ def build(path: str, with_data: bool) -> None:
 
     TASKS = [
         ('Rotate the Firebase service-account key (Firebase Console → Project settings → Service accounts → generate new, delete old)', 'Security', 'Pending', 'You', 'Current key was shared in chat — treat as exposed'),
-        ('Revoke the old Razorpay key and delete the RAZORPAY_* vars from Vercel', 'Security', 'Pending', 'You', 'Secret appeared in a screenshot; Razorpay is no longer used but the key still works on the account'),
+        ('Revoke the old Razorpay key in the Razorpay dashboard', 'Security', 'Pending', 'You', 'Secret appeared in a screenshot. Razorpay is gone from the code, the dependencies, the CSP and Vercel — checked — so this is the only step left, and it can only be done on the Razorpay account'),
         ('Paste VITE_GSTIN (from the GST certificate) into Vercel and redeploy', 'Compliance', 'Pending', 'You', 'Until then invoices/footer omit the GSTIN by design'),
         ('Update VITE_BUSINESS_ADDRESS in Vercel to the full registered address (Gachibowli · 500046)', 'Compliance', 'Pending', 'You', 'Must match the GST certificate on invoices'),
         ('Add CRON_SECRET + GOOGLE_REVIEW_URL in Vercel to switch on the review-request emails', 'Marketing', 'Pending', 'You', 'Cron is deployed and waiting on these two values'),

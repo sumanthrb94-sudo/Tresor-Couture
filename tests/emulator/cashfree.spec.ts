@@ -83,6 +83,24 @@ test('Cashfree · signatures, environment and phone handling', async () => {
     }
     rec.note('Only the exact word "production" goes live', '"prod", "true" and a blank all stay on sandbox.');
 
+    // --- the test seam cannot reach production --------------------------------
+    // CASHFREE_API_BASE points the sandbox at a local stub so the verify and
+    // webhook handlers can be tested. It redirects where the server looks to
+    // find out whether money moved, so if it applied in production, anyone who
+    // could set an env var could mark every order paid. It must be inert the
+    // moment CASHFREE_ENV says production.
+    process.env.CASHFREE_API_BASE = 'http://127.0.0.1:59999';
+    process.env.CASHFREE_ENV = 'production';
+    expect(cashfreeBase()).toBe('https://api.cashfree.com');
+    process.env.CASHFREE_ENV = 'sandbox';
+    expect(cashfreeBase()).toBe('http://127.0.0.1:59999');
+    delete process.env.CASHFREE_API_BASE;
+    expect(cashfreeBase()).toBe('https://sandbox.cashfree.com');
+    rec.note(
+      'The stub override is unreachable in production',
+      'CASHFREE_API_BASE redirects the sandbox only. A live deploy talks to api.cashfree.com whatever the environment says, so the payment-truth lookup cannot be pointed somewhere else.',
+    );
+
     // --- phone normalising ---------------------------------------------------
     // Checkout accepts +91 and 0 prefixes; Cashfree rejects the order unless it
     // gets exactly ten digits.
