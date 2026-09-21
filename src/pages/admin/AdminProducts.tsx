@@ -19,6 +19,7 @@ import {
   Check
 } from 'lucide-react';
 import { productsApi } from '../../lib/firebase';
+import { compressImage, MAIN_PHOTO_BUDGET, GALLERY_PHOTO_BUDGET } from '../../lib/compressImage';
 import { placeholderSwatch } from '../../lib/swatch';
 import ProductAudit from './ProductAudit';
 import { awaitingPhoto } from '../../lib/availability';
@@ -98,40 +99,6 @@ const parseCsvStrings = (raw: string): string[] =>
     .map(s => s.trim())
     .filter(Boolean);
 
-/** Compress an image file via canvas resize to keep payload under 1MB. */
-const compressImage = (file: File, maxDim: number, quality: number): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let { width, height } = img;
-        if (width > height && width > maxDim) {
-          height = Math.round((height * maxDim) / width);
-          width = maxDim;
-        } else if (height > maxDim) {
-          width = Math.round((width * maxDim) / height);
-          height = maxDim;
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          reject(new Error('Canvas not supported'));
-          return;
-        }
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, width, height);
-        ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
-      };
-      img.onerror = reject;
-      img.src = reader.result as string;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
 
 /** Estimate payload size in KB. */
 const payloadSizeKB = (payload: unknown): number => {
@@ -529,7 +496,10 @@ const ImageUpload: React.FC<{
   label: string;
   error?: string;
   id: string;
-}> = ({ value, onChange, label, error, id }) => {
+  /** Data-URI bytes this slot may use. The main photo gets the lion's share;
+   *  three gallery shots have to share what is left inside one document. */
+  budget?: number;
+}> = ({ value, onChange, label, error, id, budget = MAIN_PHOTO_BUDGET }) => {
   const [uploading, setUploading] = useState(false);
   const [uploadErr, setUploadErr] = useState<string | null>(null);
   const [viewing, setViewing] = useState(false);
@@ -541,10 +511,12 @@ const ImageUpload: React.FC<{
     setUploading(true);
     setUploadErr(null);
     try {
-      const base64 = await compressImage(file, 800, 0.8);
-      const sizeKB = new Blob([base64]).size / 1024;
-      if (sizeKB > 900) {
-        setUploadErr('Image still too large after compression. Try a smaller file.');
+      const base64 = await compressImage(file, budget);
+      // compressImage returns its smallest rung even when that still overshoots,
+      // so the caller has to check: Firestore rejects an oversized document
+      // whole, which would silently lose the edit in progress.
+      if (base64.length > budget) {
+        setUploadErr('That photo is too detailed to store even at the smallest size. Try cropping it first.');
         return;
       }
       onChange(base64);
@@ -1091,6 +1063,7 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
                   id={String(k)}
                   label={label}
                   value={v}
+                  budget={GALLERY_PHOTO_BUDGET}
                   onChange={val => set(k, val as Draft[typeof k])}
                 />
               ))}
