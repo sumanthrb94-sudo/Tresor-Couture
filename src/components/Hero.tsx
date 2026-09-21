@@ -102,7 +102,12 @@ const Hero: React.FC = () => {
 
   return (
     <section className="relative pt-[92px] md:pt-[108px]">
-      <div className="relative w-full h-[520px] md:h-[560px] lg:h-[600px] overflow-hidden">
+      {/* 3:4 on mobile — the shape every stored image IS — so the hero crops
+          NOTHING. A fixed 520px height against a 414px width is 0.8, and a 0.75
+          image in it loses the top and bottom: on a full-length model shot that
+          is the head. Desktop keeps a fixed height because its panel is a
+          landscape half-column, not the whole frame. */}
+      <div className="relative w-full aspect-[3/4] md:aspect-auto md:h-[560px] lg:h-[600px] overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={banner.id}
@@ -159,13 +164,16 @@ const Hero: React.FC = () => {
                 </div>
               </div>
 
-              {/* Desktop image panel */}
+              {/* Desktop image panel. The crop is biased to the upper-middle
+                  (object-[50%_28%]): this panel is a landscape half-column and
+                  the images are portrait, so something must go — centring took
+                  the head off a model shot, object-top left only a forehead. */}
               <div className="hidden md:block relative h-full overflow-hidden">
                 <FabricImage
                   photo={banner.photo}
                   fallback={banner.fallback}
                   alt={banner.title}
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-cover object-[50%_28%]"
                 />
                 <div
                   className="absolute inset-0"
