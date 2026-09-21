@@ -119,7 +119,7 @@ const Hero: React.FC = () => {
                 alt={banner.title}
                 loading="eager"
                 fetchPriority="high"
-                className="w-full h-full object-cover object-top"
+                className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[rgba(42,37,32,0.78)] via-[rgba(42,37,32,0.35)] to-[rgba(42,37,32,0.0)]" />
             </div>
@@ -163,7 +163,7 @@ const Hero: React.FC = () => {
                   photo={banner.photo}
                   fallback={banner.fallback}
                   alt={banner.title}
-                  className="absolute inset-0 w-full h-full object-cover object-top"
+                  className="absolute inset-0 w-full h-full object-cover"
                 />
                 <div
                   className="absolute inset-0"

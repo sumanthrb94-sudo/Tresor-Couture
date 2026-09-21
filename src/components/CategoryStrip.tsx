@@ -44,7 +44,15 @@ const CategoryStrip: React.FC = () => {
           View all
         </button>
       </div>
-      <div className="grid grid-flow-col auto-cols-[78%] sm:auto-cols-[44%] md:auto-cols-auto md:grid-flow-row md:grid-cols-4 lg:grid-cols-7 gap-3 md:gap-4 overflow-x-auto md:overflow-visible snap-x snap-mandatory scrollbar-none pb-2">
+      {/* 58% rather than 78%: two tiles and a peek of the third, which is what
+          tells a thumb the rail scrolls. At 78% a single tile filled the screen
+          and the strip read as one big image. */}
+      <div className="grid grid-flow-col auto-cols-[58%] sm:auto-cols-[40%] md:auto-cols-auto md:grid-flow-row md:grid-cols-4 lg:grid-cols-7 gap-3 md:gap-4 overflow-x-auto md:overflow-visible snap-x snap-mandatory scrollbar-none pb-2">
+        {/* Tiles are 3:4 — the shape every stored photograph now IS — so the
+            whole frame shows. A square box cropped a quarter away, and
+            `object-top` threw away the BOTTOM quarter, which is where the
+            piece sits once photos are centre-cropped at upload. One tile was
+            rendering as a bare patch of skin off the top of a model shot. */}
         {shown.map(tile => (
           <button
             key={tile.name}
@@ -53,7 +61,7 @@ const CategoryStrip: React.FC = () => {
             aria-label={`Shop ${tile.name}`}
           >
             <div
-              className="relative aspect-square w-full overflow-hidden rounded-sm shadow-sm transition-transform duration-500 group-hover:-translate-y-0.5"
+              className="relative aspect-[3/4] w-full overflow-hidden rounded-sm shadow-sm transition-transform duration-500 group-hover:-translate-y-0.5"
               style={{
                 background: `linear-gradient(135deg, ${tile.color} 0%, var(--color-myntra-bg-soft) 100%)`
               }}
@@ -63,7 +71,7 @@ const CategoryStrip: React.FC = () => {
                 fallback={tile.showcase.hero?.image ?? tile.showcase.photo}
                 alt={tile.name}
                 loading="lazy"
-                className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
               {/* The name sits on the photograph, so it needs its own ground. */}
               <span className="absolute inset-x-0 bottom-0 pt-8 pb-3 px-3 bg-gradient-to-t from-black/70 via-black/25 to-transparent">
