@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { Recorder } from './lib/recorder';
-import { colourSiblings, colourwayCount, styleKey } from '../../src/lib/styleGroup';
+import {
+  colourSiblings, colourwayCount, styleKey,
+  collapseToStyles, colourFacet, matchesColour,
+} from '../../src/lib/styleGroup';
 import type { Fabric } from '../../src/types';
 
 /**
@@ -103,6 +106,46 @@ test('Product page · the colourway rail offers every live colour, once', async 
 
     // A product listed twice in the catalogue snapshot must count once.
     expect(colourwayCount(blush, [blush, blush, emerald])).toBe(2);
+
+    // --- one card per DESIGN in a browse grid --------------------------------
+    // The Apple shelf: "iPhone 18" is one tile with the variants inside it, not
+    // thirty tiles differing by a word.
+    const other2 = p({ id: 'z2', styleCode: 'TC-FAN', colourName: 'Coral' });
+    const loose = p({ id: 'solo', name: 'Gold Braid' });           // no style code
+    const grid = collapseToStyles([blush, emerald, grey, other, other2, loose]);
+    expect(grid).toHaveLength(3);                                   // 2 designs + 1 one-off
+    expect(grid.map(x => x.id)).toEqual(['a', 'z', 'solo']);
+    rec.note('Eight colours of one design become one card', 'The one-off with no style code is untouched.');
+
+    // The lead must be something a shopper can actually buy. Leading with a
+    // sold-out colour while siblings are in stock reads as "design unavailable".
+    const goneFirst = p({ id: 'g1', styleCode: 'TC-X', colourName: 'Wine', barcode: 'TC00142', stock: 0 });
+    const hasStock = p({ id: 'g2', styleCode: 'TC-X', colourName: 'Ivory', barcode: 'TC00143', stock: 4 });
+    expect(collapseToStyles([goneFirst, hasStock]).map(x => x.id)).toEqual(['g2']);
+    rec.note('The card leads with a colour that is in stock', 'Not the first one that happens to be sold out.');
+
+    // All sold out: fall back to barcode order rather than dropping the design.
+    const allGone = collapseToStyles([
+      p({ id: 'h2', styleCode: 'TC-Y', barcode: 'TC00151', stock: 0 }),
+      p({ id: 'h1', styleCode: 'TC-Y', barcode: 'TC00150', stock: 0 }),
+    ]);
+    expect(allGone.map(x => x.id)).toEqual(['h1']);
+
+    // A group keeps its ORIGINAL position, so a price or A-Z sort still means
+    // what it says rather than shuffling designs to the front.
+    const keptOrder = collapseToStyles([loose, blush, other, emerald]);
+    expect(keptOrder.map(x => x.id)).toEqual(['solo', 'a', 'z']);
+
+    // --- the colour facet ----------------------------------------------------
+    // colourName and colors[] are different things and BOTH have to be offered,
+    // or a colour-filtered grid silently drops every lace.
+    const withChips = p({ id: 'c1', colors: [{ name: 'Peacock', hex: '#0E5E6F' }] });
+    expect(colourFacet([blush, emerald, withChips])).toEqual(['Blush', 'Emerald', 'Peacock']);
+    expect(matchesColour(emerald, new Set(['Emerald']))).toBe(true);
+    expect(matchesColour(emerald, new Set(['Blush']))).toBe(false);
+    expect(matchesColour(withChips, new Set(['Peacock']))).toBe(true);
+    expect(matchesColour(blush, new Set())).toBe(true);            // no filter = everything
+    rec.note('Filtering offers colourway names, not just swatch lists', 'Laces carry colourName; without this the facet would be empty for them.');
 
     rec.finish('passed');
   } catch (err) {

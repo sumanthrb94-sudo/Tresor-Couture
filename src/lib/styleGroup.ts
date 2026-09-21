@@ -115,3 +115,91 @@ export function colourwayCount(f: Fabric, catalogue: Fabric[]): number {
   if (isListed(f)) ids.add(f.id);
   return ids.size < 2 ? 0 : ids.size;
 }
+
+/**
+ * One card per DESIGN for a browse grid, instead of one per colourway.
+ *
+ * The Apple shelf: "iPhone 18" is one tile, and the Pro, the storage and the
+ * colour are chosen inside it — not thirty tiles differing by a word. A lace
+ * design in eight colours is the same shape, and eight near-identical
+ * photographs of the same border teaches a shopper nothing while pushing the
+ * next design off the screen.
+ *
+ * So a group collapses to its lead colourway, which carries the "8 colours"
+ * badge and opens a page whose swatch rail holds the rest. NOTHING IS LOST:
+ * every colourway keeps its own page, its own URL and its own barcode, and a
+ * shared link still opens the exact colour it names.
+ *
+ * The lead prefers a colourway that is IN STOCK. Leading with a sold-out one
+ * while seven siblings are available would read as "this design is unavailable"
+ * and cost the sale the grid exists to make. Ties, and all-sold-out groups,
+ * fall back to barcode order, which is the order the studio shot them in.
+ *
+ * Order is preserved: a group sits where its lead sat, so an A–Z or
+ * price sort still means what it says.
+ *
+ * Deliberately NOT used on search results — see collapseForBrowse's caller.
+ * Someone searching "emerald" wants the emerald one, not the design it belongs
+ * to with emerald hidden one click away.
+ */
+export function collapseToStyles(products: Fabric[]): Fabric[] {
+  const leadOf = new Map<string, Fabric>();
+  const out: Fabric[] = [];
+
+  for (const p of products) {
+    const key = styleKey(p);
+    if (!key) {
+      out.push(p);                      // ungrouped pieces pass through untouched
+      continue;
+    }
+    const current = leadOf.get(key);
+    if (!current) {
+      leadOf.set(key, p);
+      out.push(p);                      // reserve this group's place in the order
+      continue;
+    }
+    if (beatsLead(p, current)) {
+      leadOf.set(key, p);
+      out[out.indexOf(current)] = p;    // same slot, better representative
+    }
+  }
+  return out;
+}
+
+/** In stock wins; otherwise the earlier barcode, which is shoot order. */
+function beatsLead(candidate: Fabric, lead: Fabric): boolean {
+  const cIn = inStock(candidate);
+  const lIn = inStock(lead);
+  if (cIn !== lIn) return cIn;
+  const cb = (candidate.barcode ?? '').trim();
+  const lb = (lead.barcode ?? '').trim();
+  if (cb && lb) return cb < lb;
+  return Boolean(cb) && !lb;
+}
+
+/**
+ * Every colour name a shopper can filter by.
+ *
+ * Reads `colourName` as well as `colors[]`, because those are different things:
+ * `colors[]` lists the colours PRESENT in a piece, while `colourName` says which
+ * colourway the piece IS. Laces use the second, so a facet built from `colors[]`
+ * alone would offer nothing for them and quietly drop every lace from a
+ * colour-filtered grid.
+ */
+export function colourFacet(products: Fabric[]): string[] {
+  const s = new Set<string>();
+  for (const p of products) {
+    const own = (p.colourName ?? '').trim();
+    if (own) s.add(own);
+    p.colors?.forEach(c => c.name && s.add(c.name));
+  }
+  return [...s].sort((a, b) => a.localeCompare(b));
+}
+
+/** Does this product match any of the chosen colour names? */
+export function matchesColour(p: Fabric, chosen: Set<string>): boolean {
+  if (chosen.size === 0) return true;
+  const own = (p.colourName ?? '').trim();
+  if (own && chosen.has(own)) return true;
+  return (p.colors ?? []).some(c => chosen.has(c.name));
+}

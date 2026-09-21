@@ -6,6 +6,7 @@ import {
   MASTER_CATEGORY_TILES
 } from '../constants';
 import { masterCategoriesFor, subcategoriesFor } from '../lib/subcategories';
+import { collapseToStyles, colourFacet, matchesColour } from '../lib/styleGroup';
 import { Fabric, MasterCategory } from '../types';
 import ProductCard from '../components/ProductCard';
 import { useRouter } from '../context/RouterContext';
@@ -104,8 +105,7 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
 
   const allColors = useMemo(() => {
     const s = new Set<string>();
-    (products ?? []).forEach(f => f.colors?.forEach(c => s.add(c.name)));
-    return Array.from(s).sort();
+    return colourFacet(products ?? []);
   }, [products]);
 
   const toggleSet = (setter: React.Dispatch<React.SetStateAction<Set<string>>>, v: string) =>
@@ -119,7 +119,7 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
     const source = products ?? [];
     let list: Fabric[] = source.filter(f => {
       if (weaveTypes.size > 0 && !weaveTypes.has(f.category)) return false;
-      if (colors.size > 0 && !(f.colors ?? []).some(c => colors.has(c.name))) return false;
+      if (!matchesColour(f, colors)) return false;
       if (priceBrackets.size > 0) {
         const ok = PRICE_BRACKETS.some(b => priceBrackets.has(b.id) && f.price >= b.min && f.price < b.max);
         if (!ok) return false;
@@ -134,6 +134,16 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
       case 'popularity': list = [...list].sort((a, b) => (b.reviewCount ?? 0) - (a.reviewCount ?? 0)); break;
       case 'newest': list = [...list].reverse(); break;
     }
+    // One card per DESIGN, the way a phone shop lists "iPhone 18" once and puts
+    // the variants inside it — eight near-identical photographs of one lace
+    // border teach a shopper nothing and push the next design off the screen.
+    //
+    // EXCEPT when a colour filter is on. Someone who asked for Emerald wants the
+    // emerald pieces, not the designs that happen to come in emerald with the
+    // emerald one a click away. Collapsing is for browsing; filtering is for
+    // finding, and they want opposite things.
+    if (colors.size === 0) list = collapseToStyles(list);
+
     // Applied last, so it outranks every sort: nobody wants "price low to high"
     // to open on a row of pieces they cannot buy. Sold-out stays in the grid —
     // hiding it would collapse thin categories and 404 links already shared —

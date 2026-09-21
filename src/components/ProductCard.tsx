@@ -103,12 +103,14 @@ const ProductCard: React.FC<Props> = ({ fabric, compact = false }) => {
               {fabric.subCategory}
             </p>
           )}
-          {/* Every colourway keeps its own card — nothing is hidden from the grid,
-              from search or from a shared link. The badge is only a signal that
-              this design continues in other colours. */}
+          {/* In a browse grid this card stands for the whole DESIGN, so say how
+              many colours are behind it. Nothing is hidden: every colourway
+              keeps its own page, URL and barcode, search returns them
+              individually, and filtering by colour stops collapsing entirely. */}
           {colourways > 1 && (
             <p className="text-[10px] font-bold text-[#5C3A8E] mb-1" data-testid="colourway-count">
               {colourways} colours
+              {fabric.colourName ? <span className="font-semibold text-[color:var(--color-myntra-ink-mute)]"> · shown in {fabric.colourName}</span> : null}
             </p>
           )}
           {fabric.category === 'Laces' && fabric.unitType && (
