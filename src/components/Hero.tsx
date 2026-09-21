@@ -5,6 +5,7 @@ import { MASTER_CATEGORY_TILES } from '../constants';
 import { useRouter } from '../context/RouterContext';
 import { useCatalog } from '../context/CatalogContext';
 import { categoryShowcase } from '../lib/showcase';
+import { useHomeArt } from '../lib/homeArt';
 import FabricImage from './FabricImage';
 
 /**
@@ -52,11 +53,12 @@ interface Slide {
 const Hero: React.FC = () => {
   const { navigate } = useRouter();
   const { products } = useCatalog();
+  const art = useHomeArt();
   const [idx, setIdx] = useState(0);
 
   const slides = useMemo<Slide[]>(() => {
     const tagline = new Map(MASTER_CATEGORY_TILES.map(t => [t.name as string, t.tagline]));
-    return categoryShowcase(products).slice(0, MAX_SLIDES).map((s, i) => {
+    return categoryShowcase(products, art).slice(0, MAX_SLIDES).map((s, i) => {
       const back = BACKDROPS[i % BACKDROPS.length];
       return {
         id: s.category,
@@ -74,7 +76,7 @@ const Hero: React.FC = () => {
         ...back,
       };
     });
-  }, [products]);
+  }, [products, art]);
 
   const total = slides.length;
 

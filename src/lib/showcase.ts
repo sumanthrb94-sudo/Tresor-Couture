@@ -44,8 +44,15 @@ function pickHero(group: Fabric[]): Fabric | undefined {
   )[0];
 }
 
-/** Every master category that has a live product, deepest first. */
-export function categoryShowcase(products: Fabric[]): Showcase[] {
+/**
+ * Every master category that has a live product, deepest first.
+ *
+ * `art` overrides the face of a category with a purpose-made category image
+ * (src/lib/homeArt.ts). A category with no art keeps the product photograph,
+ * so the page degrades to its previous behaviour rather than to a hole. `hero`
+ * still points at the real product either way — only the picture changes.
+ */
+export function categoryShowcase(products: Fabric[], art: Record<string, string> = {}): Showcase[] {
   const groups = new Map<string, Fabric[]>();
   for (const p of products) {
     const master = p.masterCategory ?? p.category;
@@ -57,7 +64,7 @@ export function categoryShowcase(products: Fabric[]): Showcase[] {
   const out: Showcase[] = [];
   for (const [category, items] of groups) {
     const hero = pickHero(items);
-    const photo = (hero?.photo || hero?.image || '').trim();
+    const photo = (art[category] || hero?.photo || hero?.image || '').trim();
     if (!photo) continue;
     out.push({
       category,

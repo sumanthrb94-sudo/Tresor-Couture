@@ -3,6 +3,7 @@ import { MASTER_CATEGORY_TILES } from '../constants';
 import { useRouter } from '../context/RouterContext';
 import { useCatalog } from '../context/CatalogContext';
 import { categoryShowcase } from '../lib/showcase';
+import { useHomeArt } from '../lib/homeArt';
 import FabricImage from './FabricImage';
 
 /**
@@ -20,16 +21,17 @@ import FabricImage from './FabricImage';
 const CategoryStrip: React.FC = () => {
   const { navigate } = useRouter();
   const { products } = useCatalog();
+  const art = useHomeArt();
 
   // A tile promising a category the shop cannot show is worse than one tile
   // fewer, and a category is declared in the admin long before its first piece
   // is photographed.
   const shown = React.useMemo(() => {
-    const live = new Map(categoryShowcase(products).map(s => [s.category, s]));
+    const live = new Map(categoryShowcase(products, art).map(s => [s.category, s]));
     return MASTER_CATEGORY_TILES
       .filter(t => live.has(t.name))
       .map(t => ({ ...t, showcase: live.get(t.name)! }));
-  }, [products]);
+  }, [products, art]);
 
   if (shown.length === 0) return null;
 
