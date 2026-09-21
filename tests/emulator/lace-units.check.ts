@@ -1,3 +1,16 @@
+/**
+ * The three lace shapes, checked against the two modules that must agree about
+ * them: what the shopper is told (src/lib/laceUnits) and what they are charged
+ * (api/_lib/lacePricing).
+ *
+ * A standalone script, run with `npm run check:lace-units` — NOT a Playwright
+ * spec, and deliberately not named like one. It runs its assertions at import
+ * and ends with process.exit(). While it was called `lace-units.spec.ts` it sat
+ * inside Playwright's testDir, so collecting the emulator suite imported it,
+ * and the exit(0) killed the run before a single test executed: `playwright
+ * test` with no file argument printed "all passed" and exited 0 having tested
+ * nothing at all. A green suite that runs nothing is worse than a red one.
+ */
 import { unitBadge, stockLabel, bundleOnly, meteredLace, quantityNoun } from '../../src/lib/laceUnits';
 import { costOf } from '../../api/_lib/lacePricing';
 
