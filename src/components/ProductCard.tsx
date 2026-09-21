@@ -9,6 +9,7 @@ import FabricImage from './FabricImage';
 import QuickAddModal from './QuickAddModal';
 import { inStock } from '../lib/availability';
 import { colourwayCount } from '../lib/styleGroup';
+import { unitBadge } from '../lib/laceUnits';
 import { useCatalog } from '../context/CatalogContext';
 
 interface Props {
@@ -113,14 +114,8 @@ const ProductCard: React.FC<Props> = ({ fabric, compact = false }) => {
               {fabric.colourName ? <span className="font-semibold text-[color:var(--color-myntra-ink-mute)]"> · shown in {fabric.colourName}</span> : null}
             </p>
           )}
-          {fabric.category === 'Laces' && fabric.unitType && (
-            <p className="text-[11px] font-semibold text-[#5C3A8E] mb-1.5">
-              {fabric.unitType === 'bundle' && fabric.bundleSizeMeters
-                ? `${fabric.bundleSizeMeters}m bundle`
-                : fabric.unitType === 'per meter'
-                ? 'Sold per meter'
-                : 'Sold as unit'}
-            </p>
+          {unitBadge(fabric) && (
+            <p className="text-[11px] font-semibold text-[#5C3A8E] mb-1.5">{unitBadge(fabric)}</p>
           )}
           <div className="flex items-baseline gap-1.5 flex-wrap">
             <span className="text-[14px] font-bold text-[color:var(--color-myntra-navy)]">

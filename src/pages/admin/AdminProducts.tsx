@@ -971,11 +971,16 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
           </div>
 
           {/* Laces / metered pricing */}
-          {draft.category === 'Laces' && (draft.unitType === 'per meter' || draft.unitType === 'bundle') && (
+          {/* 'unit' is here too: a lace sold ONLY as a whole bundle is a unit
+              whose unit happens to be N metres long, and the operator still
+              has to be able to say how long that is. */}
+          {draft.category === 'Laces' && (draft.unitType === 'per meter' || draft.unitType === 'bundle' || draft.unitType === 'unit') && (
             <div className="mt-4 border border-[color:var(--color-myntra-border-soft)] rounded-md p-3 bg-[color:var(--color-myntra-bg-soft)]">
               <div className="flex items-center gap-2 mb-2 text-[color:var(--color-myntra-navy)]">
                 <Ruler className="w-4 h-4" />
-                <span className="text-[12px] font-bold uppercase tracking-[0.12em]">Laces / Metered Pricing</span>
+                <span className="text-[12px] font-bold uppercase tracking-[0.12em]">
+                  {draft.unitType === 'unit' ? 'Laces / Bundle Only' : 'Laces / Metered Pricing'}
+                </span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {/* Derived, not entered. Checkout charges `price` and nothing
@@ -983,16 +988,30 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
                     separate per-metre box was a second place to write one
                     number: set price 200 and this 250, and the customer paid
                     200 while every admin screen said 250. It now mirrors the
-                    selling price, which for lace IS the per-metre rate. */}
-                <Field label="Selling Price per Meter (₹)">
-                  <div className="input-box bg-[color:var(--color-myntra-bg-soft)] flex items-center justify-between">
-                    <span className="font-semibold">{draft.price === '' ? '—' : `₹${draft.price}`}</span>
-                    <span className="text-[10px] uppercase tracking-wide text-[color:var(--color-myntra-ink-mute)]">
-                      = selling price
-                    </span>
-                  </div>
-                </Field>
-                {draft.unitType === 'bundle' && (
+                    selling price, which for lace IS the per-metre rate.
+                    Hidden for a bundle-only lace, where `price` buys a whole
+                    bundle and calling it a per-metre rate would be a lie. */}
+                {draft.unitType !== 'unit' && (
+                  <Field label="Selling Price per Meter (₹)">
+                    <div className="input-box bg-[color:var(--color-myntra-bg-soft)] flex items-center justify-between">
+                      <span className="font-semibold">{draft.price === '' ? '—' : `₹${draft.price}`}</span>
+                      <span className="text-[10px] uppercase tracking-wide text-[color:var(--color-myntra-ink-mute)]">
+                        = selling price
+                      </span>
+                    </div>
+                  </Field>
+                )}
+                {draft.unitType === 'unit' && (
+                  <Field label="Price of ONE bundle (₹)">
+                    <div className="input-box bg-[color:var(--color-myntra-bg-soft)] flex items-center justify-between">
+                      <span className="font-semibold">{draft.price === '' ? '—' : `₹${draft.price}`}</span>
+                      <span className="text-[10px] uppercase tracking-wide text-[color:var(--color-myntra-ink-mute)]">
+                        = selling price
+                      </span>
+                    </div>
+                  </Field>
+                )}
+                {(draft.unitType === 'bundle' || draft.unitType === 'unit') && (
                   <>
                     <Field label="Bundle Size (meters)" error={errors.bundleSizeMeters}>
                       <input
@@ -1004,18 +1023,32 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
                         placeholder="e.g. 9"
                       />
                     </Field>
-                    <Field label="Bundle Price (₹)" error={errors.bundlePrice}>
-                      <input
-                        type="number"
-                        min={0}
-                        className="input-box"
-                        value={draft.bundlePrice}
-                        onChange={e => set('bundlePrice', e.target.value)}
-                      />
-                    </Field>
+                    {/* Only for a price break. On a bundle-only lace the
+                        selling price ALREADY is the bundle price, and a second
+                        box for it would be a second place to write one number. */}
+                    {draft.unitType === 'bundle' && (
+                      <Field label="Bundle Price (₹)" error={errors.bundlePrice}>
+                        <input
+                          type="number"
+                          min={0}
+                          className="input-box"
+                          value={draft.bundlePrice}
+                          onChange={e => set('bundlePrice', e.target.value)}
+                        />
+                      </Field>
+                    )}
                   </>
                 )}
               </div>
+              {/* What Stock counts changes with the shape, and getting it wrong
+                  is how a shelf oversells. Say it where stock is being set. */}
+              <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] mt-2">
+                {draft.unitType === 'unit'
+                  ? 'Sold only as a whole bundle — Stock counts BUNDLES, and the price above buys one.'
+                  : draft.unitType === 'bundle'
+                  ? 'Cut from the roll — Stock counts METRES. The bundle is a cheaper rate for the same metres.'
+                  : 'Cut from the roll — Stock counts METRES.'}
+              </p>
             </div>
           )}
 

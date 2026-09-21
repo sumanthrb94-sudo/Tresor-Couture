@@ -17,6 +17,7 @@ import { costOf, describeLine, hasBundleBreak } from '../../api/_lib/lacePricing
 import { useCatalog } from '../context/CatalogContext';
 import { useProductMeta } from '../lib/seoMeta';
 import { analytics } from '../lib/analytics';
+import { unitBadge, stockLabel, meteredLace } from '../lib/laceUnits';
 import type { Fabric } from '../types';
 
 interface Props {
@@ -108,8 +109,9 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
     [fabric, catalogProducts],
   );
 
-  const isLace = fabric?.category === 'Laces'
-    && (fabric.unitType === 'per meter' || fabric.unitType === 'bundle');
+  // Metered lace only. A bundle-only lace is counted in BUNDLES, so the
+  // quantity picker must not label it "in meters" — see src/lib/laceUnits.ts.
+  const isLace = fabric?.category === 'Laces' && meteredLace(fabric);
   // Only worth showing when a bundle break exists — for plain per-metre lace the
   // headline price times the length is the whole story, and a box restating it
   // is noise.
@@ -293,11 +295,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
             {fabric.category === 'Laces' && (
               <div className="flex flex-wrap items-center gap-2 mb-4">
                 <span className="inline-block px-2.5 py-1 rounded-full bg-[#F1ECF7] text-[#5C3A8E] border border-[#D6C9E9] text-[11px] font-bold uppercase tracking-wide">
-                  {fabric.unitType === 'bundle' && fabric.bundleSizeMeters
-                    ? `${fabric.bundleSizeMeters}m bundle`
-                    : fabric.unitType === 'per meter'
-                    ? 'Per meter'
-                    : 'Lace'}
+                  {unitBadge(fabric) ?? 'Lace'}
                 </span>
                 {fabric.productCode && (
                   <span className="text-[12px] text-[color:var(--color-myntra-ink-mute)]">Code: {fabric.productCode}</span>
@@ -521,7 +519,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
                         <dl className="grid grid-cols-2 gap-x-6 gap-y-2">
                           <dt className="text-[color:var(--color-myntra-ink-soft)]">Fabric</dt><dd className="font-semibold">{fabric.weaveType ?? fabric.category}</dd>
                           <dt className="text-[color:var(--color-myntra-ink-soft)]">Category</dt><dd className="font-semibold">{fabric.category}</dd>
-                          <dt className="text-[color:var(--color-myntra-ink-soft)]">In Stock</dt><dd className="font-semibold">{stock} {fabric.category === 'Laces' ? (fabric.unitType === 'bundle' ? `meters (${fabric.bundleSizeMeters ? Math.floor(stock / fabric.bundleSizeMeters) : stock} bundle${Math.floor(stock / (fabric.bundleSizeMeters ?? 1)) === 1 ? '' : 's'})` : 'meters') : (stock === 1 ? 'piece' : 'pieces')}</dd>
+                          <dt className="text-[color:var(--color-myntra-ink-soft)]">In Stock</dt><dd className="font-semibold">{stock} {stockLabel(fabric, stock)}</dd>
                           <dt className="text-[color:var(--color-myntra-ink-soft)]">Tags</dt><dd className="font-semibold">{fabric.tags.join(', ')}</dd>
                         </dl>
                       )}
