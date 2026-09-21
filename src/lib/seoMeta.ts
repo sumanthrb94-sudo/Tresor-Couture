@@ -86,7 +86,9 @@ export function useRouteMeta(route: Route): void {
     upsertCanonical(ORIGIN + buildPath(route));
     // Private surfaces must never enter the index even though they now have
     // real URLs.
-    const priv = ['account', 'admin', 'admin-brand-kit', 'cart', 'checkout', 'confirmation', 'auth-action', 'login', 'register'];
+    // 'supplier' belongs here: it is a working surface for one consignment
+    // partner, and an indexed intake form invites strangers to fill it in.
+    const priv = ['account', 'admin', 'admin-brand-kit', 'cart', 'checkout', 'confirmation', 'auth-action', 'login', 'register', 'supplier'];
     upsertMeta('robots', priv.includes(route.name) ? 'noindex, nofollow' : 'index, follow');
   }, [route]);
 }

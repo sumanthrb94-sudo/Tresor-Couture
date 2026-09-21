@@ -23,6 +23,25 @@ service cloud.firestore {
     function optionalString(data, field, maxLen) {
       return !(field in data) || (data[field] is string && data[field].size() <= maxLen);
     }
+    // A consignment partner who may fill in the intake form. A separate claim
+    // from `admin` on purpose: filling in a delivery note is not the same
+    // authority as editing the live catalogue.
+    function isSupplier() {
+      return isSignedIn() && (request.auth.token.supplier == true || request.auth.token.admin == true);
+    }
+    // Bounds on an intake document. Photographs ride inline as data URIs and a
+    // Firestore document is capped at 1MB, so the colour count is capped too:
+    // without it a supplier could write a document the admin console can then
+    // never load.
+    function intakeShapeOk(data) {
+      return data.designName is string && data.designName.size() > 0 && data.designName.size() <= 120
+        && data.colours is list && data.colours.size() <= 12
+        && data.status in ['draft', 'submitted', 'imported']
+        && optionalString(data, 'category', 60)
+        && optionalString(data, 'subCategory', 60)
+        && optionalString(data, 'styleCode', 40)
+        && optionalString(data, 'notes', 2000);
+    }
     // A return may be raised only against an order the caller owns, that has been
     // DELIVERED, and only within the 7-day return window measured from the
     // server-stamped deliveredAt. (get() results are cached per evaluation, so the
@@ -284,6 +303,34 @@ service cloud.firestore {
     // the customer's uid. Never customer-readable — this is back-office data.
     match /crm/{uid} {
       allow read, write: if isAdmin();
+    }
+
+    /* ---------- supplier intake ---------- */
+    // A consignment partner drafts designs here; an admin turns them into
+    // products. Deliberately NOT public-writable: photographs are stored inline
+    // as data URIs, so an open door here is an open door to filling the
+    // database with megabyte documents at the studio's expense. Access is the
+    // `supplier` custom claim (scripts/set-supplier.ts), which means handing
+    // the URL to the wrong person grants nothing.
+    //
+    // A supplier sees ONLY their own submissions — two consignment partners
+    // must not be able to read each other's costs.
+    match /intake/{docId} {
+      allow read:   if isAdmin() || (isSupplier() && resource.data.userId == request.auth.uid);
+      allow create: if isSupplier()
+        && request.resource.data.userId == request.auth.uid
+        && intakeShapeOk(request.resource.data);
+      // The supplier may keep editing until it is imported; after that the
+      // document is the record of what was imported and only an admin touches
+      // it. `userId` is pinned so a submission cannot be reassigned.
+      allow update: if (isAdmin() && request.resource.data.userId == resource.data.userId)
+        || (isSupplier()
+            && resource.data.userId == request.auth.uid
+            && request.resource.data.userId == request.auth.uid
+            && resource.data.status != 'imported'
+            && intakeShapeOk(request.resource.data));
+      allow delete: if isAdmin()
+        || (isSupplier() && resource.data.userId == request.auth.uid && resource.data.status == 'draft');
     }
 
     /* ---------- deny everything else ---------- */

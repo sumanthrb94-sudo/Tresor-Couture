@@ -421,13 +421,58 @@ export type AdminSection =
   | 'delivery'
   | 'bulk-email'
   | 'seo'
+  | 'intake'
   | 'analytics';
 
 export const ADMIN_SECTIONS: AdminSection[] = [
-  'dashboard', 'counter', 'products', 'inventory', 'orders', 'returns', 'billing',
+  'dashboard', 'counter', 'products', 'intake', 'inventory', 'orders', 'returns', 'billing',
   'customers', 'support', 'coupons', 'reviews', 'compliance', 'delivery',
   'bulk-email', 'seo', 'analytics',
 ];
+
+/* ───────────── supplier intake ───────────── */
+
+/**
+ * One colourway a supplier submitted, inside a design.
+ *
+ * Deliberately all-optional strings rather than numbers: this is what someone
+ * TYPED, not a validated product. A half-filled row has to survive being saved
+ * so the supplier can come back to it, and the numbers are parsed at import
+ * time, where a bad one can be shown next to the row that caused it.
+ */
+export interface IntakeColour {
+  colourName: string;
+  cost: string;
+  price: string;
+  mrp: string;
+  stock: string;
+  /** Data-URI JPEGs, already downscaled in the browser. First is the main shot. */
+  photos: string[];
+}
+
+export interface IntakeSubmission {
+  id: string;
+  /** Firebase uid of the supplier who wrote it. */
+  userId: string;
+  /** The design name, shared by every colourway — the "iPhone 18" of the group. */
+  designName: string;
+  category: string;
+  subCategory: string;
+  styleCode: string;
+  unitType: '' | 'unit' | 'per meter' | 'bundle';
+  bundleSizeMeters: string;
+  bundlePrice: string;
+  notes: string;
+  colours: IntakeColour[];
+  /** `draft` is the supplier's own working copy; `submitted` is handed over.
+   *  `imported` means products were created from it and it is done. */
+  status: 'draft' | 'submitted' | 'imported';
+  createdAt: string;
+  updatedAt: string;
+  /** Set when the admin turns it into products, so it cannot be imported twice. */
+  importedAt?: string;
+  importedProductIds?: string[];
+}
 
 export type Route =
   | { name: 'home' }
@@ -442,6 +487,7 @@ export type Route =
   | { name: 'account'; tab?: 'profile' | 'orders' | 'returns' | 'wishlist' | 'addresses' }
   | { name: 'admin'; section?: AdminSection }
   | { name: 'admin-brand-kit'; section?: string }
+  | { name: 'supplier' }
   | { name: 'policy'; policy: PolicyKey }
   | { name: 'auth-action'; mode: string; oobCode: string; apiKey?: string; continueUrl?: string }
   | { name: 'not-found'; path?: string };

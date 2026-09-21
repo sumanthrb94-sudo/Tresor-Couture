@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { LayoutDashboard, Package, Boxes, ShoppingBag, RotateCcw, ReceiptText, Users, Headphones, Tag, Star, Scale, Zap, Mail, Palette, LogOut, ExternalLink, ChevronDown, Search, ScanLine, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Package, Boxes, ShoppingBag, RotateCcw, ReceiptText, Users, Headphones, Tag, Star, Scale, Zap, Mail, Palette, LogOut, ExternalLink, ChevronDown, Search, ScanLine, BarChart3, Inbox } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useRouter } from '../../context/RouterContext';
 import { chatApi } from '../../lib/support';
@@ -10,6 +10,7 @@ const NAV: { id: AdminSection; label: string; Icon: React.ComponentType<{ classN
   { id: 'dashboard', label: 'Dashboard', Icon: LayoutDashboard },
   { id: 'counter', label: 'Counter', Icon: ScanLine },
   { id: 'products', label: 'Products', Icon: Package },
+  { id: 'intake', label: 'Supplier Intake', Icon: Inbox },
   { id: 'inventory', label: 'Inventory', Icon: Boxes },
   { id: 'orders', label: 'Orders', Icon: ShoppingBag },
   { id: 'returns', label: 'Returns', Icon: RotateCcw },

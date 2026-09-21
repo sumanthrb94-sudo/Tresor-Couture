@@ -582,6 +582,15 @@ export async function isAdminUser(): Promise<boolean> {
   return tok.claims.admin === true;
 }
 
+/** May this user fill in the consignment form? Admins can too, so the studio
+ *  can use the same surface to check what a supplier will see. */
+export async function isSupplierUser(): Promise<boolean> {
+  const user = auth.currentUser;
+  if (!user) return false;
+  const tok = await user.getIdTokenResult();
+  return tok.claims.supplier === true || tok.claims.admin === true;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Generic Firestore helpers                                         */
 /* ------------------------------------------------------------------ */
@@ -1071,6 +1080,42 @@ export const reviewsApi = {
   },
   moderate: (id: string, status: 'pending' | 'approved' | 'rejected') =>
     updateDoc(doc(db, 'reviews', id), { status })
+};
+
+/* ───────────── supplier intake ─────────────
+ *
+ * A consignment partner fills these in; an admin turns them into products.
+ * Writes are gated server-side on the `supplier` custom claim (firestore.rules)
+ * — the /supplier URL is a convenience, never the security boundary, because a
+ * URL gets forwarded and a claim does not.
+ */
+export const intakeApi = {
+  /** Everything this supplier has written, newest first. */
+  mine: () => {
+    if (!auth.currentUser) throw new Error('not_signed_in');
+    return listAll<DocumentData>('intake', [
+      where('userId', '==', auth.currentUser.uid),
+      orderBy('updatedAt', 'desc'),
+      qLimit(200),
+    ]);
+  },
+  /** Admin view: the whole queue. */
+  all: () => listAll<DocumentData>('intake', [orderBy('updatedAt', 'desc'), qLimit(300)]),
+  create: async (data: DocumentData) => {
+    if (!auth.currentUser) throw new Error('not_signed_in');
+    const now = new Date().toISOString();
+    const ref = await addDoc(collection(db, 'intake'), {
+      ...data,
+      userId: auth.currentUser.uid,
+      createdAt: now,
+      updatedAt: now,
+    });
+    await updateDoc(ref, { id: ref.id });
+    return { ...data, id: ref.id };
+  },
+  update: (id: string, patch: DocumentData) =>
+    updateDoc(doc(db, 'intake', id), { ...patch, updatedAt: new Date().toISOString() }),
+  remove: (id: string) => deleteDoc(doc(db, 'intake', id)),
 };
 
 export const usersApi = {

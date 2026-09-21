@@ -63,6 +63,10 @@ const parsePath = (raw: string): Route => {
       const section = ADMIN_SECTIONS.find(s => s === raw);
       return { name: 'admin', section };
     }
+    // Where a supplier fills in a consignment. Gated on the `supplier` claim,
+    // not on secrecy of the URL.
+    case 'supplier':
+      return { name: 'supplier' };
     case 'privacy':
     case 'terms':
     case 'refund':
@@ -105,6 +109,8 @@ export const buildPath = (route: Route): string => {
       return route.section ? `/admin/${route.section}` : '/admin';
     case 'admin-brand-kit':
       return route.section ? `/admin/brand-kit?section=${encodeURIComponent(route.section)}` : '/admin/brand-kit';
+    case 'supplier':
+      return '/supplier';
     case 'policy':
       return `/${route.policy}`;
     case 'auth-action':

@@ -16,6 +16,7 @@ import AdminCompliance from './AdminCompliance';
 import AdminDelivery from './AdminDelivery';
 import AdminBulkEmail from './AdminBulkEmail';
 import AdminSeo from './AdminSeo';
+import AdminIntake from './AdminIntake';
 import AdminAnalytics from './AdminAnalytics';
 import type { AdminSection } from '../../types';
 
@@ -30,6 +31,7 @@ const AdminPage: React.FC<Props> = ({ section = 'dashboard' }) => (
       {section === 'dashboard' && <AdminDashboard />}
       {section === 'counter' && <AdminCounter />}
       {section === 'products' && <AdminProducts />}
+      {section === 'intake' && <AdminIntake />}
       {section === 'inventory' && <AdminInventory />}
       {section === 'orders' && <AdminOrders />}
       {section === 'returns' && <AdminReturns />}

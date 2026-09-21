@@ -19,6 +19,7 @@
     "seed:full-catalogue": "tsx scripts/seed-full-catalogue.ts",
     "seed:full-catalogue:dry": "tsx scripts/seed-full-catalogue.ts --dry-run",
     "set-admin": "tsx scripts/set-admin.ts",
+    "set-supplier": "tsx scripts/set-supplier.ts",
     "open:signed-in-chrome": "npx tsx scripts/open-signed-in-chrome.ts",
     "open:signed-in-cdp": "npx tsx scripts/open-signed-in-cdp.ts",
     "test:e2e:signed-in": "npx playwright test tests/e2e/signed-in --project=signed-in-chrome --workers=1",

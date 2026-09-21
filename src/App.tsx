@@ -29,6 +29,7 @@ const ConfirmationPage  = lazy(() => import('./pages/ConfirmationPage'));
 const LoginPage         = lazy(() => import('./pages/LoginPage'));
 const RegisterPage      = lazy(() => import('./pages/RegisterPage'));
 const AccountPage       = lazy(() => import('./pages/AccountPage'));
+const SupplierIntakePage = lazy(() => import('./pages/SupplierIntakePage'));
 const AdminBrandKitPage = lazy(() => import('./pages/AdminBrandKitPage'));
 const AdminPage         = lazy(() => import('./pages/admin/AdminPage'));
 const NotFoundPage      = lazy(() => import('./pages/NotFoundPage'));
@@ -143,6 +144,10 @@ const RoutedView: React.FC = () => {
       return <RegisterPage />;
     case 'account':
       return <AccountPage tab={route.tab} />;
+    case 'supplier':
+      // Gated on the `supplier` custom claim inside the page, and by
+      // firestore.rules server-side. The URL itself grants nothing.
+      return <SupplierIntakePage />;
     case 'admin':
       // Access is gated by the Firebase `admin: true` custom claim, enforced
       // inside AdminPage's AdminGuard (and by firestore.rules server-side).
