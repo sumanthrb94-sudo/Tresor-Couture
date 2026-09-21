@@ -46,11 +46,13 @@ interface Row {
   mrp: string;
   stock: string;
   unit: string;
+  bundleSize: string;
+  bundlePrice: string;
 }
 
 const blankRow = (): Row => ({
   name: '', category: '', subCategory: '', code: '', styleCode: '', colourName: '',
-  cost: '', price: '', mrp: '', stock: '', unit: '',
+  cost: '', price: '', mrp: '', stock: '', unit: '', bundleSize: '', bundlePrice: '',
 });
 
 const newId = (name: string): string => {
@@ -82,6 +84,10 @@ const HEADER_ALIASES: Record<keyof Row, RegExp> = {
   mrp: /^(mrp.*|list\s*price|max.*)$/i,
   stock: /^(stock.*|qty|quantity|units?|pcs?)$/i,
   unit: /^(unit|unit\s*type|sold\s*as|uom)$/i,
+  // Anchored on "bundle" so neither can be swallowed by the price/stock
+  // aliases above, which match on a leading "price"/"stock".
+  bundleSize: /^bundle\s*(size|length|met(er|re)s).*$/i,
+  bundlePrice: /^bundle\s*(price|rate|cost).*$/i,
 };
 
 /** Positional fallback when the paste has no header line. */
@@ -139,6 +145,11 @@ const BatchAddProducts: React.FC<{ onClose: () => void; onSaved: () => void }> =
   const [material, setMaterial] = useState('');
   const [unitType, setUnitType] = useState('');
   const [supplier, setSupplier] = useState('');
+  // A roll of lace arrives in one bundle length for the whole consignment far
+  // more often than it varies row by row, so the break is a batch default that
+  // a row can still override.
+  const [bundleSize, setBundleSize] = useState('');
+  const [bundlePrice, setBundlePrice] = useState('');
 
   const [rows, setRows] = useState<Row[]>(() => Array.from({ length: 6 }, blankRow));
   const [pasteOpen, setPasteOpen] = useState(false);
@@ -168,6 +179,27 @@ const BatchAddProducts: React.FC<{ onClose: () => void; onSaved: () => void }> =
     const known = new Set<string>(CATEGORIES as unknown as string[]);
     return [...new Set(ready.map(r => r.category.trim()).filter(c => c && !known.has(c)))];
   }, [ready]);
+
+  /** Does any row actually sell by the bundle? The two extra columns are dead
+   *  weight on a batch of sarees, so they appear only once they mean something. */
+  const anyBundle = useMemo(
+    () => rows.some(r => (r.unit.trim() || unitType) === 'bundle'),
+    [rows, unitType],
+  );
+
+  /** Bundle rows with no usable price break. Worth saying out loud: the save
+   *  succeeds, but every metre is then charged at the loose rate, so a customer
+   *  buying a nine-metre bundle pays nine times the per-metre price. */
+  const bundlesMissingTerms = useMemo(
+    () =>
+      ready.filter(r => {
+        if ((r.unit.trim() || unitType) !== 'bundle') return false;
+        const size = num(r.bundleSize) ?? num(bundleSize);
+        const bp = num(r.bundlePrice) ?? num(bundlePrice);
+        return !(size && size > 0 && bp && bp > 0);
+      }).length,
+    [ready, unitType, bundleSize, bundlePrice],
+  );
 
   const applyPaste = () => {
     const parsed = parsePaste(pasteRef.current?.value ?? '');
@@ -203,6 +235,13 @@ const BatchAddProducts: React.FC<{ onClose: () => void; onSaved: () => void }> =
         const cat = (r.category.trim() || category) as Fabric['category'];
         const sub = r.subCategory.trim() || subCategory.trim();
         const unit = (r.unit.trim() || unitType) as Fabric['unitType'] | '';
+        // Only a 'bundle' piece has a break, and only when BOTH halves are
+        // present: a size with no price, or a price with no size, is not a
+        // price break, and lacePricing would silently fall back to charging
+        // `price` for every metre.
+        const bSize = unit === 'bundle' ? num(r.bundleSize) ?? num(bundleSize) : undefined;
+        const bPrice = unit === 'bundle' ? num(r.bundlePrice) ?? num(bundlePrice) : undefined;
+        const hasBreak = bSize !== undefined && bSize > 0 && bPrice !== undefined && bPrice > 0;
 
         const product: Fabric = {
           id,
@@ -217,6 +256,7 @@ const BatchAddProducts: React.FC<{ onClose: () => void; onSaved: () => void }> =
           masterCategory: cat,
           ...(sub ? { subCategory: sub } : {}),
           ...(unit ? { unitType: unit } : {}),
+          ...(hasBreak ? { bundleSizeMeters: bSize, bundlePrice: bPrice } : {}),
           ...(material.trim() ? { materialType: material.trim() } : {}),
           ...(supplier.trim() ? { supplier: supplier.trim() } : {}),
           ...(r.code.trim() ? { productCode: r.code.trim() } : {}),
@@ -395,7 +435,27 @@ const BatchAddProducts: React.FC<{ onClose: () => void; onSaved: () => void }> =
               <option value="bundle">Bundle</option>
             </select>
           </label>
+          {anyBundle && (
+            <>
+              <label className="block">
+                <span className="block text-[11px] text-[color:var(--color-myntra-ink-soft)] mb-1">Bundle size (m)</span>
+                <input value={bundleSize} onChange={e => setBundleSize(e.target.value)}
+                  inputMode="numeric" placeholder="9" aria-label="Batch bundle size in meters" className="input-box w-full" />
+              </label>
+              <label className="block">
+                <span className="block text-[11px] text-[color:var(--color-myntra-ink-soft)] mb-1">Bundle price ₹</span>
+                <input value={bundlePrice} onChange={e => setBundlePrice(e.target.value)}
+                  inputMode="numeric" placeholder="1800" aria-label="Batch bundle price" className="input-box w-full" />
+              </label>
+            </>
+          )}
         </div>
+        {anyBundle && (
+          <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] mt-2">
+            For lace, <b>Price ₹</b> is the loose <b>per-metre</b> rate and <b>Stock</b> is in <b>metres</b>.
+            The bundle is a price break on those same metres, not a different unit.
+          </p>
+        )}
       </div>
 
       <div className="px-5 pt-4">
@@ -408,7 +468,7 @@ const BatchAddProducts: React.FC<{ onClose: () => void; onSaved: () => void }> =
               ref={pasteRef}
               rows={6}
               aria-label="Paste rows"
-              placeholder={'Paste with a header row and the columns are matched by NAME, in any order:\nName\tCategory\tSub Category\tSupplier Code\tBuying Price\tSelling Price\tMRP\tStock\n\nNo header? Then the order is: Name, Category, Sub Category, Price, MRP, Stock'}
+              placeholder={'Paste with a header row and the columns are matched by NAME, in any order:\nName\tCategory\tSub Category\tStyle Code\tColour\tCost\tPrice\tMRP\tStock\tSold As\tBundle Size\tBundle Price\n\nNo header? Then the order is: Name, Category, Sub Category, Price, MRP, Stock'}
               className="input-box w-full font-mono text-[12px]"
             />
             <div className="flex flex-wrap gap-2 mt-2">
@@ -438,6 +498,8 @@ const BatchAddProducts: React.FC<{ onClose: () => void; onSaved: () => void }> =
               <th className={`${th} w-[86px]`}>MRP ₹</th>
               <th className={`${th} w-[70px]`}>Stock</th>
               <th className={`${th} w-[92px]`}>Sold as</th>
+              {anyBundle && <th className={`${th} w-[84px]`}>Bundle m</th>}
+              {anyBundle && <th className={`${th} w-[90px]`}>Bundle ₹</th>}
               <th className={`${th} w-8`} />
             </tr>
           </thead>
@@ -509,6 +571,24 @@ const BatchAddProducts: React.FC<{ onClose: () => void; onSaved: () => void }> =
                       <option value="bundle">Bundle</option>
                     </select>
                   </td>
+                  {/* Blank falls back to the batch default above, the same way
+                      category and sub category already do. */}
+                  {anyBundle && (
+                    <td className="py-1 pr-2">
+                      <input value={r.bundleSize} onChange={e => setRow(i, { bundleSize: e.target.value })}
+                        inputMode="numeric" placeholder={bundleSize || '—'}
+                        disabled={(r.unit.trim() || unitType) !== 'bundle'}
+                        aria-label={`Bundle size in meters, row ${i + 1}`} className="input-box w-full disabled:opacity-40" />
+                    </td>
+                  )}
+                  {anyBundle && (
+                    <td className="py-1 pr-2">
+                      <input value={r.bundlePrice} onChange={e => setRow(i, { bundlePrice: e.target.value })}
+                        inputMode="numeric" placeholder={bundlePrice || '—'}
+                        disabled={(r.unit.trim() || unitType) !== 'bundle'}
+                        aria-label={`Bundle price, row ${i + 1}`} className="input-box w-full disabled:opacity-40" />
+                    </td>
+                  )}
                   <td className="py-1">
                     <button
                       onClick={() => setRows(prev => (prev.length > 1 ? prev.filter((_, j) => j !== i) : [blankRow()]))}
@@ -541,7 +621,7 @@ const BatchAddProducts: React.FC<{ onClose: () => void; onSaved: () => void }> =
         </button>
       </div>
 
-      {(error || unknownCategories.length > 0) && (
+      {(error || unknownCategories.length > 0 || bundlesMissingTerms > 0) && (
         <div className="mx-5 mb-3 space-y-1">
           {error && (
             <p role="alert" className="text-[12px] text-[#A12626] flex items-start gap-1.5">
@@ -553,6 +633,14 @@ const BatchAddProducts: React.FC<{ onClose: () => void; onSaved: () => void }> =
               <AlertCircle className="w-4 h-4 shrink-0 mt-px" />
               Not a known category: {unknownCategories.join(', ')}. Pasted values have to match one of
               the eight exactly, or the piece will not appear under any menu.
+            </p>
+          )}
+          {bundlesMissingTerms > 0 && (
+            <p className="text-[12px] text-[#9A5B12] flex items-start gap-1.5">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-px" />
+              {bundlesMissingTerms} bundle row{bundlesMissingTerms === 1 ? '' : 's'} have no bundle size and
+              price. They will save, but with no price break every metre is charged at the per-metre rate —
+              a nine-metre bundle would cost nine times the Price ₹ figure.
             </p>
           )}
         </div>
