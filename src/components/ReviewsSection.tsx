@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Star, MessageSquare } from 'lucide-react';
+import { Star, MessageSquare, ShieldCheck, Upload, X, Loader2 } from 'lucide-react';
 import type { Review } from '../types';
 import { reviewsApi } from '../lib/firebase';
+import { compressImage, GALLERY_PHOTO_BUDGET } from '../lib/compressImage';
+import ImageViewer from './ImageViewer';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
 
@@ -91,6 +93,13 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(REVIEWS_PAGE_SIZE);
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  // Which delivered order of this shopper's contains the piece. null = they
+  // have not bought it, undefined = we have not checked yet.
+  const [purchase, setPurchase] = useState<{ orderId: string } | null | undefined>(undefined);
+  // Photographs a customer attached, opened full screen.
+  const [lightbox, setLightbox] = useState<{ photos: string[]; index: number; alt: string } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,6 +125,17 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
     return () => { cancelled = true; };
   }, [fabricId, reloadKey]);
 
+  useEffect(() => {
+    let cancelled = false;
+    setPurchase(undefined);
+    if (!user) { setPurchase(null); return; }
+    (async () => {
+      const hit = await reviewsApi.purchaseOf(fabricId).catch(() => null);
+      if (!cancelled) setPurchase(hit);
+    })();
+    return () => { cancelled = true; };
+  }, [fabricId, user]);
+
   const reviews = approved ?? [];
   const loading = approved === null;
 
@@ -139,6 +159,23 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
     setRating(5);
     setTitle('');
     setBody('');
+    setPhotos([]);
+  };
+
+  const addPhotos = async (files: FileList | null) => {
+    if (!files?.length) return;
+    setError(null);
+    setPhotoBusy(true);
+    try {
+      const room = 3 - photos.length;
+      const chosen = Array.from(files).slice(0, Math.max(0, room));
+      const shots = await Promise.all(chosen.map(f => compressImage(f, GALLERY_PHOTO_BUDGET)));
+      setPhotos(p => [...p, ...shots].slice(0, 3));
+    } catch {
+      setError('That photo could not be read. Try another file.');
+    } finally {
+      setPhotoBusy(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -159,12 +196,18 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
 
     setSubmitting(true);
     try {
+      if (!purchase) {
+        setError('Only customers who have received this piece can review it.');
+        return;
+      }
       await reviewsApi.create({
         fabricId,
+        orderId: purchase.orderId,
         authorName: user.fullName,
         rating,
         title: title.trim() ? title.trim() : undefined,
-        body: trimmedBody
+        body: trimmedBody,
+        photos,
       });
       setSuccess('Review submitted — pending moderation.');
       resetForm();
@@ -249,8 +292,25 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
                   Sign in
                 </button>
               </div>
+            ) : purchase === undefined ? (
+              <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)] flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" /> Checking your orders…
+              </p>
+            ) : purchase === null ? (
+              /* Not a buyer. The form is hidden rather than disabled: offering
+                 a control that cannot succeed reads as a broken page, and
+                 firestore.rules would refuse the write regardless. */
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <p className="text-[13px] text-[color:var(--color-myntra-ink-soft)]">
+                  Reviews come from customers who have received this piece. Once yours is
+                  delivered, you can write one here.
+                </p>
+              </div>
             ) : (
               <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+                <p className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[color:var(--color-myntra-green)]">
+                  <ShieldCheck className="w-4 h-4" /> Verified purchase
+                </p>
                 <div>
                   <label className="text-[11px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] block mb-1.5">
                     Your rating
@@ -287,6 +347,46 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
                   />
                   <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] mt-1">
                     {body.trim().length}/1000 — minimum 4 characters
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-soft)] block mb-1.5">
+                    Add photos (optional)
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {photos.map((src, i) => (
+                      <div key={i} className="relative w-16 h-20 rounded overflow-hidden border border-[color:var(--color-myntra-border-soft)]">
+                        <img src={src} alt={`Your photo ${i + 1}`} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setPhotos(p => p.filter((_, j) => j !== i))}
+                          aria-label={`Remove photo ${i + 1}`}
+                          className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-white/95 border border-[color:var(--color-myntra-border-soft)] flex items-center justify-center"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                    {photos.length < 3 && (
+                      <label className="w-16 h-20 rounded border border-dashed border-[color:var(--color-myntra-border)] flex flex-col items-center justify-center gap-1 cursor-pointer text-[color:var(--color-myntra-ink-mute)] hover:bg-[color:var(--color-myntra-bg-soft)]">
+                        {photoBusy
+                          ? <Loader2 className="w-4 h-4 animate-spin" />
+                          : <><Upload className="w-4 h-4" /><span className="text-[9px] font-semibold">Photo</span></>}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          className="sr-only"
+                          disabled={submitting || photoBusy}
+                          aria-label="Add a photo to your review"
+                          onChange={e => { void addPhotos(e.target.files); e.target.value = ''; }}
+                        />
+                      </label>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-[color:var(--color-myntra-ink-mute)] mt-1">
+                    Up to 3. Photos of the piece as it arrived help the next customer most.
                   </p>
                 </div>
 
@@ -372,6 +472,14 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
                           <span className="text-[11px] text-[color:var(--color-myntra-ink-mute)]">
                             {formatDate(r.createdAt)}
                           </span>
+                          {/* Every review now carries the order it was written
+                              against, so the badge states a fact the rules
+                              enforced rather than a claim the page makes. */}
+                          {r.orderId && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-[color:var(--color-myntra-green)]">
+                              <ShieldCheck className="w-3 h-3" /> Verified purchase
+                            </span>
+                          )}
                         </div>
                         <div className="mt-1">
                           <Stars rating={r.rating} />
@@ -384,6 +492,25 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
                         <p className="text-[13px] text-[color:var(--color-myntra-ink)] leading-relaxed mt-1 whitespace-pre-line">
                           {r.body}
                         </p>
+                        {/* A customer's own photographs are the most useful
+                            thing on this page: they show the piece in a room,
+                            not a studio. They open in the same full-screen
+                            viewer the product gallery uses. */}
+                        {r.photos && r.photos.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {r.photos.map((src, i) => (
+                              <button
+                                key={i}
+                                type="button"
+                                onClick={() => setLightbox({ photos: r.photos!, index: i, alt: `Photo by ${r.authorName}` })}
+                                aria-label={`Open photo ${i + 1} by ${r.authorName}`}
+                                className="w-16 h-20 rounded overflow-hidden border border-[color:var(--color-myntra-border-soft)] cursor-zoom-in"
+                              >
+                                <img src={src} alt="" className="w-full h-full object-cover" />
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </li>
@@ -405,6 +532,16 @@ const ReviewsSection: React.FC<ReviewsSectionProps> = ({ fabricId }) => {
           )}
         </div>
       </div>
+
+      {lightbox && (
+        <ImageViewer
+          photos={lightbox.photos.map(photo => ({ photo, fallback: photo }))}
+          index={lightbox.index}
+          alt={lightbox.alt}
+          onIndex={i => setLightbox(l => (l ? { ...l, index: i } : l))}
+          onClose={() => setLightbox(null)}
+        />
+      )}
     </section>
   );
 };

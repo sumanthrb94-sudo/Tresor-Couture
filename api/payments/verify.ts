@@ -186,6 +186,9 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
       tx.set(orderRef, {
         userId: decoded.uid,
         items: itemsForDoc,
+        // See api/orders/place.ts: firestore.rules needs a flat id list to
+        // answer "did this person buy this product?" for the review gate.
+        productIds: [...new Set(breakdown.lines.map((l) => l.fabricId))],
         subtotal: breakdown.subtotal,
         tax: breakdown.tax,
         shipping: breakdown.shipping,

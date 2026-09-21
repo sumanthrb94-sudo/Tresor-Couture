@@ -280,6 +280,13 @@ export interface Review {
   createdAt: string;
   /** Set by admin moderation. */
   status: 'pending' | 'approved' | 'rejected';
+  /** The delivered order this review was written against. Its presence is what
+   *  makes the review a verified purchase — firestore.rules reads this order
+   *  and refuses the write unless it belongs to the author, has been delivered,
+   *  and contains the product. */
+  orderId?: string;
+  /** Photographs the customer attached, as downscaled data URIs. */
+  photos?: string[];
 }
 
 /* ─────────── returns & refunds (RMA) ─────────── */

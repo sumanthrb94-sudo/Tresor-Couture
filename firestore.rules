@@ -139,9 +139,26 @@ service cloud.firestore {
     }
 
     /* ---------- reviews ---------- */
-    // Anyone signed-in can submit a review for any product. Reviews go
-    // into 'pending' for admin moderation. Owner can delete their own;
-    // admin can do anything.
+    // A review may only be written by someone who actually BOUGHT the piece and
+    // has been given it. Previously any signed-in account could review anything,
+    // which is how a shop ends up with ratings written by people who have never
+    // touched the fabric — and a five-star average nobody should believe.
+    //
+    // The review names the order it is written against, and that order is read
+    // here: it must belong to the caller, be DELIVERED, and contain this
+    // product. Rules cannot run a query or walk `items` (a list of maps), so
+    // the order carries a flat `productIds` written by the server when it was
+    // placed. Counter sales have no userId by design, so they cannot be used —
+    // there is no account to attribute the review to.
+    //
+    // Reviews still land in 'pending' for moderation; verified purchase is a
+    // floor, not a substitute for reading what was written.
+    function boughtAndReceived(orderId, fabricId) {
+      return exists(/databases/$(database)/documents/orders/$(orderId))
+        && get(/databases/$(database)/documents/orders/$(orderId)).data.userId == request.auth.uid
+        && get(/databases/$(database)/documents/orders/$(orderId)).data.status == 'delivered'
+        && fabricId in get(/databases/$(database)/documents/orders/$(orderId)).data.productIds;
+    }
     match /reviews/{reviewId} {
       allow read: if resource.data.status == 'approved' || isAdmin();
       allow create: if isSignedIn()
@@ -153,6 +170,12 @@ service cloud.firestore {
         && request.resource.data.fabricId is string
         && request.resource.data.fabricId.size() > 0
         && exists(/databases/$(database)/documents/products/$(request.resource.data.fabricId))
+        && request.resource.data.orderId is string
+        && boughtAndReceived(request.resource.data.orderId, request.resource.data.fabricId)
+        // Customer photographs ride inline as data URIs, so they are capped in
+        // both directions: an uncapped list is an uncapped document.
+        && (!('photos' in request.resource.data)
+            || (request.resource.data.photos is list && request.resource.data.photos.size() <= 3))
         && optionalString(request.resource.data, 'title', 120)
         && optionalString(request.resource.data, 'body', 2000)
         && optionalString(request.resource.data, 'authorName', 64);

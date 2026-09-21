@@ -202,6 +202,11 @@ async function handler(req: ApiRequest, res: ApiResponse): Promise<void> {
       tx.set(orderRef, {
         userId: decoded.uid,
         items: itemsForDoc,
+        // Flat list of what this order contains, so firestore.rules can answer
+        // "did this person buy this product?" — the review gate. Rules can
+        // get() a document but cannot run a query or walk `items`, which is a
+        // list of maps, so the ids have to be denormalised to be checkable.
+        productIds: [...new Set(breakdown.lines.map((l) => l.fabricId))],
         subtotal: breakdown.subtotal,
         tax: breakdown.tax,
         shipping: breakdown.shipping,

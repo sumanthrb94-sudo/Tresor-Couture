@@ -1068,10 +1068,40 @@ export const reviewsApi = {
     orderBy('createdAt', 'desc'),
     qLimit(100)
   ]),
-  create: async (input: { fabricId: string; rating: 1|2|3|4|5; title?: string; body: string; authorName: string }) => {
+  /**
+   * A delivered order of this caller's that contains `fabricId`, or null.
+   *
+   * This is the review gate's client half: it finds the order the review will
+   * be written against. It is NOT the security boundary — firestore.rules
+   * re-reads the same order and checks ownership, delivery and contents, so a
+   * forged orderId is refused by the server. This exists so the form can be
+   * hidden from someone who cannot use it, rather than failing on submit.
+   */
+  purchaseOf: async (fabricId: string): Promise<{ orderId: string; deliveredAt?: string } | null> => {
+    if (!auth.currentUser) return null;
+    const rows = await listAll<DocumentData>('orders', [
+      where('userId', '==', auth.currentUser.uid),
+      where('status', '==', 'delivered'),
+      where('productIds', 'array-contains', fabricId),
+      qLimit(1),
+    ]).catch(() => []);
+    const hit = rows[0];
+    return hit ? { orderId: hit.id, deliveredAt: hit.deliveredAt as string | undefined } : null;
+  },
+  create: async (input: {
+    fabricId: string;
+    orderId: string;
+    rating: 1|2|3|4|5;
+    title?: string;
+    body: string;
+    authorName: string;
+    /** Customer photographs, already downscaled to data URIs. */
+    photos?: string[];
+  }) => {
     if (!auth.currentUser) throw new Error('not_signed_in');
     const ref = await addDoc(collection(db, 'reviews'), {
       ...input,
+      ...(input.photos?.length ? { photos: input.photos } : {}),
       userId: auth.currentUser.uid,
       status: 'pending' as const,
       createdAt: new Date().toISOString()
