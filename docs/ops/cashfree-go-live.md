@@ -64,6 +64,19 @@ ID and Secret Key must never be given a `VITE_` name.** There is no public
 Cashfree key in this integration: the browser only ever receives a single-use
 `payment_session_id` minted by our server for an amount Cashfree already holds.
 
+### One variable to never set here
+
+`CASHFREE_API_BASE` exists so the test suite can point the sandbox at a local
+stand-in Cashfree. **Do not add it to Vercel.** It has no legitimate use in a
+deployment, and it redirects where the server looks to find out whether money
+moved.
+
+It is already harmless on production — the code checks it only on the sandbox
+branch, so a live deploy talks to `api.cashfree.com` regardless, and there is a
+test holding that guard in place. But a variable that looks like configuration
+invites someone to "fix" the guard later. It belongs in a test run and nowhere
+else.
+
 ### The live switch fails closed
 
 `CASHFREE_ENV` must be exactly `production` to reach real cards. Anything else —
