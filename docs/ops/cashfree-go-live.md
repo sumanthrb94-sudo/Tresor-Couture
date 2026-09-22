@@ -209,6 +209,51 @@ That last one is the idempotency check, and it is the one worth actually
 looking at. `cashfree-verify.spec.ts` already proves it against a stand-in
 Cashfree; this is the same property against the real thing.
 
+### Worked example: sandbox keys scoped to Production
+
+This has happened once, so here is the whole trace. Three variables were added
+with **Production** ticked instead of Preview, holding a **sandbox** key pair,
+while `CASHFREE_ENV` on Production already said `production`. The live site
+then offered Card and UPI and failed on both.
+
+What happens when the shopper taps Place Order:
+
+1. The browser sees `VITE_CASHFREE_MODE` is present, so `paymentsConfigured`
+   is true and it takes the real payment path rather than the demo one.
+2. It POSTs `/api/payments/create-order` with cart items — never prices.
+3. `cashfreeConfigured()` is true (both keys exist), so the 503 gate passes.
+4. `computeBreakdown()` re-prices the cart from Firestore. **This part is
+   fine** — the total on screen is correct and server-derived.
+5. `createCashfreeOrder()` calls `cashfreeBase() + '/pg/orders'`. With
+   `CASHFREE_ENV=production`, `cashfreeLive()` is true, so the base is
+   `https://api.cashfree.com` — sent with sandbox credentials.
+6. Cashfree answers 401/403 `authentication Failed`. `api.cashfree.com` has
+   never heard of a sandbox App ID; the two environments keep separate
+   credential stores and are not interchangeable.
+7. The handler's catch block logs `[create-order] failed authentication
+   Failed` and returns 500 `create_order_failed`.
+
+Two faults existed, but only the first could fire: the server was pointed at
+the live API with sandbox keys, AND `VITE_CASHFREE_MODE=sandbox` had the
+browser on the sandbox SDK. `create-order` runs before the modal opens, so it
+failed first and the second never got its turn.
+
+**No money was ever at risk.** No Cashfree order was created, so there was
+nothing to pay. Even if there had been, `/api/payments/verify` asks Cashfree
+directly, requires `order_status: PAID`, and requires the amount Cashfree
+holds to match its own recomputation within a paisa before any order is
+written or stock moved.
+
+The fix is scope, not values: set all three to **Preview only**, where
+`CASHFREE_ENV` is absent and the server therefore resolves to
+`sandbox.cashfree.com`. Note that Vercel refuses to save a variable with zero
+environments, so "untick Production" and "tick Preview" are one edit, not two.
+
+Then redeploy — Vercel applies environment changes to *new* deployments only.
+`VITE_CASHFREE_MODE` in particular is compiled into the JavaScript bundle at
+build time, so an already-built bundle keeps whatever it was built with no
+matter what the dashboard says.
+
 ### If the webhook never arrives on a preview
 
 `create-order.ts` derives `notify_url` from the request origin, so a preview
