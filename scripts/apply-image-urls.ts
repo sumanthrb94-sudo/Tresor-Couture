@@ -47,7 +47,7 @@ function checkFilesPresent(manifest: Record<string, Entry>): string[] {
   const missing: string[] = [];
   for (const entry of Object.values(manifest)) {
     const urls = [entry.photo, ...(entry.photoGallery ?? [])].filter(
-      (u): u is string => typeof u === 'string' && u.startsWith('/products/'),
+      (u): u is string => typeof u === 'string' && u.startsWith('/'),
     );
     for (const u of urls) {
       if (!existsSync(path.join(PUBLIC_DIR, u))) missing.push(u);
@@ -62,11 +62,13 @@ async function rollback(): Promise<void> {
   if (!existsSync(BACKUP)) throw new Error(`no backup at ${BACKUP} — nothing to roll back to`);
   const backup = JSON.parse(readFileSync(BACKUP, 'utf8')) as Record<string, Entry>;
   let n = 0;
-  for (const [id, prev] of Object.entries(backup)) {
+  for (const [key, prev] of Object.entries(backup)) {
     const patch: Record<string, unknown> = { updatedAt: new Date().toISOString() };
     if (prev.photo !== undefined) patch.photo = prev.photo;
     if (prev.photoGallery !== undefined) patch.photoGallery = prev.photoGallery;
-    await db.doc(`products/${id}`).update(patch);
+    // A manifest key is already a document path ("products/x", "config/y").
+    // Older backups hold a bare product id, so those still need the prefix.
+    await db.doc(key.includes('/') ? key : `products/${key}`).update(patch);
     n++;
   }
   console.log(`rolled back ${n} documents to their pre-migration images`);
@@ -90,11 +92,11 @@ async function apply(): Promise<void> {
   let changed = 0;
   let saved = 0;
 
-  for (const [id, entry] of Object.entries(manifest)) {
-    const ref = db.doc(`products/${id}`);
+  for (const [key, entry] of Object.entries(manifest)) {
+    const ref = db.doc(key.includes('/') ? key : `products/${key}`);
     const snap = await ref.get();
     if (!snap.exists) {
-      console.log(`  ${id} no longer exists — skipped`);
+      console.log(`  ${key} no longer exists — skipped`);
       continue;
     }
     const cur = snap.data() as Record<string, unknown>;
@@ -102,13 +104,13 @@ async function apply(): Promise<void> {
     // Idempotent: a document already on URLs is left alone, so a re-run after
     // a partial failure finishes the job instead of overwriting the backup
     // with URLs and losing the only copy of the images.
-    const already = typeof cur.photo === 'string' && cur.photo.startsWith('/products/');
+    const already = typeof cur.photo === 'string' && cur.photo.startsWith('/');
     if (already) {
-      console.log(`  ${String(cur.barcode ?? id)} already migrated — skipped`);
+      console.log(`  ${String(cur.barcode ?? key)} already migrated — skipped`);
       continue;
     }
 
-    backup[id] = {
+    backup[key] = {
       ...(typeof cur.photo === 'string' ? { photo: cur.photo } : {}),
       ...(Array.isArray(cur.photoGallery) ? { photoGallery: cur.photoGallery as string[] } : {}),
     };
@@ -127,7 +129,7 @@ async function apply(): Promise<void> {
     saved += before - after;
     changed++;
     console.log(
-      `  ${String(cur.barcode ?? id).padEnd(9)} ${(before / 1024).toFixed(0).padStart(4)} KB -> ${(after / 1024).toFixed(0).padStart(3)} KB  ${String(cur.name ?? '').slice(0, 26)}`,
+      `  ${String(cur.barcode ?? key).padEnd(26)} ${(before / 1024).toFixed(0).padStart(4)} KB -> ${(after / 1024).toFixed(0).padStart(3)} KB  ${String(cur.name ?? cur.category ?? '').slice(0, 24)}`,
     );
   }
 
