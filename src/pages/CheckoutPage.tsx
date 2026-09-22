@@ -310,8 +310,20 @@ const CheckoutPage: React.FC = () => {
           ? 'We could not verify that payment. If money has left your account it will be reversed automatically; please contact us before retrying.'
           : raw === 'orders_not_configured'
           ? 'Checkout is not fully configured yet. Please try again in a moment or contact us for help.'
+          : raw === 'create_order_failed'
+          ? 'We could not start the payment just now — nothing has been charged. Please try again, or choose Cash on Delivery to place the order.'
+          : raw === 'payment_not_completed'
+          ? 'The payment was not completed, so no order was placed. You can try again or choose Cash on Delivery.'
           : raw.startsWith('insufficient_stock:')
           ? 'One or more items in your bag just went out of stock. Please review your cart and try again.'
+          // Anything still unmapped is a machine code — `create_order_failed`,
+          // `verify_failed`, a future one nobody thought to add here. Falling
+          // through printed it verbatim, so a misconfigured gateway showed the
+          // shopper "create_order_failed" in the middle of checkout. A code
+          // tells them nothing they can act on and reads as a broken shop; the
+          // detail belongs in the server log, where it already is.
+          : /^[a-z0-9]+(_[a-z0-9]+)+$/.test(raw)
+          ? 'Something went wrong placing your order — nothing has been charged. Please try again, or choose Cash on Delivery.'
           : raw;
       setPlaceError(friendly);
     }
