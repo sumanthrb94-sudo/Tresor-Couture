@@ -119,12 +119,24 @@ numbers above:
 products collection      9.63 MB   →   0.42 MB      23× less
 listed products only     9.03 MB   →   0.04 MB
 heaviest document          883 KB  →     7 KB
+config collection        0.81 MB   →   0.00 MB      home page category art
+                        --------      --------
+  Firestore per visit   10.44 MB   →   0.42 MB      25× less
+
 public/products/            69 MB  →    17 MB       (60 MB of dumps deleted)
 ```
 
-36 photographs became files under `public/products/`; 91 SVG swatches stayed
-inline. Thirteen documents changed, 9.21 MB left Firestore. Every URL is
-backed by a committed file, verified by reading production back.
+Measured on the live site by the owner: **home page 8 s → 3 s.**
+
+36 photographs became files under `public/products/` and the six home page
+category images under `public/art/`; 91 SVG swatches stayed inline. Nineteen
+documents changed, 10.02 MB left Firestore. Every URL is backed by a committed
+file, verified by reading production back.
+
+`config` mattered more than its size suggested: `loadHomeArt()` reads the whole
+collection to find six documents, so all 0.81 MB of it was downloaded before
+the home page could show its category art — nearly twice the entire product
+catalogue by then.
 
 The original inline images are kept at `scripts/.image-url-backup.json` for an
 exact document-state rollback (`apply-image-urls.ts --rollback`). It is
@@ -198,8 +210,9 @@ is tidying rather than rescue:
   but it also caps future growth.)
 - **Paginate.** 103 products is fine; 1,000 is not. The `limit: 1000` is a
   cliff with nothing behind it.
-- **Load `config` by document id.** `loadHomeArt()` reads the whole collection
-  to find six known ids. Read the six.
+- ~~**Load `config` by document id.**~~ Moot: the collection is now ~2 KB, so
+  reading all of it costs nothing and the query stays flexible about which
+  categories have art.
 
 ### Phase 4 — trim the JavaScript
 
