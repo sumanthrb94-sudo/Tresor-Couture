@@ -130,9 +130,75 @@ says so and exits rather than blaming your keys for a blocked connection.
 
 ## 4. Test on sandbox first
 
-Set the sandbox pair on a Preview deployment (`CASHFREE_ENV` anything but
-`production`), then place a real order through the site with a Cashfree test
-card. Check afterwards:
+Sandbox is a Preview deployment with the sandbox key pair. Production is left
+alone throughout — nothing below touches a real card or a real customer.
+
+### 4.1 Get the sandbox keys
+
+Cashfree Dashboard → **Developers** → **API Keys**, under Payment Gateway, with
+the dashboard's environment toggle set to **Sandbox**. Sandbox keys are
+generated for you and need no OTP; production keys are a separate pair behind
+*Generate API Keys* and an OTP.
+
+**They are not interchangeable.** A sandbox key pair is rejected by
+`api.cashfree.com` and a production pair is rejected by
+`sandbox.cashfree.com`. Nearly every "the gateway stopped working" at go-live
+is one pair in the other environment.
+
+### 4.2 Set three variables on Preview — and only Preview
+
+Vercel → Project → Settings → Environment Variables. For each one, tick
+**Preview** and untick Production and Development:
+
+| Variable | Value | Environments |
+|---|---|---|
+| `CASHFREE_APP_ID` | your **sandbox** App ID | Preview only |
+| `CASHFREE_SECRET_KEY` | your **sandbox** Secret Key | Preview only |
+| `VITE_CASHFREE_MODE` | `sandbox` | Preview only |
+
+And a fourth that is set by **not** setting it:
+
+| `CASHFREE_ENV` | leave UNSET on Preview | already Production-only |
+
+That last row is the whole safety design. `cashfreeLive()` returns true only
+for the exact string `production`, so an absent `CASHFREE_ENV` means Preview
+talks to `sandbox.cashfree.com` and cannot reach a real card however the keys
+are set. `CASHFREE_ENV` is already scoped to the Production target alone —
+leave it that way.
+
+Scoping the sandbox keys to Preview matters just as much in the other
+direction: putting them on Production, where `CASHFREE_ENV` *does* say
+production, points live checkout at credentials the live API will reject.
+
+`VITE_CASHFREE_MODE=sandbox` does two things at once. Its presence is what
+unlocks Card and UPI in the checkout UI at all, and its value is what
+`src/lib/payments.ts` hands the browser SDK — anything other than the exact
+word `production` loads the sandbox SDK. One variable, both halves consistent.
+
+### 4.3 Deploy a preview
+
+Push any branch, or open a pull request. Vercel builds a preview URL with the
+Preview variables baked in. `VITE_CASHFREE_MODE` is compiled into the bundle at
+build time, so the preview must be built **after** the variable is set —
+setting it and re-opening an older preview URL changes nothing.
+
+### 4.4 Confirm the keys before spending time on the UI
+
+```bash
+CASHFREE_APP_ID=... CASHFREE_SECRET_KEY=... CASHFREE_ENV=sandbox \
+  node scripts/check-cashfree.mjs
+```
+
+Expect *Credentials ACCEPTED by sandbox*. If this fails, nothing in the browser
+is going to work and the cause is the key pair, not the app.
+
+### 4.5 Pay with a test instrument
+
+Open the preview URL, add something to the bag, check out, choose UPI or Card.
+Cashfree's test cards and test UPI ids are in their sandbox documentation —
+use those, never a real card, even on sandbox.
+
+### 4.6 Check what the shop recorded
 
 - the order appears in Admin → Orders with `paymentStatus: paid`
 - it shows `paymentProvider: cashfree`
@@ -140,7 +206,31 @@ card. Check afterwards:
 - the same order does **not** appear twice after the webhook also arrives
 
 That last one is the idempotency check, and it is the one worth actually
-looking at.
+looking at. `cashfree-verify.spec.ts` already proves it against a stand-in
+Cashfree; this is the same property against the real thing.
+
+### If the webhook never arrives on a preview
+
+`create-order.ts` derives `notify_url` from the request origin, so a preview
+deployment asks Cashfree to call that preview's own `/api/payments/webhook` —
+no dashboard registration needed for a sandbox run.
+
+But Vercel **Deployment Protection** guards preview URLs by default, and it
+will answer Cashfree's webhook POST with an authentication wall rather than the
+route. The payment still succeeds and the order is still written, because the
+browser's return from the modal triggers `/api/payments/verify` — the webhook
+is only the safety net. If you want to exercise the net, check Settings →
+Deployment Protection and either allow the preview or use a Protection Bypass
+for Automation token.
+
+### Testing with no Cashfree account at all
+
+The whole purchase path runs locally against the emulators, with no keys and no
+network: see `tests/emulator/README.md`. `entry-to-exit.spec.ts` places a real
+COD order through the real server code, and `cashfree-verify.spec.ts` drives
+the paid path against a stand-in Cashfree that can be made to report an unpaid
+order, a short payment or a duplicate. That covers everything except Cashfree's
+own hosted modal.
 
 ---
 
