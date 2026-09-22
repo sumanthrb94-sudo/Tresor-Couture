@@ -55,3 +55,4 @@ __pycache__/
 # The pixels live in public/products/ and are committed; this is only for
 # an exact document-state rollback, so it stays local.
 scripts/.image-url-backup*.json
+tests/emulator/screens-batch/
