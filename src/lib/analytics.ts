@@ -6,13 +6,20 @@
 // pollute the production GA4 property. On the real domains (preview + prod) it
 // turns on automatically once Analytics reports it's supported.
 
-import { getAnalytics, isSupported, logEvent, type Analytics } from 'firebase/analytics';
+// Imported dynamically, for the same reason as Sentry: this SDK only does
+// anything AFTER the visitor accepts cookies, and never on localhost, yet a
+// static import put it in the first chunk every visitor downloads and parses.
+// `track()` already no-ops until `instance` exists, so deferring the load
+// changes nothing about when events start flowing — consent is still the gate.
+import type { Analytics } from 'firebase/analytics';
 import { app } from './firebase';
 
 type Params = Record<string, unknown>;
 
 let instance: Analytics | null = null;
 let initialised = false;
+/** Held from the dynamic import so `track` stays synchronous for callers. */
+let logEventFn: typeof import('firebase/analytics').logEvent | null = null;
 
 const enabledHere = (): boolean => {
   if (typeof window === 'undefined') return false;
@@ -24,15 +31,19 @@ const enabledHere = (): boolean => {
 export function initAnalytics(consent = false): void {
   if (initialised || !enabledHere() || !consent) return;
   initialised = true;
-  void isSupported()
-    .then(ok => { if (ok) instance = getAnalytics(app); })
+  void import('firebase/analytics')
+    .then(async ({ getAnalytics, isSupported, logEvent }) => {
+      if (!(await isSupported())) return;
+      instance = getAnalytics(app);
+      logEventFn = logEvent;
+    })
     .catch(() => { /* analytics unavailable (e.g. blocked) — stay silent */ });
 }
 
 /** Generic GA4 event. Safe to call anywhere; no-ops until analytics is ready. */
 export function track(event: string, params: Params = {}): void {
-  if (!instance) return;
-  logEvent(instance, event, params);
+  if (!instance || !logEventFn) return;
+  logEventFn(instance, event, params);
 }
 
 /** SPA page_view for the current route. */

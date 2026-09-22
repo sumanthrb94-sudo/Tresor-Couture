@@ -36,6 +36,16 @@ export default defineConfig({
         // updates don't bust the runtime cache for unchanged dependencies.
         manualChunks: (id) => {
           if (!id.includes('node_modules')) return undefined;
+          // Sentry is imported dynamically and only when a DSN is configured.
+          // Naming a chunk here would force it into a statically-preloaded
+          // group and undo that: every visitor would download the error
+          // tracker again. Returning undefined lets Rollup put it in the lazy
+          // chunk the dynamic import creates, which is the whole point.
+          if (id.includes('/@sentry/') || id.includes('/sentry-internal/')) return undefined;
+          // Firebase Analytics is likewise dynamic — it only initialises after
+          // cookie consent — so it must not be pinned into the preloaded
+          // vendor-firebase chunk by the broader firebase rule below.
+          if (id.includes('@firebase/analytics') || id.includes('firebase/analytics')) return undefined;
           if (id.includes('/react/') || id.includes('/react-dom/') || id.includes('/scheduler/')) return 'vendor-react';
           if (id.includes('/motion/') || id.includes('framer-motion')) return 'vendor-motion';
           if (id.includes('/lucide-react/')) return 'vendor-icons';
