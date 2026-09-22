@@ -109,7 +109,30 @@ optimisation possible.
 Ordered by effect per unit of risk. Each phase is independently shippable and
 none of them changes what the site does.
 
-### Phase 1 — move photographs out of the documents ⚡ the whole win
+### Phase 1 — move photographs out of the documents ✅ DONE 22 Sep 2026
+
+Applied to production. Re-measuring with the same script that produced the
+numbers above:
+
+```
+                         before        after
+products collection      9.63 MB   →   0.42 MB      23× less
+listed products only     9.03 MB   →   0.04 MB
+heaviest document          883 KB  →     7 KB
+public/products/            69 MB  →    17 MB       (60 MB of dumps deleted)
+```
+
+36 photographs became files under `public/products/`; 91 SVG swatches stayed
+inline. Thirteen documents changed, 9.21 MB left Firestore. Every URL is
+backed by a committed file, verified by reading production back.
+
+The original inline images are kept at `scripts/.image-url-backup.json` for an
+exact document-state rollback (`apply-image-urls.ts --rollback`). It is
+gitignored — 9.2 MB of base64 — and the pixels themselves are committed as
+files, so nothing is lost if it disappears.
+
+<details>
+<summary>What the plan said before it was done</summary>
 
 Upload each image to a CDN-backed store (Firebase Storage or Vercel Blob) and
 store the URL in the product document instead of the bytes.
@@ -132,6 +155,8 @@ on screen.
 
 **Expected:** shop grid first paint from ~16 s to well under 1 s on 4G.
 
+</details>
+
 ### Phase 2 — stop copying photographs into orders
 
 `fabricSnapshot` exists so order history and receipts survive a product being
@@ -145,14 +170,26 @@ order document     414 KB  →  ~2 KB
 admin at 200        81 MB  →  ~0.4 MB
 ```
 
-> **This is also a latent functional failure, not only a slow page.** Firestore
-> caps a document at 1 MiB. Two photographed items in one order come to
-> 1.3–1.8 MB of snapshot — TC00083 (883 KB) plus TC00078 (871 KB) is 1.75 MB —
-> so **that order cannot be written at all**; `/api/orders/place` would return
-> `place_failed`. Single-item orders squeak under the cap, which is why every
-> order placed so far has worked. This is arithmetic from measured document
-> sizes, not a reproduced failure — worth confirming with a deliberate two-item
-> order before or during this phase.
+> **There was a latent functional failure here, and Phase 1 closed it.**
+> Firestore caps a document at 1 MiB. `fabricSnapshot` copies the whole
+> product document, so before the migration two photographed items in one
+> order came to 1.3–1.8 MB — TC00083 (883 KB) plus TC00078 (871 KB) is
+> 1.75 MB — and **that order could not be written at all**;
+> `/api/orders/place` would have returned `place_failed`. Single-item orders
+> squeaked under the cap, which is why nothing had failed yet.
+>
+> Now that the product documents hold URLs, the same pair measures **5.8 KB**
+> and the write succeeds. No code changed to achieve that — the snapshot got
+> small because the thing it copies got small.
+
+So Phase 2 is no longer urgent: **new** orders are already ~3 KB. What remains
+is tidying rather than rescue:
+
+- The eight **existing** orders still carry their fat snapshots (3.24 MB
+  total). They can be rewritten to URLs from the same manifest, or left as
+  historical records — they are correct, just heavy.
+- `fabricSnapshot` still copies *every* field of the product when a receipt
+  needs about six. Worth narrowing before the order count grows.
 
 ### Phase 3 — ask for less, and later
 
