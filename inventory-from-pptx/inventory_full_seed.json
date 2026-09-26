@@ -876,9 +876,10 @@
     "productCode": "LC145-01",
     "styleCode": "TC-LC145",
     "colourName": "Amber Gold",
-    "description": "Rich amber-gold threadwork and delicate sequin detailing over fine organza net. A complete 145-metre reel designed for extensive couture, lehenga borders, dupattas, and saree trims.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Rich amber-gold threadwork and delicate sequin detailing over fine organza net. Sold per meter at \u20b9150/m for custom lehenga borders, dupattas, and saree trims.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-01.jpg",
     "image": "/products/lace/LC145-01.jpg",
     "category": "Laces",
@@ -890,7 +891,7 @@
       "Amber Gold",
       "Embroidered",
       "Border",
-      "145m Reel",
+      "Per Meter",
       "Couture"
     ],
     "colors": [
@@ -899,10 +900,8 @@
         "hex": "#b4926a"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-02",
@@ -911,9 +910,10 @@
     "productCode": "LC145-02",
     "styleCode": "TC-LC145",
     "colourName": "Deep Copper",
-    "description": "Deep copper tones interwoven with metallic antique zari threads. Provides warm, regal framing for velvet jackets, necklines, and bridal ensemble hemlines. 145-metre reel.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Deep copper tones interwoven with metallic antique zari threads. Sold per meter at \u20b9150/m for velvet jackets, necklines, and bridal ensemble hemlines.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-02.jpg",
     "image": "/products/lace/LC145-02.jpg",
     "category": "Laces",
@@ -925,7 +925,7 @@
       "Deep Copper",
       "Zari",
       "Antique",
-      "145m Reel",
+      "Per Meter",
       "Bridal"
     ],
     "colors": [
@@ -934,10 +934,8 @@
         "hex": "#825438"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-03",
@@ -946,9 +944,10 @@
     "productCode": "LC145-03",
     "styleCode": "TC-LC145",
     "colourName": "Rustic Bronze",
-    "description": "Deep rustic bronze corded embroidery featuring interlocking floral motifs. Ideal for rich earthy palettes, festive sleeve cuffs, and gown accents. 145-metre reel.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Deep rustic bronze corded embroidery featuring interlocking floral motifs. Sold per meter at \u20b9150/m for rich earthy palettes, festive sleeve cuffs, and gown accents.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-03.jpg",
     "image": "/products/lace/LC145-03.jpg",
     "category": "Laces",
@@ -960,7 +959,7 @@
       "Rustic Bronze",
       "Corded",
       "Floral",
-      "145m Reel"
+      "Per Meter"
     ],
     "colors": [
       {
@@ -968,10 +967,8 @@
         "hex": "#6c4c2d"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-04",
@@ -980,9 +977,10 @@
     "productCode": "LC145-04",
     "styleCode": "TC-LC145",
     "colourName": "Rose Gold",
-    "description": "Luminous rose gold embroidery with micro-sequins laid on a soft champagne net. Adds a delicate, glowing metallic touch to contemporary pastel wear. 145-metre reel.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Luminous rose gold embroidery with micro-sequins laid on soft champagne net. Sold per meter at \u20b9150/m for contemporary pastel wear.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-04.jpg",
     "image": "/products/lace/LC145-04.jpg",
     "category": "Laces",
@@ -994,7 +992,7 @@
       "Rose Gold",
       "Shimmer",
       "Pastel",
-      "145m Reel"
+      "Per Meter"
     ],
     "colors": [
       {
@@ -1002,10 +1000,8 @@
         "hex": "#bb835e"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-05",
@@ -1014,9 +1010,10 @@
     "productCode": "LC145-05",
     "styleCode": "TC-LC145",
     "colourName": "Terracotta Blush",
-    "description": "Warm terracotta blush threadwork with subtle scalloped edging. Perfect for finishing mehendi, haldi, or festive ethnic borders. 145-metre reel.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Warm terracotta blush threadwork with subtle scalloped edging. Sold per meter at \u20b9150/m for mehendi, haldi, or festive ethnic borders.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-05.jpg",
     "image": "/products/lace/LC145-05.jpg",
     "category": "Laces",
@@ -1028,7 +1025,7 @@
       "Terracotta Blush",
       "Scalloped",
       "Festive",
-      "145m Reel"
+      "Per Meter"
     ],
     "colors": [
       {
@@ -1036,10 +1033,8 @@
         "hex": "#a4634d"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-06",
@@ -1048,9 +1043,10 @@
     "productCode": "LC145-06",
     "styleCode": "TC-LC145",
     "colourName": "Warm Honey",
-    "description": "Golden honey tones with fine metallic thread highlights and structured geometric edging. Generous 145-metre reel for large-scale garment manufacturing.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Golden honey tones with fine metallic thread highlights and structured geometric edging. Sold per meter at \u20b9150/m.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-06.jpg",
     "image": "/products/lace/LC145-06.jpg",
     "category": "Laces",
@@ -1062,7 +1058,7 @@
       "Warm Honey",
       "Metallic",
       "Border",
-      "145m Reel"
+      "Per Meter"
     ],
     "colors": [
       {
@@ -1070,10 +1066,8 @@
         "hex": "#be9369"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-07",
@@ -1082,9 +1076,10 @@
     "productCode": "LC145-07",
     "styleCode": "TC-LC145",
     "colourName": "Taupe Beige",
-    "description": "Understated taupe beige corded lace with refined scalloped borders. Excellent for subtle pipings, hem features, and tailored plackets. 145-metre reel.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Understated taupe beige corded lace with refined scalloped borders. Sold per meter at \u20b9150/m for subtle pipings, hem features, and tailored plackets.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-07.jpg",
     "image": "/products/lace/LC145-07.jpg",
     "category": "Laces",
@@ -1096,7 +1091,7 @@
       "Taupe Beige",
       "Scallop",
       "Corded",
-      "145m Reel"
+      "Per Meter"
     ],
     "colors": [
       {
@@ -1104,10 +1099,8 @@
         "hex": "#a2937a"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-08",
@@ -1116,9 +1109,10 @@
     "productCode": "LC145-08",
     "styleCode": "TC-LC145",
     "colourName": "Sand Gold",
-    "description": "Bright sand-gold threadwork rendered in a classic filigree scroll pattern. Adds crisp, polished metallic outline to sheer dupattas and saree falls. 145-metre reel.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Bright sand-gold threadwork rendered in a classic filigree scroll pattern. Sold per meter at \u20b9150/m for sheer dupattas and saree falls.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-08.jpg",
     "image": "/products/lace/LC145-08.jpg",
     "category": "Laces",
@@ -1130,7 +1124,7 @@
       "Sand Gold",
       "Filigree",
       "Saree Border",
-      "145m Reel"
+      "Per Meter"
     ],
     "colors": [
       {
@@ -1138,10 +1132,8 @@
         "hex": "#c0a786"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-09",
@@ -1150,9 +1142,10 @@
     "productCode": "LC145-09",
     "styleCode": "TC-LC145",
     "colourName": "Olive Gold",
-    "description": "Earthy olive green blended with muted gold metallic threads on sheer net. Ideal for royal dark ensembles and muted tone-on-tone designs. 145-metre reel.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Earthy olive green blended with muted gold metallic threads on sheer net. Sold per meter at \u20b9150/m for royal dark ensembles.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-09.jpg",
     "image": "/products/lace/LC145-09.jpg",
     "category": "Laces",
@@ -1163,7 +1156,7 @@
       "Lace",
       "Olive Gold",
       "Muted Gold",
-      "145m Reel"
+      "Per Meter"
     ],
     "colors": [
       {
@@ -1171,10 +1164,8 @@
         "hex": "#a08a67"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-10",
@@ -1183,9 +1174,10 @@
     "productCode": "LC145-10",
     "styleCode": "TC-LC145",
     "colourName": "Champagne Beige",
-    "description": "Light champagne beige lace decorated with subtle seed-pearl accents and sparkling micro-sequin runs. Perfect for ivory and pastel bridal wear. 145-metre reel.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Light champagne beige lace decorated with subtle seed-pearl accents and sparkling micro-sequin runs. Sold per meter at \u20b9150/m.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-10.jpg",
     "image": "/products/lace/LC145-10.jpg",
     "category": "Laces",
@@ -1197,7 +1189,7 @@
       "Champagne Beige",
       "Bridal",
       "Pearl",
-      "145m Reel"
+      "Per Meter"
     ],
     "colors": [
       {
@@ -1205,10 +1197,8 @@
         "hex": "#cdb490"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-11",
@@ -1217,9 +1207,10 @@
     "productCode": "LC145-11",
     "styleCode": "TC-LC145",
     "colourName": "Dusty Coral",
-    "description": "Vibrant dusty coral and peach embroidery with delicate floral lace runs. Enhances daytime festive wear and bright bridal dupattas. 145-metre reel.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Vibrant dusty coral and peach embroidery with delicate floral lace runs. Sold per meter at \u20b9150/m for festive wear and bridal dupattas.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-11.jpg",
     "image": "/products/lace/LC145-11.jpg",
     "category": "Laces",
@@ -1230,7 +1221,7 @@
       "Lace",
       "Dusty Coral",
       "Floral",
-      "145m Reel"
+      "Per Meter"
     ],
     "colors": [
       {
@@ -1238,10 +1229,8 @@
         "hex": "#b88068"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-12",
@@ -1250,9 +1239,10 @@
     "productCode": "LC145-12",
     "styleCode": "TC-LC145",
     "colourName": "Antique Sand",
-    "description": "Soft antique sand shade with dense corded weave and fine chain edging. Perfect for tailored border finishing and sleeve hems. 145-metre reel.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Soft antique sand shade with dense corded weave and fine chain edging. Sold per meter at \u20b9150/m for border finishing and sleeve hems.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-12.jpg",
     "image": "/products/lace/LC145-12.jpg",
     "category": "Laces",
@@ -1264,7 +1254,7 @@
       "Antique Sand",
       "Corded",
       "Braid",
-      "145m Reel"
+      "Per Meter"
     ],
     "colors": [
       {
@@ -1272,10 +1262,8 @@
         "hex": "#af9373"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-13",
@@ -1284,9 +1272,10 @@
     "productCode": "LC145-13",
     "styleCode": "TC-LC145",
     "colourName": "Blush Nude",
-    "description": "Soft blush nude net with romantic floral threadwork and scalloped border edge. Designed for modern pastel lehengas and gowns. 145-metre reel.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Soft blush nude net with romantic floral threadwork and scalloped border edge. Sold per meter at \u20b9150/m.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-13.jpg",
     "image": "/products/lace/LC145-13.jpg",
     "category": "Laces",
@@ -1298,7 +1287,7 @@
       "Blush Nude",
       "Scallop",
       "Pastel",
-      "145m Reel"
+      "Per Meter"
     ],
     "colors": [
       {
@@ -1306,10 +1295,8 @@
         "hex": "#c39881"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-14",
@@ -1318,9 +1305,10 @@
     "productCode": "LC145-14",
     "styleCode": "TC-LC145",
     "colourName": "Muted Pebble",
-    "description": "Neutral pebble grey-brown shade infused with silver and soft gold highlights. Elegant, versatile border for evening wear. 145-metre reel.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Neutral pebble grey-brown shade infused with silver and soft gold highlights. Sold per meter at \u20b9150/m.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-14.jpg",
     "image": "/products/lace/LC145-14.jpg",
     "category": "Laces",
@@ -1331,7 +1319,7 @@
       "Lace",
       "Muted Pebble",
       "Silver Gold",
-      "145m Reel"
+      "Per Meter"
     ],
     "colors": [
       {
@@ -1339,10 +1327,8 @@
         "hex": "#af9888"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-15",
@@ -1351,9 +1337,10 @@
     "productCode": "LC145-15",
     "styleCode": "TC-LC145",
     "colourName": "Golden Almond",
-    "description": "Warm golden almond satin-feel embroidery with a run of detailed geometric motifs. A rich, versatile trim for cholis and suit borders. 145-metre reel.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Warm golden almond satin-feel embroidery with a run of detailed geometric motifs. Sold per meter at \u20b9150/m.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-15.jpg",
     "image": "/products/lace/LC145-15.jpg",
     "category": "Laces",
@@ -1364,7 +1351,7 @@
       "Lace",
       "Golden Almond",
       "Geometric",
-      "145m Reel"
+      "Per Meter"
     ],
     "colors": [
       {
@@ -1372,10 +1359,8 @@
         "hex": "#bba387"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-16",
@@ -1384,9 +1369,10 @@
     "productCode": "LC145-16",
     "styleCode": "TC-LC145",
     "colourName": "Classic Khaki",
-    "description": "Sophisticated classic khaki background woven with bright gold thread. Ideal for structured ethnic suits, sherwanis, and saree borders. 145-metre reel.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Sophisticated classic khaki background woven with bright gold thread. Sold per meter at \u20b9150/m for suits and saree borders.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-16.jpg",
     "image": "/products/lace/LC145-16.jpg",
     "category": "Laces",
@@ -1397,7 +1383,7 @@
       "Lace",
       "Classic Khaki",
       "Gold Thread",
-      "145m Reel"
+      "Per Meter"
     ],
     "colors": [
       {
@@ -1405,10 +1391,8 @@
         "hex": "#bba37f"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-17",
@@ -1417,9 +1401,10 @@
     "productCode": "LC145-17",
     "styleCode": "TC-LC145",
     "colourName": "Sand Gold Scallop",
-    "description": "Luminous sand gold floral loops with scalloped edges. A classic bridal favorite for dupatta borders and lehenga flares. 145-metre reel.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Luminous sand gold floral loops with scalloped edges. Sold per meter at \u20b9150/m for dupatta borders and lehenga flares.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-17.jpg",
     "image": "/products/lace/LC145-17.jpg",
     "category": "Laces",
@@ -1431,7 +1416,7 @@
       "Sand Gold",
       "Scallop",
       "Floral",
-      "145m Reel"
+      "Per Meter"
     ],
     "colors": [
       {
@@ -1439,10 +1424,8 @@
         "hex": "#c5a57a"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-18",
@@ -1451,9 +1434,10 @@
     "productCode": "LC145-18",
     "styleCode": "TC-LC145",
     "colourName": "Soft Cream",
-    "description": "Gentle cream base with intricate lattice embroidery and fine picot selvedge. Subdued elegance for sheer organza fabrics. 145-metre reel.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Gentle cream base with intricate lattice embroidery and fine picot selvedge. Sold per meter at \u20b9150/m.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-18.jpg",
     "image": "/products/lace/LC145-18.jpg",
     "category": "Laces",
@@ -1465,7 +1449,7 @@
       "Soft Cream",
       "Lattice",
       "Picot",
-      "145m Reel"
+      "Per Meter"
     ],
     "colors": [
       {
@@ -1473,10 +1457,8 @@
         "hex": "#ab977e"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-19",
@@ -1485,9 +1467,10 @@
     "productCode": "LC145-19",
     "styleCode": "TC-LC145",
     "colourName": "Mocha Ash",
-    "description": "Deep mocha ash tone featuring warm copper-gold embroidery and crisp linear framing. A bold accent for darker fabrics. 145-metre reel.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Deep mocha ash tone featuring warm copper-gold embroidery and crisp linear framing. Sold per meter at \u20b9150/m.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-19.jpg",
     "image": "/products/lace/LC145-19.jpg",
     "category": "Laces",
@@ -1498,7 +1481,7 @@
       "Lace",
       "Mocha Ash",
       "Copper Gold",
-      "145m Reel"
+      "Per Meter"
     ],
     "colors": [
       {
@@ -1506,10 +1489,8 @@
         "hex": "#be986d"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-20",
@@ -1518,9 +1499,10 @@
     "productCode": "LC145-20",
     "styleCode": "TC-LC145",
     "colourName": "Olive Bronze",
-    "description": "Muted olive bronze corded jaal lace with antique metallic threadwork. Provides heirloom texture and antique weight. 145-metre reel.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Muted olive bronze corded jaal lace with antique metallic threadwork. Sold per meter at \u20b9150/m.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-20.jpg",
     "image": "/products/lace/LC145-20.jpg",
     "category": "Laces",
@@ -1532,7 +1514,7 @@
       "Olive Bronze",
       "Jaal",
       "Antique",
-      "145m Reel"
+      "Per Meter"
     ],
     "colors": [
       {
@@ -1540,10 +1522,8 @@
         "hex": "#93805f"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-21",
@@ -1552,9 +1532,10 @@
     "productCode": "LC145-21",
     "styleCode": "TC-LC145",
     "colourName": "Muted Rose",
-    "description": "Charming muted rose pink embroidery with floral vine repeats and gold bugle bead accents. Excellent for festive overlays. 145-metre reel.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Charming muted rose pink embroidery with floral vine repeats and gold bugle bead accents. Sold per meter at \u20b9150/m.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-21.jpg",
     "image": "/products/lace/LC145-21.jpg",
     "category": "Laces",
@@ -1565,7 +1546,7 @@
       "Lace",
       "Muted Rose",
       "Floral Vine",
-      "145m Reel"
+      "Per Meter"
     ],
     "colors": [
       {
@@ -1573,10 +1554,8 @@
         "hex": "#b07964"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-22",
@@ -1585,9 +1564,10 @@
     "productCode": "LC145-22",
     "styleCode": "TC-LC145",
     "colourName": "Dark Moss",
-    "description": "Deep dark moss green ground with subtle gold dust highlights and corded scalloped border. Great contrast on dark velvets and silks. 145-metre reel.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Deep dark moss green ground with subtle gold dust highlights and corded scalloped border. Sold per meter at \u20b9150/m.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-22.jpg",
     "image": "/products/lace/LC145-22.jpg",
     "category": "Laces",
@@ -1599,7 +1579,7 @@
       "Dark Moss",
       "Corded",
       "Gold Dust",
-      "145m Reel"
+      "Per Meter"
     ],
     "colors": [
       {
@@ -1607,10 +1587,8 @@
         "hex": "#8b7e66"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-23",
@@ -1619,9 +1597,10 @@
     "productCode": "LC145-23",
     "styleCode": "TC-LC145",
     "colourName": "Caramel Tan",
-    "description": "Rich caramel tan lace featuring packed zari scrolls and sparkling sequin highlights. High-impact trim for festive hemlines. 145-metre reel.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Rich caramel tan lace featuring packed zari scrolls and sparkling sequin highlights. Sold per meter at \u20b9150/m.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-23.jpg",
     "image": "/products/lace/LC145-23.jpg",
     "category": "Laces",
@@ -1633,7 +1612,7 @@
       "Caramel Tan",
       "Zari",
       "Sequin",
-      "145m Reel"
+      "Per Meter"
     ],
     "colors": [
       {
@@ -1641,10 +1620,8 @@
         "hex": "#a68060"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   },
   {
     "id": "LC145-24",
@@ -1653,9 +1630,10 @@
     "productCode": "LC145-24",
     "styleCode": "TC-LC145",
     "colourName": "Espresso Bronze",
-    "description": "Deep espresso bronze tone with dense antique filigree embroidery. Perfect for dramatic borders, jacket trims, and heavy dupattas. 145-metre reel.",
-    "price": 14500.0,
-    "mrp": 14500.0,
+    "description": "Deep espresso bronze tone with dense antique filigree embroidery. Sold per meter at \u20b9150/m.",
+    "price": 150.0,
+    "mrp": 150.0,
+    "sellingPricePerMeter": 150.0,
     "photo": "/products/lace/LC145-24.jpg",
     "image": "/products/lace/LC145-24.jpg",
     "category": "Laces",
@@ -1667,7 +1645,7 @@
       "Espresso Bronze",
       "Filigree",
       "Heavy Border",
-      "145m Reel"
+      "Per Meter"
     ],
     "colors": [
       {
@@ -1675,9 +1653,7 @@
         "hex": "#93735d"
       }
     ],
-    "stock": 145,
-    "unitType": "bundle",
-    "bundleSizeMeters": 145,
-    "bundlePrice": 14500.0
+    "stock": 100,
+    "unitType": "per meter"
   }
 ]
