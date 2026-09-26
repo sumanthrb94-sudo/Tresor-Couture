@@ -39,6 +39,8 @@ export interface ColourSibling {
   soldOut: boolean;
   /** The one being viewed, so the rail reads as a selector rather than a list of other things. */
   isCurrent: boolean;
+  /** Hex color code for swatch icon display. */
+  hex?: string;
 }
 
 /** Style codes are matched case- and space-insensitively: they get typed by hand. */
@@ -97,6 +99,7 @@ export function colourSiblings(current: Fabric, catalogue: Fabric[]): ColourSibl
     fallback: p.image,
     soldOut: !inStock(p),
     isCurrent: p.id === current.id,
+    hex: p.colors?.[0]?.hex,
   }));
 }
 

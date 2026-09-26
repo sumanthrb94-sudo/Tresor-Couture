@@ -319,50 +319,51 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
               </div>
             )}
 
-            {/* Colourways of this design — each one a separate product.
-                Swatches are the actual PHOTOGRAPHS rather than hex circles: for
-                lace the weave and the density of the work differ between
-                colourways as much as the colour does, and a flat dot of colour
-                shows none of that. */}
+            {/* Colourways of this design — rendered as clean luxury colour icons */}
             {siblings.length > 1 && (
               <div className="mt-5 mb-5" data-testid="colourways">
-                <p className="text-[13px] font-extrabold uppercase tracking-wider text-[color:var(--color-myntra-navy)] mb-3">
-                  Also in {siblings.length - 1} more colour{siblings.length - 1 === 1 ? '' : 's'}
-                </p>
-                <div className="flex gap-2.5 flex-wrap">
-                  {siblings.map(s => (
-                    <button
-                      key={s.id}
-                      onClick={() => { if (!s.isCurrent) navigate({ name: 'product', id: s.id }); }}
-                      aria-current={s.isCurrent ? 'true' : undefined}
-                      aria-label={`${s.colour}${s.soldOut ? ', sold out' : ''}`}
-                      title={s.colour}
-                      className={`w-[58px] shrink-0 text-left ${s.isCurrent ? '' : 'cursor-pointer'}`}
-                    >
-                      <span
-                        className={`block aspect-square overflow-hidden border-2 transition-colors ${
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[13px] font-extrabold uppercase tracking-wider text-[color:var(--color-myntra-navy)]">
+                    Available Colours ({siblings.length})
+                  </p>
+                  <span className="text-[12px] font-medium text-[color:var(--color-myntra-ink-soft)]">
+                    Selected: <span className="font-semibold text-[color:var(--color-myntra-navy)]">{fabric.colourName || fabric.colors?.[0]?.name || 'Current'}</span>
+                  </span>
+                </div>
+                <div className="flex gap-3 flex-wrap items-center">
+                  {siblings.map(s => {
+                    const hexColor = s.hex || '#d4af37';
+                    return (
+                      <button
+                        key={s.id}
+                        onClick={() => { if (!s.isCurrent) navigate({ name: 'product', id: s.id }); }}
+                        aria-current={s.isCurrent ? 'true' : undefined}
+                        aria-label={`${s.colour}${s.soldOut ? ', sold out' : ''}`}
+                        title={s.colour}
+                        className={`group relative flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-200 ${
                           s.isCurrent
-                            ? 'border-[color:var(--color-myntra-pink)]'
-                            : 'border-[color:var(--color-myntra-border)] hover:border-[color:var(--color-myntra-navy)]'
+                            ? 'border-[color:var(--color-myntra-pink)] bg-pink-50/50 shadow-sm'
+                            : 'border-gray-200 bg-white hover:border-gray-400 hover:shadow-xs cursor-pointer'
                         }`}
                       >
-                        <FabricImage
-                          photo={s.photo}
-                          fallback={s.fallback}
-                          alt={s.colour}
-                          className={`w-full h-full object-cover ${s.soldOut ? 'opacity-45' : ''}`}
+                        {/* Colour Icon Circle */}
+                        <span
+                          className={`w-4 h-4 rounded-full shrink-0 shadow-inner border border-black/10 transition-transform group-hover:scale-110 ${
+                            s.isCurrent ? 'ring-2 ring-[color:var(--color-myntra-pink)] ring-offset-1' : ''
+                          }`}
+                          style={{ backgroundColor: hexColor }}
                         />
-                      </span>
-                      <span className="block text-[10px] leading-tight mt-1 font-semibold text-[color:var(--color-myntra-navy)] line-clamp-2">
-                        {s.colour}
-                      </span>
-                      {s.soldOut && (
-                        <span className="block text-[9px] font-bold text-[color:var(--color-myntra-ink-mute)] uppercase tracking-wide">
-                          Sold out
+                        <span className={`text-[12px] font-medium ${s.isCurrent ? 'font-bold text-[color:var(--color-myntra-navy)]' : 'text-gray-700'}`}>
+                          {s.colour}
                         </span>
-                      )}
-                    </button>
-                  ))}
+                        {s.soldOut && (
+                          <span className="text-[10px] font-bold text-red-500 ml-0.5">
+                            (Sold out)
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
