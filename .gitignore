@@ -56,3 +56,5 @@ __pycache__/
 # an exact document-state rollback, so it stays local.
 scripts/.image-url-backup*.json
 tests/emulator/screens-batch/
+scratch/
+
