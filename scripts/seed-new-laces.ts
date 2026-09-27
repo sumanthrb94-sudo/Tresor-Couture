@@ -44,7 +44,7 @@ const NEW_LACES = [
   },
   {
     id: 'LC280-01',
-    styleCode: 'TC-GL280',
+    styleCode: 'TC-LC280',
     colourName: 'Antique Gold',
     hex: '#C5A059',
     name: 'Antique Gold Scalloped Cord & Pleated Zari Lace Border',
