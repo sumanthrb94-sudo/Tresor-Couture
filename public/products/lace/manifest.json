@@ -782,5 +782,77 @@
   "perM": null,
   "styleCode": "TC-BD899",
   "colourName": "Champagne Cream"
+ },
+ "BD1349-01": {
+  "name": "Champagne Emerald Zardozi Vine Lace Border",
+  "desc": "Intricate gold zardozi leafy vine on translucent champagne net, accented with alternating emerald green and peach floral stone centers and cultured seed pearls. Sold as a complete 9-meter bundle for ₹1,349.",
+  "price": 1349,
+  "mrp": 1999,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": null,
+  "styleCode": "TC-BD1349",
+  "colourName": "Champagne Emerald"
+ },
+ "BD1349-02": {
+  "name": "Dusty Rose Olive Zardozi Vine Lace Border",
+  "desc": "Delicate dusty rose net embellished with radiant gold zardozi embroidery, featuring olive green and blush pink floral centers with pearl accents. Sold as a complete 9-meter bundle for ₹1,349.",
+  "price": 1349,
+  "mrp": 1999,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": null,
+  "styleCode": "TC-BD1349",
+  "colourName": "Dusty Rose Olive"
+ },
+ "BD1349-03": {
+  "name": "Pale Gold Teal Zardozi Vine Lace Border",
+  "desc": "Shimmering pale gold and sage ground decorated with detailed zardozi leaf work and vibrant turquoise teal floral stone highlights. Sold as a complete 9-meter bundle for ₹1,349.",
+  "price": 1349,
+  "mrp": 1999,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": null,
+  "styleCode": "TC-BD1349",
+  "colourName": "Pale Gold Teal"
+ },
+ "BD1349-04": {
+  "name": "Midnight Black Zardozi Vine Lace Border",
+  "desc": "Dramatic midnight black velvet and net base enriched with gleaming antique gold zardozi vines, fine seed pearls, and crystal florets. Sold as a complete 9-meter bundle for ₹1,349.",
+  "price": 1349,
+  "mrp": 1999,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": null,
+  "styleCode": "TC-BD1349",
+  "colourName": "Midnight Black"
+ },
+ "BD1349-05": {
+  "name": "Pastel Blush Mint Zardozi Vine Lace Border",
+  "desc": "Soft pastel blush ground interwoven with warm gold zari vines, crowned by fresh mint green and peach florets with seed pearls. Sold as a complete 9-meter bundle for ₹1,349.",
+  "price": 1349,
+  "mrp": 1999,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": null,
+  "styleCode": "TC-BD1349",
+  "colourName": "Pastel Blush Mint"
+ },
+ "BD1349-06": {
+  "name": "Seafoam Mint Lilac Zardozi Vine Lace Border",
+  "desc": "Ethereal seafoam mint net detailed with fine gold corded vines, pastel lilac and peach crystal flower centers, and delicate pearl beads. Sold as a complete 9-meter bundle for ₹1,349.",
+  "price": 1349,
+  "mrp": 1999,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": null,
+  "styleCode": "TC-BD1349",
+  "colourName": "Seafoam Mint Lilac"
  }
 }
