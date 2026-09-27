@@ -1106,5 +1106,31 @@
   "perM": null,
   "styleCode": "TC-PT800",
   "colourName": "Midnight Black"
+ },
+ "LC250-01": {
+  "name": "Metallic Silver Braided Cable Gota Lace Border",
+  "desc": "Artisanal metallic silver braided rope and cable plait gota lace border. Elegant lustrous finish perfect for dupattas, blouses, lehengas, and festive borders. Available at ₹85/meter or ₹250 for a full 9-meter bundle.",
+  "price": 85,
+  "mrp": 150,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "bundlePrice": 250,
+  "perM": 85,
+  "styleCode": "TC-BR250",
+  "colourName": "Metallic Silver"
+ },
+ "LC250-02": {
+  "name": "Antique Gold Scallop Chevron Gota Patti Lace Border",
+  "desc": "Exquisite antique gold triangular chevron and scalloped wave gota patti border lace. Traditional craftsmanship ideal for sarees, anarkalis, and ceremonial ensembles. Available at ₹85/meter or ₹250 for a full 9-meter bundle.",
+  "price": 85,
+  "mrp": 150,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "bundlePrice": 250,
+  "perM": 85,
+  "styleCode": "TC-CH250",
+  "colourName": "Antique Gold"
  }
 }
