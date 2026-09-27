@@ -3541,12 +3541,12 @@
     "listingStatus": "Active"
   },
   {
-    "id": "LC250-01",
+    "id": "LC280-01",
     "brand": "TRESOR",
     "name": "Metallic Silver Braided Cable Gota Lace Border",
     "title": "Metallic Silver Braided Cable Gota Lace Border",
-    "productCode": "LC250-01",
-    "styleCode": "TC-BD250",
+    "productCode": "LC280-01",
+    "styleCode": "TC-BD280",
     "colourName": "Metallic Silver",
     "description": "Artisanal metallic silver braided rope and cable plait gota lace border. Elegant lustrous finish perfect for dupattas, blouses, lehengas, and festive borders. Sold as a complete 9-meter bundle for ₹250.",
     "price": 250,
@@ -3554,13 +3554,13 @@
     "bundlePrice": 250,
     "bundleSizeMeters": 9,
     "mrp": 399,
-    "photo": "/products/lace/LC250-01.jpg",
+    "photo": "/products/lace/LC280-01.jpg",
     "photoGallery": [
-      "/products/lace/LC250-01.jpg"
+      "/products/lace/LC280-01.jpg"
     ],
-    "image": "/products/lace/LC250-01.jpg",
+    "image": "/products/lace/LC280-01.jpg",
     "gallery": [
-      "/products/lace/LC250-01.jpg"
+      "/products/lace/LC280-01.jpg"
     ],
     "category": "Laces",
     "masterCategory": "Laces",
@@ -3586,26 +3586,26 @@
     "listingStatus": "Active"
   },
   {
-    "id": "LC250-02",
+    "id": "LC280-02",
     "brand": "TRESOR",
     "name": "Antique Gold Scallop Chevron Gota Patti Lace Border",
     "title": "Antique Gold Scallop Chevron Gota Patti Lace Border",
-    "productCode": "LC250-02",
-    "styleCode": "TC-BD250B",
-    "colourName": "Antique Gold",
+    "productCode": "LC280-02",
+    "styleCode": "TC-BD280",
+    "colourName": "Antique Gold Chevron",
     "description": "Exquisite antique gold triangular chevron and scalloped wave gota patti border lace. Traditional craftsmanship ideal for sarees, anarkalis, and ceremonial ensembles. Sold as a complete 9-meter bundle for ₹250.",
     "price": 250,
     "sellingPricePerMeter": null,
     "bundlePrice": 250,
     "bundleSizeMeters": 9,
     "mrp": 399,
-    "photo": "/products/lace/LC250-02.jpg",
+    "photo": "/products/lace/LC280-02.jpg",
     "photoGallery": [
-      "/products/lace/LC250-02.jpg"
+      "/products/lace/LC280-02.jpg"
     ],
-    "image": "/products/lace/LC250-02.jpg",
+    "image": "/products/lace/LC280-02.jpg",
     "gallery": [
-      "/products/lace/LC250-02.jpg"
+      "/products/lace/LC280-02.jpg"
     ],
     "category": "Laces",
     "masterCategory": "Laces",
@@ -3613,7 +3613,7 @@
     "materialType": "Antique Gold Gota Patti & Zari",
     "colors": [
       {
-        "name": "Antique Gold",
+        "name": "Antique Gold Chevron",
         "hex": "#C6A15C"
       }
     ],
@@ -3632,26 +3632,26 @@
     "listingStatus": "Active"
   },
   {
-    "id": "LC280-01",
+    "id": "LC280-03",
     "brand": "TRESOR",
     "name": "Antique Gold Scalloped Cord & Pleated Zari Lace Border",
     "title": "Antique Gold Scalloped Cord & Pleated Zari Lace Border",
-    "productCode": "LC280-01",
+    "productCode": "LC280-03",
     "styleCode": "TC-BD280",
-    "colourName": "Antique Gold",
+    "colourName": "Antique Gold Scallop",
     "description": "Opulent antique gold zari lace border featuring a contoured scalloped cord wave edge and raised pleated geometric chevron track on fine mesh. Sold as a complete 9-meter bundle for ₹280.",
     "price": 280,
     "sellingPricePerMeter": null,
     "bundlePrice": 280,
     "bundleSizeMeters": 9,
     "mrp": 450,
-    "photo": "/products/lace/LC280-01.jpg",
+    "photo": "/products/lace/LC280-03.jpg",
     "photoGallery": [
-      "/products/lace/LC280-01.jpg"
+      "/products/lace/LC280-03.jpg"
     ],
-    "image": "/products/lace/LC280-01.jpg",
+    "image": "/products/lace/LC280-03.jpg",
     "gallery": [
-      "/products/lace/LC280-01.jpg"
+      "/products/lace/LC280-03.jpg"
     ],
     "category": "Laces",
     "masterCategory": "Laces",
@@ -3659,7 +3659,7 @@
     "materialType": "Antique Gold Zari, Metallic Cord & Mesh",
     "colors": [
       {
-        "name": "Antique Gold",
+        "name": "Antique Gold Scallop",
         "hex": "#C5A059"
       }
     ],

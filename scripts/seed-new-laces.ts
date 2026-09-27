@@ -5,8 +5,8 @@ const { db, prod, projectId } = initAdmin();
 
 const BUNDLE_LACES = [
   {
-    id: 'LC250-01',
-    styleCode: 'TC-BD250',
+    id: 'LC280-01',
+    styleCode: 'TC-BD280',
     colourName: 'Metallic Silver',
     hex: '#D1D5DB',
     name: 'Metallic Silver Braided Cable Gota Lace Border',
@@ -19,14 +19,14 @@ const BUNDLE_LACES = [
     sellingPricePerMeter: null,
     mrp: 399,
     materialType: 'Metallic Silver Zari & Gota Braid',
-    stock: 10, // 10 bundles
-    photo: '/products/lace/LC250-01.jpg',
-    photoGallery: ['/products/lace/LC250-01.jpg']
+    stock: 10,
+    photo: '/products/lace/LC280-01.jpg',
+    photoGallery: ['/products/lace/LC280-01.jpg']
   },
   {
-    id: 'LC250-02',
-    styleCode: 'TC-BD250B',
-    colourName: 'Antique Gold',
+    id: 'LC280-02',
+    styleCode: 'TC-BD280',
+    colourName: 'Antique Gold Chevron',
     hex: '#C6A15C',
     name: 'Antique Gold Scallop Chevron Gota Patti Lace Border',
     description: 'Exquisite antique gold triangular chevron and scalloped wave gota patti border lace. Traditional craftsmanship ideal for sarees, anarkalis, and ceremonial ensembles. Sold as a complete 9-meter bundle for ₹250.',
@@ -38,14 +38,14 @@ const BUNDLE_LACES = [
     sellingPricePerMeter: null,
     mrp: 399,
     materialType: 'Antique Gold Gota Patti & Zari',
-    stock: 10, // 10 bundles
-    photo: '/products/lace/LC250-02.jpg',
-    photoGallery: ['/products/lace/LC250-02.jpg']
+    stock: 10,
+    photo: '/products/lace/LC280-02.jpg',
+    photoGallery: ['/products/lace/LC280-02.jpg']
   },
   {
-    id: 'LC280-01',
+    id: 'LC280-03',
     styleCode: 'TC-BD280',
-    colourName: 'Antique Gold',
+    colourName: 'Antique Gold Scallop',
     hex: '#C5A059',
     name: 'Antique Gold Scalloped Cord & Pleated Zari Lace Border',
     description: 'Opulent antique gold zari lace border featuring a contoured scalloped cord wave edge and raised pleated geometric chevron track on fine mesh. Sold as a complete 9-meter bundle for ₹280.',
@@ -57,16 +57,21 @@ const BUNDLE_LACES = [
     sellingPricePerMeter: null,
     mrp: 450,
     materialType: 'Antique Gold Zari, Metallic Cord & Mesh',
-    stock: 10, // 10 bundles
-    photo: '/products/lace/LC280-01.jpg',
-    photoGallery: ['/products/lace/LC280-01.jpg']
+    stock: 10,
+    photo: '/products/lace/LC280-03.jpg',
+    photoGallery: ['/products/lace/LC280-03.jpg']
   }
 ];
 
 async function main() {
-  console.log(`🌸 Updating ${BUNDLE_LACES.length} lace items to Bundle-Only in Firestore (Target: ${prod ? 'PRODUCTION' : 'EMULATOR'} "${projectId}")...\n`);
+  console.log(`🌸 Seeding unified styleCode "TC-BD280" to Firestore (Target: ${prod ? 'PRODUCTION' : 'EMULATOR'} "${projectId}")...\n`);
 
   const batch = db.batch();
+
+  // Clean up old duplicate IDs if they exist
+  batch.delete(db.collection('products').doc('LC250-01'));
+  batch.delete(db.collection('products').doc('LC250-02'));
+
   for (const l of BUNDLE_LACES) {
     const ref = db.collection('products').doc(l.id);
     batch.set(ref, {
@@ -99,11 +104,11 @@ async function main() {
       updatedAt: FieldValue.serverTimestamp(),
     }, { merge: true });
 
-    console.log(`  + ${l.id.padEnd(10)} [${l.styleCode}] ${l.name} - ₹${l.price} / ${l.bundleSizeMeters}m bundle only (Stock: ${l.stock} bundles)`);
+    console.log(`  + ${l.id.padEnd(10)} [${l.styleCode}] ${l.name} (${l.colourName}) - ₹${l.price}`);
   }
 
   await batch.commit();
-  console.log(`\n🎉 Successfully updated all 3 items to 9m Bundle-Only in Firestore!`);
+  console.log(`\n🎉 Successfully unified all 3 colourways under TC-BD280 in Firestore!`);
 }
 
 main().then(() => process.exit(0)).catch(err => {

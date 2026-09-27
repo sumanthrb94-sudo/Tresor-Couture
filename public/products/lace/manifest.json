@@ -1107,33 +1107,31 @@
   "styleCode": "TC-PT800",
   "colourName": "Midnight Black"
  },
- "LC250-01": {
+ "LC280-01": {
   "name": "Metallic Silver Braided Cable Gota Lace Border",
-  "desc": "Artisanal metallic silver braided rope and cable plait gota lace border. Elegant lustrous finish perfect for dupattas, blouses, lehengas, and festive borders. Sold as a complete 9-meter bundle for ₹250.",
+  "desc": "Artisanal metallic silver braided rope and cable plait gota lace border. Sold as a complete 9-meter bundle for ₹250.",
   "price": 250,
   "mrp": 399,
   "sub": "Trim & Edging",
   "unit": "bundle",
   "bundle": 9,
-  "bundlePrice": 250,
   "perM": null,
-  "styleCode": "TC-BD250",
+  "styleCode": "TC-BD280",
   "colourName": "Metallic Silver"
  },
- "LC250-02": {
+ "LC280-02": {
   "name": "Antique Gold Scallop Chevron Gota Patti Lace Border",
-  "desc": "Exquisite antique gold triangular chevron and scalloped wave gota patti border lace. Traditional craftsmanship ideal for sarees, anarkalis, and ceremonial ensembles. Sold as a complete 9-meter bundle for ₹250.",
+  "desc": "Exquisite antique gold triangular chevron and scalloped wave gota patti border lace. Sold as a complete 9-meter bundle for ₹250.",
   "price": 250,
   "mrp": 399,
   "sub": "Trim & Edging",
   "unit": "bundle",
   "bundle": 9,
-  "bundlePrice": 250,
   "perM": null,
-  "styleCode": "TC-BD250B",
-  "colourName": "Antique Gold"
+  "styleCode": "TC-BD280",
+  "colourName": "Antique Gold Chevron"
  },
- "LC280-01": {
+ "LC280-03": {
   "name": "Antique Gold Scalloped Cord & Pleated Zari Lace Border",
   "desc": "Opulent antique gold zari lace border featuring a contoured scalloped cord wave edge and raised pleated geometric chevron track on fine mesh. Sold as a complete 9-meter bundle for ₹280.",
   "price": 280,
@@ -1141,9 +1139,8 @@
   "sub": "Trim & Edging",
   "unit": "bundle",
   "bundle": 9,
-  "bundlePrice": 280,
   "perM": null,
   "styleCode": "TC-BD280",
-  "colourName": "Antique Gold"
+  "colourName": "Antique Gold Scallop"
  }
 }
