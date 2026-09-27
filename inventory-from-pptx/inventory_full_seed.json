@@ -1655,5 +1655,504 @@
     ],
     "stock": 100,
     "unitType": "per meter"
+  },
+  {
+    "id": "BD999-01",
+    "brand": "TRESOR",
+    "name": "Honey Mustard Embroidered Floral Trim",
+    "productCode": "BD999-01",
+    "styleCode": "TC-BD999",
+    "colourName": "Honey Mustard",
+    "description": "Rich honey mustard velvet ground adorned with hand-embellished floral zari vines, cultured seed pearls, and crystal beadwork. Sold as a complete 9-meter bundle for \u20b9999.",
+    "price": 999.0,
+    "mrp": 1499.0,
+    "photo": "/products/lace/BD999-01.jpg",
+    "photoGallery": [
+      "/products/lace/BD999-01.jpg",
+      "/products/lace/BD999-01-alt.jpg"
+    ],
+    "image": "/products/lace/BD999-01.jpg",
+    "gallery": [
+      "/products/lace/BD999-01.jpg",
+      "/products/lace/BD999-01-alt.jpg"
+    ],
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Embroidered Zari, Pearls & Beads",
+    "tags": [
+      "Lace",
+      "Honey Mustard",
+      "Embroidered",
+      "Floral",
+      "Pearls",
+      "9m Bundle",
+      "Couture"
+    ],
+    "colors": [
+      {
+        "name": "Honey Mustard",
+        "hex": "#b68a4c"
+      }
+    ],
+    "stock": 10,
+    "unitType": "unit",
+    "costPrice": null,
+    "sellingPricePerMeter": null,
+    "bundleSizeMeters": 9,
+    "bundlePrice": 999.0,
+    "listingStatus": "Active"
+  },
+  {
+    "id": "BD999-02",
+    "brand": "TRESOR",
+    "name": "Emerald Forest Embroidered Floral Trim",
+    "productCode": "BD999-02",
+    "styleCode": "TC-BD999",
+    "colourName": "Emerald Forest",
+    "description": "Regal emerald forest green velvet border trimmed with intricate floral embroidery, lustrous seed pearls, and silver-toned zari leaves. Sold as a complete 9-meter bundle for \u20b9999.",
+    "price": 999.0,
+    "mrp": 1499.0,
+    "photo": "/products/lace/BD999-02.jpg",
+    "photoGallery": [
+      "/products/lace/BD999-02.jpg",
+      "/products/lace/BD999-02-alt.jpg"
+    ],
+    "image": "/products/lace/BD999-02.jpg",
+    "gallery": [
+      "/products/lace/BD999-02.jpg",
+      "/products/lace/BD999-02-alt.jpg"
+    ],
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Embroidered Zari, Pearls & Beads",
+    "tags": [
+      "Lace",
+      "Emerald Forest",
+      "Embroidered",
+      "Floral",
+      "Pearls",
+      "9m Bundle",
+      "Bridal"
+    ],
+    "colors": [
+      {
+        "name": "Emerald Forest",
+        "hex": "#2d4f3b"
+      }
+    ],
+    "stock": 10,
+    "unitType": "unit",
+    "costPrice": null,
+    "sellingPricePerMeter": null,
+    "bundleSizeMeters": 9,
+    "bundlePrice": 999.0,
+    "listingStatus": "Active"
+  },
+  {
+    "id": "BD999-03",
+    "brand": "TRESOR",
+    "name": "Coral Peach Embroidered Net Border",
+    "productCode": "BD999-03",
+    "styleCode": "TC-BD999",
+    "colourName": "Coral Peach",
+    "description": "Delicate coral peach threadwork flowers with champagne gold embroidery and pearl florets on fine translucent net. Sold as a complete 9-meter bundle for \u20b9999.",
+    "price": 999.0,
+    "mrp": 1499.0,
+    "photo": "/products/lace/BD999-03.jpg",
+    "photoGallery": [
+      "/products/lace/BD999-03.jpg",
+      "/products/lace/BD999-03-alt.jpg"
+    ],
+    "image": "/products/lace/BD999-03.jpg",
+    "gallery": [
+      "/products/lace/BD999-03.jpg",
+      "/products/lace/BD999-03-alt.jpg"
+    ],
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Embroidered Zari, Pearls & Beads",
+    "tags": [
+      "Lace",
+      "Coral Peach",
+      "Embroidered",
+      "Floral",
+      "Pearls",
+      "9m Bundle",
+      "Pastel"
+    ],
+    "colors": [
+      {
+        "name": "Coral Peach",
+        "hex": "#d47a63"
+      }
+    ],
+    "stock": 10,
+    "unitType": "unit",
+    "costPrice": null,
+    "sellingPricePerMeter": null,
+    "bundleSizeMeters": 9,
+    "bundlePrice": 999.0,
+    "listingStatus": "Active"
+  },
+  {
+    "id": "BD999-04",
+    "brand": "TRESOR",
+    "name": "Sage Olive Embroidered Net Trim",
+    "productCode": "BD999-04",
+    "styleCode": "TC-BD999",
+    "colourName": "Sage Olive",
+    "description": "Soothing sage olive green embroidered border featuring pearl centers, leafy vines, and soft metallic threadwork on airy net. Sold as a complete 9-meter bundle for \u20b9999.",
+    "price": 999.0,
+    "mrp": 1499.0,
+    "photo": "/products/lace/BD999-04.jpg",
+    "photoGallery": [
+      "/products/lace/BD999-04.jpg"
+    ],
+    "image": "/products/lace/BD999-04.jpg",
+    "gallery": [
+      "/products/lace/BD999-04.jpg"
+    ],
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Embroidered Zari, Pearls & Beads",
+    "tags": [
+      "Lace",
+      "Sage Olive",
+      "Embroidered",
+      "Floral",
+      "Pearls",
+      "9m Bundle"
+    ],
+    "colors": [
+      {
+        "name": "Sage Olive",
+        "hex": "#7d8b67"
+      }
+    ],
+    "stock": 10,
+    "unitType": "unit",
+    "costPrice": null,
+    "sellingPricePerMeter": null,
+    "bundleSizeMeters": 9,
+    "bundlePrice": 999.0,
+    "listingStatus": "Active"
+  },
+  {
+    "id": "BD999-05",
+    "brand": "TRESOR",
+    "name": "Champagne Primrose Gold Trim",
+    "productCode": "BD999-05",
+    "styleCode": "TC-BD999",
+    "colourName": "Primrose Gold",
+    "description": "Luminous champagne primrose gold embroidery on translucent net, accentuated with pearl drops and sparkling crystal beadwork. Sold as a complete 9-meter bundle for \u20b9999.",
+    "price": 999.0,
+    "mrp": 1499.0,
+    "photo": "/products/lace/BD999-05.jpg",
+    "photoGallery": [
+      "/products/lace/BD999-05.jpg"
+    ],
+    "image": "/products/lace/BD999-05.jpg",
+    "gallery": [
+      "/products/lace/BD999-05.jpg"
+    ],
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Embroidered Zari, Pearls & Beads",
+    "tags": [
+      "Lace",
+      "Primrose Gold",
+      "Champagne",
+      "Embroidered",
+      "Floral",
+      "Pearls",
+      "9m Bundle"
+    ],
+    "colors": [
+      {
+        "name": "Primrose Gold",
+        "hex": "#d4af37"
+      }
+    ],
+    "stock": 10,
+    "unitType": "unit",
+    "costPrice": null,
+    "sellingPricePerMeter": null,
+    "bundleSizeMeters": 9,
+    "bundlePrice": 999.0,
+    "listingStatus": "Active"
+  },
+  {
+    "id": "BD999-06",
+    "brand": "TRESOR",
+    "name": "Dusty Rose Mauve Embroidered Border",
+    "productCode": "BD999-06",
+    "styleCode": "TC-BD999",
+    "colourName": "Dusty Rose",
+    "description": "Romantic dusty rose mauve floral border embellished with fine zari branches and cultured seed pearls. Sold as a complete 9-meter bundle for \u20b9999.",
+    "price": 999.0,
+    "mrp": 1499.0,
+    "photo": "/products/lace/BD999-06.jpg",
+    "photoGallery": [
+      "/products/lace/BD999-06.jpg"
+    ],
+    "image": "/products/lace/BD999-06.jpg",
+    "gallery": [
+      "/products/lace/BD999-06.jpg"
+    ],
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Embroidered Zari, Pearls & Beads",
+    "tags": [
+      "Lace",
+      "Dusty Rose",
+      "Mauve",
+      "Embroidered",
+      "Floral",
+      "Pearls",
+      "9m Bundle"
+    ],
+    "colors": [
+      {
+        "name": "Dusty Rose",
+        "hex": "#a35c6a"
+      }
+    ],
+    "stock": 10,
+    "unitType": "unit",
+    "costPrice": null,
+    "sellingPricePerMeter": null,
+    "bundleSizeMeters": 9,
+    "bundlePrice": 999.0,
+    "listingStatus": "Active"
+  },
+  {
+    "id": "BD999-07",
+    "brand": "TRESOR",
+    "name": "Mink Taupe Embroidered Floral Lace",
+    "productCode": "BD999-07",
+    "styleCode": "TC-BD999",
+    "colourName": "Mink Taupe",
+    "description": "Elegant mink taupe embroidered lace trim with subtle metallic sheen and pearl accents on delicate organza net. Sold as a complete 9-meter bundle for \u20b9999.",
+    "price": 999.0,
+    "mrp": 1499.0,
+    "photo": "/products/lace/BD999-07.jpg",
+    "photoGallery": [
+      "/products/lace/BD999-07.jpg",
+      "/products/lace/BD999-07-alt.jpg"
+    ],
+    "image": "/products/lace/BD999-07.jpg",
+    "gallery": [
+      "/products/lace/BD999-07.jpg",
+      "/products/lace/BD999-07-alt.jpg"
+    ],
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Embroidered Zari, Pearls & Beads",
+    "tags": [
+      "Lace",
+      "Mink Taupe",
+      "Embroidered",
+      "Floral",
+      "Pearls",
+      "9m Bundle"
+    ],
+    "colors": [
+      {
+        "name": "Mink Taupe",
+        "hex": "#8c7a6b"
+      }
+    ],
+    "stock": 10,
+    "unitType": "unit",
+    "costPrice": null,
+    "sellingPricePerMeter": null,
+    "bundleSizeMeters": 9,
+    "bundlePrice": 999.0,
+    "listingStatus": "Active"
+  },
+  {
+    "id": "BD999-08",
+    "brand": "TRESOR",
+    "name": "Mulberry Wine Embroidered Lace Trim",
+    "productCode": "BD999-08",
+    "styleCode": "TC-BD999",
+    "colourName": "Mulberry Wine",
+    "description": "Deep mulberry wine floral motifs with gold zari and pearl stamen details, ideal for royal bridal couture and lehengas. Sold as a complete 9-meter bundle for \u20b9999.",
+    "price": 999.0,
+    "mrp": 1499.0,
+    "photo": "/products/lace/BD999-08.jpg",
+    "photoGallery": [
+      "/products/lace/BD999-08.jpg"
+    ],
+    "image": "/products/lace/BD999-08.jpg",
+    "gallery": [
+      "/products/lace/BD999-08.jpg"
+    ],
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Embroidered Zari, Pearls & Beads",
+    "tags": [
+      "Lace",
+      "Mulberry Wine",
+      "Embroidered",
+      "Floral",
+      "Pearls",
+      "9m Bundle",
+      "Bridal"
+    ],
+    "colors": [
+      {
+        "name": "Mulberry Wine",
+        "hex": "#5e2d44"
+      }
+    ],
+    "stock": 10,
+    "unitType": "unit",
+    "costPrice": null,
+    "sellingPricePerMeter": null,
+    "bundleSizeMeters": 9,
+    "bundlePrice": 999.0,
+    "listingStatus": "Active"
+  },
+  {
+    "id": "BD999-09",
+    "brand": "TRESOR",
+    "name": "Ruby Crimson Embroidered Ribbon Border",
+    "productCode": "BD999-09",
+    "styleCode": "TC-BD999",
+    "colourName": "Ruby Crimson",
+    "description": "Striking ruby crimson floral embroidery on soft blush ground, highlighted with seed pearls and metallic edging. Sold as a complete 9-meter bundle for \u20b9999.",
+    "price": 999.0,
+    "mrp": 1499.0,
+    "photo": "/products/lace/BD999-09.jpg",
+    "photoGallery": [
+      "/products/lace/BD999-09.jpg"
+    ],
+    "image": "/products/lace/BD999-09.jpg",
+    "gallery": [
+      "/products/lace/BD999-09.jpg"
+    ],
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Embroidered Zari, Pearls & Beads",
+    "tags": [
+      "Lace",
+      "Ruby Crimson",
+      "Embroidered",
+      "Floral",
+      "Pearls",
+      "9m Bundle"
+    ],
+    "colors": [
+      {
+        "name": "Ruby Crimson",
+        "hex": "#9e2a3b"
+      }
+    ],
+    "stock": 10,
+    "unitType": "unit",
+    "costPrice": null,
+    "sellingPricePerMeter": null,
+    "bundleSizeMeters": 9,
+    "bundlePrice": 999.0,
+    "listingStatus": "Active"
+  },
+  {
+    "id": "BD999-10",
+    "brand": "TRESOR",
+    "name": "Antique Caramel Bronze Lace Border",
+    "productCode": "BD999-10",
+    "styleCode": "TC-BD999",
+    "colourName": "Caramel Bronze",
+    "description": "Warm antique caramel bronze embroidery featuring intricate leafy trails, pearl clusters, and copper bugle beads. Sold as a complete 9-meter bundle for \u20b9999.",
+    "price": 999.0,
+    "mrp": 1499.0,
+    "photo": "/products/lace/BD999-10.jpg",
+    "photoGallery": [
+      "/products/lace/BD999-10.jpg"
+    ],
+    "image": "/products/lace/BD999-10.jpg",
+    "gallery": [
+      "/products/lace/BD999-10.jpg"
+    ],
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Embroidered Zari, Pearls & Beads",
+    "tags": [
+      "Lace",
+      "Caramel Bronze",
+      "Embroidered",
+      "Floral",
+      "Pearls",
+      "9m Bundle"
+    ],
+    "colors": [
+      {
+        "name": "Caramel Bronze",
+        "hex": "#8f5e38"
+      }
+    ],
+    "stock": 10,
+    "unitType": "unit",
+    "costPrice": null,
+    "sellingPricePerMeter": null,
+    "bundleSizeMeters": 9,
+    "bundlePrice": 999.0,
+    "listingStatus": "Active"
+  },
+  {
+    "id": "BD999-11",
+    "brand": "TRESOR",
+    "name": "Slate Charcoal Navy Embroidered Trim",
+    "productCode": "BD999-11",
+    "styleCode": "TC-BD999",
+    "colourName": "Slate Navy",
+    "description": "Sophisticated slate charcoal and deep navy embroidery on silver net with pearl and zircon-style bead highlights. Sold as a complete 9-meter bundle for \u20b9999.",
+    "price": 999.0,
+    "mrp": 1499.0,
+    "photo": "/products/lace/BD999-11.jpg",
+    "photoGallery": [
+      "/products/lace/BD999-11.jpg"
+    ],
+    "image": "/products/lace/BD999-11.jpg",
+    "gallery": [
+      "/products/lace/BD999-11.jpg"
+    ],
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Embroidered Zari, Pearls & Beads",
+    "tags": [
+      "Lace",
+      "Slate Navy",
+      "Charcoal",
+      "Embroidered",
+      "Floral",
+      "Pearls",
+      "9m Bundle"
+    ],
+    "colors": [
+      {
+        "name": "Slate Navy",
+        "hex": "#3a4454"
+      }
+    ],
+    "stock": 10,
+    "unitType": "unit",
+    "costPrice": null,
+    "sellingPricePerMeter": null,
+    "bundleSizeMeters": 9,
+    "bundlePrice": 999.0,
+    "listingStatus": "Active"
   }
 ]
