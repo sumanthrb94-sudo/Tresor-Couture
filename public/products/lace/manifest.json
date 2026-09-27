@@ -734,5 +734,53 @@
   "perM": null,
   "styleCode": "TC-BD999",
   "colourName": "Slate Navy"
+ },
+ "BD899-01": {
+  "name": "Blush Peach Scalloped Pearl Lace Border",
+  "desc": "Delicate blush peach base adorned with scalloped fan edging, lustrous seed pearl chains, and shimmering gold zari threadwork. Sold as a complete 9-meter bundle for ₹899.",
+  "price": 899,
+  "mrp": 1299,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": null,
+  "styleCode": "TC-BD899",
+  "colourName": "Blush Peach"
+ },
+ "BD899-02": {
+  "name": "Berry Magenta Scalloped Pearl Lace Border",
+  "desc": "Vibrant berry magenta base featuring arched scalloped embroidery, gold chain borders, and luminous embedded pearls. Sold as a complete 9-meter bundle for ₹899.",
+  "price": 899,
+  "mrp": 1299,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": null,
+  "styleCode": "TC-BD899",
+  "colourName": "Berry Magenta"
+ },
+ "BD899-03": {
+  "name": "Crimson Red Scalloped Pearl Lace Border",
+  "desc": "Deep royal crimson red lace border embellished with golden scalloped crowns and continuous pearl piping. Sold as a complete 9-meter bundle for ₹899.",
+  "price": 899,
+  "mrp": 1299,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": null,
+  "styleCode": "TC-BD899",
+  "colourName": "Crimson Red"
+ },
+ "BD899-04": {
+  "name": "Champagne Cream Scalloped Pearl Lace Border",
+  "desc": "Luminous champagne cream and ivory ground highlighted with antique gold scallop loops and seed pearls. Sold as a complete 9-meter bundle for ₹899.",
+  "price": 899,
+  "mrp": 1299,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "perM": null,
+  "styleCode": "TC-BD899",
+  "colourName": "Champagne Cream"
  }
 }

@@ -2154,5 +2154,190 @@
     "bundleSizeMeters": 9,
     "bundlePrice": 999.0,
     "listingStatus": "Active"
+  },
+  {
+    "id": "BD899-01",
+    "brand": "TRESOR",
+    "name": "Blush Peach Scalloped Pearl Lace Border",
+    "productCode": "BD899-01",
+    "styleCode": "TC-BD899",
+    "colourName": "Blush Peach",
+    "description": "Delicate blush peach base adorned with scalloped fan edging, lustrous seed pearl chains, and shimmering gold zari threadwork. Sold as a complete 9-meter bundle for \u20b9899.",
+    "price": 899.0,
+    "mrp": 1299.0,
+    "photo": "/products/lace/BD899-01.jpg",
+    "photoGallery": [
+      "/products/lace/BD899-01.jpg"
+    ],
+    "image": "/products/lace/BD899-01.jpg",
+    "gallery": [
+      "/products/lace/BD899-01.jpg"
+    ],
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Scalloped Zari & Pearls",
+    "tags": [
+      "Lace",
+      "Blush Peach",
+      "Scalloped",
+      "Pearls",
+      "Zari",
+      "9m Bundle",
+      "Couture"
+    ],
+    "colors": [
+      {
+        "name": "Blush Peach",
+        "hex": "#e48f87"
+      }
+    ],
+    "stock": 10,
+    "unitType": "unit",
+    "costPrice": null,
+    "sellingPricePerMeter": null,
+    "bundleSizeMeters": 9,
+    "bundlePrice": 899.0,
+    "listingStatus": "Active"
+  },
+  {
+    "id": "BD899-02",
+    "brand": "TRESOR",
+    "name": "Berry Magenta Scalloped Pearl Lace Border",
+    "productCode": "BD899-02",
+    "styleCode": "TC-BD899",
+    "colourName": "Berry Magenta",
+    "description": "Vibrant berry magenta base featuring arched scalloped embroidery, gold chain borders, and luminous embedded pearls. Sold as a complete 9-meter bundle for \u20b9899.",
+    "price": 899.0,
+    "mrp": 1299.0,
+    "photo": "/products/lace/BD899-02.jpg",
+    "photoGallery": [
+      "/products/lace/BD899-02.jpg",
+      "/products/lace/BD899-02-alt.jpg"
+    ],
+    "image": "/products/lace/BD899-02.jpg",
+    "gallery": [
+      "/products/lace/BD899-02.jpg",
+      "/products/lace/BD899-02-alt.jpg"
+    ],
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Scalloped Zari & Pearls",
+    "tags": [
+      "Lace",
+      "Berry Magenta",
+      "Plum",
+      "Scalloped",
+      "Pearls",
+      "Zari",
+      "9m Bundle",
+      "Bridal"
+    ],
+    "colors": [
+      {
+        "name": "Berry Magenta",
+        "hex": "#8a1f4d"
+      }
+    ],
+    "stock": 10,
+    "unitType": "unit",
+    "costPrice": null,
+    "sellingPricePerMeter": null,
+    "bundleSizeMeters": 9,
+    "bundlePrice": 899.0,
+    "listingStatus": "Active"
+  },
+  {
+    "id": "BD899-03",
+    "brand": "TRESOR",
+    "name": "Crimson Red Scalloped Pearl Lace Border",
+    "productCode": "BD899-03",
+    "styleCode": "TC-BD899",
+    "colourName": "Crimson Red",
+    "description": "Deep royal crimson red lace border embellished with golden scalloped crowns and continuous pearl piping. Sold as a complete 9-meter bundle for \u20b9899.",
+    "price": 899.0,
+    "mrp": 1299.0,
+    "photo": "/products/lace/BD899-03.jpg",
+    "photoGallery": [
+      "/products/lace/BD899-03.jpg"
+    ],
+    "image": "/products/lace/BD899-03.jpg",
+    "gallery": [
+      "/products/lace/BD899-03.jpg"
+    ],
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Scalloped Zari & Pearls",
+    "tags": [
+      "Lace",
+      "Crimson Red",
+      "Maroon",
+      "Scalloped",
+      "Pearls",
+      "Zari",
+      "9m Bundle",
+      "Bridal"
+    ],
+    "colors": [
+      {
+        "name": "Crimson Red",
+        "hex": "#9e1b26"
+      }
+    ],
+    "stock": 10,
+    "unitType": "unit",
+    "costPrice": null,
+    "sellingPricePerMeter": null,
+    "bundleSizeMeters": 9,
+    "bundlePrice": 899.0,
+    "listingStatus": "Active"
+  },
+  {
+    "id": "BD899-04",
+    "brand": "TRESOR",
+    "name": "Champagne Cream Scalloped Pearl Lace Border",
+    "productCode": "BD899-04",
+    "styleCode": "TC-BD899",
+    "colourName": "Champagne Cream",
+    "description": "Luminous champagne cream and ivory ground highlighted with antique gold scallop loops and seed pearls. Sold as a complete 9-meter bundle for \u20b9899.",
+    "price": 899.0,
+    "mrp": 1299.0,
+    "photo": "/products/lace/BD899-04.jpg",
+    "photoGallery": [
+      "/products/lace/BD899-04.jpg"
+    ],
+    "image": "/products/lace/BD899-04.jpg",
+    "gallery": [
+      "/products/lace/BD899-04.jpg"
+    ],
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Scalloped Zari & Pearls",
+    "tags": [
+      "Lace",
+      "Champagne Cream",
+      "Ivory",
+      "Scalloped",
+      "Pearls",
+      "Zari",
+      "9m Bundle",
+      "Pastel"
+    ],
+    "colors": [
+      {
+        "name": "Champagne Cream",
+        "hex": "#d8b979"
+      }
+    ],
+    "stock": 10,
+    "unitType": "unit",
+    "costPrice": null,
+    "sellingPricePerMeter": null,
+    "bundleSizeMeters": 9,
+    "bundlePrice": 899.0,
+    "listingStatus": "Active"
   }
 ]
