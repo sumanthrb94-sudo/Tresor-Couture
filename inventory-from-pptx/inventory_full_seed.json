@@ -3307,5 +3307,237 @@
     "bundlePrice": null,
     "sellingPricePerMeter": 199,
     "listingStatus": "Active"
+  },
+  {
+    "id": "PT800-01",
+    "brand": "TRESOR",
+    "name": "Antique Gold Zardozi & Pearl Gala Bodice Yoke Patch",
+    "productCode": "PT800-01",
+    "styleCode": "TC-PT800",
+    "colourName": "Antique Gold",
+    "description": "Ornate handcrafted bodice gala patch on sheer net base, embellished with antique gold zardozi wirework, bugle beads, and a fine seed-pearl fringe border. Sold per piece at \u20b9800 (Only 1 in stock).",
+    "price": 800,
+    "mrp": 1299,
+    "photo": "/products/lace/PT800-01.jpg",
+    "photoGallery": [
+      "/products/lace/PT800-01.jpg"
+    ],
+    "image": "/products/lace/PT800-01.jpg",
+    "gallery": [
+      "/products/lace/PT800-01.jpg"
+    ],
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Patch",
+    "materialType": "Handcrafted Antique Gold Zardozi, Cultured Pearls & Bugle Beads",
+    "colors": [
+      {
+        "name": "Antique Gold",
+        "hex": "#C4A058"
+      }
+    ],
+    "tags": [
+      "Lace",
+      "Patch",
+      "Neckline",
+      "Gala",
+      "Zardozi",
+      "Antique Gold",
+      "Pearls",
+      "1 in Stock",
+      "Couture"
+    ],
+    "stock": 1,
+    "unitType": "unit",
+    "bundleSizeMeters": null,
+    "bundlePrice": null,
+    "sellingPricePerMeter": null,
+    "listingStatus": "Active"
+  },
+  {
+    "id": "PT800-02",
+    "brand": "TRESOR",
+    "name": "Rani Magenta & Sage Floral Beaded Neckline Collar Patch",
+    "productCode": "PT800-02",
+    "styleCode": "TC-PT800",
+    "colourName": "Rani Magenta & Sage",
+    "description": "Exquisite scalloped V-neckline collar patch intricately embroidered with vibrant rani magenta and sage green floral bouquets, silver sequins, cultured pearls, and cutdana beads. Includes overview and close-up detail photos. Sold per piece at \u20b9800 (Only 1 in stock).",
+    "price": 800,
+    "mrp": 1299,
+    "photo": "/products/lace/PT800-02.jpg",
+    "photoGallery": [
+      "/products/lace/PT800-02.jpg",
+      "/products/lace/PT800-02-detail.jpg"
+    ],
+    "image": "/products/lace/PT800-02.jpg",
+    "gallery": [
+      "/products/lace/PT800-02.jpg",
+      "/products/lace/PT800-02-detail.jpg"
+    ],
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Patch",
+    "materialType": "Handcrafted Glass Cutdana, Sequins, Pearls & Silk Threadwork",
+    "colors": [
+      {
+        "name": "Rani Magenta & Sage",
+        "hex": "#A81B5E"
+      }
+    ],
+    "tags": [
+      "Lace",
+      "Patch",
+      "Neckline",
+      "Collar",
+      "Floral",
+      "Rani Magenta",
+      "Sage Green",
+      "1 in Stock",
+      "Couture"
+    ],
+    "stock": 1,
+    "unitType": "unit",
+    "bundleSizeMeters": null,
+    "bundlePrice": null,
+    "sellingPricePerMeter": null,
+    "listingStatus": "Active"
+  },
+  {
+    "id": "PT800-03",
+    "brand": "TRESOR",
+    "name": "Pastel Rainbow Sorbet Floral Beaded Neckline Collar Patch",
+    "productCode": "PT800-03",
+    "styleCode": "TC-PT800",
+    "colourName": "Pastel Rainbow Sorbet",
+    "description": "Whimsical pastel rainbow sorbet V-neck collar patch featuring floral sprays in powder blue, baby pink, sunny lemon, and mint green, heavily frosted with seed pearls and micro-beads. Sold per piece at \u20b9800 (Only 1 in stock).",
+    "price": 800,
+    "mrp": 1299,
+    "photo": "/products/lace/PT800-03.jpg",
+    "photoGallery": [
+      "/products/lace/PT800-03.jpg"
+    ],
+    "image": "/products/lace/PT800-03.jpg",
+    "gallery": [
+      "/products/lace/PT800-03.jpg"
+    ],
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Patch",
+    "materialType": "Handcrafted Pastel Seed Beads, Cutdana & Crystal Flowers",
+    "colors": [
+      {
+        "name": "Pastel Rainbow Sorbet",
+        "hex": "#E2C29B"
+      }
+    ],
+    "tags": [
+      "Lace",
+      "Patch",
+      "Neckline",
+      "Collar",
+      "Floral",
+      "Pastel Rainbow",
+      "Sorbet",
+      "1 in Stock",
+      "Festive"
+    ],
+    "stock": 1,
+    "unitType": "unit",
+    "bundleSizeMeters": null,
+    "bundlePrice": null,
+    "sellingPricePerMeter": null,
+    "listingStatus": "Active"
+  },
+  {
+    "id": "PT800-04",
+    "brand": "TRESOR",
+    "name": "Ivory Bridal Pearl & Crystal Floral Neckline Collar Patch",
+    "productCode": "PT800-04",
+    "styleCode": "TC-PT800",
+    "colourName": "Ivory Bridal White",
+    "description": "Tone-on-tone pure bridal ivory white scalloped collar patch lavishly hand-worked with cultured seed pearls, translucent sequins, and sparkling crystal cutdana florets. Sold per piece at \u20b9800 (Only 1 in stock).",
+    "price": 800,
+    "mrp": 1299,
+    "photo": "/products/lace/PT800-04.jpg",
+    "photoGallery": [
+      "/products/lace/PT800-04.jpg"
+    ],
+    "image": "/products/lace/PT800-04.jpg",
+    "gallery": [
+      "/products/lace/PT800-04.jpg"
+    ],
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Patch",
+    "materialType": "Handcrafted Bridal Ivory Pearls, Micro-Sequins & Crystal Cutdana",
+    "colors": [
+      {
+        "name": "Ivory Bridal White",
+        "hex": "#F4EFE6"
+      }
+    ],
+    "tags": [
+      "Lace",
+      "Patch",
+      "Neckline",
+      "Collar",
+      "Floral",
+      "Ivory White",
+      "Pearls",
+      "Bridal",
+      "1 in Stock"
+    ],
+    "stock": 1,
+    "unitType": "unit",
+    "bundleSizeMeters": null,
+    "bundlePrice": null,
+    "sellingPricePerMeter": null,
+    "listingStatus": "Active"
+  },
+  {
+    "id": "PT800-05",
+    "brand": "TRESOR",
+    "name": "Midnight Black Cutdana & Sequin Floral Neckline Collar Patch",
+    "productCode": "PT800-05",
+    "styleCode": "TC-PT800",
+    "colourName": "Midnight Black",
+    "description": "Dramatic couture midnight black collar patch embroidered with glossy black glass cutdana, shimmering night-sky sequins, and faceted micro-beads on sheer tulle. Sold per piece at \u20b9800 (Only 1 in stock).",
+    "price": 800,
+    "mrp": 1299,
+    "photo": "/products/lace/PT800-05.jpg",
+    "photoGallery": [
+      "/products/lace/PT800-05.jpg"
+    ],
+    "image": "/products/lace/PT800-05.jpg",
+    "gallery": [
+      "/products/lace/PT800-05.jpg"
+    ],
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Patch",
+    "materialType": "Handcrafted Glossy Black Jet Cutdana, Micro-Beads & Sequins",
+    "colors": [
+      {
+        "name": "Midnight Black",
+        "hex": "#1A1A1A"
+      }
+    ],
+    "tags": [
+      "Lace",
+      "Patch",
+      "Neckline",
+      "Collar",
+      "Floral",
+      "Midnight Black",
+      "Cutdana",
+      "1 in Stock",
+      "Statement"
+    ],
+    "stock": 1,
+    "unitType": "unit",
+    "bundleSizeMeters": null,
+    "bundlePrice": null,
+    "sellingPricePerMeter": null,
+    "listingStatus": "Active"
   }
 ]

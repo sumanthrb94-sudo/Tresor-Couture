@@ -1046,5 +1046,65 @@
   "perM": 199,
   "styleCode": "TC-LC199",
   "colourName": "Emerald Green"
+ },
+ "PT800-01": {
+  "name": "Antique Gold Zardozi & Pearl Gala Bodice Yoke Patch",
+  "desc": "Ornate handcrafted bodice gala patch on sheer net base, embellished with antique gold zardozi wirework, bugle beads, and a fine seed-pearl fringe border. Sold per piece at ₹800 (Only 1 in stock).",
+  "price": 800,
+  "mrp": 1299,
+  "sub": "Patch",
+  "unit": "piece",
+  "bundle": null,
+  "perM": null,
+  "styleCode": "TC-PT800",
+  "colourName": "Antique Gold"
+ },
+ "PT800-02": {
+  "name": "Rani Magenta & Sage Floral Beaded Neckline Collar Patch",
+  "desc": "Exquisite scalloped V-neckline collar patch intricately embroidered with vibrant rani magenta and sage green floral bouquets, silver sequins, cultured pearls, and cutdana beads. Includes overview and close-up detail photos. Sold per piece at ₹800 (Only 1 in stock).",
+  "price": 800,
+  "mrp": 1299,
+  "sub": "Patch",
+  "unit": "piece",
+  "bundle": null,
+  "perM": null,
+  "styleCode": "TC-PT800",
+  "colourName": "Rani Magenta & Sage"
+ },
+ "PT800-03": {
+  "name": "Pastel Rainbow Sorbet Floral Beaded Neckline Collar Patch",
+  "desc": "Whimsical pastel rainbow sorbet V-neck collar patch featuring floral sprays in powder blue, baby pink, sunny lemon, and mint green, heavily frosted with seed pearls and micro-beads. Sold per piece at ₹800 (Only 1 in stock).",
+  "price": 800,
+  "mrp": 1299,
+  "sub": "Patch",
+  "unit": "piece",
+  "bundle": null,
+  "perM": null,
+  "styleCode": "TC-PT800",
+  "colourName": "Pastel Rainbow Sorbet"
+ },
+ "PT800-04": {
+  "name": "Ivory Bridal Pearl & Crystal Floral Neckline Collar Patch",
+  "desc": "Tone-on-tone pure bridal ivory white scalloped collar patch lavishly hand-worked with cultured seed pearls, translucent sequins, and sparkling crystal cutdana florets. Sold per piece at ₹800 (Only 1 in stock).",
+  "price": 800,
+  "mrp": 1299,
+  "sub": "Patch",
+  "unit": "piece",
+  "bundle": null,
+  "perM": null,
+  "styleCode": "TC-PT800",
+  "colourName": "Ivory Bridal White"
+ },
+ "PT800-05": {
+  "name": "Midnight Black Cutdana & Sequin Floral Neckline Collar Patch",
+  "desc": "Dramatic couture midnight black collar patch embroidered with glossy black glass cutdana, shimmering night-sky sequins, and faceted micro-beads on sheer tulle. Sold per piece at ₹800 (Only 1 in stock).",
+  "price": 800,
+  "mrp": 1299,
+  "sub": "Patch",
+  "unit": "piece",
+  "bundle": null,
+  "perM": null,
+  "styleCode": "TC-PT800",
+  "colourName": "Midnight Black"
  }
 }
