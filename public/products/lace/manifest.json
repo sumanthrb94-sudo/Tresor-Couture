@@ -1132,5 +1132,18 @@
   "perM": 85,
   "styleCode": "TC-CH250",
   "colourName": "Antique Gold"
+ },
+ "LC280-01": {
+  "name": "Antique Gold Scalloped Cord & Pleated Zari Lace Border",
+  "desc": "Opulent antique gold zari lace border featuring a contoured scalloped cord wave edge and raised pleated geometric chevron track on fine mesh. Available at ₹30/meter or ₹280 for a full 9-meter bundle.",
+  "price": 30,
+  "mrp": 60,
+  "sub": "Trim & Edging",
+  "unit": "bundle",
+  "bundle": 9,
+  "bundlePrice": 280,
+  "perM": 30,
+  "styleCode": "TC-GL280",
+  "colourName": "Antique Gold"
  }
 }

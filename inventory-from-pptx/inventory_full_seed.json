@@ -3632,5 +3632,52 @@
     "stock": 90,
     "unitType": "bundle",
     "listingStatus": "Active"
+  },
+  {
+    "id": "LC280-01",
+    "brand": "TRESOR",
+    "name": "Antique Gold Scalloped Cord & Pleated Zari Lace Border",
+    "title": "Antique Gold Scalloped Cord & Pleated Zari Lace Border",
+    "productCode": "LC280-01",
+    "styleCode": "TC-GL280",
+    "colourName": "Antique Gold",
+    "description": "Opulent antique gold zari lace border featuring a contoured scalloped cord wave edge and raised pleated geometric chevron track on fine mesh. Available at ₹30/meter or ₹280 for a full 9-meter bundle.",
+    "price": 30,
+    "sellingPricePerMeter": 30,
+    "bundlePrice": 280,
+    "bundleSizeMeters": 9,
+    "mrp": 60,
+    "photo": "/products/lace/LC280-01.jpg",
+    "photoGallery": [
+      "/products/lace/LC280-01.jpg"
+    ],
+    "image": "/products/lace/LC280-01.jpg",
+    "gallery": [
+      "/products/lace/LC280-01.jpg"
+    ],
+    "category": "Laces",
+    "masterCategory": "Laces",
+    "subCategory": "Trim & Edging",
+    "materialType": "Antique Gold Zari, Metallic Cord & Mesh",
+    "colors": [
+      {
+        "name": "Antique Gold",
+        "hex": "#C5A059"
+      }
+    ],
+    "tags": [
+      "Lace",
+      "Zari",
+      "Gold",
+      "Antique Gold",
+      "Scallop",
+      "Cordwork",
+      "Per Meter",
+      "9m Bundle",
+      "Festive"
+    ],
+    "stock": 90,
+    "unitType": "bundle",
+    "listingStatus": "Active"
   }
 ]

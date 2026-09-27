@@ -19,7 +19,7 @@ const NEW_LACES = [
     sellingPricePerMeter: 85,
     mrp: 150,
     materialType: 'Metallic Silver Zari & Gota Braid',
-    stock: 90, // 90 meters (10 bundles of 9m)
+    stock: 90,
     photo: '/products/lace/LC250-01.jpg',
     photoGallery: ['/products/lace/LC250-01.jpg']
   },
@@ -38,14 +38,33 @@ const NEW_LACES = [
     sellingPricePerMeter: 85,
     mrp: 150,
     materialType: 'Antique Gold Gota Patti & Zari',
-    stock: 90, // 90 meters (10 bundles of 9m)
+    stock: 90,
     photo: '/products/lace/LC250-02.jpg',
     photoGallery: ['/products/lace/LC250-02.jpg']
+  },
+  {
+    id: 'LC280-01',
+    styleCode: 'TC-GL280',
+    colourName: 'Antique Gold',
+    hex: '#C5A059',
+    name: 'Antique Gold Scalloped Cord & Pleated Zari Lace Border',
+    description: 'Opulent antique gold zari lace border featuring a contoured scalloped cord wave edge and raised pleated geometric chevron track on fine mesh. Available at ₹30/meter or ₹280 for a full 9-meter bundle.',
+    tags: ['Lace', 'Zari', 'Gold', 'Antique Gold', 'Scallop', 'Cordwork', 'Per Meter', '9m Bundle', 'Festive'],
+    unitType: 'bundle',
+    bundleSizeMeters: 9,
+    bundlePrice: 280,
+    price: 30,
+    sellingPricePerMeter: 30,
+    mrp: 60,
+    materialType: 'Antique Gold Zari, Metallic Cord & Mesh',
+    stock: 90,
+    photo: '/products/lace/LC280-01.jpg',
+    photoGallery: ['/products/lace/LC280-01.jpg']
   }
 ];
 
 async function main() {
-  console.log(`🌸 Seeding ${NEW_LACES.length} new lace items to Firestore (Target: ${prod ? 'PRODUCTION' : 'EMULATOR'} "${projectId}")...\n`);
+  console.log(`🌸 Seeding ${NEW_LACES.length} lace items to Firestore (Target: ${prod ? 'PRODUCTION' : 'EMULATOR'} "${projectId}")...\n`);
 
   const batch = db.batch();
   for (const l of NEW_LACES) {
