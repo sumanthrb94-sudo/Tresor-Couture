@@ -114,14 +114,13 @@ class Store<T extends BaseRecord> {
   }
 }
 
-import { Fabric, Order, User, Coupon, Review } from '../types';
+import { Fabric, Order, User, Coupon } from '../types';
 import { FABRICS as SEED_FABRICS } from '../constants';
 
 export const fabricsStore = new Store<Fabric>('fabrics:v1', () => SEED_FABRICS);
 export const ordersStore = new Store<Order>('orders:v2');
 export const usersStore = new Store<User>('users:v1');
 export const couponsStore = new Store<Coupon & BaseRecord>('coupons:v1', () => seedCoupons());
-export const reviewsStore = new Store<Review>('reviews:v1');
 
 /* Coupon code IS the id — keep both in sync via this small adapter. */
 function couponSeed(code: string, partial: Omit<Coupon, 'code' | 'active'>): Coupon & BaseRecord {

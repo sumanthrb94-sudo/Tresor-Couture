@@ -24,9 +24,9 @@ import { adminPage, customerPage, dismissConsent } from './lib/session';
  *      the catalogue, so it is checked against the catalogue, not against what
  *      the checkout rendered — otherwise the test would confirm the browser
  *      agrees with itself.
- *   3. DELIVERY IS WHAT UNLOCKS THINGS. The return window and the review gate
- *      both hang off `status: delivered`, and both are checked after the admin
- *      marks it so — not before.
+ *   3. DELIVERY IS WHAT UNLOCKS THINGS. The return window hangs off
+ *      `status: delivered`, and is checked after the admin marks it so — not
+ *      before.
  */
 
 /**
@@ -102,7 +102,7 @@ test('Entry to exit · browse → buy → deliver → return, with the server pr
       'Sign in as customer@test.local, open a product, add it to the bag, and check out with Cash on Delivery.',
       'Confirm the order total matches quantity x catalogue price, and that the product stock fell by the quantity ordered.',
       'As admin@test.local, mark the order shipped, then delivered.',
-      'Back as the customer: the order can now be returned, and the product page now shows the "Verified purchase" review form it withheld before.',
+      'Back as the customer: the order can now be returned. The product page shows no reviews or ratings.',
     ],
   });
 
@@ -310,23 +310,15 @@ test('Entry to exit · browse → buy → deliver → return, with the server pr
     await adm.waitForTimeout(2500);
     await rec.step(adm, 'The return reaches the admin queue', 'End of the round trip: the piece was found, bought, shipped, delivered and sent back, all through the real server.', 'assert');
 
-    // ─────────── AND THE REVIEW GATE OPENS ───────────
-    // The last thing a delivered order unlocks. This is the only test that can
-    // prove the gate for real: the rule reads `productIds` off an order that
-    // must be this customer's AND delivered, and until now every order in the
-    // suite was seeded, so the gate was only ever checked against a fixture
-    // rather than against a purchase the shop itself recorded.
+    // ─────────── NO REVIEWS ANYWHERE ───────────
+    // Reviews and ratings were removed from the shop. Even for a buyer whose
+    // delivered order contains this piece — the one person the old form would
+    // have appeared for — the product page must offer no review form, list and
+    // no star rating.
     await cust.goto(`/product/${PRODUCT_ID}`, { waitUntil: 'domcontentloaded' });
     await cust.waitForTimeout(3000);
-    await cust.getByText(/write a review/i).first().scrollIntoViewIfNeeded().catch(() => {});
-    await cust.waitForTimeout(1500);
-    await expect(cust.getByText(/verified purchase/i).first()).toBeVisible({ timeout: 20_000 });
-    await rec.step(
-      cust,
-      'Having bought it, the shopper can review it',
-      'The "Verified purchase" form renders only once the buyer is matched to a delivered order carrying this product. Before this purchase the same page offered no form at all.',
-      'assert',
-    );
+    await expect(cust.getByText(/write a review|verified purchase|customer reviews|ratings?\b/i)).toHaveCount(0);
+    await rec.step(cust, 'No reviews or ratings on the product page', 'Not even for the shopper who has just bought and received it.', 'assert');
 
     rec.finish('passed');
     await cust.context().close();

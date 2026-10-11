@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heart, Star, ShoppingBag, Check } from 'lucide-react';
+import { Heart, ShoppingBag, Check } from 'lucide-react';
 import { Fabric } from '../types';
 import { formatINR } from '../constants';
 import { useRouter } from '../context/RouterContext';
@@ -81,14 +81,6 @@ const ProductCard: React.FC<Props> = ({ fabric, compact = false }) => {
               "Trending" on a card the customer cannot buy from. */}
           {fabric.sticker && !soldOut && (
             <span className="badge-trending">{fabric.sticker}</span>
-          )}
-          {fabric.rating !== undefined && (
-            <span className="absolute bottom-2 left-2 badge-rating">
-              {fabric.rating.toFixed(1)} <Star className="w-3 h-3 fill-current star" />
-              {fabric.reviewCount !== undefined && (
-                <span className="text-[color:var(--color-myntra-ink-mute)] font-medium ml-1">| {fabric.reviewCount}</span>
-              )}
-            </span>
           )}
         </div>
 

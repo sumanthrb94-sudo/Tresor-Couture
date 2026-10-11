@@ -1,14 +1,13 @@
 import { displayDescription } from '../lib/productCopy';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { Check, ChevronDown, ChevronUp, Expand, Heart, Minus, Plus, ShieldCheck, ShoppingBag, Star, Truck, Zap } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Expand, Heart, Minus, Plus, ShieldCheck, ShoppingBag, Truck, Zap } from 'lucide-react';
 import { formatINR } from '../constants';
 import { useRouter } from '../context/RouterContext';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import FabricImage from '../components/FabricImage';
 import ProductCard from '../components/ProductCard';
-import ReviewsSection from '../components/ReviewsSection';
 import StickyAddToCart from '../components/StickyAddToCart';
 import DeliveryChecker from '../components/DeliveryChecker';
 import { productsApi } from '../lib/firebase';
@@ -282,19 +281,6 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
           <div>
             <h1 className="text-[20px] md:text-[22px] font-extrabold text-[color:var(--color-myntra-navy)] mb-1">{fabric.brand}</h1>
             <p className="text-[16px] md:text-[18px] text-[color:var(--color-myntra-ink)] mb-3">{fabric.name}</p>
-
-            {fabric.rating !== undefined && (
-              <div className="inline-flex items-center gap-2 border border-[color:var(--color-myntra-border-soft)] rounded px-2.5 py-1 mb-5">
-                <span className="text-[13px] font-bold text-[color:var(--color-myntra-navy)]">{fabric.rating.toFixed(1)}</span>
-                <Star className="w-3.5 h-3.5 fill-[color:var(--color-myntra-green)] text-[color:var(--color-myntra-green)]" />
-                {fabric.reviewCount != null && fabric.reviewCount > 0 && (
-                  <>
-                    <span className="w-px h-3.5 bg-[color:var(--color-myntra-border)]" />
-                    <span className="text-[12px] text-[color:var(--color-myntra-ink-soft)] font-semibold">{fabric.reviewCount.toLocaleString('en-IN')} Ratings</span>
-                  </>
-                )}
-              </div>
-            )}
 
             <hr className="border-[color:var(--color-myntra-border-soft)] mb-4" />
 
@@ -579,8 +565,6 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
           </section>
         )}
 
-        {/* Reviews */}
-        <ReviewsSection fabricId={fabric.id} />
       </div>
 
       {/* Mobile-only sticky add-to-bag — appears once the in-card CTA scrolls out of view. */}

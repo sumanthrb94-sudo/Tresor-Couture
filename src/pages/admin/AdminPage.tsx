@@ -11,7 +11,6 @@ import AdminBilling from './AdminBilling';
 import AdminCustomers from './AdminCustomers';
 import AdminSupport from './AdminSupport';
 import AdminCoupons from './AdminCoupons';
-import AdminReviews from './AdminReviews';
 import AdminCompliance from './AdminCompliance';
 import AdminDelivery from './AdminDelivery';
 import AdminBulkEmail from './AdminBulkEmail';
@@ -39,7 +38,6 @@ const AdminPage: React.FC<Props> = ({ section = 'dashboard' }) => (
       {section === 'customers' && <AdminCustomers />}
       {section === 'support' && <AdminSupport />}
       {section === 'coupons' && <AdminCoupons />}
-      {section === 'reviews' && <AdminReviews />}
       {section === 'compliance' && <AdminCompliance />}
       {section === 'delivery' && <AdminDelivery />}
       {section === 'bulk-email' && <AdminBulkEmail />}
