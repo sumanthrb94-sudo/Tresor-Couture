@@ -92,6 +92,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(false);
         return;
       }
+      // Loading again until this user's profile and admin claim are read.
+      // Without it, the moment after sign-in reads as "settled, nobody signed
+      // in" (loading was already false from the signed-out state, and `user`
+      // is only set once hydrate finishes), so a guarded page — the admin
+      // console — bounced the user to /login and on to the home page whenever
+      // the profile read was slow, e.g. the first read on a cold database.
+      setLoading(true);
       try {
         await hydrate(fbUser.uid, fbUser.email);
       } finally {
