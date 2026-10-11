@@ -100,6 +100,10 @@ export interface Fabric {
    *  flat-lay from a snapshot with a price tag in the frame. This is how the
    *  studio overrules it. */
   featured?: boolean;
+  /** When the document was created. Firestore hands back a Timestamp; older or
+   *  imported rows may carry an ISO string or epoch millis. Read it through
+   *  `createdMs` in lib/homeRails.ts rather than assuming a shape. */
+  createdAt?: unknown;
   /** Stock level at which to reorder — reporting only, never blocks a sale. */
   reorderLevel?: number;
   /** Where the piece was bought. Back-office only, never shown to customers. */

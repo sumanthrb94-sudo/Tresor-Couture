@@ -528,6 +528,14 @@ const ImageUpload: React.FC<{
     }
   };
 
+  /** Clear this slot. Nothing is written until the product is saved, so a
+   *  mis-tap is undone by closing the editor without saving. */
+  const removeImage = () => {
+    setUploadErr(null);
+    setViewing(false);
+    onChange('');
+  };
+
   return (
     <div className="space-y-2">
       <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[color:var(--color-myntra-ink-mute)] mb-1">
@@ -544,18 +552,33 @@ const ImageUpload: React.FC<{
             real pixel size. The old 48×56 stamp could not tell one lace from
             another, which is the whole reason to look at it. */}
         {value ? (
-          <button
-            type="button"
-            onClick={() => setViewing(true)}
-            title="View at full size"
-            aria-label={`View ${label} at full size`}
-            className="group relative w-24 h-28 rounded border border-[color:var(--color-myntra-border-soft)] bg-[color:var(--color-myntra-bg-soft)] overflow-hidden shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-myntra-pink)]"
-          >
-            <Thumb photo={value} alt={label} className="w-full h-full object-contain" />
-            <span className="absolute inset-x-0 bottom-0 py-0.5 bg-black/55 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-              Full size
-            </span>
-          </button>
+          <div className="relative w-24 h-28 shrink-0">
+            <button
+              type="button"
+              onClick={() => setViewing(true)}
+              title="View at full size"
+              aria-label={`View ${label} at full size`}
+              className="group relative w-full h-full rounded border border-[color:var(--color-myntra-border-soft)] bg-[color:var(--color-myntra-bg-soft)] overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-myntra-pink)]"
+            >
+              <Thumb photo={value} alt={label} className="w-full h-full object-contain" />
+              <span className="absolute inset-x-0 bottom-0 py-0.5 bg-black/55 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                Full size
+              </span>
+            </button>
+            {/* Always visible, not hover-only: this runs on a phone at the shelf,
+                where there is no hover. A sibling of the viewer button, not a
+                child — a button inside a button is invalid and swallows taps. */}
+            <button
+              type="button"
+              onClick={removeImage}
+              title={`Remove ${label}`}
+              aria-label={`Remove ${label}`}
+              data-testid={`remove-${id}`}
+              className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white border border-[#E8B4B4] text-[#A12626] shadow flex items-center justify-center hover:bg-[#FDF0F0] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A12626]"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
         ) : (
           <div className="w-24 h-28 rounded border border-[color:var(--color-myntra-border-soft)] bg-[color:var(--color-myntra-bg-soft)] overflow-hidden shrink-0 flex items-center justify-center text-[color:var(--color-myntra-ink-mute)]">
             <ImageIcon className="w-5 h-5" />
@@ -609,6 +632,16 @@ const ImageUpload: React.FC<{
         >
           <Camera className="w-3.5 h-3.5" /> Take Photo
         </label>
+
+        {value && (
+          <button
+            type="button"
+            onClick={removeImage}
+            className="btn-outline !py-1.5 !px-3 text-[12px] inline-flex items-center gap-1.5 !text-[#A12626] !border-[#E8B4B4]"
+          >
+            <Trash2 className="w-3.5 h-3.5" /> Remove
+          </button>
+        )}
 
         {/* Quick-pick dropdown */}
         <div className="relative flex-1 min-w-[140px]">
@@ -1077,6 +1110,12 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
               onChange={setPhoto}
               error={errors.photo}
             />
+            {draft.photo.trim() && draft.listingStatus === 'Active' && (
+              <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] -mt-2">
+                Removing the main photo moves this piece to Draft — a product on the website
+                needs a photograph. Add another to put it back.
+              </p>
+            )}
             {!draft.photo.trim() && (
               <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] -mt-2">
                 No photo yet? Save anyway. The product is created with a barcode and counts for
@@ -1144,8 +1183,9 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
                     Feature on the home page
                   </span>
                   <span className="block text-[11px] text-[color:var(--color-myntra-ink-soft)]">
-                    Puts this piece on the hero slide and the tile for its category, and on
-                    the Lookbook card for its subcategory. Without it the home page picks the
+                    Puts this piece in the "Studio Picks" row on the home page, on the hero
+                    slide and the tile for its category, and on the Lookbook card for its
+                    subcategory. Without it the home page picks the
                     best-photographed piece in stock, which is a guess. Tick it on one piece
                     per category.
                   </span>
