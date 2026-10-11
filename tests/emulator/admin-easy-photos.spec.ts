@@ -16,7 +16,15 @@ test('Admin · pick several photos once and they fill Main + gallery in order', 
   // claim check and the first catalogue read on a fresh emulator. Wait for the
   // screen to be there rather than assuming it arrives in 15s.
   const addProduct = adm.getByRole('button', { name: /add product/i }).first();
-  await expect(addProduct).toBeVisible({ timeout: 60_000 });
+  try {
+    await expect(addProduct).toBeVisible({ timeout: 60_000 });
+  } catch (err) {
+    // Only ever failed as the FIRST spec of a fresh CI run, never locally.
+    // Say where the admin actually is, so the log alone explains it.
+    const text = (await adm.locator('body').innerText().catch(() => '')).replace(/\s+/g, ' ').slice(0, 400);
+    console.log(`[admin-easy-photos] Add Product missing. url=${adm.url()} text="${text}"`);
+    throw err;
+  }
   await addProduct.click();
 
   await adm.locator('#bulk-photos').setInputFiles([
