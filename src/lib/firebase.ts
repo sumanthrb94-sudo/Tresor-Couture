@@ -575,10 +575,10 @@ export function onAuth(cb: (user: FbUser | null) => void) {
 }
 
 /** True when the signed-in user has the admin custom claim. */
-export async function isAdminUser(): Promise<boolean> {
+export async function isAdminUser(forceRefresh = false): Promise<boolean> {
   const user = auth.currentUser;
   if (!user) return false;
-  const tok = await user.getIdTokenResult();
+  const tok = await user.getIdTokenResult(forceRefresh);
   return tok.claims.admin === true;
 }
 
