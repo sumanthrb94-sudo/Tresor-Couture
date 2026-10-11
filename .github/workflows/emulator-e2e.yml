@@ -93,16 +93,24 @@ jobs:
           ENV
           npm run build
 
-      - name: Serve the build
+      - name: Serve the build and the API
+        # `vite preview` is static: every /api/* request 404s, so the specs
+        # that place an order (entry-to-exit, checkout) could never pass here.
+        # scripts/local-api-server.ts serves the same build AND the real api/
+        # handlers on one origin, against the emulators (tests/emulator/README).
+        env:
+          FIREBASE_PROJECT_ID: demo-tresor
+          ALLOWED_ORIGIN: http://127.0.0.1:4173
+          PORT: '4173'
         run: |
-          npm run preview -- --port 4173 --host 127.0.0.1 > preview.log 2>&1 &
+          npm run serve:local > preview.log 2>&1 &
           for i in $(seq 1 30); do
             if [ "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:4173/)" = "200" ]; then
-              echo "Preview ready after ${i}s"; exit 0
+              echo "App + API ready after ${i}s"; exit 0
             fi
             sleep 1
           done
-          echo "::error::Preview server did not come up"; cat preview.log; exit 1
+          echo "::error::App server did not come up"; cat preview.log; exit 1
 
       - name: Run emulator E2E suites
         run: npm run test:emulator
