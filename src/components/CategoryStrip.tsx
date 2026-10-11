@@ -20,7 +20,7 @@ import FabricImage from './FabricImage';
  */
 const CategoryStrip: React.FC = () => {
   const { navigate } = useRouter();
-  const { products } = useCatalog();
+  const { homeProducts: products } = useCatalog();
   const art = useHomeArt();
 
   // A tile promising a category the shop cannot show is worse than one tile

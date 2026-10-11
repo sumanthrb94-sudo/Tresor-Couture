@@ -19,7 +19,8 @@ import ShopPage from './pages/ShopPage';
 import ProductPage from './pages/ProductPage';
 import CartPage from './pages/CartPage';
 import { CatalogProvider, useCatalog } from './context/CatalogContext';
-import { inStock } from './lib/availability';
+import { buildHomeRails } from './lib/homeRails';
+import BrowseAllGrid from './components/BrowseAllGrid';
 import { useRouteMeta, useStoreJsonLd } from './lib/seoMeta';
 
 // Routes that aren't on the critical home/shop path are lazy-loaded so they
@@ -44,31 +45,15 @@ import { RouterProvider, useRouter } from './context/RouterContext';
 import AdminGuard from './pages/admin/AdminGuard';
 
 const Home: React.FC = () => {
-  const { products, loading, error: loadError, refresh } = useCatalog();
+  const { homeProducts: products, homeLoading: loading, error: loadError, refresh } = useCatalog();
   useStoreJsonLd(true);
 
-  // Rails defined by spec. Bridal prefers master categories (Sarees, Lehenga Cholis)
-  // when there are enough; otherwise falls back to silk/satin fabrics so the rail
-  // doesn't collapse on a catalogue weighted toward yardage.
-  const { trending, newIn, bridal, summer } = useMemo(() => {
-    // Home rails are merchandising, not a catalogue: only advertise pieces we
-    // can actually ship. Sold-out product stays discoverable in Shop and via
-    // its own URL, where it is clearly badged.
-    const list = (products ?? []).filter(inStock);
-    const byMaster = list.filter(f => f.masterCategory === 'Sarees' || f.masterCategory === 'Lehenga Cholis');
-    const byCategory = list.filter(f => f.materialType === 'Silk' || f.materialType === 'Satin');
-    return {
-      trending: list.filter(f => f.sticker === 'Trending' || f.sticker === 'Bestseller').slice(0, 5),
-      newIn:    list.filter(f => f.sticker === 'New In' || f.sticker === 'Limited').slice(0, 5),
-      bridal:   (byMaster.length >= 3 ? byMaster : byCategory).slice(0, 5),
-      summer:   list.filter(f => f.materialType === 'Cotton' || f.materialType === 'Linen').slice(0, 5)
-    };
-  }, [products]);
-
-  const bridalUsesMaster = useMemo(() => {
-    const list = (products ?? []).filter(inStock);
-    return list.filter(f => f.masterCategory === 'Sarees' || f.masterCategory === 'Lehenga Cholis').length >= 3;
-  }, [products]);
+  // Rail membership lives in lib/homeRails.ts: pure, tested, and not dependent
+  // on someone having hand-tagged each product with a sticker.
+  const { trending, newIn, bridal, bridalUsesMaster, summer, studio } = useMemo(
+    () => buildHomeRails(products),
+    [products],
+  );
 
   return (
     <main>
@@ -115,6 +100,14 @@ const Home: React.FC = () => {
         ctaCategory="Cotton"
         bg="white"
       />
+      <ProductRail
+        eyebrow="Suggested by the Studio"
+        title="Studio Picks"
+        items={studio}
+        loading={loading}
+        bg="soft"
+      />
+      <BrowseAllGrid />
     </main>
   );
 };

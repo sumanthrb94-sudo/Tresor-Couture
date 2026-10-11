@@ -26,7 +26,7 @@ import { MIN_CARDS, buildEntries } from '../lib/lookbook';
 
 const LookbookRail: React.FC = () => {
   const { navigate } = useRouter();
-  const { products, loading } = useCatalog();
+  const { homeProducts: products, homeLoading: loading } = useCatalog();
   const trackRef = useRef<HTMLDivElement>(null);
 
   const entries = useMemo(() => buildEntries(products), [products]);

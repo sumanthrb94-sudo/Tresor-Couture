@@ -844,6 +844,11 @@ export const productsApi = {
     c.push(qLimit(opts.limit ?? 100));
     return listAll<DocumentData>('products', c);
   },
+  /** The newest `n` products — a first paint for the home page while the full
+   *  catalogue is still downloading. Products without a `createdAt` are simply
+   *  not in this list; they arrive with the full load. */
+  recent: (n = 48) =>
+    listAll<DocumentData>('products', [orderBy('createdAt', 'desc'), qLimit(n)]),
   get:    (id: string) => getOne<DocumentData>('products', id),
   create: async (data: DocumentData) => {
     const ref = await addDoc(collection(db, 'products'), {

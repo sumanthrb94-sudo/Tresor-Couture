@@ -205,7 +205,7 @@ const AccountPage: React.FC<Props> = ({ tab = 'profile' }) => {
         <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-4 md:gap-6">
           {/* Desktop sidebar */}
           <aside className="hidden md:block">
-            <div className="md:sticky md:top-[110px]">
+            <div className="md:sticky md:top-[110px] lg:top-[150px]">
               <div className="bg-white border border-[color:var(--color-myntra-border-soft)] mb-3">
                 <div className="px-4 py-4 border-b border-[color:var(--color-myntra-border-soft)]">
                   <p className="text-[11px] font-bold uppercase tracking-wider text-[color:var(--color-myntra-ink-mute)] mb-1">

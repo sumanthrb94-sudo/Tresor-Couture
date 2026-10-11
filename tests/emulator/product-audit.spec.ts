@@ -114,6 +114,10 @@ test('Products · A photo in the editor can be seen at its real size', async ({ 
   try {
     const adm = await adminPage(browser);
     await gotoAdmin(adm, 'products');
+    // A specific seeded piece that HAS a photograph. "The first row" depends on
+    // whatever earlier specs left behind — a photo-less draft from the batch
+    // spec sorts first and has no Main Photo to open.
+    await adm.getByPlaceholder(/search name, brand/i).fill('Mashru Silk-Satin');
     await adm.getByRole('button', { name: /^edit/i }).first().click({ timeout: 20_000 });
     await rec.step(adm, 'A product is open in the editor', 'Each photo field carries a preview big enough to identify the piece.');
 

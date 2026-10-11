@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Pencil,
+  MoreHorizontal,
   Trash2,
   Plus,
   Search,
@@ -19,6 +20,7 @@ import {
   Check
 } from 'lucide-react';
 import { productsApi } from '../../lib/firebase';
+import { isPlaceholderDescription } from '../../lib/productCopy';
 import { compressImage, MAIN_PHOTO_BUDGET, GALLERY_PHOTO_BUDGET } from '../../lib/compressImage';
 import { placeholderSwatch } from '../../lib/swatch';
 import ProductAudit from './ProductAudit';
@@ -257,6 +259,9 @@ const validateDraft = (d: Draft): DraftErrors => {
   if (!d.brand.trim()) errs.brand = 'Brand is required';
   if (!d.name.trim()) errs.name = 'Name is required';
   if (!d.description.trim()) errs.description = 'Description is required';
+  else if (isPlaceholderDescription(d.description)) {
+    errs.description = 'Write a real description — shoppers read this on the product page.';
+  }
   if (!d.category) errs.category = 'Pick a category';
   // A photo is deliberately NOT required. A piece is registered — priced,
   // stocked, barcoded, sellable at the counter — days before the shoot, and
@@ -505,9 +510,12 @@ const ImageUpload: React.FC<{
   const [viewing, setViewing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const processFile = async (file: File | undefined) => {
     if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setUploadErr('That file is not an image. Choose a JPG, PNG or WebP photo.');
+      return;
+    }
     setUploading(true);
     setUploadErr(null);
     try {
@@ -528,34 +536,77 @@ const ImageUpload: React.FC<{
     }
   };
 
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => processFile(e.target.files?.[0]);
+
+  const [dragging, setDragging] = useState(false);
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    void processFile(e.dataTransfer.files?.[0]);
+  };
+
+  // An uploaded photo is a 100KB+ base64 string. Showing it in the text box
+  // made the field look broken and invited editing it by accident; say what it
+  // is instead. A typed path (/products/…) stays editable.
+  const isUploaded = value.startsWith('data:');
+
+  /** Clear this slot. Nothing is written until the product is saved, so a
+   *  mis-tap is undone by closing the editor without saving. */
+  const removeImage = () => {
+    setUploadErr(null);
+    setViewing(false);
+    onChange('');
+  };
+
   return (
-    <div className="space-y-2">
+    <div
+      className={`space-y-2 rounded ${dragging ? 'ring-2 ring-[color:var(--color-myntra-pink)] ring-offset-2' : ''}`}
+      onDragOver={e => { e.preventDefault(); setDragging(true); }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={onDrop}
+    >
       <label className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[color:var(--color-myntra-ink-mute)] mb-1">
         {label}
       </label>
       <div className="flex gap-2">
         <input
           className="input-box flex-1"
-          value={value}
+          value={isUploaded ? `Photo uploaded · ${Math.round(value.length / 1024)} KB` : value}
+          readOnly={isUploaded}
           onChange={e => { onChange(e.target.value); setUploadErr(null); }}
-          placeholder="/products/… or base64"
+          placeholder="Drop a photo here, or use Upload"
         />
         {/* Big enough to judge the piece at a glance, and a click away from its
             real pixel size. The old 48×56 stamp could not tell one lace from
             another, which is the whole reason to look at it. */}
         {value ? (
-          <button
-            type="button"
-            onClick={() => setViewing(true)}
-            title="View at full size"
-            aria-label={`View ${label} at full size`}
-            className="group relative w-24 h-28 rounded border border-[color:var(--color-myntra-border-soft)] bg-[color:var(--color-myntra-bg-soft)] overflow-hidden shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-myntra-pink)]"
-          >
-            <Thumb photo={value} alt={label} className="w-full h-full object-contain" />
-            <span className="absolute inset-x-0 bottom-0 py-0.5 bg-black/55 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity">
-              Full size
-            </span>
-          </button>
+          <div className="relative w-24 h-28 shrink-0">
+            <button
+              type="button"
+              onClick={() => setViewing(true)}
+              title="View at full size"
+              aria-label={`View ${label} at full size`}
+              className="group relative w-full h-full rounded border border-[color:var(--color-myntra-border-soft)] bg-[color:var(--color-myntra-bg-soft)] overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-myntra-pink)]"
+            >
+              <Thumb photo={value} alt={label} className="w-full h-full object-contain" />
+              <span className="absolute inset-x-0 bottom-0 py-0.5 bg-black/55 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                Full size
+              </span>
+            </button>
+            {/* Always visible, not hover-only: this runs on a phone at the shelf,
+                where there is no hover. A sibling of the viewer button, not a
+                child — a button inside a button is invalid and swallows taps. */}
+            <button
+              type="button"
+              onClick={removeImage}
+              title={`Remove ${label}`}
+              aria-label={`Remove ${label}`}
+              data-testid={`remove-${id}`}
+              className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-white border border-[#E8B4B4] text-[#A12626] shadow flex items-center justify-center hover:bg-[#FDF0F0] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A12626]"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
         ) : (
           <div className="w-24 h-28 rounded border border-[color:var(--color-myntra-border-soft)] bg-[color:var(--color-myntra-bg-soft)] overflow-hidden shrink-0 flex items-center justify-center text-[color:var(--color-myntra-ink-mute)]">
             <ImageIcon className="w-5 h-5" />
@@ -609,6 +660,16 @@ const ImageUpload: React.FC<{
         >
           <Camera className="w-3.5 h-3.5" /> Take Photo
         </label>
+
+        {value && (
+          <button
+            type="button"
+            onClick={removeImage}
+            className="btn-outline !py-1.5 !px-3 text-[12px] inline-flex items-center gap-1.5 !text-[#A12626] !border-[#E8B4B4]"
+          >
+            <Trash2 className="w-3.5 h-3.5" /> Remove
+          </button>
+        )}
 
         {/* Quick-pick dropdown */}
         <div className="relative flex-1 min-w-[140px]">
@@ -774,6 +835,57 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
     set('photo', value);
   };
 
+  /**
+   * Several photographs, one pick.
+   *
+   * The shoot produces a handful of frames per piece, and filling four slots
+   * one dialog at a time is the slowest part of listing it. Pick them all: the
+   * first fills Main Photo if it is empty, the rest fill the empty gallery
+   * slots in order. Slots that already hold a photo are never overwritten.
+   */
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkMsg, setBulkMsg] = useState<string | null>(null);
+  const bulkRef = useRef<HTMLInputElement>(null);
+  const addPhotos = async (files: File[]) => {
+    const images = files.filter(f => f.type.startsWith('image/'));
+    if (!images.length) { setBulkMsg('None of those files are images.'); return; }
+    const slots = ([
+      ['photo', MAIN_PHOTO_BUDGET],
+      ['gallery1', GALLERY_PHOTO_BUDGET],
+      ['gallery2', GALLERY_PHOTO_BUDGET],
+      ['gallery3', GALLERY_PHOTO_BUDGET],
+    ] as const).filter(([k]) => !String(draft[k]).trim());
+    if (!slots.length) { setBulkMsg('All four photo slots are full. Remove one first.'); return; }
+    setBulkBusy(true);
+    setBulkMsg(null);
+    let next: Draft = { ...draft };
+    let used = 0, tooBig = 0;
+    try {
+      for (const file of images.slice(0, slots.length)) {
+        const [key, budget] = slots[used];
+        const data = await compressImage(file, budget);
+        if (data.length > budget) { tooBig += 1; continue; }
+        next = { ...next, [key]: data };
+        used += 1;
+        if (used >= slots.length) break;
+      }
+      // Same rule as setPhoto: a photograph is what publishes a draft.
+      if (!draft.photo.trim() && next.photo.trim() && next.listingStatus === 'Draft') next.listingStatus = 'Active';
+      onChange(next);
+      const skipped = images.length - used - tooBig;
+      setBulkMsg(
+        `${used} photo${used === 1 ? '' : 's'} added.`
+        + (tooBig ? ` ${tooBig} too detailed to store — crop and retry.` : '')
+        + (skipped > 0 ? ` ${skipped} not added: no free slots.` : ''),
+      );
+    } catch {
+      setBulkMsg('Could not process one of those photos. Try again.');
+    } finally {
+      setBulkBusy(false);
+      if (bulkRef.current) bulkRef.current.value = '';
+    }
+  };
+
   const priceNum = Number(draft.price);
   const mrpNum = Number(draft.mrp);
   const disc = discountPercent(priceNum, mrpNum);
@@ -812,6 +924,73 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
 
       <div className="px-5 sm:px-6 py-5 space-y-7">
         {/* Basics */}
+        {/* Media */}
+        <section>
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--color-myntra-ink-mute)] mb-3">
+            Media
+          </h3>
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-3 rounded border border-dashed border-[color:var(--color-myntra-border)] bg-[color:var(--color-myntra-bg-soft)] px-3 py-2.5">
+              <input
+                ref={bulkRef}
+                id="bulk-photos"
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={e => void addPhotos(Array.from(e.target.files ?? []))}
+              />
+              <label
+                htmlFor="bulk-photos"
+                className="btn-primary !py-1.5 !px-3 text-[12px] inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                {bulkBusy ? 'Adding photos…' : <><Upload className="w-3.5 h-3.5" /> Add all photos at once</>}
+              </label>
+              <span className="text-[11px] text-[color:var(--color-myntra-ink-soft)]">
+                Pick up to four photos together. The first becomes the Main Photo. You can also drag a photo onto any slot below.
+              </span>
+              {bulkMsg && <p role="status" className="w-full text-[11px] font-semibold text-[color:var(--color-myntra-navy)]">{bulkMsg}</p>}
+            </div>
+            <ImageUpload
+              id="main"
+              label="Main Photo"
+              value={draft.photo}
+              onChange={setPhoto}
+              error={errors.photo}
+            />
+            {draft.photo.trim() && draft.listingStatus === 'Active' && (
+              <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] -mt-2">
+                Removing the main photo moves this piece to Draft — a product on the website
+                needs a photograph. Add another to put it back.
+              </p>
+            )}
+            {!draft.photo.trim() && (
+              <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] -mt-2">
+                No photo yet? Save anyway. The product is created with a barcode and counts for
+                stock and counter billing — it simply stays off the website until you add the
+                photograph here, which publishes it.
+              </p>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {([
+                ['gallery1', draft.gallery1, 'Gallery 1'],
+                ['gallery2', draft.gallery2, 'Gallery 2'],
+                ['gallery3', draft.gallery3, 'Gallery 3']
+              ] as [keyof Draft, string, string][]).map(([k, v, label]) => (
+                <ImageUpload
+                  key={String(k)}
+                  id={String(k)}
+                  label={label}
+                  value={v}
+                  budget={GALLERY_PHOTO_BUDGET}
+                  onChange={val => set(k, val as Draft[typeof k])}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+
         <section>
           <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--color-myntra-ink-mute)] mb-3">
             Basics
@@ -1064,46 +1243,6 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
           </div>
         </section>
 
-        {/* Media */}
-        <section>
-          <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--color-myntra-ink-mute)] mb-3">
-            Media
-          </h3>
-          <div className="space-y-4">
-            <ImageUpload
-              id="main"
-              label="Main Photo"
-              value={draft.photo}
-              onChange={setPhoto}
-              error={errors.photo}
-            />
-            {!draft.photo.trim() && (
-              <p className="text-[11px] text-[color:var(--color-myntra-ink-soft)] -mt-2">
-                No photo yet? Save anyway. The product is created with a barcode and counts for
-                stock and counter billing — it simply stays off the website until you add the
-                photograph here, which publishes it.
-              </p>
-            )}
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {([
-                ['gallery1', draft.gallery1, 'Gallery 1'],
-                ['gallery2', draft.gallery2, 'Gallery 2'],
-                ['gallery3', draft.gallery3, 'Gallery 3']
-              ] as [keyof Draft, string, string][]).map(([k, v, label]) => (
-                <ImageUpload
-                  key={String(k)}
-                  id={String(k)}
-                  label={label}
-                  value={v}
-                  budget={GALLERY_PHOTO_BUDGET}
-                  onChange={val => set(k, val as Draft[typeof k])}
-                />
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* Publishing */}
         <section>
           <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-[color:var(--color-myntra-ink-mute)] mb-3">
@@ -1144,8 +1283,9 @@ const Editor: React.FC<EditorProps> = ({ draft, isNew, saving, errors, onChange,
                     Feature on the home page
                   </span>
                   <span className="block text-[11px] text-[color:var(--color-myntra-ink-soft)]">
-                    Puts this piece on the hero slide and the tile for its category, and on
-                    the Lookbook card for its subcategory. Without it the home page picks the
+                    Puts this piece in the "Studio Picks" row on the home page, on the hero
+                    slide and the tile for its category, and on the Lookbook card for its
+                    subcategory. Without it the home page picks the
                     best-photographed piece in stock, which is a guess. Tick it on one piece
                     per category.
                   </span>
@@ -1883,9 +2023,17 @@ const AdminProducts: React.FC = () => {
             >
               <Download className="w-4 h-4" /> Export CSV
             </button>
+            {/* Developer and destructive tools live behind a disclosure. "Wipe DB" sat
+                one click from "Add Product" in the day-to-day toolbar: a mis-tap away
+                from the confirm dialog, on a screen the client uses all day. */}
+            <details className="relative group">
+              <summary className="btn-outline inline-flex items-center justify-center gap-1.5 !py-2.5 cursor-pointer list-none select-none">
+                <MoreHorizontal className="w-4 h-4" /> Advanced
+              </summary>
+              <div className="absolute right-0 top-full mt-1 z-30 w-56 rounded-md border border-[color:var(--color-myntra-border-soft)] bg-white p-2 shadow-xl flex flex-col gap-2">
             <button
               onClick={() => { setPendingAction('seed-laces'); setActionError(null); setActionSuccess(null); }}
-              className="btn-outline inline-flex items-center justify-center gap-1.5 !py-2.5"
+              className="btn-outline inline-flex items-center justify-center gap-1.5 !py-2"
               title="Seed laces from PPTX catalogue"
             >
               <Upload className="w-4 h-4" /> Seed Laces
@@ -1898,6 +2046,8 @@ const AdminProducts: React.FC = () => {
             >
               <Trash2 className="w-4 h-4" /> Wipe DB
             </button>
+              </div>
+            </details>
           </div>
         </div>
       </div>
