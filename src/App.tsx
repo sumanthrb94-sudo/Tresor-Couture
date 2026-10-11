@@ -45,7 +45,7 @@ import { RouterProvider, useRouter } from './context/RouterContext';
 import AdminGuard from './pages/admin/AdminGuard';
 
 const Home: React.FC = () => {
-  const { products, loading, error: loadError, refresh } = useCatalog();
+  const { homeProducts: products, homeLoading: loading, error: loadError, refresh } = useCatalog();
   useStoreJsonLd(true);
 
   // Rail membership lives in lib/homeRails.ts: pure, tested, and not dependent

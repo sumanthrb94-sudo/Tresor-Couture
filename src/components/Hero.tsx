@@ -52,7 +52,7 @@ interface Slide {
 
 const Hero: React.FC = () => {
   const { navigate } = useRouter();
-  const { products } = useCatalog();
+  const { homeProducts: products } = useCatalog();
   const art = useHomeArt();
   const [idx, setIdx] = useState(0);
 
@@ -107,7 +107,7 @@ const Hero: React.FC = () => {
           image in it loses the top and bottom: on a full-length model shot that
           is the head. Desktop keeps a fixed height because its panel is a
           landscape half-column, not the whole frame. */}
-      <div className="relative w-full aspect-[3/4] md:aspect-auto md:h-[560px] lg:h-[600px] overflow-hidden">
+      <div className="relative w-full aspect-[3/4] md:aspect-auto md:h-[560px] lg:h-[clamp(420px,52vh,600px)] overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={banner.id}

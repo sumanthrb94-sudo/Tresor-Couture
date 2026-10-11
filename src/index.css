@@ -238,3 +238,10 @@
 .marquee-track { animation: marquee 28s linear infinite; }
 
 }
+
+/* Desktop header is two rows (logo/search/icons, then categories), 29px taller
+   than the single row every page's top padding was written against. One shim
+   here rather than editing the padding on a dozen pages. */
+@media (min-width: 1024px) {
+  body { padding-top: 29px; }
+}

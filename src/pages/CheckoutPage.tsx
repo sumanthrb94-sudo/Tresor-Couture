@@ -514,7 +514,7 @@ const CheckoutPage: React.FC = () => {
 
           {/* Summary */}
           <aside>
-            <div className="lg:sticky lg:top-[110px] space-y-3">
+            <div className="lg:sticky lg:top-[150px] space-y-3">
               {/* Coupon */}
               <div className="bg-white border border-[color:var(--color-myntra-border-soft)] p-4">
                 <p className="text-[12px] font-extrabold uppercase tracking-wider text-[color:var(--color-myntra-navy)] mb-3 inline-flex items-center gap-1.5">

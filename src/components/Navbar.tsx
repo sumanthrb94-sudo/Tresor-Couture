@@ -124,7 +124,7 @@ const Navbar: React.FC = () => {
     const items = searchPool.filter(f => f.masterCategory === label).slice(0, 4);
     return (
       <div
-        className="fixed top-[64px] md:top-[80px] left-1/2 -translate-x-1/2 w-[820px] max-w-[calc(100vw-32px)] bg-white border-t-4 border-[color:var(--color-myntra-pink)] shadow-2xl pt-6 pb-7 px-8 grid grid-cols-[220px_1fr] gap-8 z-[60]"
+        className="fixed top-[64px] md:top-[80px] lg:top-[109px] left-1/2 -translate-x-1/2 w-[820px] max-w-[calc(100vw-32px)] bg-white border-t-4 border-[color:var(--color-myntra-pink)] shadow-2xl pt-6 pb-7 px-8 grid grid-cols-[220px_1fr] gap-8 z-[60]"
         onMouseEnter={() => setHoverCat(label)}
         onMouseLeave={() => setHoverCat(null)}
       >
@@ -289,7 +289,7 @@ const Navbar: React.FC = () => {
     <>
       <header className="fixed top-0 left-0 w-full z-50 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
         {/* Top tier — hamburger, logo, centered search, search icon */}
-        <div className="h-16 md:h-20 px-4 md:px-6 lg:px-6 xl:px-10 flex items-center gap-3 md:gap-4">
+        <div className="h-16 md:h-20 lg:h-16 px-4 md:px-6 lg:px-6 xl:px-10 flex items-center gap-3 md:gap-4">
           {/* Hamburger — left of logo (mobile only) */}
           <button className="lg:hidden p-2 -ml-2" onClick={() => setMobileOpen(true)} aria-label="Open menu">
             <Menu className="w-6 h-6" />
@@ -304,27 +304,9 @@ const Navbar: React.FC = () => {
             </span>
           </button>
 
-          {/* Desktop mega-menu nav — left of center */}
-          <nav className="hidden lg:flex items-stretch gap-0 xl:gap-1 h-full min-w-0 flex-shrink overflow-x-auto scrollbar-none" aria-label="Primary">
-            {NAV.map(n => {
-              const isActive = (n.kind === 'master' && activeCat === n.label) || (n.kind === 'static' && n.label === 'Sale' && route.name === 'shop' && !activeCat);
-              const onClick = () => { if (n.kind === 'master') goShop(n.label); else goShop(); };
-              const isPremium = n.tone === 'premium';
-              return (
-                <div key={n.label} className="relative h-full" onMouseEnter={() => setHoverCat(n.label)} onMouseLeave={() => setHoverCat(null)}>
-                  <button onClick={onClick} aria-haspopup={n.kind === 'master' ? 'true' : undefined} aria-expanded={n.kind === 'master' ? hoverCat === n.label : undefined}
-                    className={isPremium ? `h-full px-2 flex items-center gap-1.5 whitespace-nowrap font-serif italic text-[12px] tracking-[0.02em] transition-colors no-tap-highlight border-b-[3px] ${isActive ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)]' : 'border-transparent text-[#8E6520] hover:text-[color:var(--color-myntra-pink)]'}` : `h-full px-2 flex items-center whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.04em] transition-colors no-tap-highlight border-b-[3px] ${isActive ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)]' : 'border-transparent text-[color:var(--color-myntra-navy)] hover:text-[color:var(--color-myntra-pink)]'}`}>
-                    {isPremium && <span aria-hidden className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--color-myntra-pink)]" />}{n.label}
-                  </button>
-                  {n.kind === 'master' && hoverCat === n.label && megaPanel(n.label)}
-                </div>
-              );
-            })}
-          </nav>
-
           {/* CENTERED SEARCH BAR — visible on tablet+ */}
-          <form onSubmit={onSearchSubmit} className="hidden md:flex flex-1 justify-center max-w-xl mx-auto relative">
-            <div className="relative w-full max-w-[480px]">
+          <form onSubmit={onSearchSubmit} className="hidden md:flex flex-1 justify-center max-w-2xl mx-auto relative min-w-[220px]">
+            <div className="relative w-full max-w-[560px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[color:var(--color-myntra-ink-mute)] pointer-events-none" />
               <input
                 value={search}
@@ -447,6 +429,29 @@ const Navbar: React.FC = () => {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Category row */}
+        <div className="hidden lg:block border-t border-[color:var(--color-myntra-border-soft)]">
+          <div className="h-11 px-6 xl:px-10 flex justify-center">
+          {/* Category row — its own line on desktop. Squeezed beside the logo, search and icons it left the search bar 60px wide at 1280px. */}
+          <nav className="flex items-stretch justify-center gap-1 xl:gap-3 h-full min-w-0 overflow-x-auto scrollbar-none" aria-label="Primary">
+            {NAV.map(n => {
+              const isActive = (n.kind === 'master' && activeCat === n.label) || (n.kind === 'static' && n.label === 'Sale' && route.name === 'shop' && !activeCat);
+              const onClick = () => { if (n.kind === 'master') goShop(n.label); else goShop(); };
+              const isPremium = n.tone === 'premium';
+              return (
+                <div key={n.label} className="relative h-full" onMouseEnter={() => setHoverCat(n.label)} onMouseLeave={() => setHoverCat(null)}>
+                  <button onClick={onClick} aria-haspopup={n.kind === 'master' ? 'true' : undefined} aria-expanded={n.kind === 'master' ? hoverCat === n.label : undefined}
+                    className={isPremium ? `h-full px-2 flex items-center gap-1.5 whitespace-nowrap font-serif italic text-[12px] tracking-[0.02em] transition-colors no-tap-highlight border-b-[3px] ${isActive ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)]' : 'border-transparent text-[#8E6520] hover:text-[color:var(--color-myntra-pink)]'}` : `h-full px-2 flex items-center whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.04em] transition-colors no-tap-highlight border-b-[3px] ${isActive ? 'border-[color:var(--color-myntra-pink)] text-[color:var(--color-myntra-pink)]' : 'border-transparent text-[color:var(--color-myntra-navy)] hover:text-[color:var(--color-myntra-pink)]'}`}>
+                    {isPremium && <span aria-hidden className="inline-block w-1.5 h-1.5 rounded-full bg-[color:var(--color-myntra-pink)]" />}{n.label}
+                  </button>
+                  {n.kind === 'master' && hoverCat === n.label && megaPanel(n.label)}
+                </div>
+              );
+            })}
+          </nav>
           </div>
         </div>
 

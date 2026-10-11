@@ -21,7 +21,7 @@ const PAGE = 20;
  */
 const BrowseAllGrid: React.FC = () => {
   const { navigate } = useRouter();
-  const { products, loading } = useCatalog();
+  const { homeProducts: products, homeLoading: loading } = useCatalog();
   const all = useMemo(() => browseAll(products), [products]);
   const [shown, setShown] = useState(PAGE);
   const sentinel = useRef<HTMLDivElement>(null);
