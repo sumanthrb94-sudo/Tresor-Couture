@@ -19,6 +19,7 @@ import {
   Check
 } from 'lucide-react';
 import { productsApi } from '../../lib/firebase';
+import { isPlaceholderDescription } from '../../lib/productCopy';
 import { compressImage, MAIN_PHOTO_BUDGET, GALLERY_PHOTO_BUDGET } from '../../lib/compressImage';
 import { placeholderSwatch } from '../../lib/swatch';
 import ProductAudit from './ProductAudit';
@@ -257,6 +258,9 @@ const validateDraft = (d: Draft): DraftErrors => {
   if (!d.brand.trim()) errs.brand = 'Brand is required';
   if (!d.name.trim()) errs.name = 'Name is required';
   if (!d.description.trim()) errs.description = 'Description is required';
+  else if (isPlaceholderDescription(d.description)) {
+    errs.description = 'Write a real description — shoppers read this on the product page.';
+  }
   if (!d.category) errs.category = 'Pick a category';
   // A photo is deliberately NOT required. A piece is registered — priced,
   // stocked, barcoded, sellable at the counter — days before the shoot, and

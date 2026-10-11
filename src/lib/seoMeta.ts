@@ -1,3 +1,4 @@
+import { displayDescription } from './productCopy';
 import { useEffect } from 'react';
 import type { Fabric, Route } from '../types';
 import { BUSINESS, gstinConfigured } from './business';
@@ -112,7 +113,7 @@ export function useProductMeta(fabric: Fabric | undefined): void {
   useEffect(() => {
     if (!fabric) return;
     const url = `${ORIGIN}/product/${encodeURIComponent(fabric.id)}`;
-    const desc = (fabric.description || '').slice(0, 300);
+    const desc = displayDescription(fabric).slice(0, 300);
     document.title = `${fabric.name} · ${SITE}`;
     upsertMeta('description', desc);
     upsertMeta('robots', 'index, follow');

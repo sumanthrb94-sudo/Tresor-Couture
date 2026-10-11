@@ -1,3 +1,4 @@
+import { displayDescription } from '../lib/productCopy';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { Check, ChevronDown, ChevronUp, Expand, Heart, Minus, Plus, ShieldCheck, ShoppingBag, Star, Truck, Zap } from 'lucide-react';
@@ -462,7 +463,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
 
             {/* Description */}
             <div className="mb-6">
-              <p className="text-[14px] text-[color:var(--color-myntra-ink)] leading-relaxed">{fabric.description}</p>
+              <p className="text-[14px] text-[color:var(--color-myntra-ink)] leading-relaxed">{displayDescription(fabric)}</p>
             </div>
 
             {/* CTAs */}
