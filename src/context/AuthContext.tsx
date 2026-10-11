@@ -27,6 +27,8 @@ interface AuthContextValue {
   logout: () => Promise<void>;
   updateProfile: (patch: Partial<User>) => Promise<void>;
   refresh: () => Promise<void>;
+  /** Re-read the admin claim from a freshly minted token. Returns the result. */
+  recheckAdmin: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -90,6 +92,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(false);
         return;
       }
+      // Loading again until this user's profile and admin claim are read.
+      // Without it, the moment after sign-in reads as "settled, nobody signed
+      // in" (loading was already false from the signed-out state, and `user`
+      // is only set once hydrate finishes), so a guarded page — the admin
+      // console — bounced the user to /login and on to the home page whenever
+      // the profile read was slow, e.g. the first read on a cold database.
+      setLoading(true);
       try {
         await hydrate(fbUser.uid, fbUser.email);
       } finally {
@@ -191,6 +200,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await hydrate(user.id, user.email);
   }, [user, hydrate]);
 
+  // The cached token can be stale (claim granted after it was minted) and the
+  // claim read can fail transiently. Either way an admin would be sent away
+  // from the console for good, so the admin guard asks once more with a
+  // freshly minted token before it redirects.
+  const recheckAdmin = useCallback(async () => {
+    let admin = false;
+    try {
+      admin = await isAdminUser(true);
+    } catch {
+      /* still unreadable → not admin */
+    }
+    setIsAdmin(admin);
+    return admin;
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -205,7 +229,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         requestPasswordReset,
         logout,
         updateProfile,
-        refresh
+        refresh,
+        recheckAdmin
       }}
     >
       {children}

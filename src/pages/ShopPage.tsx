@@ -13,7 +13,7 @@ import { useRouter } from '../context/RouterContext';
 import { useCatalog } from '../context/CatalogContext';
 import { sellableFirst } from '../lib/availability';
 
-type SortKey = 'recommended' | 'popularity' | 'price-asc' | 'price-desc' | 'rating' | 'newest';
+type SortKey = 'recommended' | 'price-asc' | 'price-desc' | 'newest';
 
 interface Props {
   initialCategory?: string;
@@ -130,8 +130,6 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
     switch (sort) {
       case 'price-asc': list = [...list].sort((a, b) => a.price - b.price); break;
       case 'price-desc': list = [...list].sort((a, b) => b.price - a.price); break;
-      case 'rating': list = [...list].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0)); break;
-      case 'popularity': list = [...list].sort((a, b) => (b.reviewCount ?? 0) - (a.reviewCount ?? 0)); break;
       case 'newest': list = [...list].reverse(); break;
     }
     // One card per DESIGN, the way a phone shop lists "iPhone 18" once and puts
@@ -304,10 +302,8 @@ const ShopPage: React.FC<Props> = ({ initialCategory, initialSubCategory }) => {
                   className="appearance-none border border-[color:var(--color-myntra-border)] rounded px-3 py-2 pr-8 text-[13px] font-semibold bg-white"
                 >
                   <option value="recommended">Recommended</option>
-                  <option value="popularity">Popularity</option>
                   <option value="price-asc">Price: Low to High</option>
                   <option value="price-desc">Price: High to Low</option>
-                  <option value="rating">Customer Rating</option>
                   <option value="newest">What's New</option>
                 </select>
                 <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />

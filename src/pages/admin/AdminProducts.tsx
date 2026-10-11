@@ -2089,7 +2089,6 @@ const AdminProducts: React.FC = () => {
                     <Th className="w-[130px]">Category</Th>
                     <Th className="w-[140px]">Price</Th>
                     <Th className="w-[80px]">Stock</Th>
-                    <Th className="w-[80px]">Rating</Th>
                     <Th className="w-[110px] text-right pr-4">Actions</Th>
                   </tr>
                 </thead>
@@ -2199,18 +2198,6 @@ const AdminProducts: React.FC = () => {
                             <div className="text-[10px] text-[#5C3A8E] font-semibold">
                               {f.bundleSizeMeters}m each
                             </div>
-                          )}
-                        </Td>
-                        <Td>
-                          {f.rating != null ? (
-                            <span className="badge-rating">
-                              <span className="star">★</span>
-                              {f.rating.toFixed(1)}
-                            </span>
-                          ) : (
-                            <span className="text-[12px] text-[color:var(--color-myntra-ink-mute)]">
-                              —
-                            </span>
                           )}
                         </Td>
                         <Td className="text-right pr-3">

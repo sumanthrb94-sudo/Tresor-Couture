@@ -12,7 +12,6 @@ import {
   ArrowUpRight,
   Calendar,
   Tag,
-  Star,
   Palette,
   Database
 } from 'lucide-react';
@@ -330,7 +329,6 @@ const AdminDashboard: React.FC = () => {
     { label: 'Manage Products', route: { name: 'admin', section: 'products' }, Icon: Package },
     { label: 'View All Orders',  route: { name: 'admin', section: 'orders' },   Icon: ShoppingBag },
     { label: 'Coupons',          route: { name: 'admin', section: 'coupons' },  Icon: Tag },
-    { label: 'Reviews',          route: { name: 'admin', section: 'reviews' },  Icon: Star },
     { label: 'Brand Identity Kit', route: { name: 'admin-brand-kit' },          Icon: Palette }
   ];
 
