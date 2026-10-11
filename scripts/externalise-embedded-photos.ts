@@ -33,6 +33,8 @@ async function main() {
   let files = 0, bytes = 0, docs = 0;
   for (const d of snap.docs) {
     const f = d.data();
+    // Retired pieces are off the shop; leave them as they are.
+    if (f.listingStatus === 'Retired') continue;
     const stem = `${String(f.productCode ?? '').trim() || d.id}`.replace(/[^A-Za-z0-9_-]/g, '-');
     const patch: Record<string, unknown> = {};
     const put = (data: string, suffix: string): string | null => {
