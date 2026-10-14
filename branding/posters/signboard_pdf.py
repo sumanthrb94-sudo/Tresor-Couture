@@ -9,7 +9,7 @@ from PIL import Image
 IN = 72.0
 W, H = 180 * IN, 48 * IN            # 15 ft x 4 ft
 out = sys.argv[1] if len(sys.argv) > 1 else 'branding/posters/tresor-couture-signboard-15x4ft.pdf'
-emblem = 'branding/posters/emblem-trim.png'
+emblem = 'branding/posters/emblem-print.png'
 pdfmetrics.registerFont(TTFont('Cormorant-Bold', 'branding/_fonts/Cormorant-Bold.ttf'))
 FONT = 'Cormorant-Bold'
 CREAM, GOLD = HexColor('#F5ECDC'), HexColor('#B8893A')
