@@ -1,0 +1,49 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Corm;src:url(../../branding/_fonts/Cormorant-SemiBold.ttf);font-weight:600}
+@font-face{font-family:Corm;src:url(../../branding/_fonts/Cormorant-Medium.ttf);font-weight:500}
+@font-face{font-family:Corm;src:url(../../branding/_fonts/Cormorant-Bold.ttf);font-weight:700}
+@font-face{font-family:Corm;src:url(../../branding/_fonts/Cormorant-Italic.ttf);font-style:italic}
+@font-face{font-family:Inter;src:url(../../branding/_fonts/Inter-Medium.ttf);font-weight:500}
+@font-face{font-family:Inter;src:url(../../branding/_fonts/Inter-Light.ttf);font-weight:300}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:2160px;height:3840px}
+body{position:relative;overflow:hidden;font-family:Corm,serif;color:#F5ECDC;
+ background:radial-gradient(1500px 1200px at 50% 22%, #4a3418 0%, #2a1d0f 45%, #160f08 100%);}
+.frame{position:absolute;inset:70px;border:3px solid #B8893A;box-shadow:0 0 40px rgba(216,185,122,.35), inset 0 0 40px rgba(216,185,122,.15)}
+.frame:after{content:"";position:absolute;inset:22px;border:1px solid rgba(216,185,122,.45)}
+.gold{background:linear-gradient(180deg,#F3DFA8 0%,#D8B97A 30%,#B8893A 62%,#8E6520 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+ filter:drop-shadow(0 0 18px rgba(232,196,120,.45)) drop-shadow(0 6px 10px rgba(0,0,0,.5))}
+.emblem{position:absolute;left:50%;top:190px;transform:translateX(-50%);width:1250px;filter:drop-shadow(0 0 60px rgba(232,196,120,.35)) drop-shadow(0 20px 30px rgba(0,0,0,.5))}
+.word{position:absolute;left:0;right:0;text-align:center}
+.tresor{top:1250px;font-weight:600;font-size:330px;letter-spacing:.08em;line-height:1}
+.couture{top:1590px;font-weight:600;font-size:150px;letter-spacing:.32em;line-height:1;padding-left:.32em}
+.jsm{top:1780px;font-weight:600;font-size:88px;letter-spacing:.06em}
+.rule{position:absolute;left:50%;transform:translateX(-50%);top:1950px;width:900px;height:2px;background:linear-gradient(90deg,transparent,#D8B97A,transparent)}
+.rule:before{content:"";position:absolute;left:50%;top:-9px;width:20px;height:20px;transform:translateX(-50%) rotate(45deg);background:#D8B97A;box-shadow:0 0 16px rgba(232,196,120,.8)}
+.tag{top:2010px;font-style:italic;font-size:92px;color:#EAD9BA;letter-spacing:.01em}
+.row{position:absolute;left:170px;right:170px;top:2250px;display:flex;gap:44px}
+.card{flex:1;height:860px;border-radius:230px 230px 10px 10px;overflow:hidden;border:4px solid #B8893A;box-shadow:0 0 34px rgba(216,185,122,.35),0 30px 50px rgba(0,0,0,.55)}
+.card img{width:100%;height:100%;object-fit:cover;object-position:50% 18%}
+.cats{top:3250px;font-family:Inter;font-weight:500;font-size:44px;letter-spacing:.32em;color:#D8B97A}
+.cats span{color:#8E6520;padding:0 .5em}
+.site{top:3400px;font-weight:600;font-size:110px;letter-spacing:.12em}
+.foot{top:3560px;font-family:Inter;font-weight:300;font-size:38px;letter-spacing:.3em;color:#EAD9BA}
+</style></head><body>
+<div class="frame"></div>
+<img class="emblem" src="../../branding/master-logo-emblem-4k.png">
+<div class="word tresor gold">TRESOR</div>
+<div class="word couture gold">COUTURE</div>
+<div class="word jsm gold">by JSM</div>
+<div class="rule"></div>
+<div class="word tag">Curated designer pieces from our city studio</div>
+<div class="row">
+ <div class="card"><img src="../../public/products/SP002-main.webp"></div>
+ <div class="card"><img src="../../public/products/3PC001-main.webp"></div>
+ <div class="card"><img src="../../public/products/tc1001-main.webp"></div>
+ <div class="card"><img src="../../public/products/SP001-main.webp"></div>
+</div>
+<div class="word cats">STUDIOS PRÊT<span>✦</span>ETHNIC WEAR<span>✦</span>LACES<span>✦</span>FABRICS</div>
+<div class="word site gold">tresorcouture.in</div>
+<div class="word foot">SHOP THE COLLECTION ONLINE</div>
+</body></html>
