@@ -6,9 +6,8 @@
  *   npx tsx scripts/seed-predraped-sarees-oct26.ts --prod            # dry run
  *   npx tsx scripts/seed-predraped-sarees-oct26.ts --prod --apply    # LIVE write
  *
- * costPrice is the buying price from the supplier chat; price is 2x cost, the
- * same mark-up as the existing designer pieces, and editable in admin. MRP
- * equals price — no invented "was" price.
+ * The prices in the chat are SELLING prices; the buying price is half of the
+ * selling price. MRP equals price — no invented "was" price.
  *
  * Idempotent: a product code that already exists is skipped. Barcodes come
  * from counters/barcodes in a transaction, the same series the admin console
@@ -21,7 +20,8 @@ import { formatBarcode } from './lib/barcodes';
 interface Piece {
   code: string;
   name: string;
-  cost: number;
+  /** Selling price, as given in the chat. */
+  price: number;
   gallery: number;
   /** Short MP4 of the piece being worn, shown after the photos. */
   video?: string;
@@ -32,7 +32,7 @@ const PIECES: Piece[] = [
   {
     code: 'PDS001',
     name: 'Midnight Navy Satin Pre-Draped Saree with Embellished Sheer Bralette',
-    cost: 26000,
+    price: 26000,
     gallery: 3,
     video: '/products/video/PDS001.mp4',
     description:
@@ -41,7 +41,7 @@ const PIECES: Piece[] = [
   {
     code: 'PDS002',
     name: 'Champagne Satin Pre-Draped Saree with Sequinned Half-Sleeve Blouse',
-    cost: 26000,
+    price: 26000,
     gallery: 3,
     video: '/products/video/PDS002.mp4',
     description:
@@ -50,7 +50,7 @@ const PIECES: Piece[] = [
   {
     code: 'PDS003',
     name: 'Navy Sequinned Net Pre-Draped Saree with Fringed Blouse',
-    cost: 16000,
+    price: 16000,
     gallery: 1,
     description:
       'A pre-draped saree in navy net, covered from pleat to pallu in tonal sequins and threadwork so the whole drape shimmers with every step. The pleats fall straight and full to the floor and the pallu trails long behind the shoulder. It comes with a matching sleeveless blouse with a V-neckline, finished at the hem with a fringe of sequinned strands that sits over the waist. Dark, rich and glamorous for evening weddings, receptions and cocktail parties. Style with statement earrings in silver or gold and a clutch. One piece available.',
@@ -58,7 +58,7 @@ const PIECES: Piece[] = [
   {
     code: 'PDS004',
     name: 'Champagne Gold Sequinned Net Pre-Draped Saree',
-    cost: 16000,
+    price: 16000,
     gallery: 0,
     description:
       'A pre-draped saree in pale champagne gold net, sequinned all over in a fine, scattered pattern that catches the light softly rather than blazing. The pleats are set and fall straight to the floor, and the pallu drapes from the shoulder in a long, sheer sweep. It is paired with a matching sequinned blouse in the same tone, so the look reads as one luminous column. Light and festive, it suits engagements, receptions, day-to-evening weddings and cocktail parties. Pair with gold or polki earrings and nude heels. One piece available.',
@@ -66,7 +66,7 @@ const PIECES: Piece[] = [
   {
     code: 'PDS005',
     name: 'Plum Sequinned Net Pre-Draped Saree',
-    cost: 15000,
+    price: 15000,
     gallery: 0,
     description:
       'A pre-draped saree in deep plum purple net, embellished all over in tonal sequins for a rich, jewel-toned shimmer. The pleats are stitched in place and fall to the floor, and the pallu drapes long from the shoulder for an easy, finished look that needs no pinning. It comes with a matching sequinned sleeveless blouse. A striking colour for sangeet nights, receptions, cocktail parties and festive evenings. Style with silver or diamond-look jewellery and a metallic clutch. One piece available.',
@@ -92,10 +92,11 @@ async function main() {
     const dup = await db.collection('products').where('productCode', '==', p.code).limit(1).get();
     if (!dup.empty) { console.log(`= ${p.code} exists as ${dup.docs[0].id} — skipped`); continue; }
 
-    const price = p.cost * 2;
+    const price = p.price;
+    const cost = p.price / 2;
     const photo = `/products/${p.code}-main.webp`;
     const photoGallery = Array.from({ length: p.gallery }, (_, i) => `/products/${p.code}-g${i + 1}.webp`);
-    console.log(`+ ${p.code} "${p.name}" ₹${price} (cost ₹${p.cost}), ${1 + p.gallery} photo(s)${p.video ? ' + video' : ''}`);
+    console.log(`+ ${p.code} "${p.name}" ₹${price} (cost ₹${cost}), ${1 + p.gallery} photo(s)${p.video ? ' + video' : ''}`);
     if (!apply) continue;
 
     const ref = db.collection('products').doc();
@@ -106,7 +107,7 @@ async function main() {
       description: p.description,
       price,
       mrp: price,
-      costPrice: p.cost,
+      costPrice: cost,
       photo,
       photoGallery,
       image: photo,
