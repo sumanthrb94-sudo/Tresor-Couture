@@ -1,7 +1,7 @@
 import { displayDescription } from '../lib/productCopy';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { Check, ChevronDown, ChevronUp, Expand, Heart, Minus, Plus, ShieldCheck, ShoppingBag, Truck, Zap } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Expand, Heart, Play, Minus, Plus, ShieldCheck, ShoppingBag, Truck, Zap } from 'lucide-react';
 import { formatINR } from '../constants';
 import { useRouter } from '../context/RouterContext';
 import { useCart } from '../context/CartContext';
@@ -104,6 +104,10 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
   // sees — main photo first, no duplicate shots, never a swatch in front of a
   // real photograph — can be tested without mounting the page.
   const gallery = useMemo(() => (fabric ? buildGallery(fabric) : []), [fabric]);
+  // A video, when the piece has one, sits after the photographs as one more
+  // tile; activeImage === gallery.length selects it.
+  const video = fabric?.video?.trim() || '';
+  const showingVideo = !!video && activeImage === gallery.length;
 
   // The other colourways of this design. Grouping rules live in lib/styleGroup.ts
   // so "which colours does a shopper see" can be tested without mounting a page.
@@ -246,6 +250,20 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
                   <FabricImage photo={g.photo} fallback={g.fallback} alt="" className="w-full h-full object-cover" />
                 </button>
               ))}
+              {video && (
+                <button
+                  key="video"
+                  onClick={() => setActiveImage(gallery.length)}
+                  aria-label={`Play video of ${fabric.name}`}
+                  data-testid="pdp-video-thumb"
+                  className={`relative aspect-[3/4] overflow-hidden border-2 transition-colors ${showingVideo ? 'border-[color:var(--color-myntra-pink)]' : 'border-transparent'}`}
+                >
+                  <FabricImage photo={gallery[0]?.photo} fallback={gallery[0]?.fallback ?? fabric.image} alt="" className="w-full h-full object-cover" />
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/35">
+                    <Play className="w-6 h-6 text-white fill-white" />
+                  </span>
+                </button>
+              )}
             </div>
             <motion.div
               key={activeImage}
@@ -254,6 +272,21 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
               transition={{ duration: 0.3 }}
               className="relative aspect-[3/4] bg-[color:var(--color-myntra-bg-soft)] overflow-hidden"
             >
+              {showingVideo ? (
+                <video
+                  key={video}
+                  src={video}
+                  poster={gallery[0]?.photo}
+                  data-testid="pdp-video"
+                  className="absolute inset-0 w-full h-full object-cover bg-black"
+                  controls
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                />
+              ) : (<>
               {/* The card crop is 3:4 and object-cover, so it hides the ends of
                   a scalloped border and every bit of bead detail. Opening the
                   photograph properly is a click, not a hidden gesture. */}
@@ -273,6 +306,7 @@ const ProductPage: React.FC<Props> = ({ productId }) => {
               <span className="pointer-events-none absolute bottom-2 right-2 inline-flex items-center gap-1 px-2 py-1 rounded-full bg-black/55 text-white text-[11px] font-semibold">
                 <Expand className="w-3.5 h-3.5" /> Tap to zoom
               </span>
+              </>)}
               {fabric.sticker && <span className="badge-trending">{fabric.sticker}</span>}
             </motion.div>
           </div>

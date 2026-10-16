@@ -1,0 +1,32 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:Corm;src:url(../../branding/_fonts/Cormorant-Bold.ttf);font-weight:700}
+@font-face{font-family:Corm;src:url(../../branding/_fonts/Cormorant-SemiBold.ttf);font-weight:600}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:3840px;height:1536px}
+body{position:relative;overflow:hidden;background:#E9DCC4}
+/* wall behind the board */
+.wall{position:absolute;inset:0;background:radial-gradient(2600px 1100px at 50% 50%,#F1E6D1 0%,#E3D3B6 60%,#CDB993 100%)}
+/* backlit panel */
+.board{position:absolute;left:24px;top:150px;right:24px;bottom:150px;
+ background:radial-gradient(1900px 700px at 55% 50%,#FBF4E6 0%,#F4E8D2 55%,#E9D9BC 100%);
+ border:20px solid transparent;border-image:linear-gradient(135deg,#F6E3AE,#C9973F 30%,#8E6520 55%,#E7C77E 75%,#A9792F) 1;
+ box-shadow:0 0 70px 18px rgba(255,214,140,.75),0 0 180px 40px rgba(255,200,110,.35),inset 0 0 90px rgba(255,214,140,.55),0 40px 60px rgba(90,60,20,.35)}
+.board:after{content:"";position:absolute;inset:12px;border:2px solid rgba(184,137,58,.35)}
+.emblem{position:absolute;left:170px;top:70px;height:1060px;
+ filter:drop-shadow(0 0 22px rgba(255,190,90,.95)) drop-shadow(0 0 60px rgba(255,180,80,.6)) drop-shadow(10px 18px 14px rgba(110,70,20,.35))}
+.txt{position:absolute;left:1420px;right:120px;text-align:center;font-family:Corm,serif;line-height:1}
+.g{background:linear-gradient(180deg,#FFF0BE 0%,#E9C877 22%,#C49135 48%,#8C6119 70%,#D9B060 88%,#A57426 100%);
+ -webkit-background-clip:text;background-clip:text;color:transparent;
+ filter:drop-shadow(0 0 3px rgba(120,80,20,.9)) drop-shadow(0 0 26px rgba(255,190,90,.95)) drop-shadow(0 0 70px rgba(255,180,80,.75)) drop-shadow(8px 14px 10px rgba(110,70,20,.35))}
+.t1{top:150px;font-weight:700;font-size:430px;letter-spacing:.035em}
+.t2{top:600px;font-weight:700;font-size:250px;letter-spacing:.14em;padding-left:.14em}
+.t3{top:900px;font-weight:700;font-size:130px;letter-spacing:.03em}
+</style></head><body>
+<div class="wall"></div>
+<div class="board">
+ <img class="emblem" src="emblem-trim.png">
+ <div class="txt t1 g">TRESOR</div>
+ <div class="txt t2 g">COUTURE</div>
+ <div class="txt t3 g">by JSM</div>
+</div>
+</body></html>
