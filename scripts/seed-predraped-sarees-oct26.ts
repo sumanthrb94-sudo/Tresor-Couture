@@ -1,7 +1,7 @@
 /**
  * One-off (16 Oct 2026): list the five pre-draped / sequinned sarees shot on
- * 16 Oct — two from WhatsApp videos (stills taken from the video), three from
- * photographs.
+ * 16 Oct — two from WhatsApp videos (stills taken from the video, and the video
+ * itself shown after them), three from photographs.
  *
  *   npx tsx scripts/seed-predraped-sarees-oct26.ts --prod            # dry run
  *   npx tsx scripts/seed-predraped-sarees-oct26.ts --prod --apply    # LIVE write
@@ -23,6 +23,8 @@ interface Piece {
   name: string;
   cost: number;
   gallery: number;
+  /** Short MP4 of the piece being worn, shown after the photos. */
+  video?: string;
   description: string;
 }
 
@@ -32,6 +34,7 @@ const PIECES: Piece[] = [
     name: 'Midnight Navy Satin Pre-Draped Saree with Embellished Sheer Bralette',
     cost: 26000,
     gallery: 3,
+    video: '/products/video/PDS001.mp4',
     description:
       'A ready-to-wear saree in deep midnight navy with a liquid satin sheen. The pleats and pallu come pre-draped, so it goes on in minutes and stays exactly where it should all evening; the pallu falls long from the shoulder and the pleats sweep the floor. The blouse is the statement: a sheer bralette with structured cups, strappy shoulders and a sweetheart neckline, worked all over with beads, sequins and floral embellishment, and finished at the hem with a row of beaded fringe that moves as you do. Made for cocktail nights, sangeet, receptions and evening weddings. Style with chandelier or statement gold earrings and keep the neck bare to let the blouse do the talking. One piece available.',
   },
@@ -40,6 +43,7 @@ const PIECES: Piece[] = [
     name: 'Champagne Satin Pre-Draped Saree with Sequinned Half-Sleeve Blouse',
     cost: 26000,
     gallery: 3,
+    video: '/products/video/PDS002.mp4',
     description:
       'A pre-draped saree in soft champagne taupe with a glossy satin finish. The pleats are stitched in place and the pallu is set over the shoulder, so the drape is perfect from the first wear with none of the pinning. It is paired with a half-sleeve blouse densely worked in silver sequins and beadwork, cut with a sweetheart neckline and a cropped hem. The muted, metallic palette reads elegant rather than loud — right for receptions, engagements, cocktail evenings and festive dinners. Pair with pearl or diamond-look drop earrings, a slim bracelet and a sleek bun. One piece available.',
   },
@@ -91,7 +95,7 @@ async function main() {
     const price = p.cost * 2;
     const photo = `/products/${p.code}-main.webp`;
     const photoGallery = Array.from({ length: p.gallery }, (_, i) => `/products/${p.code}-g${i + 1}.webp`);
-    console.log(`+ ${p.code} "${p.name}" ₹${price} (cost ₹${p.cost}), ${1 + p.gallery} photo(s)`);
+    console.log(`+ ${p.code} "${p.name}" ₹${price} (cost ₹${p.cost}), ${1 + p.gallery} photo(s)${p.video ? ' + video' : ''}`);
     if (!apply) continue;
 
     const ref = db.collection('products').doc();
@@ -106,6 +110,7 @@ async function main() {
       photo,
       photoGallery,
       image: photo,
+      ...(p.video ? { video: p.video } : {}),
       masterCategory: 'Sarees',
       category: 'Sarees',
       subCategory: 'Pre-draped Saree',

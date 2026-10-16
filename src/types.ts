@@ -35,6 +35,9 @@ export interface Fabric {
   photo: string;
   /** Additional photographs for the gallery. */
   photoGallery?: string[];
+  /** Optional short video of the piece being worn (MP4 path or URL). Shown as
+   *  the last tile of the product-page gallery. */
+  video?: string;
   /** Guaranteed-loading SVG fabric swatch used as onError fallback. */
   image: string;
   gallery?: string[];
